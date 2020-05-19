@@ -1,0 +1,6 @@
+*.tex
+*.aux
+*.pdf
+*.log
+./bin/*
+./obj/*

@@ -2,5 +2,5 @@
 *.aux
 *.pdf
 *.log
-./bin/*
-./obj/*
+bin/
+obj/

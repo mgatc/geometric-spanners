@@ -54,7 +54,6 @@
 		<Unit filename="include/PlanarSpanner.h" />
 		<Unit filename="include/SpanningGraph.h" />
 		<Unit filename="include/Vertex_info.h" />
-		<Unit filename="include/geometric_spanner.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="src/Graph.cpp" />
 		<Unit filename="src/PlanarSpanner.cpp" />

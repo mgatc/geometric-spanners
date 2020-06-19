@@ -49,16 +49,16 @@
 			<Add library="boost_thread" />
 		</Linker>
 		<Unit filename=".gitignore" />
-		<Unit filename="include/CgalComponents.h" />
-		<Unit filename="include/GeometricSpannerExperiment.h" />
-		<Unit filename="include/GeometricSpannerPrinter.h" />
-		<Unit filename="include/GeometricSpannerSolutionChecker.h" />
-		<Unit filename="include/Greedy.h" />
+		<Unit filename="include/CGALComponents.h" />
+		<Unit filename="include/Graph.h" />
+		<Unit filename="include/PlanarSpanner.h" />
+		<Unit filename="include/SpanningGraph.h" />
+		<Unit filename="include/Vertex_info.h" />
+		<Unit filename="include/geometric_spanner.h" />
 		<Unit filename="main.cpp" />
-		<Unit filename="src/GeometricSpannerExperiment.cpp" />
-		<Unit filename="src/GeometricSpannerPrinter.cpp" />
-		<Unit filename="src/GeometricSpannerSolutionChecker.cpp" />
-		<Unit filename="src/Greedy.cpp" />
+		<Unit filename="src/Graph.cpp" />
+		<Unit filename="src/PlanarSpanner.cpp" />
+		<Unit filename="src/SpanningGraph.cpp" />
 		<Extensions>
 			<code_completion />
 			<debugger />

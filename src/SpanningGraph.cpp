@@ -1,0 +1,130 @@
+#include "SpanningGraph.h"
+
+#include <list>
+
+
+
+namespace gsnunf {
+
+SpanningGraph::SpanningGraph( std::list<Point> &S ) : Graph( S ) {
+
+    std::list<Vertex_handle> canonical;
+    std::list<Vertex_handle>::iterator c_iter;
+    Vertex_handle triangle[3];
+    Vertex_circulator v_n, done;
+    int i;
+
+    canonical_order( canonical );
+
+    // Add first three vertices from canonical
+    for( i=0, c_iter=canonical.begin(); i<3&&i<canonical.size(); ++c_iter, ++i ) {
+        (*c_iter)->info().is_removed = false; // add vertex
+        triangle[i] = *c_iter; // save in array for quick addition of edges
+    }
+
+    for( i=0; i<3&&i<canonical.size(); ++i ) { // Add edges of triangle
+        add_edge( triangle[i], triangle[(i+1)%3] );
+    }
+
+    // Add the rest of the vertices from canonical
+    for( i=i; i<canonical.size(); ++c_iter, ++i ) {
+
+        (*c_iter)->info().is_removed = false;
+
+        v_n = _DT.incident_vertices( *c_iter );
+        done = v_n;
+
+        normalize_circulator( v_n );
+
+        done = v_n;
+
+        int k = count_valid_neighbors( v_n );
+
+//        cout << "adding " << (*c_iter)->point() << "\n";
+//        cout << "  k = " << k << "\n";
+
+        if( k == 2 ) {
+            // remove edge between first two vertices
+            remove_first_edge( v_n );
+            // add edge between canonical iterator and first vertex
+            add_first_edge( *c_iter, v_n );
+            // add edge between canonical iterator and second vertex
+            add_second_edge( *c_iter, v_n );
+
+        } else if( k > 2 ) {
+            // remove edge between first two vertices
+            remove_first_edge( v_n );
+            // remove edge between last two vertices
+            remove_last_edge( v_n );
+            // add edge between canonical iterator and first vertex
+            add_first_edge( *c_iter, v_n );
+            // add edge between canonical iterator and second vertex
+            add_second_edge( *c_iter, v_n );
+            // add edge between canonical iterator and last vertex
+            add_last_edge( *c_iter, v_n );
+        }
+    }
+
+    TriangulationPrinter printer( _DT, 1 );
+    //printer.draw();
+    printer.drawSpanningGraph( _E );
+
+}
+
+
+
+void SpanningGraph::add_first_edge( Vertex_handle v, Vertex_circulator C ) {
+    Vertex_handle v2 = C->handle();
+    add_edge( v, v2 );
+}
+
+void SpanningGraph::add_second_edge( Vertex_handle v, Vertex_circulator C ) {
+
+    while( _DT.is_infinite(++C) );
+    Vertex_handle v2 = C->handle();
+    add_edge( v, v2 );
+
+}
+
+void SpanningGraph::add_last_edge( Vertex_handle v, Vertex_circulator C ) {
+    --C;
+    Vertex_circulator done(C);
+
+    while( ( C->info().is_removed || _DT.is_infinite(C) ) && --C != done );
+
+    Vertex_handle v2 = C->handle();
+
+    add_edge( v, v2 );
+}
+
+void SpanningGraph::remove_first_edge( Vertex_circulator C ) {
+
+    Vertex_handle v1 = C->handle(),
+                  v2 = (++C)->handle();
+
+    remove_edge( v1, v2 );
+}
+
+void SpanningGraph::remove_second_edge( Vertex_circulator C ) {
+
+    Vertex_handle v1 = (++C)->handle(),
+                  v2 = (++C)->handle();
+
+    remove_edge( v1, v2 );
+}
+
+void SpanningGraph::remove_last_edge( Vertex_circulator C ) {
+    --C;
+
+    Vertex_circulator done(C);
+
+    while( ( C->info().is_removed || _DT.is_infinite(C) ) && --C != done );
+
+    Vertex_handle v1 = C->handle(),
+                  v2 = (--C)->handle();
+
+    remove_edge( v1, v2 );
+}
+
+}
+

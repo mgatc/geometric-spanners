@@ -48,6 +48,7 @@
 			<Add library="boost_system" />
 			<Add library="boost_thread" />
 		</Linker>
+		<Unit filename=".gitignore" />
 		<Unit filename="include/CgalComponents.h" />
 		<Unit filename="include/GeometricSpannerExperiment.h" />
 		<Unit filename="include/GeometricSpannerPrinter.h" />

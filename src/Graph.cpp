@@ -12,6 +12,11 @@ Graph::Graph( std::list<Point> &S ) : _DT( S.begin(), S.end() ) {
 
 }
 
+Graph::Graph( Graph &G ) : _DT( G._DT ), _E( G._E ) {
+
+}
+
+
 
 
 void Graph::add_edge( Vertex_handle v1, Vertex_handle v2 ) {

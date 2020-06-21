@@ -18,6 +18,8 @@ public:
 
     SpanningGraph( std::list<Point> &S );
 
+protected:
+
     void remove_first_edge( Vertex_circulator C );
     void remove_second_edge( Vertex_circulator C );
     void remove_last_edge( Vertex_circulator C );
@@ -25,8 +27,6 @@ public:
     void add_first_edge( Vertex_handle v, Vertex_circulator C );
     void add_second_edge( Vertex_handle v, Vertex_circulator C );
     void add_last_edge( Vertex_handle v, Vertex_circulator C );
-
-protected:
 
 private:
 

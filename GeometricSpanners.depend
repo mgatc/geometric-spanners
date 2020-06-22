@@ -416,12 +416,10 @@
 1588865172 source:/home/matt/UDC/udc/src/ExperimentalHex2.cpp
 	"ExperimentalHex2.h"
 
-1589915362 source:/home/matt/GeometricSpanners/main.cpp
-	"Greedy.h"
-	"GeometricSpannerExperiment.h"
-	"GeometricSpannerPrinter.h"
-	"CgalComponents.h"
-	<chrono>
+1592529053 source:/home/matt/GeometricSpanners/main.cpp
+	"CGALComponents.h"
+	"Graph.h"
+	"PlanarSpanner.h"
 
 1589914637 /home/matt/GeometricSpanners/include/Greedy.h
 	"CgalComponents.h"
@@ -485,4 +483,59 @@
 1589915095 source:/home/matt/GeometricSpanners/src/GeometricSpannerSolutionChecker.cpp
 	"GeometricSpannerSolutionChecker.h"
 	"CgalComponents.h"
+
+1592527855 source:/home/matt/GeometricSpanners/src/PlanarSpanner.cpp
+	"PlanarSpanner.h"
+	"SpanningGraph.h"
+	<list>
+
+1592528228 /home/matt/GeometricSpanners/include/PlanarSpanner.h
+	"CGALComponents.h"
+	"Graph.h"
+	"SpanningGraph.h"
+
+1592528171 /home/matt/GeometricSpanners/include/CGALComponents.h
+	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
+	<CGAL/Triangulation_vertex_base_with_info_2.h>
+	<CGAL/Delaunay_triangulation_2.h>
+	<CGAL/point_generators_2.h>
+	<CGAL/circulator.h>
+	<CGAL/algorithm.h>
+	<string>
+	<unordered_set>
+	<unordered_map>
+	"Vertex_info.h"
+
+1592527688 /home/matt/GeometricSpanners/include/Vertex_info.h
+
+1592827916 /home/matt/GeometricSpanners/include/Graph.h
+	"CGALComponents.h"
+	<unordered_set>
+	<unordered_map>
+	<list>
+
+1592827921 /home/matt/GeometricSpanners/include/SpanningGraph.h
+	"CGALComponents.h"
+	"Graph.h"
+	<list>
+
+1592527965 source:/home/matt/GeometricSpanners/src/SpanningGraph.cpp
+	"SpanningGraph.h"
+	<list>
+
+1592827905 source:/home/matt/GeometricSpanners/src/Graph.cpp
+	"Graph.h"
+	<list>
+	<unordered_set>
+	<unordered_map>
+
+1592828037 source:/home/matt/GeometricSpanners/src/PolygonSpanner.cpp
+	"PolygonSpanner.h"
+	<list>
+
+1592828023 /home/matt/GeometricSpanners/include/PolygonSpanner.h
+	"CGALComponents.h"
+	"SpanningGraph.h"
+	"Graph.h"
+	<utility>
 

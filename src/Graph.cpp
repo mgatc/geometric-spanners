@@ -8,11 +8,11 @@
 
 namespace gsnunf {
 
-Graph::Graph( std::list<Point> &S ) : _DT( S.begin(), S.end() ) {
+Graph::Graph( const std::list<Point> &S ) : _DT( S.begin(), S.end() ) {
 
 }
 
-Graph::Graph( Graph &G ) : _DT( G._DT ), _E( G._E ) {
+Graph::Graph( const Graph &G ) : _DT( G._DT ), _E( G._E ) {
 
 }
 

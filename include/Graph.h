@@ -20,8 +20,8 @@ public:
     Graph(){}
     ~Graph(){}
 
-    Graph( Graph &G );
-    Graph( std::list<Point> &S );
+    Graph( const Graph &G );
+    Graph( const std::list<Point> &S );
 
     void add_edge( Vertex_handle v1, Vertex_handle v2 );
     void remove_edge( Vertex_handle v1, Vertex_handle v2 );

@@ -6,7 +6,7 @@
 
 namespace gsnunf {
 
-SpanningGraph::SpanningGraph( std::list<Point> &S ) : Graph( S ) {
+SpanningGraph::SpanningGraph( const std::list<Point> &S ) : Graph( S ) {
 
     std::list<Vertex_handle> canonical;
     std::list<Vertex_handle>::iterator c_iter;

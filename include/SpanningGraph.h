@@ -16,7 +16,7 @@ public:
     SpanningGraph() {}
     ~SpanningGraph() {}
 
-    SpanningGraph( std::list<Point> &S );
+    SpanningGraph( const std::list<Point> &S );
 
 protected:
 

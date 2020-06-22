@@ -12,7 +12,7 @@ int main() {
     Graph graph;
 
     // RANDOM POINT SET
-    std::list<Point> points;
+    list<Point> points;
     const double width = 25;
     const int n = 50;
     CGAL::Random_points_in_square_2<Point,Creator> g( width/2 );
@@ -20,7 +20,7 @@ int main() {
 
 
     // POINT SET FROM PAPER, PAGE 253
-//    std::list<Point> points = {
+//    list<Point> points = {
 //        Point( -1, 0.1 ),
 //        Point( -0.9, 3 ),
 //        Point( -2, 6 ),
@@ -42,7 +42,7 @@ int main() {
 //    };
 
     // TESTING POINT SET
-//    std::list<Point> points = {
+//    list<Point> points = {
 //        Point(0,0),
 //        Point(0,3),
 //        Point(5,0),

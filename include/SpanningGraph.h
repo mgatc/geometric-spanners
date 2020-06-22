@@ -1,5 +1,5 @@
-#ifndef SPANNINGGRAPH_H
-#define SPANNINGGRAPH_H
+#ifndef GSNUNF_SPANNINGGRAPH_H
+#define GSNUNF_SPANNINGGRAPH_H
 
 #include "CGALComponents.h"
 #include "Graph.h"
@@ -11,14 +11,14 @@
 namespace gsnunf {
 
 class SpanningGraph : public Graph {
-public:
+  public:
 
     SpanningGraph() {}
     ~SpanningGraph() {}
 
     SpanningGraph( const std::list<Point> &S );
 
-protected:
+  protected:
 
     void remove_first_edge( Vertex_circulator C );
     void remove_second_edge( Vertex_circulator C );
@@ -28,12 +28,11 @@ protected:
     void add_second_edge( Vertex_handle v, Vertex_circulator C );
     void add_last_edge( Vertex_handle v, Vertex_circulator C );
 
-private:
+  private:
 
 
-};
+}; // class SpanningGraph
 
-}
+} // namespace gsnunf
 
-#endif
-
+#endif // GSNUNF_SPANNINGGRAPH_H

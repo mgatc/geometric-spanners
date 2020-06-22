@@ -1,5 +1,5 @@
-#ifndef GRAPH_H
-#define GRAPH_H
+#ifndef GSNUNF_GRAPH_H
+#define GSNUNF_GRAPH_H
 
 #include "CGALComponents.h"
 
@@ -12,8 +12,7 @@
 namespace gsnunf {
 
 class Graph {
-public:
-
+  public:
     typedef std::unordered_set< Vertex_handle >                    Incident_vertices;
     typedef std::unordered_map< Vertex_handle, Incident_vertices >    Adjacency_list;
 
@@ -28,7 +27,7 @@ public:
     int count_valid_neighbors( Vertex_circulator C );
     void normalize_circulator( Vertex_circulator &C );
 
-protected:
+  protected:
     DelaunayTriangulation _DT;
     Adjacency_list _E;
 
@@ -38,11 +37,11 @@ protected:
     void update_eligible_vertices( std::unordered_set<Vertex_handle> &eligible_vertices, Vertex_handle v, std::unordered_set<Vertex_handle> &reserved );
     void canonical_order( std::list<Vertex_handle> &out );
 
-private:
+  private:
 
 
-};
+}; // class Graph
 
-}
+} // namespace gsnunf
 
-#endif
+#endif // GSNUNF_GRAPH_H

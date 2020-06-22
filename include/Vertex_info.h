@@ -1,5 +1,5 @@
-#ifndef VERTEX_INFO_H
-#define VERTEX_INFO_H
+#ifndef GSNUNF_VERTEX_INFO_H
+#define GSNUNF_VERTEX_INFO_H
 
 namespace gsnunf {
 
@@ -16,6 +16,6 @@ struct Vertex_info { // accessed via Vertex_handle_instance.info()
 //v.info() = {true,true,2};       // how to set entire info() struct
 //v.info().is_removed = true;     // how to set a single member only
 
-}
+} // namespace gsnunf
 
-#endif
+#endif // GSNUNF_VERTEX_INFO_H

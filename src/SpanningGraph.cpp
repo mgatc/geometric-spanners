@@ -65,7 +65,7 @@ SpanningGraph::SpanningGraph( const std::list<Point> &S ) : Graph( S ) {
         }
     }
 
-    TriangulationPrinter printer( _DT, 1 );
+    TriangulationPrinter printer( _DT, .25 );
     //printer.draw();
     printer.drawSpanningGraph( _E );
 

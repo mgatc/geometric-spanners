@@ -113,18 +113,18 @@ class TriangulationPrinter {
             fprintf(fp,"\n\n\n\\begin{tikzpicture}\n\n");
 
             // Draw triangulation
-//            for(Finite_edges_iterator eit = T.finite_edges_begin(); eit != T.finite_edges_end(); ++eit) {
-//                DelaunayTriangulation::Edge e = *eit;
-//                double x1 = e.first->vertex( (e.second+1)%3 )->point().x();
-//                double y1 = e.first->vertex( (e.second+1)%3 )->point().y();
-//                double x2 = e.first->vertex( (e.second+2)%3 )->point().x();
-//                double y2 = e.first->vertex( (e.second+2)%3 )->point().y();
-//                fprintf(fp, "\\draw [thin,stroke=gray] (%f,%f) -- (%f,%f);\n", x1,y1, x2,y2);
-//            }
+            for(Finite_edges_iterator eit = T.finite_edges_begin(); eit != T.finite_edges_end(); ++eit) {
+                DelaunayTriangulation::Edge e = *eit;
+                double x1 = e.first->vertex( (e.second+1)%3 )->point().x();
+                double y1 = e.first->vertex( (e.second+1)%3 )->point().y();
+                double x2 = e.first->vertex( (e.second+2)%3 )->point().x();
+                double y2 = e.first->vertex( (e.second+2)%3 )->point().y();
+                fprintf(fp, "\\draw [thin,stroke=gray] (%f,%f) -- (%f,%f);\n", x1,y1, x2,y2);
+            }
 
             // Draw vertices
-//            for(Finite_vertices_iterator it = T.finite_vertices_begin(); it != T.finite_vertices_end(); ++it)
-//                fprintf(fp,"\\draw [fill=red,stroke=red] (%f,%f) circle [radius=%f];\n",it->point().x(),it->point().y(),radiusOfPoints);
+            for(Finite_vertices_iterator it = T.finite_vertices_begin(); it != T.finite_vertices_end(); ++it)
+                fprintf(fp,"\\draw [fill=red,stroke=red] (%f,%f) circle [radius=%f];\n",it->point().x(),it->point().y(),radiusOfPoints);
 
             // draw spanning graph
             for( auto el : graph ) {

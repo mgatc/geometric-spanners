@@ -1,4 +1,5 @@
 #include "SpanningGraph.h"
+#include "GeometricSpannerPrinter.h"
 
 #include <list>
 
@@ -65,9 +66,9 @@ SpanningGraph::SpanningGraph( const std::list<Point> &S ) : Graph( S ) {
         }
     }
 
-    TriangulationPrinter printer( _DT, .25 );
-    //printer.draw();
-    printer.drawSpanningGraph( _E );
+    GeometricSpannerPrinter printer( .25f );
+    printer.drawTriangulation(_DT, "Triangulation");
+    printer.drawGraph(*this, "SpanningGraph");
 
 }
 

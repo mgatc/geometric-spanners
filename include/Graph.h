@@ -16,6 +16,9 @@ class Graph {
     typedef std::unordered_set< Vertex_handle >                    Incident_vertices;
     typedef std::unordered_map< Vertex_handle, Incident_vertices >    Adjacency_list;
 
+    DelaunayTriangulation _DT;
+    Adjacency_list _E;
+
     Graph(){}
     ~Graph(){}
 
@@ -28,8 +31,6 @@ class Graph {
     void normalize_circulator( Vertex_circulator &C );
 
   protected:
-    DelaunayTriangulation _DT;
-    Adjacency_list _E;
 
     void add_half_edge( Vertex_handle v1, Vertex_handle v2 );
     void remove_half_edge( Vertex_handle v1, Vertex_handle v2 );

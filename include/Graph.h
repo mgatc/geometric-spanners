@@ -1,11 +1,11 @@
 #ifndef GSNUNF_GRAPH_H
 #define GSNUNF_GRAPH_H
 
-#include "CGALComponents.h"
-
 #include <unordered_set>
 #include <unordered_map>
 #include <list>
+
+#include "CGALComponents.h"
 
 
 
@@ -13,8 +13,8 @@ namespace gsnunf {
 
 class Graph {
   public:
-    typedef std::unordered_set< Vertex_handle >                    Incident_vertices;
-    typedef std::unordered_map< Vertex_handle, Incident_vertices >    Adjacency_list;
+    typedef unordered_set< Vertex_handle >                    Incident_vertices;
+    typedef unordered_map< Vertex_handle, Incident_vertices >    Adjacency_list;
 
     DelaunayTriangulation _DT;
     Adjacency_list _E;

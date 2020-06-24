@@ -1,7 +1,21 @@
 #ifndef GSNUNF_CGALCOMPONENTS_H
 #define GSNUNF_CGALCOMPONENTS_H
 
+/*
+ * Include headers in the following order:
+ *      Related header,
+ *      C system headers,
+ *      C++ standard library headers,
+ *      other libraries' headers,
+ *      your project's headers.
+ */
 
+/**
+ *  Global stl includes
+ */
+#include <string>
+#include <unordered_set>
+#include <unordered_map>
 
 /**
  *  Global CGAL includes
@@ -12,13 +26,6 @@
 #include <CGAL/point_generators_2.h>                            // Random point generation, testing
 #include <CGAL/circulator.h>                                    // Vertex neighbor searches
 #include <CGAL/algorithm.h>
-
-/**
- *  Global stl includes
- */
-#include <string>
-#include <unordered_set>
-#include <unordered_map>
 
 /**
  *  Other global includes

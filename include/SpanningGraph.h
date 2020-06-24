@@ -1,10 +1,10 @@
 #ifndef GSNUNF_SPANNINGGRAPH_H
 #define GSNUNF_SPANNINGGRAPH_H
 
+#include <list>
+
 #include "CGALComponents.h"
 #include "Graph.h"
-
-#include <list>
 
 
 

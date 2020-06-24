@@ -49,7 +49,7 @@ void GeometricSpannerPrinter::drawGraph(Graph &graph, std::string fName) {
     // draw spanning graph
     for( auto el : graph._E ) {
         for( auto v : el.second ) {
-            std::cout << el.first->point() << " " << v->point() << "\n";
+            //std::cout << el.first->point() << " " << v->point() << "\n";
             double x1 = el.first->point().x();
             double y1 = el.first->point().y();
             double x2 = v->point().x();

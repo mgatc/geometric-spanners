@@ -1,7 +1,8 @@
 #include "SpanningGraph.h"
-#include "GeometricSpannerPrinter.h"
 
 #include <list>
+
+#include "GeometricSpannerPrinter.h"
 
 
 

@@ -2,5 +2,6 @@
 *.aux
 *.pdf
 *.log
+*.layout
 bin/
 obj/

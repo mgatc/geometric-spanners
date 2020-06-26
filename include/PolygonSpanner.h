@@ -22,8 +22,8 @@ class PolygonSpanner : public Graph {
   protected:
 
     void add_children( const Graph &G, Vertex_circulator C );
-    void add_cross_delaunay_edges( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r );
-    void add_incident_delaunay_edges( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r );
+    void add_cross_edges( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r );
+    void add_forward_edges( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r );
     void add_polygon_spanner_edges( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r );
     double get_angle( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r );
 

@@ -1,7 +1,7 @@
 #ifndef GSNUNF_GRAPH_H
 #define GSNUNF_GRAPH_H
 
-#include <unordered_set>
+#include <set>
 #include <unordered_map>
 #include <list>
 
@@ -13,7 +13,7 @@ namespace gsnunf {
 
 class Graph {
   public:
-    typedef unordered_set< Vertex_handle >                    Incident_vertices;
+    typedef set< Vertex_handle >                    Incident_vertices;
     typedef unordered_map< Vertex_handle, Incident_vertices >    Adjacency_list;
 
     DelaunayTriangulation _DT;

@@ -9,7 +9,7 @@
 
 namespace gsnunf {
 
-typedef unordered_map<Vertex_handle, int> VisitsAllowedTable;
+typedef unordered_map<Vertex_handle, short int> VisitsAllowedTable;
 
 VisitsAllowedTable TransformPolygon( const SpanningGraph &SG );
 

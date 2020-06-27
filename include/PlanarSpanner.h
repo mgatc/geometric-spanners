@@ -9,15 +9,11 @@
 
 namespace gsnunf {
 
-class PlanarSpanner {
+class PlanarSpanner : public Graph {
   public:
-    PlanarSpanner( std::list<Point> &S, double epsilon, Graph &G );
+    PlanarSpanner( Graph &G, double epsilon );
 
   protected:
-    std::list<Point> &_S;
-
-    void PolygonSpanner( Graph &P, DelaunayTriangulation &DT, Graph &G_P );
-    void GreedySpanner( Graph &G_P, double epsilon, Graph &G );
 
 }; // class PlanarSpanner
 

@@ -17,7 +17,7 @@ class PolygonSpanner : public Graph {
     PolygonSpanner() {}
     ~PolygonSpanner() {}
 
-    PolygonSpanner( const SpanningGraph& SG, VisitsAllowedTable& visitsAllowed );
+    PolygonSpanner( const SpanningGraph& SG );
 
   protected:
 

@@ -9,14 +9,13 @@ using namespace gsnunf;
 int main() {
 
     const double epsilon = 2;
-    Graph graph;
 
     // RANDOM POINT SET
-    list<Point> points;
-    const double width = 25;
-    const int n = 50;
-    CGAL::Random_points_in_square_2<Point,Creator> g( width/2 );
-    std::copy_n( g, n, std::back_inserter(points) );
+//    list<Point> points;
+//    const double width = 25;
+//    const int n = 50;
+//    CGAL::Random_points_in_square_2<Point,Creator> g( width/2 );
+//    std::copy_n( g, n, std::back_inserter(points) );
 
 
     // POINT SET FROM PAPER, PAGE 253
@@ -42,24 +41,25 @@ int main() {
 //    };
 
     // TESTING POINT SET
-//    list<Point> points = {
-//        Point(0,0),
-//        Point(0,3),
-//        Point(5,0),
-//        Point(5,3),
-//        Point(7,5),
-//        Point(7,-2),
-//        Point(-4,4),
-//        Point(-2,1),
+    list<Point> points = {
+        Point(0,0),
+        Point(0,3),
+        Point(5,0),
+        Point(5,3),
+        Point(7,5),
+        Point(7,-2),
+        Point(-4,4),
+        Point(-2,1)
 //        Point(7,-9),
 //        Point(-11,-3),
 //        Point(10,0),
 //        Point(1,-10),
 //        Point(5,2),
 //        Point(8,8)
-//    };
+    };
 
-    PlanarSpanner planar_spanner_builder( points, epsilon, graph );
+    Graph graph( points );
+    PlanarSpanner planar_spanner_builder( graph, epsilon );
 
     return 0;
 }

@@ -13,14 +13,16 @@ namespace gsnunf {
 
 class Graph {
   public:
-    typedef set< Vertex_handle >                    Incident_vertices;
-    typedef unordered_map< Vertex_handle, Incident_vertices >    Adjacency_list;
+    typedef set< Vertex_handle > Incident_vertices;
+    typedef unordered_map< Vertex_handle, Incident_vertices > Adjacency_list;
 
     DelaunayTriangulation _DT;
     Adjacency_list _E;
 
-    Graph(){}
-    ~Graph(){}
+    Graph() {
+    }
+    ~Graph() {
+    }
 
     Graph( const Graph &G );
     Graph( const std::list<Point> &S );

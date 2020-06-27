@@ -9,6 +9,40 @@
 namespace gsnunf {
 
 SpanningGraph::SpanningGraph( const std::list<Point> &S ) : Graph( S ) {
+    compute_spanning_graph();
+}
+
+SpanningGraph::SpanningGraph( Graph& G ) : Graph( G ) {
+    compute_spanning_graph();
+}
+
+
+
+void SpanningGraph::add_first_edge( Vertex_handle v, Vertex_circulator C ) {
+    Vertex_handle v2 = C->handle();
+    add_edge( v, v2 );
+}
+
+void SpanningGraph::add_second_edge( Vertex_handle v, Vertex_circulator C ) {
+
+    while( _DT.is_infinite(++C) );
+    Vertex_handle v2 = C->handle();
+    add_edge( v, v2 );
+
+}
+
+void SpanningGraph::add_last_edge( Vertex_handle v, Vertex_circulator C ) {
+    --C;
+    Vertex_circulator done(C);
+
+    while( ( C->info().is_removed || _DT.is_infinite(C) ) && --C != done );
+
+    Vertex_handle v2 = C->handle();
+
+    add_edge( v, v2 );
+}
+
+void SpanningGraph::compute_spanning_graph() {
 
     std::list<Vertex_handle> canonical;
     std::list<Vertex_handle>::iterator c_iter;
@@ -70,33 +104,6 @@ SpanningGraph::SpanningGraph( const std::list<Point> &S ) : Graph( S ) {
     GeometricSpannerPrinter printer( .25f );
     printer.drawTriangulation(_DT, "Triangulation");
     printer.drawGraph(*this, "SpanningGraph");
-
-}
-
-
-
-void SpanningGraph::add_first_edge( Vertex_handle v, Vertex_circulator C ) {
-    Vertex_handle v2 = C->handle();
-    add_edge( v, v2 );
-}
-
-void SpanningGraph::add_second_edge( Vertex_handle v, Vertex_circulator C ) {
-
-    while( _DT.is_infinite(++C) );
-    Vertex_handle v2 = C->handle();
-    add_edge( v, v2 );
-
-}
-
-void SpanningGraph::add_last_edge( Vertex_handle v, Vertex_circulator C ) {
-    --C;
-    Vertex_circulator done(C);
-
-    while( ( C->info().is_removed || _DT.is_infinite(C) ) && --C != done );
-
-    Vertex_handle v2 = C->handle();
-
-    add_edge( v, v2 );
 }
 
 void SpanningGraph::remove_first_edge( Vertex_circulator C ) {

@@ -16,6 +16,13 @@ Graph::Graph( const Graph &G ) : _DT( G._DT ), _E( G._E ) {
 
 }
 
+//Graph() {
+//    _DT = new DelaunayTriangulation();
+//}
+//
+//~Graph() {
+//    delete _DT;
+//}
 
 
 

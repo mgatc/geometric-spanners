@@ -3,19 +3,16 @@
 #include <list>
 
 #include "SpanningGraph.h"
-#include "TransformPolygon.h"
+#include "PolygonSpanner.h"
 
 
 
 namespace gsnunf {
 
-PlanarSpanner::PlanarSpanner( std::list<Point> &S, double epsilon, Graph &G )
-    : _S(S) {
-    // Delaunay Triangulation of S
-
-    SpanningGraph SG( S );
-    VisitsAllowedTable visitsAllowed = TransformPolygon( SG );
-    Graph G_P = PolygonSpanner( SG, visitsAllowed );
+PlanarSpanner::PlanarSpanner( Graph &G, double epsilon ) {
+    // Graph G already contains a Delaunay Triangulation of the point set S
+    SpanningGraph SG( G );
+    Graph G_P = PolygonSpanner( SG );
 //    GreedySpanner( G_P, epsilon, G );
 }
 

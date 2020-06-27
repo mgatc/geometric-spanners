@@ -1,11 +1,12 @@
 #ifndef GSNUNF_POLYGONSPANNER_H
 #define GSNUNF_POLYGONSPANNER_H
 
+#include <utility>
+#include <queue>
+
 #include "CGALComponents.h"
 #include "SpanningGraph.h"
 #include "Graph.h"
-
-#include <utility>
 
 
 
@@ -28,6 +29,10 @@ class PolygonSpanner : public Graph {
     double get_angle( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r );
 
   private:
+
+    SpanningGraph SG;
+    queue<Vertex_handle> _level;
+    unordered_set<Vertex_handle> _known;
 
 
 }; // class PolygonSpanner

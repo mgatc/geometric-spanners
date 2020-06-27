@@ -38,7 +38,8 @@ using namespace std;
  *  Global types
  */
 typedef CGAL::Exact_predicates_inexact_constructions_kernel                        K;
-    typedef K::Point_2                                                         Point;
+typedef K::Point_2                                                             Point;
+typedef CGAL::Vector_2<K>                                                   Vector2D;
 
 typedef CGAL::Triangulation_vertex_base_with_info_2< gsnunf::Vertex_info, K >     Vb;
 typedef CGAL::Triangulation_data_structure_2<Vb>                                 Tds;
@@ -61,5 +62,7 @@ struct LTR { // comparator for Point type
             || ( lhs.x() == rhs.x() && lhs.y() < rhs.y() );
     }
 };
+
+const double PI = 3.14159265359;
 
 #endif // GSNUNF_CGALCOMPONENTS_H

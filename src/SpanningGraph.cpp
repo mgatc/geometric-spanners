@@ -2,17 +2,19 @@
 
 #include <list>
 
-#include "GeometricSpannerPrinter.h"
-
 
 
 namespace gsnunf {
 
-SpanningGraph::SpanningGraph( const std::list<Point> &S ) : Graph( S ) {
+SpanningGraph::SpanningGraph( DelaunayGraph& G ) : DelaunayGraph( G ) {
     compute_spanning_graph();
 }
 
-SpanningGraph::SpanningGraph( Graph& G ) : Graph( G ) {
+SpanningGraph::SpanningGraph( DelaunayTriangulation* DT ) : DelaunayGraph( DT ) {
+    compute_spanning_graph();
+}
+
+SpanningGraph::SpanningGraph( shared_ptr<DelaunayTriangulation> DT ) : DelaunayGraph( DT ) {
     compute_spanning_graph();
 }
 
@@ -25,7 +27,7 @@ void SpanningGraph::add_first_edge( Vertex_handle v, Vertex_circulator C ) {
 
 void SpanningGraph::add_second_edge( Vertex_handle v, Vertex_circulator C ) {
 
-    while( _DT.is_infinite(++C) );
+    while( _DT->is_infinite(++C) );
     Vertex_handle v2 = C->handle();
     add_edge( v, v2 );
 
@@ -35,7 +37,7 @@ void SpanningGraph::add_last_edge( Vertex_handle v, Vertex_circulator C ) {
     --C;
     Vertex_circulator done(C);
 
-    while( ( C->info().is_removed || _DT.is_infinite(C) ) && --C != done );
+    while( ( C->info().is_removed || _DT->is_infinite(C) ) && --C != done );
 
     Vertex_handle v2 = C->handle();
 
@@ -67,7 +69,7 @@ void SpanningGraph::compute_spanning_graph() {
 
         (*c_iter)->info().is_removed = false;
 
-        v_n = _DT.incident_vertices( *c_iter );
+        v_n = _DT->incident_vertices( *c_iter );
         done = v_n;
 
         normalize_circulator( v_n );
@@ -100,10 +102,6 @@ void SpanningGraph::compute_spanning_graph() {
             add_last_edge( *c_iter, v_n );
         }
     }
-
-    GeometricSpannerPrinter printer( .25f );
-    printer.drawTriangulation(_DT, "Triangulation");
-    printer.drawGraph(*this, "SpanningGraph");
 }
 
 void SpanningGraph::remove_first_edge( Vertex_circulator C ) {
@@ -127,7 +125,7 @@ void SpanningGraph::remove_last_edge( Vertex_circulator C ) {
 
     Vertex_circulator done(C);
 
-    while( ( C->info().is_removed || _DT.is_infinite(C) ) && --C != done );
+    while( ( C->info().is_removed || _DT->is_infinite(C) ) && --C != done );
 
     Vertex_handle v1 = C->handle(),
                   v2 = (--C)->handle();

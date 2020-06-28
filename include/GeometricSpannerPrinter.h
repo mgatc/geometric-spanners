@@ -2,7 +2,7 @@
 #define GSNUNF_GEOMETRICSPANNERPRINTER_H
 
 #include "CGALComponents.h"
-#include "Graph.h"
+#include "DelaunayGraph.h"
 
 namespace gsnunf {
 
@@ -13,8 +13,8 @@ class GeometricSpannerPrinter {
 
     GeometricSpannerPrinter(double radiusOfPoints = 0.09);
 
-    void drawTriangulation(const DelaunayTriangulation &T, std::string fName);
-    void drawGraph(Graph &graph, std::string fName);
+    void draw( const DelaunayTriangulation& T, std::string fName );
+    void draw( const DelaunayGraph& graph, std::string fName );
 
 }; // class TriangulationPrinter
 

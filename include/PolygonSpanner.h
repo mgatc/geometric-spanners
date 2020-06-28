@@ -6,23 +6,23 @@
 
 #include "CGALComponents.h"
 #include "SpanningGraph.h"
-#include "Graph.h"
+#include "DelaunayGraph.h"
 
 
 
 namespace gsnunf {
 
-class PolygonSpanner : public Graph {
+class PolygonSpanner : public DelaunayGraph {
   public:
 
-    PolygonSpanner() {}
-    ~PolygonSpanner() {}
+//    PolygonSpanner() {}
+//    ~PolygonSpanner() {}
 
-    PolygonSpanner( const SpanningGraph& SG );
+    PolygonSpanner( SpanningGraph& SG );
 
   protected:
 
-    void add_children( const Graph &G, Vertex_circulator C );
+    void add_children( const DelaunayGraph &G, Vertex_circulator C );
     void add_cross_edges( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r );
     void add_forward_edges( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r );
     void add_polygon_spanner_edges( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r );

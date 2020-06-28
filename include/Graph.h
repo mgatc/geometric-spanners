@@ -11,21 +11,18 @@
 
 namespace gsnunf {
 
-class Graph {
+class DelaunayGraph {
   public:
     typedef set< Vertex_handle > Incident_vertices;
     typedef unordered_map< Vertex_handle, Incident_vertices > Adjacency_list;
 
-    DelaunayTriangulation _DT;
+    DelaunayTriangulation& _DT;
     Adjacency_list _E;
 
-    Graph() {
-    }
-    ~Graph() {
-    }
+    DelaunayGraph();
+    ~DelaunayGraph();
 
-    Graph( const Graph &G );
-    Graph( const std::list<Point> &S );
+    DelaunayGraph( DelaunayTriangulation& DT );
 
     void add_edge( Vertex_handle v1, Vertex_handle v2 );
     void remove_edge( Vertex_handle v1, Vertex_handle v2 );
@@ -43,7 +40,7 @@ class Graph {
   private:
 
 
-}; // class Graph
+}; // class DelaunayGraph
 
 } // namespace gsnunf
 

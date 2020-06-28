@@ -1,4 +1,4 @@
-#include "Graph.h"
+#include "DelaunayGraph.h"
 
 #include <list>
 #include <unordered_set>
@@ -8,32 +8,24 @@
 
 namespace gsnunf {
 
-Graph::Graph( const std::list<Point> &S ) : _DT( S.begin(), S.end() ) {
+DelaunayGraph::DelaunayGraph( const std::list<Point> &S ) : DelaunayGraph(), _DT( S.begin(), S.end() ) {
 
 }
 
-Graph::Graph( const Graph &G ) : _DT( G._DT ), _E( G._E ) {
+DelaunayGraph::DelaunayGraph( const DelaunayGraph &G ) : _DT( G._DT ), _E( G._E ) {
 
 }
 
-//Graph() {
-//    _DT = new DelaunayTriangulation();
-//}
-//
-//~Graph() {
-//    delete _DT;
-//}
 
 
-
-void Graph::add_edge( Vertex_handle v1, Vertex_handle v2 ) {
+void DelaunayGraph::add_edge( Vertex_handle v1, Vertex_handle v2 ) {
     //cout<<"  add_edge( " << v1->point() << " - " << v2->point() << " )\n";
     add_half_edge( v1, v2 );
     add_half_edge( v2, v1 );
 
 }
 
-void Graph::add_half_edge( Vertex_handle v1, Vertex_handle v2 ) {
+void DelaunayGraph::add_half_edge( Vertex_handle v1, Vertex_handle v2 ) {
 
     Adjacency_list::iterator v1_incident_vertices = _E.find(v1);
 
@@ -47,7 +39,7 @@ void Graph::add_half_edge( Vertex_handle v1, Vertex_handle v2 ) {
  *  Given a Delaunay Triangulation DT and an output list out, compute the canonical ordering of
  *  the underlying point set.
  */
-void Graph::canonical_order( std::list<Vertex_handle> &out ) {
+void DelaunayGraph::canonical_order( std::list<Vertex_handle> &out ) {
     out.clear();
 
     if( _DT.number_of_vertices() <= 3 ) {
@@ -110,7 +102,7 @@ void Graph::canonical_order( std::list<Vertex_handle> &out ) {
     assert( _DT.number_of_vertices() == out.size() );
 }
 
-int Graph::count_valid_neighbors( Vertex_circulator C ) {
+int DelaunayGraph::count_valid_neighbors( Vertex_circulator C ) {
     Vertex_circulator done(C);
     int k = 0; // count N_i path length k
 
@@ -122,7 +114,7 @@ int Graph::count_valid_neighbors( Vertex_circulator C ) {
     return k;
 }
 
-void Graph::normalize_circulator( Vertex_circulator &C ) {
+void DelaunayGraph::normalize_circulator( Vertex_circulator &C ) {
     Vertex_circulator done = C;
     // Position circulator so that we are guaranteed to be on the first vertex on the path N_i
     // Loop until the circulator reaches an invalid vertex or completes a full rotation
@@ -132,14 +124,14 @@ void Graph::normalize_circulator( Vertex_circulator &C ) {
     while( ( C->info().is_removed || _DT.is_infinite(C) ) && ++C != done );// cout<<v_n->point()<<"\n";
 }
 
-void Graph::remove_edge( Vertex_handle v1, Vertex_handle v2 ) {
+void DelaunayGraph::remove_edge( Vertex_handle v1, Vertex_handle v2 ) {
     //cout<<"  remove_edge( " << v1->point() << " - " << v2->point() << " )\n";
     remove_half_edge( v1, v2 );
     remove_half_edge( v2, v1 );
 
 }
 
-void Graph::remove_half_edge( Vertex_handle v1, Vertex_handle v2 ) {
+void DelaunayGraph::remove_half_edge( Vertex_handle v1, Vertex_handle v2 ) {
 
     Adjacency_list::iterator v1_incident_vertices = _E.find(v1);
 
@@ -154,7 +146,7 @@ void Graph::remove_half_edge( Vertex_handle v1, Vertex_handle v2 ) {
  *  reserved vertices, perform any necessary insertion or removal of v from eligible
  *  based on its current presence in eligible, its incident chord status, and its reserved status.
  */
-void Graph::update_eligible_vertices( std::unordered_set<Vertex_handle> &eligible, Vertex_handle v, std::unordered_set<Vertex_handle> &reserved ) {
+void DelaunayGraph::update_eligible_vertices( std::unordered_set<Vertex_handle> &eligible, Vertex_handle v, std::unordered_set<Vertex_handle> &reserved ) {
     auto reserved_iter = reserved.find(v);
     bool is_reserved = reserved_iter != reserved.end();
 
@@ -175,7 +167,7 @@ void Graph::update_eligible_vertices( std::unordered_set<Vertex_handle> &eligibl
  *  count. Additionally, if update_neighbors is true, recursive call update_incident_chords on
  *  each neighbor.
  */
-void Graph::update_incident_chords( Vertex_handle v_update, std::unordered_set<Vertex_handle> &eligible_vertices, std::unordered_set<Vertex_handle> &reserved_vertices, int vertices_remaining, bool update_neighbors ) {
+void DelaunayGraph::update_incident_chords( Vertex_handle v_update, std::unordered_set<Vertex_handle> &eligible_vertices, std::unordered_set<Vertex_handle> &reserved_vertices, int vertices_remaining, bool update_neighbors ) {
 
     v_update->info().incident_chords = 0;
 

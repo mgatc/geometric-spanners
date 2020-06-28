@@ -11,38 +11,38 @@
 
 namespace gsnunf {
 
-PolygonSpanner::PolygonSpanner( const SpanningGraph &SG ) : Graph( SG ) {
+PolygonSpanner::PolygonSpanner( SpanningGraph &SG ) : DelaunayGraph( SG ) {
 
     // Process v_1
-    const Vertex_handle v_1 = (_DT.finite_vertices_begin()); // choose v_1
+    const Vertex_handle v_1 = (_DT->finite_vertices_begin()); // choose v_1
     _known.insert( v_1 );
 
     // Create and orient C so it points to s_1
-    Vertex_circulator C = _DT.incident_vertices( v_1 ); // neighbors of v_1 in DT
+    Vertex_circulator C = _DT->incident_vertices( v_1 ); // neighbors of v_1 in DT
     Incident_vertices N = _E.find( v_1 )->second;    // neighbors of v_1 in E
 
     while( N.find( (--C)->handle() ) == N.end() ); // loop while N is not in E
 
     Vertex_circulator start = C;
 
-    while( !( --C == start || _DT.is_infinite( C->handle() ) ) ); // loop until reaching s_1 again or an infinite vertex
+    while( !( --C == start || _DT->is_infinite( C->handle() ) ) ); // loop until reaching s_1 again or an infinite vertex
 
-    if( _DT.is_infinite( C->handle() ) ) // if we stopped on an infinite vertex, step CW
+    if( _DT->is_infinite( C->handle() ) ) // if we stopped on an infinite vertex, step CW
         start = --C;
 
     Vertex_circulator done(start);
-    Vertex_handle last = _DT.infinite_vertex();
+    Vertex_handle last = _DT->infinite_vertex();
 
     do {
         _level.push( C->handle() );  // queue C
         _known.insert( C->handle() );// mark C as explored
         if( N.find( C->handle() ) != N.end() ) {        // if we found an vertex, try to add edges for partition
-            if( last != _DT.infinite_vertex() ) {        // not a valid partition if last vertex was infinite
+            if( last != _DT->infinite_vertex() ) {        // not a valid partition if last vertex was infinite
                 add_polygon_spanner_edges( last, v_1, C );
             }
             last = C;                                   // update last found vertex
         }
-    } while( --C != done && !_DT.is_infinite(C) ); // keep going until we reach done or infinite
+    } while( --C != done && !_DT->is_infinite(C) ); // keep going until we reach done or infinite
 
     if( C == done ) {                                 // if we reached done, we still need to add the last partition
         add_polygon_spanner_edges( last, v_1, C );
@@ -56,20 +56,20 @@ PolygonSpanner::PolygonSpanner( const SpanningGraph &SG ) : Graph( SG ) {
         v_i = _level.front();
         _level.pop();
 
-        C = _DT.incident_vertices( v_i );
+        C = _DT->incident_vertices( v_i );
         N = _E.find( v_i )->second;
 
         while( N.find( (--C)->handle() ) == N.end() ); // loop while C is not in N
 
         Vertex_circulator start = C;
 
-        while( !( --C == start || _DT.is_infinite( C->handle() ) ) ); // loop until reaching s_1 again or an infinite vertex
+        while( !( --C == start || _DT->is_infinite( C->handle() ) ) ); // loop until reaching s_1 again or an infinite vertex
 
-        if( _DT.is_infinite( C->handle() ) ) // if we stopped on an infinite vertex, step CW
+        if( _DT->is_infinite( C->handle() ) ) // if we stopped on an infinite vertex, step CW
             start = --C;
 
         Vertex_circulator done(start);
-        Vertex_handle last = _DT.infinite_vertex();
+        Vertex_handle last = _DT->infinite_vertex();
 
         // found s_1
 
@@ -79,7 +79,7 @@ PolygonSpanner::PolygonSpanner( const SpanningGraph &SG ) : Graph( SG ) {
                 _known.insert(C);
             }
             if( N.find( C->handle() ) != N.end() ) {        // if we found an vertex, try to add edges for partition
-                if( last != _DT.infinite_vertex() ) {        // not a valid partition if last vertex was infinite
+                if( last != _DT->infinite_vertex() ) {        // not a valid partition if last vertex was infinite
                     s_1 = last;
                     s_j = s_1;
                     s_k = C;
@@ -94,7 +94,7 @@ PolygonSpanner::PolygonSpanner( const SpanningGraph &SG ) : Graph( SG ) {
                 }
                 last = C;                                   // update last found vertex
             }
-        } while( --C != done && !_DT.is_infinite(C) ); // keep going until we reach done or infinite
+        } while( --C != done && !_DT->is_infinite(C) ); // keep going until we reach done or infinite
 
         if( C == done ) {                                 // if we reached done, we still need to add the last partition
             s_1 = done;
@@ -117,7 +117,7 @@ PolygonSpanner::PolygonSpanner( const SpanningGraph &SG ) : Graph( SG ) {
 
 
 void PolygonSpanner::add_cross_edges( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r ) {
-    Vertex_circulator N = _DT.incident_vertices(q);
+    Vertex_circulator N = _DT->incident_vertices(q);
     Vertex_handle v_prev = p;
 
     while( --N != p ); // loop until N points to p
@@ -133,7 +133,7 @@ void PolygonSpanner::add_forward_edges( const Vertex_handle &p, const Vertex_han
     double subangle = theta / num_subangles;
 
     Vertex_handle add[num_subangles];
-    Vertex_circulator N = _DT.incident_vertices(q);
+    Vertex_circulator N = _DT->incident_vertices(q);
 
     while( --N != p );
 
@@ -141,7 +141,7 @@ void PolygonSpanner::add_forward_edges( const Vertex_handle &p, const Vertex_han
     short i;
 
     do {
-        if( _known.find(N) == _known.end() && !_DT.is_infinite(N) ) { // N is not removed or infinite
+        if( _known.find(N) == _known.end() && !_DT->is_infinite(N) ) { // N is not removed or infinite
             alpha = get_angle( N, q, r );
             i = int(alpha/theta);
             cout<< "sub: "<<num_subangles<< "  i: "<<i<<endl;

@@ -4,20 +4,21 @@
 #include <list>
 
 #include "CGALComponents.h"
-#include "Graph.h"
+#include "DelaunayGraph.h"
 
 
 
 namespace gsnunf {
 
-class SpanningGraph : public Graph {
+class SpanningGraph : public DelaunayGraph {
   public:
 
     SpanningGraph() {}
     ~SpanningGraph() {}
 
-    SpanningGraph( const std::list<Point> &S );
-    SpanningGraph( Graph& G );
+    SpanningGraph( DelaunayGraph& G );
+    SpanningGraph( DelaunayTriangulation* DT );
+    SpanningGraph( shared_ptr<DelaunayTriangulation> DT );
 
   protected:
 

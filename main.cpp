@@ -1,5 +1,7 @@
+#include <memory>
+
 #include "CGALComponents.h"
-#include "Graph.h"
+#include "DelaunayGraph.h"
 #include "PlanarSpanner.h"
 
 
@@ -58,8 +60,9 @@ int main() {
 //        Point(8,8)
     };
 
-    Graph graph( points );
-    PlanarSpanner planar_spanner_builder( graph, epsilon );
+    shared_ptr<DelaunayTriangulation> DT( new DelaunayTriangulation( points.begin(), points.end() ) );
+
+    PlanarSpanner planar_spanner_builder( DT, epsilon );
 
     return 0;
 }

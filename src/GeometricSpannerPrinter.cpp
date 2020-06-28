@@ -6,7 +6,7 @@ GeometricSpannerPrinter::GeometricSpannerPrinter(double radiusOfPoints) {
     this->radiusOfPoints = radiusOfPoints;
 }
 
-void GeometricSpannerPrinter::drawTriangulation(const DelaunayTriangulation &T, std::string fName) {
+void GeometricSpannerPrinter::draw(const DelaunayTriangulation &T, std::string fName) {
     FILE *fp = fopen(  fName.c_str() ,"w");
     fprintf(fp,"\\documentclass{standalone} \n\\usepackage{tikz} \n \n\n\\begin{document}\n");
     fprintf(fp,"\n\n\n\\begin{tikzpicture}\n\n");
@@ -37,13 +37,13 @@ void GeometricSpannerPrinter::drawTriangulation(const DelaunayTriangulation &T, 
     system(command.c_str());
 
 }
-void GeometricSpannerPrinter::drawGraph(Graph &graph, std::string fName) {
+void GeometricSpannerPrinter::draw( const DelaunayGraph &graph, std::string fName ) {
     FILE *fp = fopen(  fName.c_str() ,"w");
     fprintf(fp,"\\documentclass{standalone} \n\\usepackage{tikz} \n \n\n\\begin{document}\n");
     fprintf(fp,"\n\n\n\\begin{tikzpicture}\n\n");
 
     // Draw vertices
-    for(Finite_vertices_iterator it = graph._DT.finite_vertices_begin(); it != graph._DT.finite_vertices_end(); ++it)
+    for(Finite_vertices_iterator it = graph._DT->finite_vertices_begin(); it != graph._DT->finite_vertices_end(); ++it)
         fprintf(fp,"\\draw [fill=red,stroke=red] (%f,%f) circle [radius=%f];\n",it->point().x(),it->point().y(),radiusOfPoints);
 
     // draw spanning graph

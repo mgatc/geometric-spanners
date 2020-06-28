@@ -2,16 +2,16 @@
 #define GSNUNF_PLANARSPANNER_H
 
 #include "CGALComponents.h"
-#include "Graph.h"
+#include "DelaunayGraph.h"
 #include "SpanningGraph.h"
 
 
 
 namespace gsnunf {
 
-class PlanarSpanner : public Graph {
+class PlanarSpanner : public DelaunayGraph {
   public:
-    PlanarSpanner( Graph &G, double epsilon );
+    PlanarSpanner( shared_ptr<DelaunayTriangulation> DT, double epsilon );
 
   protected:
 

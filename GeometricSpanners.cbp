@@ -62,16 +62,16 @@
 		</Linker>
 		<Unit filename=".gitignore" />
 		<Unit filename="include/CGALComponents.h" />
+		<Unit filename="include/DelaunayGraph.h" />
 		<Unit filename="include/GeometricSpannerPrinter.h" />
-		<Unit filename="include/Graph.h" />
 		<Unit filename="include/PlanarSpanner.h" />
 		<Unit filename="include/PolygonSpanner.h" />
 		<Unit filename="include/SpanningGraph.h" />
 		<Unit filename="include/TransformPolygon.h" />
 		<Unit filename="include/Vertex_info.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="src/DelaunayGraph.cpp" />
 		<Unit filename="src/GeometricSpannerPrinter.cpp" />
-		<Unit filename="src/Graph.cpp" />
 		<Unit filename="src/PlanarSpanner.cpp" />
 		<Unit filename="src/PolygonSpanner.cpp" />
 		<Unit filename="src/SpanningGraph.cpp" />

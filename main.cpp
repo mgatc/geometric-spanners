@@ -51,13 +51,13 @@ int main() {
         Point(7,5),
         Point(7,-2),
         Point(-4,4),
-        Point(-2,1)
-//        Point(7,-9),
-//        Point(-11,-3),
-//        Point(10,0),
-//        Point(1,-10),
-//        Point(5,2),
-//        Point(8,8)
+        Point(-2,1),
+        Point(7,-9),
+        Point(-11,-3),
+        Point(10,0),
+        Point(1,-10),
+        Point(5,2),
+        Point(8,8)
     };
 
     shared_ptr<DelaunayTriangulation> DT( new DelaunayTriangulation( points.begin(), points.end() ) );

@@ -416,7 +416,7 @@
 1588865172 source:/home/matt/UDC/udc/src/ExperimentalHex2.cpp
 	"ExperimentalHex2.h"
 
-1593367024 source:/home/matt/GeometricSpanners/main.cpp
+1593432902 source:/home/matt/GeometricSpanners/main.cpp
 	<memory>
 	"CGALComponents.h"
 	"DelaunayGraph.h"
@@ -484,7 +484,7 @@
 	"GeometricSpannerSolutionChecker.h"
 	"CgalComponents.h"
 
-1593367065 source:/home/matt/GeometricSpanners/src/PlanarSpanner.cpp
+1593433160 source:/home/matt/GeometricSpanners/src/PlanarSpanner.cpp
 	"PlanarSpanner.h"
 	<list>
 	"SpanningGraph.h"
@@ -521,7 +521,7 @@
 	"CGALComponents.h"
 	"DelaunayGraph.h"
 
-1593366287 source:/home/matt/GeometricSpanners/src/SpanningGraph.cpp
+1593431125 source:/home/matt/GeometricSpanners/src/SpanningGraph.cpp
 	"SpanningGraph.h"
 	<list>
 
@@ -531,15 +531,17 @@
 	<unordered_set>
 	<unordered_map>
 
-1593365272 source:/home/matt/GeometricSpanners/src/PolygonSpanner.cpp
+1593438759 source:/home/matt/GeometricSpanners/src/PolygonSpanner.cpp
 	"PolygonSpanner.h"
 	<list>
 	<unordered_set>
 	<math.h>
 	<cmath>
+	<iterator>
+	<algorithm>
 	<CGAL/Vector_2.h>
 
-1593365293 /home/matt/GeometricSpanners/include/PolygonSpanner.h
+1593432136 /home/matt/GeometricSpanners/include/PolygonSpanner.h
 	<utility>
 	<queue>
 	"CGALComponents.h"
@@ -631,7 +633,7 @@
 	<memory>
 	"CGALComponents.h"
 
-1593365624 source:/home/matt/GeometricSpanners/src/DelaunayGraph.cpp
+1593431112 source:/home/matt/GeometricSpanners/src/DelaunayGraph.cpp
 	"DelaunayGraph.h"
 	<list>
 	<unordered_set>

@@ -102,6 +102,7 @@ void SpanningGraph::compute_spanning_graph() {
             add_last_edge( *c_iter, v_n );
         }
     }
+    normalize_properties();
 }
 
 void SpanningGraph::remove_first_edge( Vertex_circulator C ) {

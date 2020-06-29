@@ -26,11 +26,12 @@ class PolygonSpanner : public DelaunayGraph {
     void add_cross_edges( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r );
     void add_forward_edges( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r );
     void add_polygon_spanner_edges( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r );
+    void find_s_1_in_circulator( Vertex_circulator& C, const Incident_vertices& N );
     double get_angle( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r );
 
   private:
 
-    SpanningGraph SG;
+    //SpanningGraph SG;
     queue<Vertex_handle> _level;
     unordered_set<Vertex_handle> _known;
 

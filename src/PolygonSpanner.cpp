@@ -172,13 +172,20 @@ void PolygonSpanner::find_s_1_in_circulator( Vertex_circulator& C, const Inciden
 }
 
 double PolygonSpanner::get_angle( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r ) {
-    Vector2D pq( p->point(), q->point() ); // vector pq <- q-p // geometric vector, not std::vector
-    Vector2D qr( q->point(), r->point() ); // vector qr <- r-q
-    return acos(
-        ( pq.x()*qr.x() + pq.y()*qr.y() )
+    //a = atan2d(x1*y2-y1*x2,x1*x2+y1*y2);
+    Vector2D pq( p->point(), q->point() );
+    Vector2D qr( q->point(), r->point() );
+    double res = atan(
+        ( pq.x()*qr.y() - pq.y()*qr.x() )
         /
-        ( sqrt( pq.squared_length() ) * sqrt( qr.squared_length() ) )
+        ( pq.x()*qr.x() + pq.y()*qr.y() )
     );
+    res *= -1;
+    if( res < EPSILON ) {
+        res += 2*PI;
+    }
+    cout<< p->point()<<" -> "<< q->point()<<" -> "<< r->point()<<" = "<<res*180/PI<<endl;
+    return res;
 }
 
 } // namespace gsnunf

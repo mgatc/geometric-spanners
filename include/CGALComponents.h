@@ -64,5 +64,6 @@ struct LTR { // comparator for Point type
 };
 
 const double PI = 3.14159265359;
+const double EPSILON = 0.000001;
 
 #endif // GSNUNF_CGALCOMPONENTS_H

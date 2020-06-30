@@ -103,6 +103,10 @@ void SpanningGraph::compute_spanning_graph() {
         }
     }
     normalize_properties();
+
+    // Test assumption
+    for( auto it=_E.begin(); it!=_E.end(); ++it ) // for all v_i, 1<=i<=n
+        assert( it->second.size() <= 3 );         // |v_i| <= 3
 }
 
 void SpanningGraph::remove_first_edge( Vertex_circulator C ) {

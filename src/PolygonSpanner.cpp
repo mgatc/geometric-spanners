@@ -59,6 +59,8 @@ PolygonSpanner::PolygonSpanner( SpanningGraph &SG ) : DelaunayGraph( SG ) {
         N_PS = _E.find( v_i )->second;     // neighbors of v_1 in PolygonSpanner edges
         N_SG = SG._E.find( v_i )->second;  // neighbors of v_1 in SpanningGraph edges
 
+        assert( N_PS.size() <= 5 ); // Lemma 3.3
+
         find_s_1_in_circulator( C, N_SG );
 
         Vertex_circulator done(C);
@@ -176,25 +178,6 @@ void PolygonSpanner::find_s_1_in_circulator( Vertex_circulator& C, const Inciden
 
     if( _DT->is_infinite( C->handle() ) ) // if we stopped on an infinite vertex, step CW
         start = --C;
-}
-
-// TODO: move to DelaunayGraph
-double PolygonSpanner::get_angle( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r ) {
-    assert( !_DT->is_infinite(p) && !_DT->is_infinite(q) && !_DT->is_infinite(r) );
-
-    Vector2D pq( p->point(), q->point() );
-    Vector2D rq( r->point(), q->point() );
-
-    double result = atan2(rq.y(), rq.x()) - atan2(pq.y(), pq.x());
-
-    // atan() returns a value between -PI and PI. From zero ("up"), CCW rotation is negative and CW is positive.
-    // Our zero is also "up," but we only want positive values between 0 and 2*PI:
-
-    result *= -1; // First, invert the result. This will associate CW rotation with positive values.
-    if( result < EPSILON ) // Then, if the result is less than 0 (or epsilon for floats) add 2*PI.
-        result += 2*PI;
-
-    return result;
 }
 
 } // namespace gsnunf

@@ -45,14 +45,14 @@ typedef CGAL::Triangulation_vertex_base_with_info_2< gsnunf::Vertex_info, K >   
 typedef CGAL::Triangulation_data_structure_2<Vb>                                 Tds;
 
 typedef CGAL::Delaunay_triangulation_2< K, Tds >               DelaunayTriangulation;
-    typedef DelaunayTriangulation::Finite_vertices_iterator Finite_vertices_iterator;
-    typedef DelaunayTriangulation::Finite_edges_iterator       Finite_edges_iterator;
-    typedef DelaunayTriangulation::Face_handle                           Face_handle;
-    typedef DelaunayTriangulation::Vertex_handle                       Vertex_handle;
-    typedef DelaunayTriangulation::Vertex_circulator               Vertex_circulator;
+//    typedef DelaunayTriangulation::Finite_vertices_iterator Finite_vertices_iterator;
+////    typedef DelaunayTriangulation::Finite_edges_iterator       Finite_edges_iterator;
+//    typedef DelaunayTriangulation::Face_handle                           Face_handle;
+//    typedef DelaunayTriangulation::Vertex_handle                       Vertex_handle;
+//    typedef DelaunayTriangulation::Vertex_circulator               Vertex_circulator;
 
 typedef CGAL::Creator_uniform_2<double,Point>                                Creator;
-typedef CGAL::Container_from_circulator<Vertex_circulator>          Vertex_container;
+//typedef CGAL::Container_from_circulator<Vertex_circulator>          Vertex_container;
 
 // For sorting containers of Points, as with std::sort()
 // Not used by anything right now, but useful enough to keep around

@@ -60,9 +60,11 @@ int main() {
 //        Point(8,8)
 //    };
 
-    shared_ptr<DelaunayTriangulation> DT( new DelaunayTriangulation( points.begin(), points.end() ) );
+    DelaunayTriangulation DT( points.begin(), points.end() );
 
-    PlanarSpanner planar_spanner_builder( DT, epsilon );
+    DelaunayGraph PS( DT );
+
+    PS = PlanarSpanner( PS, epsilon );
 
     return 0;
 }

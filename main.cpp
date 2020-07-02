@@ -62,9 +62,9 @@ int main() {
 
     DelaunayTriangulation DT( points.begin(), points.end() );
 
-    DelaunayGraph PS( DT );
+    DelaunayGraph<DelaunayTriangulation> S( DT );
 
-    PS = PlanarSpanner( PS, epsilon );
+    PlanarSpanner( S, epsilon );
 
     return 0;
 }

@@ -14,23 +14,22 @@
 namespace gsnunf {
 
 template< class T >
-DelaunayGraph<T>& PlanarSpanner( const DelaunayGraph<T>& DT, double epsilon ) {
+void PlanarSpanner( DelaunayGraph<T>& G, double epsilon ) {
 
     GeometricSpannerPrinter printer( .25f );
-    printer.draw( DT._DT, "Triangulation" );
+    printer.draw( G._DT, "Triangulation" );
 
-    DelaunayGraph<T> G = SpanningGraph( DT );
+    SpanningGraph( G );
     printer.draw( G, "SpanningGraph" );
 
 //    for( auto it = _DT->finite_vertices_begin(); it!=_DT->finite_vertices_end(); ++it ) {
 //        cout<< it->point() << " on_outer_face:"<< (it->info().on_outer_face ? "true" : "false" ) << endl;
 //    }
 
-    DelaunayGraph<T> G_P = PolygonSpanner( G );
-    printer.draw( G_P, "PolygonSpanner" );
+    PolygonSpanner( G );
+    printer.draw( G, "PolygonSpanner" );
 //    GreedySpanner( G_P, epsilon, G );
 
-    return G_P;
 }
 
 namespace planar_spanner {

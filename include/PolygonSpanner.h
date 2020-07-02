@@ -12,15 +12,114 @@
 
 namespace gsnunf {
 
+namespace polygon_spanner {
+
+    template< typename T >
+    void add_cross_edges( T& G, const typename T::VertexHash& known,
+                         const typename T::Vertex_handle &p, const typename T::Vertex_handle &q, const typename T::Vertex_handle &r ){
+        typename T::Vertex_circulator N = G._DT.incident_vertices(q);
+
+        while( --N != p ); // loop until N points to p
+        do {
+            typename T::Vertex_handle v_1 = N->handle();
+            typename T::Vertex_handle v_2 = (--N)->handle();
+//            if(  _known.find(v_1) == _known.end() && !_DT->is_infinite(v_1)
+//              && _known.find(v_2) == _known.end() && !_DT->is_infinite(v_2) ) { // N is not known or infinite
+            if(  !contains( known, v_1 ) && !G._DT.is_infinite(v_1)
+              && !contains( known, v_2 ) && !G._DT.is_infinite(v_2) ) { // N is not known or infinite
+                G.add_edge( v_1, v_2 ); // add edge between N and CW N
+            }
+        } while( N != r );
+    }
+
+    template< typename T >
+    void add_forward_edges( T& G, const typename T::VertexHash& known,
+                           const typename T::Vertex_handle &p, const typename T::Vertex_handle &q, const typename T::Vertex_handle &r ) {
+
+
+        using Vertex_handle = typename T::Vertex_handle;
+        using Vertex_circulator = typename T::Vertex_circulator;
+
+        double alpha = G.get_angle( p,q,r );
+        short subangles = rint( ceil( 2.0 * alpha / PI ) );
+        double beta = alpha / subangles;
+        //cout<<"alpha:"<<alpha<< " subangles:"<<subangles<<" beta:"<<beta<<endl;
+
+        Vertex_handle add[subangles];
+        fill( add, add+subangles, G._DT.infinite_vertex() ); // initialize add to infinite vertex
+
+        Vertex_circulator N = G._DT.incident_vertices(q);
+        while( --N != p ); // loop until N points to p
+
+        double theta;
+        short i;
+
+        while( --N != r ) {
+//            if( _known.find(N) == _known.end() && !_DT->is_infinite(N) ) { // N is not known or infinite
+            if( !contains( known, N ) && !G._DT.is_infinite(N) ) { // N is not known or infinite
+                theta = G.get_angle( p, q, N );
+                i = int(theta/beta);
+                //cout<< "  subangles: "<<subangles<< "    i: "<<i<< "    theta:"<<theta<<endl;
+                assert( i <= subangles-1 );
+
+                if( G._DT.is_infinite( add[i] ) || Vector2D( N->point(), q->point() ).squared_length() < Vector2D( add[i]->point(), q->point() ).squared_length() )
+                    add[i] = N->handle();   // if the saved vertex is infinite or longer than the current one, update
+            }
+        } //while( --N != r );
+
+        for( Vertex_handle v : add )
+            if( !G._DT.is_infinite(v) )
+                G.add_edge(q, v);
+    }
+
+    template< typename T >
+    void add_polygon_spanner_edges( T& G, const typename T::VertexHash& known,
+                                   const typename T::Vertex_handle &p, const typename T::Vertex_handle &q, const typename T::Vertex_handle &r ) {
+        assert( !G._DT.is_infinite(p) && !G._DT.is_infinite(q) && !G._DT.is_infinite(r) );
+
+        add_forward_edges( G, known, p, q, r );
+        add_cross_edges( G, known, p, q, r );
+    }
+
+    template< typename T >
+    void find_s_1( const T& G, typename T::Vertex_circulator& C, const typename T::VertexSet& N ) {
+//        while( N.find( (--C)->handle() ) == N.end() ); // loop while N is not in E
+        typename T::Vertex_circulator done(C);
+
+        while( !contains( N, --C ) && C != done ); // loop while C is not in N
+
+        done = C;
+
+        while( !( --C == done || G._DT.is_infinite( C->handle() ) ) ); // loop until reaching s_1 again or an infinite vertex
+
+        if( G._DT.is_infinite( C->handle() ) ) // if we stopped on an infinite vertex, step CW
+            done = --C;
+    }
+
+} // namespace polygon_spanner
+
+
+
 template< typename T >
-DelaunayGraph<T>& PolygonSpanner( const DelaunayGraph<T>& SG ) {
+void PolygonSpanner( DelaunayGraph<T>& SG ) {
 
     using Vertex_handle = typename T::Vertex_handle;
     using Vertex_circulator = typename T::Vertex_circulator;
-    using VertexSet = typename T::VertexSet;
+    using VertexHash = typename DelaunayGraph<T>::VertexHash;
+    using VertexSet = typename DelaunayGraph<T>::VertexSet;
 
-    VertexSet known, level;
+    using namespace polygon_spanner;
+
+    VertexHash known, on_outer_face;
+    std::queue<Vertex_handle> level;
     DelaunayGraph PS( SG );
+
+    Vertex_circulator v_convex_hull = SG._DT.incident_vertices( SG._DT.infinite_vertex() ), // create a circulator of the convex hull
+                      done( v_convex_hull );
+
+    do { // cycle through convex hull to set vertex info
+        on_outer_face.insert( v_convex_hull );  // incident_chords (called in next loop) relies on accurate on_outer_face values
+    } while( ++v_convex_hull != done );
 
     // Process v_1
     auto v_1 = SG._DT.finite_vertices_begin(); // used for testing
@@ -33,9 +132,9 @@ DelaunayGraph<T>& PolygonSpanner( const DelaunayGraph<T>& SG ) {
     VertexSet N_PS = PS._E.find( v_i )->second;  // neighbors of v_1 in PolygonSpanner edges
     VertexSet N_SG = SG._E.find( v_i )->second;  // neighbors of v_1 in SpanningGraph edges
 
-    find_s_1_in_circulator( PS, C, N_SG );
+    find_s_1( PS, C, N_SG );
 
-    Vertex_circulator done(C);                      // remember where we started
+    done = C;                      // remember where we started
     Vertex_handle last = PS._DT.infinite_vertex(); // initialize last as an invalid, but allowed value
 
     do {
@@ -96,7 +195,7 @@ DelaunayGraph<T>& PolygonSpanner( const DelaunayGraph<T>& SG ) {
                 }
                 last = C;                              // update last found vertex
             }
-        } while( --C != done && !PS._DT->is_infinite(C) ); // keep going until we reach done or infinite
+        } while( --C != done && !PS._DT.is_infinite(C) ); // keep going until we reach done or infinite
 
         if( C == done ) {                               // if we reached done, we still need to add the last partition
             s_1 = last->handle();
@@ -117,7 +216,7 @@ DelaunayGraph<T>& PolygonSpanner( const DelaunayGraph<T>& SG ) {
 
         // BFS housekeeping
         do { // loop through neighbors in DT
-            if( !contains( known, C ) && !PS._DT->is_infinite(C) ) { // If C is NOT known, queue it and add to known
+            if( !contains( known, C ) && !PS._DT.is_infinite(C) ) { // If C is NOT known, queue it and add to known
                 level.push(C);
                 known.insert(C);
             }
@@ -125,94 +224,9 @@ DelaunayGraph<T>& PolygonSpanner( const DelaunayGraph<T>& SG ) {
 
     } while( !level.empty() ); // level is not empty
 
-    return PS;
+    swap( SG._E, PS._E );
 
 } // PolygonSpanner( SpanningGraph &SG )
-
-namespace polygon_spanner {
-
-    template< typename T >
-    void add_cross_edges( T& G, const typename T::VertexSet& known, const typename T::Vertex_handle &p, const typename T::Vertex_handle &q, const typename T::Vertex_handle &r ){
-        typename T::Vertex_circulator N = G._DT->incident_vertices(q);
-
-        while( --N != p ); // loop until N points to p
-        do {
-            typename T::Vertex_handle v_1 = N->handle();
-            typename T::Vertex_handle v_2 = (--N)->handle();
-//            if(  _known.find(v_1) == _known.end() && !_DT->is_infinite(v_1)
-//              && _known.find(v_2) == _known.end() && !_DT->is_infinite(v_2) ) { // N is not known or infinite
-            if(  !contains( known, v_1 ) && !G._DT.is_infinite(v_1)
-              && !contains( known, v_2 ) && !G._DT.is_infinite(v_2) ) { // N is not known or infinite
-                G.add_edge( v_1, v_2 ); // add edge between N and CW N
-            }
-        } while( N != r );
-    }
-
-    template< typename T >
-    void add_forward_edges( T& G, const typename T::VertexSet& known,
-                           const typename T::Vertex_handle &p, const typename T::Vertex_handle &q, const typename T::Vertex_handle &r ) {
-
-
-        using Vertex_handle = typename T::Vertex_handle;
-        using Vertex_circulator = typename T::Vertex_circulator;
-
-        double alpha = G.get_angle( p,q,r );
-        short subangles = rint( ceil( 2.0 * alpha / PI ) );
-        double beta = alpha / subangles;
-        //cout<<"alpha:"<<alpha<< " subangles:"<<subangles<<" beta:"<<beta<<endl;
-
-        Vertex_handle add[subangles];
-        fill( add, add+subangles, G._DT.infinite_vertex() ); // initialize add to infinite vertex
-
-        Vertex_circulator N = G._DT.incident_vertices(q);
-        while( --N != p ); // loop until N points to p
-
-        double theta;
-        short i;
-
-        while( --N != r ) {
-//            if( _known.find(N) == _known.end() && !_DT->is_infinite(N) ) { // N is not known or infinite
-            if( contains( known, N ) && !G._DT.is_infinite(N) ) { // N is not known or infinite
-                theta = G.get_angle( p, q, N );
-                i = int(theta/beta);
-                //cout<< "  subangles: "<<subangles<< "    i: "<<i<< "    theta:"<<theta<<endl;
-                assert( i <= subangles-1 );
-
-                if( G._DT.is_infinite( add[i] ) || Vector2D( N->point(), q->point() ).squared_length() < Vector2D( add[i]->point(), q->point() ).squared_length() )
-                    add[i] = N->handle();   // if the saved vertex is infinite or longer than the current one, update
-            }
-        } //while( --N != r );
-
-        for( Vertex_handle v : add )
-            if( !G._DT.is_infinite(v) )
-                G.add_edge(q, v);
-    }
-
-    template< typename T >
-    void add_polygon_spanner_edges( T& G, const typename T::VertexSet& known,
-                                   const typename T::Vertex_handle &p, const typename T::Vertex_handle &q, const typename T::Vertex_handle &r ) {
-        assert( !G._DT.is_infinite(p) && !G._DT.is_infinite(q) && !G._DT.is_infinite(r) );
-
-        add_forward_edges( G, known, p, q, r );
-        add_cross_edges( G, known, p, q, r );
-    }
-
-    template< typename T >
-    void find_s_1( const T& G, typename T::Vertex_circulator& C, const typename T::VertexSet& N ) {
-//        while( N.find( (--C)->handle() ) == N.end() ); // loop while N is not in E
-        typename T::Vertex_circulator done(C);
-
-        while( !contains( N, --C ) && C != done ); // loop while C is not in N
-
-        done = C;
-
-        while( !( --C == done || G._DT.is_infinite( C->handle() ) ) ); // loop until reaching s_1 again or an infinite vertex
-
-        if( G._DT.is_infinite( C->handle() ) ) // if we stopped on an infinite vertex, step CW
-            done = --C;
-    }
-
-} // namespace polygon_spanner
 
 } // namespace gsnunf
 

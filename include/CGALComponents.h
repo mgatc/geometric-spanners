@@ -30,7 +30,7 @@
 /**
  *  Other global includes
  */
-#include "Vertex_info.h"
+//#include "Vertex_info.h"
 
 using namespace std;
 
@@ -41,7 +41,7 @@ typedef CGAL::Exact_predicates_inexact_constructions_kernel                     
 typedef K::Point_2                                                             Point;
 typedef CGAL::Vector_2<K>                                                   Vector2D;
 
-typedef CGAL::Triangulation_vertex_base_with_info_2< gsnunf::Vertex_info, K >     Vb;
+typedef CGAL::Triangulation_vertex_base_with_info_2< bool, K >     Vb;
 typedef CGAL::Triangulation_data_structure_2<Vb>                                 Tds;
 
 typedef CGAL::Delaunay_triangulation_2< K, Tds >               DelaunayTriangulation;

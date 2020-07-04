@@ -3,7 +3,6 @@
 
 #include <list>
 
-#include "CGALComponents.h"
 #include "DelaunayGraph.h"
 
 
@@ -16,6 +15,7 @@ namespace gsnunf {
     void add_first_edge( T& G, typename T::Vertex_handle v, typename T::Vertex_circulator C ) {
         typename T::Vertex_handle v2 = C->handle();
         G.add_edge( v, v2 );
+        // focus1 on v2
     }
 
     template< class T >
@@ -23,6 +23,7 @@ namespace gsnunf {
         while( G._DT.is_infinite(++C) );
         typename T::Vertex_handle v2 = C->handle();
         G.add_edge( v, v2 );
+        // focus1 on v2
     }
 
     template< class T >
@@ -30,28 +31,29 @@ namespace gsnunf {
         --C;
         typename T::Vertex_circulator done(C);
 
-        //while( ( C->info().is_removed || G._DT->is_infinite(C) ) && --C != done );
         while( ( contains( is_removed, C ) || G._DT.is_infinite(C) ) && --C != done );
 
         typename T::Vertex_handle v2 = C->handle();
 
         G.add_edge( v, v2 );
+
+        // focus1 on v2
     }
 
     template< class T >
     void remove_first_edge( T& G, typename T::Vertex_circulator C ) {
         typename T::Vertex_handle v1 = C->handle(),
                                   v2 = (++C)->handle();
-
         G.remove_edge( v1, v2 );
+        // focus1 on v2
     }
 
     template< class T >
     void remove_second_edge( T& G, typename T::Vertex_circulator C ) {
         typename T::Vertex_handle v1 = (++C)->handle(),
                                   v2 = (++C)->handle();
-
         G.remove_edge( v1, v2 );
+        // focus1 on v2
     }
 
     template< class T >
@@ -60,13 +62,12 @@ namespace gsnunf {
 
         typename T::Vertex_circulator done(C);
 
-        //while( ( C->info().is_removed || G._DT->is_infinite(C) ) && --C != done );
         while( ( contains( is_removed, C ) || G._DT.is_infinite(C) ) && --C != done );
 
         typename T::Vertex_handle v1 = C->handle(),
                                   v2 = (--C)->handle();
-
         G.remove_edge( v1, v2 );
+        // focus1 on v2
     }
 
 }; // namespace spanning_graph
@@ -82,9 +83,8 @@ void SpanningGraph( DelaunayGraph<T>& DT ) {
 
     using namespace spanning_graph;
 
-    //DelaunayGraph SG( DT );
-    list<Vertex_handle> canonical;
-    typename list<Vertex_handle>::iterator c_iter;
+    std::list<Vertex_handle> canonical;
+    typename std::list<Vertex_handle>::iterator c_iter;
 
     Vertex_handle triangle[3];
     Vertex_circulator v_n, done;
@@ -96,9 +96,10 @@ void SpanningGraph( DelaunayGraph<T>& DT ) {
 
     // Add first three vertices from canonical
     for( i=0, c_iter=canonical.begin(); i<3&&i<canonical.size(); ++c_iter, ++i ) {
-        //(*c_iter)->info().is_removed = false; // add vertex
         is_removed.erase( *c_iter );
         triangle[i] = *c_iter; // save in array for quick addition of edges
+        // focus0 on c_iter
+        // activate c_iter
     }
 
     for( i=0; i<3&&i<canonical.size(); ++i ) { // Add edges of triangle
@@ -107,9 +108,9 @@ void SpanningGraph( DelaunayGraph<T>& DT ) {
 
     // Add the rest of the vertices from canonical
     for( i=i; i<canonical.size(); ++c_iter, ++i ) {
-
-        //(*c_iter)->info().is_removed = false;
         is_removed.erase( *c_iter );
+        // focus0 on c_iter
+        // activate c_iter
 
         v_n = DT._DT.incident_vertices( *c_iter );
         done = v_n;
@@ -119,9 +120,6 @@ void SpanningGraph( DelaunayGraph<T>& DT ) {
         done = v_n;
 
         int k = DT.count_valid_neighbors( v_n, is_removed );
-
-//        cout << "adding " << (*c_iter)->point() << "\n";
-//        cout << "  k = " << k << "\n";
 
         if( k == 2 ) {
             // remove edge between first two vertices

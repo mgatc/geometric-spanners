@@ -1,11 +1,22 @@
+#include <list>
 #include <memory>
 
-#include "CGALComponents.h"
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h> // CGAL
+#include <CGAL/Delaunay_triangulation_2.h>                      // Triangulations
+#include <CGAL/point_generators_2.h>                            // Random point generation, testing
+
 #include "DelaunayGraph.h"
 #include "PlanarSpanner.h"
 
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef K::Point_2 Point;
+
+typedef CGAL::Delaunay_triangulation_2<K> Delaunay_triangulation_2;
+typedef CGAL::Creator_uniform_2<double,Point> Creator;
 
 using namespace gsnunf;
+using namespace std;
+
 
 
 int main() {
@@ -60,9 +71,9 @@ int main() {
 //        Point(8,8)
 //    };
 
-    DelaunayTriangulation DT( points.begin(), points.end() );
+    Delaunay_triangulation_2 DT( points.begin(), points.end() );
 
-    DelaunayGraph<DelaunayTriangulation> S( DT );
+    DelaunayGraph<Delaunay_triangulation_2> S( DT );
 
     PlanarSpanner( S, epsilon );
 

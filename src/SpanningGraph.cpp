@@ -10,11 +10,11 @@ namespace gsnunf {
 //    compute_spanning_graph();
 //}
 //
-//SpanningGraph::SpanningGraph( DelaunayTriangulation* DT ) : DelaunayGraph( DT ) {
+//SpanningGraph::SpanningGraph( Delaunay_triangulation_2* DT ) : DelaunayGraph( DT ) {
 //    compute_spanning_graph();
 //}
 //
-//SpanningGraph::SpanningGraph( shared_ptr<DelaunayTriangulation> DT ) : DelaunayGraph( DT ) {
+//SpanningGraph::SpanningGraph( shared_ptr<Delaunay_triangulation_2> DT ) : DelaunayGraph( DT ) {
 //    compute_spanning_graph();
 //}
 //

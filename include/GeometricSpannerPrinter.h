@@ -46,8 +46,8 @@ class GeometricSpannerPrinter {
 
     }
 
-    template< typename T, template< typename > class G >
-    void draw( const G<T>& DG, std::string fName ) {
+    template< typename T >
+    void draw( const DelaunayGraph<T>& DG, std::string fName ) {
         FILE *fp = fopen(  fName.c_str() ,"w");
         fprintf(fp,"\\documentclass{standalone} \n\\usepackage{tikz} \n \n\n\\begin{document}\n");
         fprintf(fp,"\n\n\n\\begin{tikzpicture}\n\n");

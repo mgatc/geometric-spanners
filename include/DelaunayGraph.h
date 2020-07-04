@@ -1,10 +1,13 @@
 #ifndef GSNUNF_GRAPH_H
 #define GSNUNF_GRAPH_H
 
-#include <set>
-#include <unordered_map>
 #include <list>
 #include <memory>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
+
+#include <CGAL/circulator.h>
 
 #include "CGALComponents.h"
 
@@ -26,6 +29,8 @@ class DelaunayGraph {
     typedef typename T::Finite_vertices_iterator Finite_vertices_iterator;
     typedef typename T::Finite_edges_iterator Finite_edges_iterator;
     typedef typename T::Face_handle Face_handle;
+
+    typedef CGAL::Vector_2<typename T::Geom_traits> Vector_2;
     typedef CGAL::Container_from_circulator<Vertex_circulator> Vertex_container;
 
     typedef std::set<Vertex_handle> VertexSet;
@@ -34,7 +39,6 @@ class DelaunayGraph {
     template <typename V>
     using VertexMap = std::unordered_map<Vertex_handle, V>;
 
-    //template <typename T>
     using AdjacencyList = VertexMap<VertexSet>;
 
 
@@ -46,45 +50,26 @@ class DelaunayGraph {
 
     DelaunayGraph( const T& DT ) : _DT(DT) {}
     DelaunayGraph( const DelaunayGraph<T>& G ) : _DT(G._DT), _E(G._E) {}
-//    DelaunayGraph( DelaunayGraph<T>&& other) {
-//        _DT = other._DT;
-//        _E = other._E;
-//    }
-//
-//    DelaunayGraph<T>& operator=( const DelaunayGraph<T>& other ) {
-//        if (this != &other) { // self-assignment check expected
-//            _DT = other._DT;
-//            _E.empty
-//            _E = other._E;
-//
-//            if (other.size != size) {         // storage cannot be reused
-//                delete[] mArray;              // destroy storage in this
-//                size = 0;
-//                mArray = nullptr;             // preserve invariants in case next line throws
-//                mArray = new int[other.size]; // create storage in this
-//                size = other.size;
-//            }
-//            std::copy(other.mArray, other.mArray + other.size, mArray);
-//        }
-//        return *this;
-//    }
+
+
 
     void add_edge( const Vertex_handle v1, const Vertex_handle v2 ) {
-        //cout<<"  add_edge( " << v1->point() << " - " << v2->point() << " )\n";
         add_half_edge( v1, v2 );
         add_half_edge( v2, v1 );
+        // activate edge( v1, v2 )
     }
 
     void remove_edge( const Vertex_handle v1, const Vertex_handle v2 ) {
         remove_half_edge( v1, v2 );
         remove_half_edge( v2, v1 );
+        // inactivate edge( v1, v2 )
     }
 
     double get_angle( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r ) {
         assert( !_DT.is_infinite(p) && !_DT.is_infinite(q) && !_DT.is_infinite(r) );
 
-        Vector2D pq( p->point(), q->point() );
-        Vector2D rq( r->point(), q->point() );
+        Vector_2 pq( p->point(), q->point() );
+        Vector_2 rq( r->point(), q->point() );
 
         double result = atan2( rq.y(), rq.x()) - atan2(pq.y(), pq.x() );
 
@@ -106,8 +91,11 @@ class DelaunayGraph {
         out.clear();
 
         if( _DT.number_of_vertices() <= 3 ) {
-            for( auto v=_DT.finite_vertices_begin(); v!=_DT.finite_vertices_end(); ++v )
+            for( auto v=_DT.finite_vertices_begin(); v!=_DT.finite_vertices_end(); ++v ) {
                 out.push_back( v->handle() );
+                // focus0 on v->handle
+                // inactivate v->handle
+            }
             return;
         }
 
@@ -118,8 +106,8 @@ class DelaunayGraph {
                           done( v_convex_hull );
 
         do { // cycle through convex hull to set vertex info
-//            v_convex_hull->info().on_outer_face = true;  // incident_chords (called in next loop) relies on accurate on_outer_face values
             on_outer_face.insert( v_convex_hull );  // incident_chords (called in next loop) relies on accurate on_outer_face values
+            // focus0 on v_convex_hull
         } while( ++v_convex_hull != done );
 
         do { // cycle through convex hull again to add eligible vertices to list
@@ -130,7 +118,9 @@ class DelaunayGraph {
         // find two consecutive valid vertices to be v_1 and v_2
         while( !contains( eligible_vertices, v_convex_hull ) && !contains( eligible_vertices, ++v_convex_hull ) ); // loop until reaching valid vertex
         v_1 = v_convex_hull;
+        // focus0 on v_1
         v_2 = --v_convex_hull;
+        // focus0 on v_2
 
         // v_1 and v_2 must be reserved as the last two vertices to be added
         reserved_vertices.insert(v_1);
@@ -141,27 +131,25 @@ class DelaunayGraph {
         while( !eligible_vertices.empty() ) {
 
             v_k = *eligible_vertices.begin();
+            // focus0 on v_k
+
+            // inactivate v_k
 
             eligible_vertices.erase(v_k);
             is_removed.insert(v_k);
             on_outer_face.erase(v_k);
             out.push_front(v_k);
 
-//            v_k->info().is_removed = true;
-//            v_k->info().on_outer_face = false;
-
             // Update neighbors
             Vertex_circulator v_n = _DT.incident_vertices( v_k ),
                               done( v_n );
             do { // update outer face
-//                if( !_DT.is_infinite(v_n) && !v_n->info().is_removed )
+                // focus1 on v_n
                 if( !_DT.is_infinite(v_n) && !contains( is_removed, v_n ) )
-//                    v_n->info().on_outer_face = true;
                     on_outer_face.insert( v_n );
             } while( ++v_n != done );
 
             do { // test incidence of new outer face vertices
-//                if( !_DT.is_infinite(v_n) && !v_n->info().is_removed && v_n != v_1 && v_n != v_2 ) {
                 if( !_DT.is_infinite(v_n) && !contains( is_removed, v_n ) && !contains( reserved_vertices, v_n ) ) {
                     update_incident_chords( v_n, has_incident_chords, eligible_vertices, is_removed, on_outer_face, reserved_vertices, _DT.number_of_vertices()-out.size(), true );
                     update_eligibility( v_n, eligible_vertices, reserved_vertices, has_incident_chords );
@@ -169,7 +157,11 @@ class DelaunayGraph {
             } while( ++v_n != done );
         }
         out.push_front(v_2);
+        // focus0 on v_2
+        // inactivate v_2
         out.push_front(v_1);
+        // focus0 on v_1
+        // inactivate v_1
 
         assert( _DT.number_of_vertices() == out.size() );
     }
@@ -190,11 +182,7 @@ class DelaunayGraph {
                                  int vertices_remaining,
                                  bool update_neighbors ) {
 
-        //v_update->info().incident_chords = 0;
-
         // Conditions that will result in 0 incident chords to v_update
-//        if( v_update->info().is_removed ) return;     // Vertex is removed already
-//        if( !v_update->info().on_outer_face ) return; // If a vertex is not on the outer face, it cannot be part of a chord
         if(   _DT.is_infinite( v_update )            // Vertex is the infinite vertex
            || contains( is_removed, v_update )       // Vertex is removed already
            || !contains( on_outer_face, v_update )   // If a vertex is not on the outer face, it cannot be part of a chord
@@ -213,7 +201,7 @@ class DelaunayGraph {
         Vertex_circulator v_neighbor = _DT.incident_vertices( v_update ),
                                        done( v_neighbor );
         do {
-//            if( !_DT.is_infinite( v_neighbor ) && !v_neighbor->info().is_removed && v_neighbor->info().on_outer_face ) {
+            // focus2 on v_neighbor
             if( !_DT.is_infinite( v_neighbor ) && !contains( is_removed, v_neighbor ) && contains( on_outer_face, v_neighbor ) ) {
                 if( update_neighbors )
                     update_incident_chords( v_neighbor, has_incident_chords, eligible_vertices, is_removed, on_outer_face, reserved_vertices, vertices_remaining, false );
@@ -232,12 +220,6 @@ class DelaunayGraph {
             has_incident_chords.insert( v_update );
     }
 
-//    DelaunayGraph<T>& operator=( const DelaunayGraph<T>& other ) { // copy assignment
-//        _DT = Dother._DT;
-//        _E = other._E;
-//        return *this;
-//    }
-
     DelaunayGraph<T>& operator=( DelaunayGraph<T>&& other ) { // move assignment
         if(&other != *this) {
             _DT = other._DT;
@@ -251,6 +233,7 @@ class DelaunayGraph {
         int k = 0; // count N_i path length k
 
         do {
+            // ++focus on C
             if( !contains( invalid, C ) && !_DT.is_infinite(C) )
                 k++;
         } while( ++C != done );

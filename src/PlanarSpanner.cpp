@@ -10,7 +10,7 @@
 
 namespace gsnunf {
 
-//PlanarSpanner::PlanarSpanner( shared_ptr<DelaunayTriangulation> DT, double epsilon ) : DelaunayGraph(DT) {
+//PlanarSpanner::PlanarSpanner( shared_ptr<Delaunay_triangulation_2> DT, double epsilon ) : DelaunayGraph(DT) {
 //
 //    GeometricSpannerPrinter printer( .25f );
 //    printer.draw( *_DT, "Triangulation" );

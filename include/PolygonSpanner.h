@@ -1,10 +1,9 @@
 #ifndef GSNUNF_POLYGONSPANNER_H
 #define GSNUNF_POLYGONSPANNER_H
 
-#include <utility>
+#include <algorithm>
 #include <queue>
 
-#include "CGALComponents.h"
 #include "SpanningGraph.h"
 #include "DelaunayGraph.h"
 
@@ -23,12 +22,12 @@ namespace polygon_spanner {
         do {
             typename T::Vertex_handle v_1 = N->handle();
             typename T::Vertex_handle v_2 = (--N)->handle();
-//            if(  _known.find(v_1) == _known.end() && !_DT->is_infinite(v_1)
-//              && _known.find(v_2) == _known.end() && !_DT->is_infinite(v_2) ) { // N is not known or infinite
             if(  !contains( known, v_1 ) && !G._DT.is_infinite(v_1)
               && !contains( known, v_2 ) && !G._DT.is_infinite(v_2) ) { // N is not known or infinite
                 G.add_edge( v_1, v_2 ); // add edge between N and CW N
             }
+            // focus1 on v_1
+            // focus2 on v_2
         } while( N != r );
     }
 
@@ -39,14 +38,14 @@ namespace polygon_spanner {
 
         using Vertex_handle = typename T::Vertex_handle;
         using Vertex_circulator = typename T::Vertex_circulator;
+        using Vector_2 = typename T::Vector_2;
 
         double alpha = G.get_angle( p,q,r );
         short subangles = rint( ceil( 2.0 * alpha / PI ) );
         double beta = alpha / subangles;
-        //cout<<"alpha:"<<alpha<< " subangles:"<<subangles<<" beta:"<<beta<<endl;
 
         Vertex_handle add[subangles];
-        fill( add, add+subangles, G._DT.infinite_vertex() ); // initialize add to infinite vertex
+        std::fill( add, add+subangles, G._DT.infinite_vertex() ); // initialize add to infinite vertex
 
         Vertex_circulator N = G._DT.incident_vertices(q);
         while( --N != p ); // loop until N points to p
@@ -55,14 +54,13 @@ namespace polygon_spanner {
         short i;
 
         while( --N != r ) {
-//            if( _known.find(N) == _known.end() && !_DT->is_infinite(N) ) { // N is not known or infinite
+            // focus1 on N
             if( !contains( known, N ) && !G._DT.is_infinite(N) ) { // N is not known or infinite
                 theta = G.get_angle( p, q, N );
                 i = int(theta/beta);
-                //cout<< "  subangles: "<<subangles<< "    i: "<<i<< "    theta:"<<theta<<endl;
                 assert( i <= subangles-1 );
 
-                if( G._DT.is_infinite( add[i] ) || Vector2D( N->point(), q->point() ).squared_length() < Vector2D( add[i]->point(), q->point() ).squared_length() )
+                if( G._DT.is_infinite( add[i] ) || Vector_2( N->point(), q->point() ).squared_length() < Vector_2( add[i]->point(), q->point() ).squared_length() )
                     add[i] = N->handle();   // if the saved vertex is infinite or longer than the current one, update
             }
         } //while( --N != r );
@@ -83,7 +81,6 @@ namespace polygon_spanner {
 
     template< typename T >
     void find_s_1( const T& G, typename T::Vertex_circulator& C, const typename T::VertexSet& N ) {
-//        while( N.find( (--C)->handle() ) == N.end() ); // loop while N is not in E
         typename T::Vertex_circulator done(C);
 
         while( !contains( N, --C ) && C != done ); // loop while C is not in N
@@ -119,6 +116,7 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
 
     do { // cycle through convex hull to set vertex info
         on_outer_face.insert( v_convex_hull );  // incident_chords (called in next loop) relies on accurate on_outer_face values
+        // focus0 on v_convex_hull
     } while( ++v_convex_hull != done );
 
     // Process v_1
@@ -126,6 +124,7 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
     //advance(v_1, 6);
 
     Vertex_handle v_i = v_1; // choose v_1
+    // focus0 on v_i
 
     // Create and orient C so it points to s_1
     Vertex_circulator C = PS._DT.incident_vertices( v_i ); // neighbors of v_1 in DT
@@ -138,7 +137,7 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
     Vertex_handle last = PS._DT.infinite_vertex(); // initialize last as an invalid, but allowed value
 
     do {
-//            if( N_SG.find( C->handle() ) != N_SG.end() ) {        // if we found an vertex, try to add edges for partition
+        // focus1 on C
         if( contains( N_SG, C ) ) {        // if we found an vertex, try to add edges for partition
             if( last != PS._DT.infinite_vertex() ) {        // not a valid partition if last vertex was infinite
                 add_polygon_spanner_edges( PS, known, last, v_i, C );
@@ -162,6 +161,7 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
     do { // loop through _level queue
         v_i = level.front();
         level.pop();
+        // focus0 on v_i
 
         C = PS._DT.incident_vertices( v_i );
         N_PS = PS._E.find( v_i )->second;    // neighbors of v_1 in PolygonSpanner edges
@@ -175,7 +175,7 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
         Vertex_circulator last;
 
         do { // loop through neighbors in DT
-//                if( N_SG.find( C->handle() ) != N_SG.end() ) {    // if we found an vertex in SG, try to add edges for partition
+            // focus1 on C
             if( contains( N_SG, C ) ) {    // if we found an vertex in SG, try to add edges for partition
                 if( last != nullptr ) {        // not a valid partition if last vertex was null
                     s_1 = last->handle();
@@ -183,10 +183,8 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
                     s_k = C;
                     s_m = C->handle();
 
-//                        while( N_PS.find( (--s_j)->handle() ) == N_PS.end() && s_j->handle() != s_1 ); //edge(++s_j, v_i) is not in E_P
                     while( !contains( N_PS, --s_j ) && s_j->handle() != s_1 ); //edge(++s_j, v_i) is not in E_P
                     while( !contains( N_PS, ++s_k ) && s_k->handle() != s_m ); //edge(--s_k, v_i) is not in E_P
-//                        while( N_PS.find( (++s_k)->handle() ) == N_PS.end() && s_k->handle() != s_m ); //edge(--s_k, v_i) is not in E_P
 
                     add_polygon_spanner_edges( PS, known, s_1, v_i, s_j );
                     add_polygon_spanner_edges( PS, known, s_k, v_i, s_m );
@@ -203,10 +201,8 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
             s_k = C;
             s_m = C->handle();
 
-//                while( !contains( N_PS, --s_j )N_PS.find( (--s_j)->handle() ) == N_PS.end() && s_j->handle() != s_1 ); // while edge(++s_j, v_i) is not in E_P
             while( !contains( N_PS, --s_j ) && s_j->handle() != s_1 ); // while edge(++s_j, v_i) is not in E_P
             while( !contains( N_PS, ++s_k ) && s_k->handle() != s_m ); // while edge(--s_k, v_i) is not in E_P
-//                while( N_PS.find( (++s_k)->handle() ) == N_PS.end() && s_k->handle() != s_m ); // while edge(--s_k, v_i) is not in E_P
 
             add_polygon_spanner_edges( PS, known, s_1, v_i, s_j );
             add_polygon_spanner_edges( PS, known, s_k, v_i, s_m );
@@ -219,12 +215,13 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
             if( !contains( known, C ) && !PS._DT.is_infinite(C) ) { // If C is NOT known, queue it and add to known
                 level.push(C);
                 known.insert(C);
+                // focus1 on C
             }
         } while( --C != done ); // keep going until we reach done or infinite
 
     } while( !level.empty() ); // level is not empty
 
-    swap( SG._E, PS._E );
+    std::swap( SG._E, PS._E );
 
 } // PolygonSpanner( SpanningGraph &SG )
 

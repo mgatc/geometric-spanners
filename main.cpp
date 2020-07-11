@@ -30,6 +30,9 @@ int main() {
 //    CGAL::Random_points_in_square_2<Point,Creator> g( width/2 );
 //    std::copy_n( g, n, std::back_inserter(points) );
 
+//    for( Point p : points )
+//        cout<<p<<endl;
+
 
     // POINT SET FROM PAPER, PAGE 253
     list<Point> points = {

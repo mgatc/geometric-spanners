@@ -9,8 +9,8 @@
  *      other libraries' headers,
  *      your project's headers.
  */
-
-const double PI = 3.14159265359;
-const double EPSILON = 0.000001;
+//
+//const double PI = 3.14159265359;
+//const double EPSILON = 0.000001;
 
 #endif // GSNUNF_CGALCOMPONENTS_H

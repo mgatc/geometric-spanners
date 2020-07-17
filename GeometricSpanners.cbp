@@ -61,15 +61,19 @@
 			<Add library="boost_thread" />
 		</Linker>
 		<Unit filename=".gitignore" />
-		<Unit filename="GeometricSpanner.cpp" />
-		<Unit filename="include/CGALComponents.h" />
+		<Unit filename="CMakeLists.txt" />
+		<Unit filename="cmake/GeometricSpannersConfig.cmake" />
 		<Unit filename="include/DelaunayGraph.h" />
+		<Unit filename="include/FloydWarshall.h" />
 		<Unit filename="include/GeometricSpannerPrinter.h" />
+		<Unit filename="include/GraphAlgorithmEvent.h" />
 		<Unit filename="include/PlanarSpanner.h" />
 		<Unit filename="include/PolygonSpanner.h" />
 		<Unit filename="include/SpanningGraph.h" />
+		<Unit filename="include/StretchFactor.h" />
 		<Unit filename="include/TransformPolygon.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="src/GeometricSpanners.cpp" />
 		<Extensions>
 			<envvars set="openmp" />
 			<code_completion />

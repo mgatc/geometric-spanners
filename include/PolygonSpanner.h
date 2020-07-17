@@ -4,8 +4,10 @@
 #include <algorithm>
 #include <queue>
 
-#include "SpanningGraph.h"
 #include "DelaunayGraph.h"
+#include "GeometricSpannerPrinter.h"
+#include "SpanningGraph.h"
+#include "StretchFactor.h"
 
 
 
@@ -22,12 +24,13 @@ namespace polygon_spanner {
         do {
             typename T::Vertex_handle v_1 = N->handle();
             typename T::Vertex_handle v_2 = (--N)->handle();
+            G.addToEventQueue( v_1, 1 ); // focus1 on v_1
+            G.addToEventQueue( v_2, 2 );// focus2 on v_2
             if(  !contains( known, v_1 ) && !G._DT.is_infinite(v_1)
               && !contains( known, v_2 ) && !G._DT.is_infinite(v_2) ) { // N is not known or infinite
                 G.add_edge( v_1, v_2 ); // add edge between N and CW N
+                G.addToEventQueue( {v_1, v_2}, true );
             }
-            // focus1 on v_1
-            // focus2 on v_2
         } while( N != r );
     }
 
@@ -44,8 +47,7 @@ namespace polygon_spanner {
         short subangles = rint( ceil( 2.0 * alpha / PI ) );
         double beta = alpha / subangles;
 
-        Vertex_handle add[subangles];
-        std::fill( add, add+subangles, G._DT.infinite_vertex() ); // initialize add to infinite vertex
+        std::vector<Vertex_handle> add( subangles, G._DT.infinite_vertex() ); // initialize add to infinite vertex
 
         Vertex_circulator N = G._DT.incident_vertices(q);
         while( --N != p ); // loop until N points to p
@@ -54,7 +56,7 @@ namespace polygon_spanner {
         short i;
 
         while( --N != r ) {
-            // focus1 on N
+            G.addToEventQueue( N, 1 );// focus1 on N
             if( !contains( known, N ) && !G._DT.is_infinite(N) ) { // N is not known or infinite
                 theta = G.get_angle( p, q, N );
                 i = int(theta/beta);
@@ -66,8 +68,10 @@ namespace polygon_spanner {
         } //while( --N != r );
 
         for( Vertex_handle v : add )
-            if( !G._DT.is_infinite(v) )
+            if( !G._DT.is_infinite(v) ) {
                 G.add_edge(q, v);
+                G.addToEventQueue( {q, v}, true ); // add edge
+            }
     }
 
     template< typename T >
@@ -82,15 +86,19 @@ namespace polygon_spanner {
     template< typename T >
     void find_s_1( const T& G, typename T::Vertex_circulator& C, const typename T::VertexSet& N ) {
         typename T::Vertex_circulator done(C);
+        // NOTE: use --C/C-- for CW rotation and ++C/C++ for CCW rotation
 
-        while( !contains( N, --C ) && C != done ); // loop while C is not in N
-
+        // Loop until C is in N.
+        while( !contains( N, --C ) && C != done );
         done = C;
-
-        while( !( --C == done || G._DT.is_infinite( C->handle() ) ) ); // loop until reaching s_1 again or an infinite vertex
-
-        if( G._DT.is_infinite( C->handle() ) ) // if we stopped on an infinite vertex, step CW
-            done = --C;
+        /* Loop until the last C was an infinite vertex or this
+         * vertex is the starting vertex. If C is infinite, it
+         * will be decremented once more by the postfix operator,
+         * landing us on the first vertex CW of the infinite, a
+         * valid s_1. If the starting vertex is reached instead
+         * of the infinite, then it is a valid s_1.
+         */
+        while( !G._DT.is_infinite(C--) && C != done );
     }
 
 } // namespace polygon_spanner
@@ -107,37 +115,37 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
 
     using namespace polygon_spanner;
 
-    VertexHash known, on_outer_face;
-    std::queue<Vertex_handle> level;
-    DelaunayGraph PS( SG );
+    VertexHash known, on_outer_face; // property maps
+    std::queue<Vertex_handle> level; // BFS queue
+    DelaunayGraph PS( SG );          // resultant graph object
 
     Vertex_circulator v_convex_hull = SG._DT.incident_vertices( SG._DT.infinite_vertex() ), // create a circulator of the convex hull
                       done( v_convex_hull );
 
     do { // cycle through convex hull to set vertex info
         on_outer_face.insert( v_convex_hull );  // incident_chords (called in next loop) relies on accurate on_outer_face values
-        // focus0 on v_convex_hull
+        SG.addToEventQueue( v_convex_hull, 0 );// focus0 on v_convex_hull
     } while( ++v_convex_hull != done );
 
-    // Process v_1
-    auto v_1 = SG._DT.finite_vertices_begin(); // used for testing
-    //advance(v_1, 6);
+    // Process v_1 //
+
+    auto v_1 = SG._DT.finite_vertices_begin(); // v_1 can be chosen arbitrarily
+    //advance(v_1, 6); // used for testing
 
     Vertex_handle v_i = v_1; // choose v_1
-    // focus0 on v_i
+    SG.addToEventQueue( v_convex_hull, 0 );// focus0 on v_convex_hull
 
     // Create and orient C so it points to s_1
     Vertex_circulator C = PS._DT.incident_vertices( v_i ); // neighbors of v_1 in DT
     VertexSet N_PS = PS._E.find( v_i )->second;  // neighbors of v_1 in PolygonSpanner edges
     VertexSet N_SG = SG._E.find( v_i )->second;  // neighbors of v_1 in SpanningGraph edges
-
     find_s_1( PS, C, N_SG );
 
     done = C;                      // remember where we started
-    Vertex_handle last = PS._DT.infinite_vertex(); // initialize last as an invalid, but allowed value
+    Vertex_handle last = PS._DT.infinite_vertex(); // initialize last as infinite
 
-    do {
-        // focus1 on C
+    do { // investigate neighbors
+        SG.addToEventQueue( C, 1 ); // focus1 on C
         if( contains( N_SG, C ) ) {        // if we found an vertex, try to add edges for partition
             if( last != PS._DT.infinite_vertex() ) {        // not a valid partition if last vertex was infinite
                 add_polygon_spanner_edges( PS, known, last, v_i, C );
@@ -154,20 +162,22 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
 
     known.insert( v_i );
 
+    // Process v_i, i>1 //
+
     Vertex_handle s_1, s_m;
     Vertex_circulator s_j, s_k;
 
-    // process v_i, i>1
-    do { // loop through _level queue
+    do { // loop through level queue
         v_i = level.front();
-        level.pop();
-        // focus0 on v_i
+        SG.addToEventQueue( v_i, 0 ); // focus0 on v_i
 
         C = PS._DT.incident_vertices( v_i );
         N_PS = PS._E.find( v_i )->second;    // neighbors of v_1 in PolygonSpanner edges
         N_SG = SG._E.find( v_i )->second;  // neighbors of v_1 in SpanningGraph edges
 
-        assert( N_PS.size() <= 5 ); // Lemma 3.3
+        // Lemma 3.3
+        //assert( N_PS.size() <= 5 );
+        std::cout<<v_i->point()<<" N_PS:"<<N_PS.size()<<" N_SG:"<<N_SG.size()<<std::endl;
 
         find_s_1( PS, C, N_SG );
 
@@ -175,16 +185,16 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
         Vertex_circulator last;
 
         do { // loop through neighbors in DT
-            // focus1 on C
-            if( contains( N_SG, C ) ) {    // if we found an vertex in SG, try to add edges for partition
-                if( last != nullptr ) {        // not a valid partition if last vertex was null
+            SG.addToEventQueue( C, 1 ); // focus1 on C
+            if( contains( N_SG, C ) ) {    // if we found a vertex in SG, try to add edges for partition
+                if( CGAL::circulator_size( last ) > 0 ) {        // not a valid partition if last vertex was null
                     s_1 = last->handle();
                     s_j = last;
                     s_k = C;
                     s_m = C->handle();
 
-                    while( !contains( N_PS, --s_j ) && s_j->handle() != s_1 ); //edge(++s_j, v_i) is not in E_P
-                    while( !contains( N_PS, ++s_k ) && s_k->handle() != s_m ); //edge(--s_k, v_i) is not in E_P
+                    while( !contains( N_PS, --s_j ) && s_j != s_m ); //edge(++s_j, v_i) is not in E_P
+                    while( !contains( N_PS, ++s_k ) && s_k != s_1 ); //edge(--s_k, v_i) is not in E_P
 
                     add_polygon_spanner_edges( PS, known, s_1, v_i, s_j );
                     add_polygon_spanner_edges( PS, known, s_k, v_i, s_m );
@@ -195,7 +205,8 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
             }
         } while( --C != done && !PS._DT.is_infinite(C) ); // keep going until we reach done or infinite
 
-        if( C == done ) {                               // if we reached done, we still need to add the last partition
+        if( C == done ) {
+            SG.addToEventQueue( C, 1 ); // focus1 on C
             s_1 = last->handle();
             s_j = last;
             s_k = C;
@@ -211,17 +222,31 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
         done = C;
 
         // BFS housekeeping
+        level.pop();
         do { // loop through neighbors in DT
             if( !contains( known, C ) && !PS._DT.is_infinite(C) ) { // If C is NOT known, queue it and add to known
                 level.push(C);
                 known.insert(C);
-                // focus1 on C
+                SG.addToEventQueue( C, 1 ); // focus1 on C
             }
         } while( --C != done ); // keep going until we reach done or infinite
-
     } while( !level.empty() ); // level is not empty
 
+    SG.addToEventQueue( SG._DT.infinite_vertex(), 0 ); // focus0 on infinite
+
     std::swap( SG._E, PS._E );
+
+    // Lemma 3.4
+    // ((PI+1)*(2*PI/(3*cos(PI/6)))) = 10.01602416
+    //assert( StretchFactor(SG) <= (PI+1) ); // fails
+    //assert( StretchFactor(SG) <= ((PI+1)*(2*PI/(3*cos(PI/6)))) ); // fails
+    std::cout<<"StretchFactor(SG):"<<StretchFactor(SG)
+             <<" StretchFactor(PS):"<<StretchFactor(PS)<<std::endl;
+
+    // Test degree assumption given after lemma 3.4
+    for( auto it=SG._E.begin(); it!=SG._E.end(); ++it ) {
+        assert( it->second.size() <= 36 );
+    }
 
 } // PolygonSpanner( SpanningGraph &SG )
 

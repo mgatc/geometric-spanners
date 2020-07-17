@@ -15,7 +15,9 @@ namespace gsnunf {
     void add_first_edge( T& G, typename T::Vertex_handle v, typename T::Vertex_circulator C ) {
         typename T::Vertex_handle v2 = C->handle();
         G.add_edge( v, v2 );
-        // focus1 on v2
+        G.addToEventQueue( v, 1 );
+        G.addToEventQueue( v2, 2 );
+        G.addToEventQueue( { v, v2 }, true );
     }
 
     template< class T >
@@ -23,7 +25,9 @@ namespace gsnunf {
         while( G._DT.is_infinite(++C) );
         typename T::Vertex_handle v2 = C->handle();
         G.add_edge( v, v2 );
-        // focus1 on v2
+        G.addToEventQueue( v, 1 );
+        G.addToEventQueue( v2, 2 );
+        G.addToEventQueue( { v, v2 }, true );
     }
 
     template< class T >
@@ -37,7 +41,9 @@ namespace gsnunf {
 
         G.add_edge( v, v2 );
 
-        // focus1 on v2
+        G.addToEventQueue( v, 1 );
+        G.addToEventQueue( v2, 2 );
+        G.addToEventQueue( { v, v2 }, true );
     }
 
     template< class T >
@@ -45,7 +51,10 @@ namespace gsnunf {
         typename T::Vertex_handle v1 = C->handle(),
                                   v2 = (++C)->handle();
         G.remove_edge( v1, v2 );
-        // focus1 on v2
+
+        G.addToEventQueue( v1, 1 );
+        G.addToEventQueue( v2, 2 );
+        G.addToEventQueue( { v1, v2 }, false );
     }
 
     template< class T >
@@ -53,7 +62,10 @@ namespace gsnunf {
         typename T::Vertex_handle v1 = (++C)->handle(),
                                   v2 = (++C)->handle();
         G.remove_edge( v1, v2 );
-        // focus1 on v2
+
+        G.addToEventQueue( v1, 1 );
+        G.addToEventQueue( v2, 2 );
+        G.addToEventQueue( { v1, v2 }, false );
     }
 
     template< class T >
@@ -67,7 +79,10 @@ namespace gsnunf {
         typename T::Vertex_handle v1 = C->handle(),
                                   v2 = (--C)->handle();
         G.remove_edge( v1, v2 );
-        // focus1 on v2
+
+        G.addToEventQueue( v1, 1 );
+        G.addToEventQueue( v2, 2 );
+        G.addToEventQueue( { v1, v2 }, false );
     }
 
 }; // namespace spanning_graph
@@ -78,7 +93,6 @@ void SpanningGraph( DelaunayGraph<T>& DT ) {
 
     using Vertex_handle = typename T::Vertex_handle;
     using Vertex_circulator = typename T::Vertex_circulator;
-    //using VertexSet = typename DelaunayGraph<T>::VertexSet;
     using VertexHash = typename DelaunayGraph<T>::VertexHash;
 
     using namespace spanning_graph;
@@ -98,19 +112,20 @@ void SpanningGraph( DelaunayGraph<T>& DT ) {
     for( i=0, c_iter=canonical.begin(); i<3&&i<canonical.size(); ++c_iter, ++i ) {
         is_removed.erase( *c_iter );
         triangle[i] = *c_iter; // save in array for quick addition of edges
-        // focus0 on c_iter
-        // activate c_iter
+        DT.addToEventQueue( *c_iter, 0 );
+        DT.addToEventQueue( *c_iter, true );
     }
 
     for( i=0; i<3&&i<canonical.size(); ++i ) { // Add edges of triangle
-        DT.add_edge( triangle[i], triangle[(i+1)%3] );
+        DT.add_edge( triangle[i], triangle[(i+1)%3] );        DT.addToEventQueue( { triangle[i], triangle[(i+1)%3] }, true );
+        DT.addToEventQueue( { triangle[i], triangle[(i+1)%3] }, true );
     }
 
     // Add the rest of the vertices from canonical
     for( i=i; i<canonical.size(); ++c_iter, ++i ) {
         is_removed.erase( *c_iter );
-        // focus0 on c_iter
-        // activate c_iter
+        DT.addToEventQueue( *c_iter, 0 );        // activate c_iter
+        DT.addToEventQueue( *c_iter, true );
 
         v_n = DT._DT.incident_vertices( *c_iter );
         done = v_n;

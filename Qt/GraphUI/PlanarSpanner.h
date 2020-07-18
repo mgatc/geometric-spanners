@@ -3,7 +3,6 @@
 
 #include <list>
 
-#include "CGALComponents.h"
 #include "DelaunayGraph.h"
 #include "SpanningGraph.h"
 #include "PolygonSpanner.h"
@@ -17,17 +16,17 @@ template< class T >
 void PlanarSpanner( DelaunayGraph<T>& G, double epsilon ) {
 
     GeometricSpannerPrinter printer( .25f );
-    printer.draw( G._DT, "Triangulation" );
+    //printer.draw( G._DT, "Triangulation" );
 
     SpanningGraph( G );
-    printer.draw( G, "SpanningGraph" );
+    //printer.draw( G, "SpanningGraph" );
 
 //    for( auto it = _DT->finite_vertices_begin(); it!=_DT->finite_vertices_end(); ++it ) {
 //        cout<< it->point() << " on_outer_face:"<< (it->info().on_outer_face ? "true" : "false" ) << endl;
 //    }
 
     PolygonSpanner( G );
-    printer.draw( G, "PolygonSpanner" );
+    //printer.draw( G, "PolygonSpanner" );
 //    GreedySpanner( G_P, epsilon, G );
 
 }

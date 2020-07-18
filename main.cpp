@@ -25,13 +25,13 @@ using namespace std;
 int main() {
 
     const double epsilon = 2;
-    int i = 2;
+    int i = 3;
 
     //for( i=1; i<=5; i++ ) {
         // RANDOM POINT SET
         list<Point> points;
         const double width = 10*i;
-        const int n = pow(5, i);
+        const int n = 25;//pow(5, i);
         CGAL::Random_points_in_square_2<Point,Creator> g( width/2 );
         std::copy_n( g, n, std::back_inserter(points) );
 

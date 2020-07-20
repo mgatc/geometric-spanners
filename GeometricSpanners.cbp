@@ -21,7 +21,6 @@
 					<Add directory="include" />
 				</Compiler>
 				<Linker>
-					<Add library="-I/usr/local/include/CGAL" />
 					<Add library="gmp" />
 					<Add library="boost_thread" />
 					<Add library="boost_system" />

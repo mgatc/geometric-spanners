@@ -127,24 +127,37 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
         SG.addToEventQueue( v_convex_hull, 0 );// focus0 on v_convex_hull
     } while( ++v_convex_hull != done );
 
-    // Process v_1 //
+    /* Process v_1
 
-    auto v_1 = SG._DT.finite_vertices_begin(); // v_1 can be chosen arbitrarily
-    //advance(v_1, 6); // used for testing
+       Processing v_1 is slightly different than processing all other vertices.
+       Theoretically, v_1 can be chosen arbitrarily, but because we have only
+       symbolically duplicated vertices and edges for TransformPolygon, we must
+       ensure v_1 is not a split vertex. A split vertex is any vertex on the
+       convex hull with degree > 2, or any interior vertex with degree > 1.
+       These two conditions can be represented in one statement by casting a
+       boolean representation of "on convex hull" to int.
+     */
+
+    auto v_1 = SG._DT.finite_vertices_begin();
+    VertexSet N_SG = SG._E.find( v_1 )->second;  // neighbors of v_1 in SpanningGraph edges
+    while( N_SG.size() > 1 + int( contains( on_outer_face, v_1 ) ) ) {
+        ++v_1;
+        N_SG = SG._E.find( v_1 )->second;
+    }
 
     Vertex_handle v_i = v_1; // choose v_1
-    SG.addToEventQueue( v_convex_hull, 0 );// focus0 on v_convex_hull
+    SG.addToEventQueue( v_i, 0 );
 
     // Create and orient C so it points to s_1
     Vertex_circulator C = PS._DT.incident_vertices( v_i ); // neighbors of v_1 in DT
     VertexSet N_PS = PS._E.find( v_i )->second;  // neighbors of v_1 in PolygonSpanner edges
-    VertexSet N_SG = SG._E.find( v_i )->second;  // neighbors of v_1 in SpanningGraph edges
     find_s_1( PS, C, N_SG );
 
     done = C;                      // remember where we started
     Vertex_handle last = PS._DT.infinite_vertex(); // initialize last as infinite
 
     do { // investigate neighbors
+
         SG.addToEventQueue( C, 1 ); // focus1 on C
         if( contains( N_SG, C ) ) {        // if we found an vertex, try to add edges for partition
             if( last != PS._DT.infinite_vertex() ) {        // not a valid partition if last vertex was infinite
@@ -159,7 +172,6 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
     if( C == done ) {                               // if we reached done, we still need to add the last partition
         add_polygon_spanner_edges( PS, known, last, v_i, C );
     }
-
     known.insert( v_i );
 
     // Process v_i, i>1 //
@@ -168,6 +180,7 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
     Vertex_circulator s_j, s_k;
 
     do { // loop through level queue
+
         v_i = level.front();
         SG.addToEventQueue( v_i, 0 ); // focus0 on v_i
 
@@ -177,7 +190,8 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
 
         // Lemma 3.3
         //assert( N_PS.size() <= 5 );
-        std::cout<<v_i->point()<<" N_PS:"<<N_PS.size()<<" N_SG:"<<N_SG.size()<<std::endl;
+        if( N_SG.size() > 5 )
+            std::cout<<v_i->point()<<" N_PS:"<<N_PS.size()<<" N_SG:"<<N_SG.size()<<std::endl;
 
         find_s_1( PS, C, N_SG );
 
@@ -185,6 +199,7 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
         Vertex_circulator last;
 
         do { // loop through neighbors in DT
+
             SG.addToEventQueue( C, 1 ); // focus1 on C
             if( contains( N_SG, C ) ) {    // if we found a vertex in SG, try to add edges for partition
                 if( CGAL::circulator_size( last ) > 0 ) {        // not a valid partition if last vertex was null
@@ -229,9 +244,9 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
                 known.insert(C);
                 SG.addToEventQueue( C, 1 ); // focus1 on C
             }
+
         } while( --C != done ); // keep going until we reach done or infinite
     } while( !level.empty() ); // level is not empty
-
     SG.addToEventQueue( SG._DT.infinite_vertex(), 0 ); // focus0 on infinite
 
     std::swap( SG._E, PS._E );
@@ -240,8 +255,8 @@ void PolygonSpanner( DelaunayGraph<T>& SG ) {
     // ((PI+1)*(2*PI/(3*cos(PI/6)))) = 10.01602416
     //assert( StretchFactor(SG) <= (PI+1) ); // fails
     //assert( StretchFactor(SG) <= ((PI+1)*(2*PI/(3*cos(PI/6)))) ); // fails
-    std::cout<<"StretchFactor(SG):"<<StretchFactor(SG)
-             <<" StretchFactor(PS):"<<StretchFactor(PS)<<std::endl;
+//    std::cout<<"StretchFactor(SG):"<<StretchFactor(SG)
+//             <<" StretchFactor(PS):"<<StretchFactor(PS)<<std::endl;
 
     // Test degree assumption given after lemma 3.4
     for( auto it=SG._E.begin(); it!=SG._E.end(); ++it ) {

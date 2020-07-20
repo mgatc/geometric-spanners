@@ -25,13 +25,13 @@ using namespace std;
 int main() {
 
     const double epsilon = 2;
-    int i = 3;
+    int i = 2;
 
-    //for( i=1; i<=5; i++ ) {
+    for( i=1; i<=15; i++ ) {
         // RANDOM POINT SET
         list<Point> points;
-        const double width = 10*i;
-        const int n = 25;//pow(5, i);
+        const double width = 100;
+        const int n = pow(2.5, i);
         CGAL::Random_points_in_square_2<Point,Creator> g( width/2 );
         std::copy_n( g, n, std::back_inserter(points) );
 
@@ -44,14 +44,14 @@ int main() {
 
         auto stop = chrono::steady_clock::now();
 
-//        cout
-//            <<i<<"--------------------------"
-//            <<" n:"<<n
-//            <<" w:"<<width
-//            <<" t:"<<StretchFactor(S)
-//            <<" runtime:"<<chrono::duration_cast<chrono::milliseconds>(stop - start).count()
-//            <<"\n"<<endl;
-    //}
+        cout
+            <<i<<"--------------------------"
+            <<" n:"<<n
+            <<" w:"<<width
+            //<<" t:"<<StretchFactor(S)
+            <<" runtime:"<<chrono::duration_cast<chrono::microseconds>(stop - start).count()<<"us"
+            <<"\n";
+    }
 
 
 

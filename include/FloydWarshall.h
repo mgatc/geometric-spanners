@@ -2,8 +2,8 @@
 #define GSNUNF_FLOYDWARSHALL_H
 
 #include <algorithm>
+#include <array>
 #include <optional>
-#include <vector>
 
 #include <CGAL/number_utils.h>
 #include <CGAL/squared_distance_2.h>
@@ -13,66 +13,58 @@
 
 namespace gsnunf {
 
-//using nullopt = std::nullopt;
-template< typename T >
-using optional = std::optional<T>;
-template< typename T >
-using vector = std::vector<T>;
-template< typename T >
-using OptionalRow = vector< optional<T> >;
-template< typename T >
-using Matrix = vector< OptionalRow<T> >;
+using namespace std;
 
 template< typename N >
-optional<N> min( const optional<N>& ij, const std::pair< optional<N>,optional<N> > ikj ) {
-    optional<N> newPathLength = std::nullopt;
-    if( ikj.first && ikj.second ) newPathLength = *ikj.first + *ikj.second;
-    if( ij && newPathLength ) return CGAL::min( ij, newPathLength );
+optional<N> min( const optional<N>& ij, const pair< optional<N>,optional<N> >& ikj ) {
+//    cout<<"min start"<<endl;
+
+    optional<N> newPathLength = nullopt;
+
+    if( ikj.first && ikj.second ) newPathLength = { *ikj.first + *ikj.second };
+    if( ij && newPathLength ) return { CGAL::min( *ij, *newPathLength ) };
     if( ij ) return ij;
+
     return newPathLength;
 }
 
 template< class DG >
-void FloydWarshall( const DG& G, typename DG::template EdgeInfoMap<typename DG::FT>& dist ) {
+void FloydWarshall( const DG& G, const typename DG::template VertexMap<size_t>& index, vector< vector< optional<typename DG::FT> > >& distances ) {
     using Vertex_handle = typename DG::Vertex_handle;
-    size_t n = G._DT.number_of_vertices();
 
-    dist.clear();
-    typename DG::template VertexMap< optional< typename DG::FT > > allVertices;
+    size_t N = getN(G);
 
-    // Add all vertices to a vertex map with nullopts (infinity)
-    for( auto i = G._DT.finite_vertices_begin();
-        i != G._DT.finite_vertices_end();
-        ++i
-    ) allVertices.emplace( i, std::nullopt );
+    // Then, create an NxN table to hold distances.
+    vector< vector< optional<typename DG::FT> > > dist( N, vector< optional<typename DG::FT> >( N, nullopt ) );
+    // container constructor should initialize optionals using default constructor, aka nullopt
 
-    // Then, create an entry to map each vertex to every other vertex
-    for( auto i = G._DT.finite_vertices_begin();
-        i != G._DT.finite_vertices_end();
-        ++i
-    ) dist.emplace( i, allVertices );
-
-    // Set all i==j to 0
-    for( auto& i : dist )
-        i.second[i.first] = std::make_optional( typename DG::FT(0) );
+    // Set all i==j to 0 (distance to self)
+    for( size_t i=0; i<N; ++i )
+        dist.at(i).at(i) = make_optional( typename DG::FT(0) );
 
     // Add distance of each edge (u,v) in G._E to dist[u][v]
+    // using indices of u and v mapped in index
     for( auto& adjacent : G._E ) {
-        Vertex_handle u = adjacent.first;
+        Vertex_handle u = adjacent.first; // get vertex handle
         for( Vertex_handle v : adjacent.second ) {
-            dist[u][v] = CGAL::sqrt( CGAL::squared_distance( u->point(), v->point() ) );
+            dist.at(index.at(u)).at(index.at(v)) = make_optional( CGAL::sqrt( CGAL::squared_distance( u->point(), v->point() ) ) );
         }
     }
 
     // Check if going through k yields a shorter path from i to j
-    for( auto k : dist )
-        for( auto& i : dist )
-            for( auto j : dist ) {
-                i.second[j.first] = gsnunf::min(
-                    i.second[j.first],
-                  { i.second[k.first], k.second[j.first] }
+    for( size_t k=0; k<N; ++k ) {
+        for( size_t i=0; i<N; ++i ) {
+            for( size_t j=0; j<N; ++j ) {
+                //cout<<"1:"<<*dist.at(i).at(j)<<" 2:"<<*dist.at(i).at(k)<<" "<< *dist.at(k).at(j)<<"\n";
+                dist.at(i).at(j) = gsnunf::min(
+                    dist.at(i).at(j),
+                  { dist.at(i).at(k), dist.at(k).at(j) }
                 );
             }
+        }
+    }
+    // swap the addresses for array we built with the address given in parameters
+    swap( dist, distances );
 
     return;
 }

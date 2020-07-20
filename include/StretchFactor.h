@@ -7,72 +7,95 @@
 namespace gsnunf {
 
 template< class DG >
-void EuclideanDistanceMap( const DG& G, typename DG::template EdgeInfoMap<typename DG::FT>& euclidean ) {
+inline size_t getN( const DG& G ) {
+    return G._DT.number_of_vertices();
+}
+
+template< class DG >
+inline typename DG::FT getDistance( const DG& G, const typename DG::Vertex_handle a, const typename DG::Vertex_handle b ) {
+    return a == b ? 0 : CGAL::sqrt( CGAL::squared_distance( a->point(), b->point() ) );
+}
+
+template< class DG >
+void createVertexToIndexMap( const DG& G, typename DG::template VertexMap<size_t>& index ) {
+    index.clear();
+    index.reserve( getN(G) );
+    size_t i=0;
+    for( auto it = G._DT.finite_vertices_begin();
+        it != G._DT.finite_vertices_end();
+        ++it
+    ) index.emplace( it, i++ );
+}
+
+template< class DG >
+void EuclideanDistanceMatrix( const DG& G, const typename DG::template VertexMap<size_t>& index, vector< vector< optional<typename DG::FT> > >& euclidean ) {
     using Vertex_handle = typename DG::Vertex_handle;
-    size_t n = G._DT.number_of_vertices();
+    size_t N = getN(G);
 
-    typename DG::template VertexMap< optional< typename DG::FT > > allVertices;
+    vector< vector< optional<typename DG::FT> > > eucl( N, vector< optional<typename DG::FT> >(N, nullopt) );
 
-    // Add all vertices to a vertex map with nullopts (infinity)
-    for( auto i = G._DT.finite_vertices_begin();
-        i != G._DT.finite_vertices_end();
-        ++i
-    ) allVertices.emplace( i, std::nullopt );
+    for( auto i = G._DT.finite_vertices_begin(); i != G._DT.finite_vertices_end(); ++i )
+        for( auto j = G._DT.finite_vertices_begin(); j != G._DT.finite_vertices_end(); ++j )
+            eucl.at(index.at(i)).at(index.at(j)) =
+                make_optional(
+                    getDistance( G, i->handle(), j->handle() )
+                );
 
-    // Then, create an entry to map each vertex to every other vertex
-    euclidean.clear();
-    for( auto i = G._DT.finite_vertices_begin();
-        i != G._DT.finite_vertices_end();
-        ++i
-    ) euclidean.emplace( i, allVertices );
+    // Make sure we added distances for all pairs, none should be nullopt (infinite)
+    for( size_t i=0; i<N; ++i )
+        for( size_t j=0; j<N; ++j )
+            assert( eucl.at(i).at(j) );
 
-    // Now, loop through everything and calculate distances
-    for( auto& i : euclidean ) {
-        for( auto& j : i.second ) {
-            j.second = CGAL::sqrt( CGAL::squared_distance( i.first->point(), j.first->point() ) );
-        }
-    }
+    swap( eucl, euclidean );
+
     return;
 }
 
 template< class DG >
-void StretchFactorMap( const DG& G, typename DG::template EdgeInfoMap<typename DG::FT>& stretch ) {
+void StretchFactorMatrix( const DG& G, vector< vector< optional<typename DG::FT> > >& stretch ) {
     using Vertex_handle = typename DG::Vertex_handle;
-    using EdgeInfoMap = typename DG::template EdgeInfoMap< typename DG::FT >;
+    size_t N = getN(G);
 
-    // First, conduct Floyd-Warshall to determine all paths' cost
-    FloydWarshall( G, stretch );
+    // First, create a vertex-to-index map
+    // Add all vertices to a vertex map and assign an index
 
+    typename DG::template VertexMap< size_t > index;
+    createVertexToIndexMap( G, index );
+
+    // Next, conduct Floyd-Warshall to determine all paths' cost
+    FloydWarshall( G, index, stretch );
+    assert( stretch.size() == N );
     // Next, determine Euclidean distance between all vertices
-    EdgeInfoMap euclidean;
-    EuclideanDistanceMap( G, euclidean );
+    vector< vector< optional<typename DG::FT> > > euclidean;
+    EuclideanDistanceMatrix( G, index, euclidean );
+    assert( euclidean.size() == N );
 
-    for( auto& i : stretch ) {
-        Vertex_handle u = i.first;
-        for( auto& j : i.second ) {
-            Vertex_handle v = j.first;
-            if( u == v )
-                j.second = std::make_optional( typename DG::FT(0) );
-            else
-                j.second = *j.second / *euclidean[u][v];
-        }
-    }
+    vector< vector< optional<typename DG::FT> > > quotient( N, vector< optional<typename DG::FT> >(N) );
+
+    for( size_t i=0; i<N; ++i )
+        for( size_t j=0; j<N; ++j )
+            quotient.at(i).at(j) =
+                stretch.at(i).at(j) ?
+                    make_optional( i==j ? 0 : *stretch.at(i).at(j) / *euclidean.at(i).at(j) )
+                    : nullopt;
+
+
+    swap( quotient, stretch );
 
     return;
 }
 
 template< class DG >
 typename DG::FT StretchFactor( const DG& G ) {
-    using EdgeInfoMap = typename DG::template EdgeInfoMap< typename DG::FT >;
+    vector< vector< optional<typename DG::FT> > > stretch;
+    StretchFactorMatrix( G, stretch );
 
-    EdgeInfoMap stretch;
-    StretchFactorMap( G, stretch );
-
-    typename DG::FT maxValue;
+    typename DG::FT maxValue = 1.0;
     // Find max in stretch
-    for( auto& i : stretch )
-        for( auto& j : i.second )
-            maxValue = CGAL::max( *j.second, maxValue );
+    for( const auto& i : stretch )
+        for( const auto& j : i )
+            maxValue = CGAL::max( *j, maxValue );
+
     return maxValue;
 }
 

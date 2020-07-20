@@ -27,7 +27,7 @@ int main() {
     const double epsilon = 2;
     int i = 2;
 
-    for( i=1; i<=15; i++ ) {
+    for( i=1; i<=12; i++ ) {
         // RANDOM POINT SET
         list<Point> points;
         const double width = 100;

@@ -31,12 +31,11 @@ optional<N> min( const optional<N>& ij, const pair< optional<N>,optional<N> >& i
 template< class DG >
 void FloydWarshall( const DG& G, const typename DG::template VertexMap<size_t>& index, vector< vector< optional<typename DG::FT> > >& distances ) {
     using Vertex_handle = typename DG::Vertex_handle;
-
     size_t N = getN(G);
 
-    // Then, create an NxN table to hold distances.
+    // Create an NxN table to hold distances.
     vector< vector< optional<typename DG::FT> > > dist( N, vector< optional<typename DG::FT> >( N, nullopt ) );
-    // container constructor should initialize optionals using default constructor, aka nullopt
+    // container constructor should initialize optionals using default constructor, aka nullopt, aka infinity
 
     // Set all i==j to 0 (distance to self)
     for( size_t i=0; i<N; ++i )
@@ -44,10 +43,11 @@ void FloydWarshall( const DG& G, const typename DG::template VertexMap<size_t>& 
 
     // Add distance of each edge (u,v) in G._E to dist[u][v]
     // using indices of u and v mapped in index
-    for( auto& adjacent : G._E ) {
+    for( auto adjacent : G._E ) {
         Vertex_handle u = adjacent.first; // get vertex handle
         for( Vertex_handle v : adjacent.second ) {
             dist.at(index.at(u)).at(index.at(v)) = make_optional( CGAL::sqrt( CGAL::squared_distance( u->point(), v->point() ) ) );
+            //cout<<"adding edge of weight:"<<*dist.at(index.at(u)).at(index.at(v))<<"\n";
         }
     }
 

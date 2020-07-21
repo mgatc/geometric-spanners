@@ -109,6 +109,15 @@ class DelaunayGraph {
         addToEventQueue( std::make_pair(v1,v2), false );
     }
 
+    void add_all_edges() {
+        for( auto eit = _DT.finite_edges_begin(); eit != _DT.finite_edges_end(); ++eit ) {
+            typename T::Edge e = *eit;
+            Vertex_handle p = e.first->vertex( (e.second+1)%3 ),
+                          q = e.first->vertex( (e.second+2)%3 );
+            add_edge( p, q );
+        }
+    }
+
     double get_angle( const Vertex_handle &p, const Vertex_handle &q, const Vertex_handle &r ) {
         // TODO: use math/angle from CGAL, not stl
         assert( !_DT.is_infinite(p) && !_DT.is_infinite(q) && !_DT.is_infinite(r) );

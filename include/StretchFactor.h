@@ -32,6 +32,7 @@ void EuclideanDistanceMatrix( const DG& G, const typename DG::template VertexMap
     using Vertex_handle = typename DG::Vertex_handle;
     size_t N = getN(G);
 
+    // Create an NxN table to hold distances.
     vector< vector< optional<typename DG::FT> > > eucl( N, vector< optional<typename DG::FT> >(N, nullopt) );
 
     for( auto i = G._DT.finite_vertices_begin(); i != G._DT.finite_vertices_end(); ++i )
@@ -79,7 +80,6 @@ void StretchFactorMatrix( const DG& G, vector< vector< optional<typename DG::FT>
                     make_optional( i==j ? 0 : *stretch.at(i).at(j) / *euclidean.at(i).at(j) )
                     : nullopt;
 
-
     swap( quotient, stretch );
 
     return;
@@ -92,9 +92,11 @@ typename DG::FT StretchFactor( const DG& G ) {
 
     typename DG::FT maxValue = 1.0;
     // Find max in stretch
-    for( const auto& i : stretch )
-        for( const auto& j : i )
+    for( auto i : stretch )
+        for( auto j : i ) {
             maxValue = CGAL::max( *j, maxValue );
+            //cout<<*j<<"\n";
+        }
 
     return maxValue;
 }

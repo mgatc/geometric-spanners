@@ -3,7 +3,9 @@
 
 #include <algorithm>
 #include <array>
+#include <iostream>
 #include <optional>
+#include <vector>
 
 #include <CGAL/number_utils.h>
 #include <CGAL/squared_distance_2.h>
@@ -41,28 +43,26 @@ void FloydWarshall( const DG& G, const typename DG::template VertexMap<size_t>& 
     for( size_t i=0; i<N; ++i )
         dist.at(i).at(i) = make_optional( typename DG::FT(0) );
 
+    assert( index.size() == N );
+
     // Add distance of each edge (u,v) in G._E to dist[u][v]
     // using indices of u and v mapped in index
-    for( auto adjacent : G._E ) {
+    for( const auto& adjacent : G._E ) {
         Vertex_handle u = adjacent.first; // get vertex handle
-        for( Vertex_handle v : adjacent.second ) {
+        for( const Vertex_handle v : adjacent.second )
             dist.at(index.at(u)).at(index.at(v)) = make_optional( CGAL::sqrt( CGAL::squared_distance( u->point(), v->point() ) ) );
-            //cout<<"adding edge of weight:"<<*dist.at(index.at(u)).at(index.at(v))<<"\n";
-        }
+
     }
 
     // Check if going through k yields a shorter path from i to j
-    for( size_t k=0; k<N; ++k ) {
-        for( size_t i=0; i<N; ++i ) {
-            for( size_t j=0; j<N; ++j ) {
-                //cout<<"1:"<<*dist.at(i).at(j)<<" 2:"<<*dist.at(i).at(k)<<" "<< *dist.at(k).at(j)<<"\n";
+    for( size_t k=0; k<N; ++k )
+        for( size_t i=0; i<N; ++i )
+            for( size_t j=0; j<N; ++j )
                 dist.at(i).at(j) = gsnunf::min(
                     dist.at(i).at(j),
                   { dist.at(i).at(k), dist.at(k).at(j) }
                 );
-            }
-        }
-    }
+
     // swap the addresses for array we built with the address given in parameters
     swap( dist, distances );
 

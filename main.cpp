@@ -24,26 +24,6 @@ using namespace std;
 
 int main() {
 
-    /*
-        Delaunay Triangulation Test
-
-        The Delaunay triangulation is known to be a t-spanner
-        where t <= 2pi/(3cos(pi/6)). Therefore, in output from
-        this section, t<=b verifies correct operation.
-    */
-
-
-    cout
-        <<"--------------------------\n"
-        <<"--------------------------\n"
-        <<"Delaunay Triangulation Test\n"
-        <<"--------------------------\n"
-        <<"The Delaunay triangulation is known to be a t-spanner\n"
-        <<"where t <= 2pi/(3cos(pi/6)). Therefore, in output from\n"
-        <<"this section, t<=b verifies correct operation.\n"
-        <<"--------------------------\n";
-
-    const double epsilon = 2;
     const double width = 100;
 
     /*
@@ -63,7 +43,7 @@ int main() {
 
     size_t i = 2;
 
-    for( i=1; i<=10; ++i ) {
+    for( i=2; i<=10; ++i ) {
         // SET POINT SET
         list<Point> points;
         const int n = pow(2, i);
@@ -73,9 +53,8 @@ int main() {
 
         Delaunay_triangulation_2 DT( points.begin(), points.end() );
         DelaunayGraph<Delaunay_triangulation_2> S(DT);
-        S.add_all_edges();
 
-        //PlanarSpanner( S, epsilon );
+        PlanarSpanner(S);
 
         auto stop = chrono::steady_clock::now();
 
@@ -89,43 +68,6 @@ int main() {
             <<"\n";
     }
 
-    /*
-        Unit square test
-
-        Four points placed in a 1x1 square with edges completing the square will
-        yield t = sqrt2 ~ 1.41
-    */
-
-    list<Point> points {
-        { 0,0 },
-        { 0,1 },
-        { 1,1 },
-        { 1,0 }
-    };
-
-    Delaunay_triangulation_2 DT;
-    vector<DelaunayGraph<Delaunay_triangulation_2>::Vertex_handle> V;
-
-    for( auto p : points )
-        V.emplace_back( DT.insert(p) );
-
-    DelaunayGraph<Delaunay_triangulation_2> S(DT);
-
-    for( size_t i=0; i<points.size(); ++i )
-        S.add_edge( V.at(i), V.at( (i+1)%points.size() ) );
-
-
-    cout
-        <<"--------------------------\n"
-        <<"--------------------------\n"
-        <<"Unit Square Test\n"
-        <<"--------------------------\n"
-        <<"Four points placed in a 1x1 square with edges completing \n"
-        <<" the square will yield t = sqrt2 ~ 1.41\n"
-        <<"--------------------------\n"
-        <<" t:"<<StretchFactor(S)
-        <<" b:"<<sqrt(2)
-        <<"\n";
 
 
     return 0;

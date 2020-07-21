@@ -65,11 +65,9 @@ void StretchFactorMatrix( const DG& G, vector< vector< optional<typename DG::FT>
 
     // Next, conduct Floyd-Warshall to determine all paths' cost
     FloydWarshall( G, index, stretch );
-    assert( stretch.size() == N );
     // Next, determine Euclidean distance between all vertices
     vector< vector< optional<typename DG::FT> > > euclidean;
     EuclideanDistanceMatrix( G, index, euclidean );
-    assert( euclidean.size() == N );
 
     vector< vector< optional<typename DG::FT> > > quotient( N, vector< optional<typename DG::FT> >(N) );
 

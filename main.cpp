@@ -24,23 +24,58 @@ using namespace std;
 
 int main() {
 
+    /*
+        Delaunay Triangulation Test
+
+        The Delaunay triangulation is known to be a t-spanner
+        where t <= 2pi/(3cos(pi/6)). Therefore, in output from
+        this section, t<=b verifies correct operation.
+    */
+
+
+    cout
+        <<"--------------------------\n"
+        <<"--------------------------\n"
+        <<"Delaunay Triangulation Test\n"
+        <<"--------------------------\n"
+        <<"The Delaunay triangulation is known to be a t-spanner\n"
+        <<"where t <= 2pi/(3cos(pi/6)). Therefore, in output from\n"
+        <<"this section, t<=b verifies correct operation.\n"
+        <<"--------------------------\n";
+
     const double epsilon = 2;
-    int i = 2;
+    const double width = 100;
 
-    for( i=1; i<=12; i++ ) {
-        // RANDOM POINT SET
+    /*
+        g1-g4 are the random point generators. Currently, they must be
+        manually changed in the code to effect the point set properties.
+        I tried to put them in a vector of the base class and loop through
+        it to change the generator. However, their base class doesn't
+        implement the ++ operator, required by copy_n. Therefore, we need
+        to create a random point set factory for this purpose, which will
+        be useful throughout the project.
+    */
+
+    auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width/2 );
+    auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>( width/2 );
+    auto g3 = CGAL::Random_points_on_circle_2<Point,Creator>( width/2 );
+    auto g4 = CGAL::Random_points_on_square_2<Point,Creator>( width/2 );
+
+    size_t i = 2;
+
+    for( i=1; i<=10; ++i ) {
+        // SET POINT SET
         list<Point> points;
-        const double width = 100;
-        const int n = pow(2.5, i);
-        CGAL::Random_points_in_square_2<Point,Creator> g( width/2 );
-        std::copy_n( g, n, std::back_inserter(points) );
-
+        const int n = pow(2, i);
+        std::copy_n( g4, n, std::back_inserter(points) );
 
         auto start = chrono::steady_clock::now();
 
         Delaunay_triangulation_2 DT( points.begin(), points.end() );
         DelaunayGraph<Delaunay_triangulation_2> S(DT);
-        PlanarSpanner( S, epsilon );
+        S.add_all_edges();
+
+        //PlanarSpanner( S, epsilon );
 
         auto stop = chrono::steady_clock::now();
 
@@ -48,63 +83,49 @@ int main() {
             <<i<<"--------------------------"
             <<" n:"<<n
             <<" w:"<<width
-            //<<" t:"<<StretchFactor(S)
+            <<" t:"<<StretchFactor(S)
+            <<" b:"<<(2*PI/(3*cos(PI*6)))
             <<" runtime:"<<chrono::duration_cast<chrono::microseconds>(stop - start).count()<<"us"
             <<"\n";
     }
 
+    /*
+        Unit square test
+
+        Four points placed in a 1x1 square with edges completing the square will
+        yield t = sqrt2 ~ 1.41
+    */
+
+    list<Point> points {
+        { 0,0 },
+        { 0,1 },
+        { 1,1 },
+        { 1,0 }
+    };
+
+    Delaunay_triangulation_2 DT;
+    vector<DelaunayGraph<Delaunay_triangulation_2>::Vertex_handle> V;
+
+    for( auto p : points )
+        V.emplace_back( DT.insert(p) );
+
+    DelaunayGraph<Delaunay_triangulation_2> S(DT);
+
+    for( size_t i=0; i<points.size(); ++i )
+        S.add_edge( V.at(i), V.at( (i+1)%points.size() ) );
 
 
-//    for( Point p : points )
-//        cout<<p<<endl;
-
-    // POINT SET FOR STRETCH FACTOR TEST
-//    list<Point> points{
-//            {0,0},
-//            {0,1},
-//            {1,1},
-//            {1,0}
-//        };
-
-    // POINT SET FROM PAPER, PAGE 253
-//    list<Point> points = {
-//        { -1, 0.1 },
-//        { -0.9, 3 },
-//        { -2, 6 },
-//        { -7, 3.1 },
-//        { -6, -0.1 },
-//        { -9, -0.2 },
-//        { -7.7, -1 },
-//        { -6.1, -1.5 },
-//        { -10, -4 },
-//        { -4, -3 },
-//        { -1.5, -6 },
-//        { 1, -9 },
-//        { 4, -4 },
-//        { 4.1, 0 },
-//        { 3.9, 5.9 },
-//        { 5, 3 },
-//        { 5, -2 },
-//        { 9, 1 }
-//    };
-
-    // TESTING POINT SET
-//    list<Point> points = {
-//        {0,0},
-//        {0,3},
-//        {5,0},
-//        {5,3},
-//        {7,5},
-//        {7,-2},
-//        {-4,4},
-//        {-2,1},
-//        {7,-9},
-//        {-11,-3},
-//        {10,0},
-//        {1,-10},
-//        {5,2},
-//        {8,8}
-//    };
+    cout
+        <<"--------------------------\n"
+        <<"--------------------------\n"
+        <<"Unit Square Test\n"
+        <<"--------------------------\n"
+        <<"Four points placed in a 1x1 square with edges completing \n"
+        <<" the square will yield t = sqrt2 ~ 1.41\n"
+        <<"--------------------------\n"
+        <<" t:"<<StretchFactor(S)
+        <<" b:"<<sqrt(2)
+        <<"\n";
 
 
     return 0;

@@ -1,7 +1,6 @@
 #ifndef GSNUNF_GEOMETRICSPANNERPRINTER_H
 #define GSNUNF_GEOMETRICSPANNERPRINTER_H
 
-#include "CGALComponents.h"
 #include "DelaunayGraph.h"
 
 namespace gsnunf {

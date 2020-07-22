@@ -29,15 +29,15 @@ add_executable(GraphUI
   graphview.h
   graphscene.cpp
   graphscene.h
-  GraphAlgorithmEvent.h
-  DelaunayGraph.h
-  GeometricSpannerPrinter.h
-  PlanarSpanner.h
   playbackparameters.cpp
   playbackparameters.h
-  PolygonSpanner.h
-  SpanningGraph.h
-  TransformPolygon.h
+  ../../include/PolygonSpanner.h
+  ../../include/SpanningGraph.h
+  ../../include/TransformPolygon.h
+  ../../include/GraphAlgorithmEvent.h
+  ../../include/DelaunayGraph.h
+  ../../include/GeometricSpannerPrinter.h
+  ../../include/PlanarSpanner.h
 )
 
 target_link_libraries(GraphUI PRIVATE Qt5::Widgets Boost::system Boost::thread gmp mpfr CGAL::CGAL)

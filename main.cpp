@@ -41,13 +41,15 @@ int main() {
     auto g3 = CGAL::Random_points_on_circle_2<Point,Creator>( width/2 );
     auto g4 = CGAL::Random_points_on_square_2<Point,Creator>( width/2 );
 
-    size_t i = 2;
+    size_t i = 6;
+    GeometricSpannerPrinter printer( .25f );
 
-    for( i=2; i<=10; ++i ) {
+
+    //for( i=2; i<=10; ++i ) {
         // SET POINT SET
         list<Point> points;
         const int n = pow(2, i);
-        std::copy_n( g4, n, std::back_inserter(points) );
+        std::copy_n( g2, n, std::back_inserter(points) );
 
         auto start = chrono::steady_clock::now();
 
@@ -63,10 +65,11 @@ int main() {
             <<" n:"<<n
             <<" w:"<<width
             <<" t:"<<StretchFactor(S)
-            <<" b:"<<(2*PI/(3*cos(PI*6)))
+            <<" b:"<<(PI+1)*(2*PI/(3*cos(PI/6)))
             <<" runtime:"<<chrono::duration_cast<chrono::microseconds>(stop - start).count()<<"us"
             <<"\n";
-    }
+        //printer.draw( S, "temp");
+    //}
 
 
 

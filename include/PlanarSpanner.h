@@ -3,7 +3,6 @@
 
 #include <list>
 
-#include "CGALComponents.h"
 #include "DelaunayGraph.h"
 #include "SpanningGraph.h"
 #include "PolygonSpanner.h"

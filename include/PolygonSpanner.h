@@ -81,10 +81,10 @@ namespace polygon_spanner {
                     G.add_edge(q, v);
                 else {
 
-                    std::cout<<v->point()<<" N_PS:"<<G._E.find( v )->second.size()<<std::endl;
-
-                    GeometricSpannerPrinter printer( .25f );
-                    printer.draw( G, "PolygonSpanner" );
+//                    std::cout<<v->point()<<" N_PS:"<<G._E.find( v )->second.size()<<std::endl;
+//
+//                    GeometricSpannerPrinter printer( .25f );
+//                    printer.draw( G, "PolygonSpanner" );
                 }
 
                 G.addToEventQueue( {q, v}, true ); // add edge
@@ -164,7 +164,7 @@ void PolygonSpanner( DelaunayGraph<T>& P ) {
      */
 
     auto v_1 = P._DT.finite_vertices_begin();
-    VertexSet N_P;  // neighbors of v_1 in SpanningGraph edges
+    VertexSet& N_P = P._E.find( v_1 )->second;  // neighbors of v_1 in SpanningGraph edges
     do {
         N_P = P._E.find( v_1 )->second;
     } while( N_P.size() > 1 + int( contains( on_outer_face, v_1++ ) ) );
@@ -174,7 +174,7 @@ void PolygonSpanner( DelaunayGraph<T>& P ) {
 
     // Create and orient C so it points to s_1
     Vertex_circulator C = PS._DT.incident_vertices( v_i ); // neighbors of v_1 in DT
-    VertexSet N_PS = PS._E.find( v_i )->second;  // neighbors of v_1 in PolygonSpanner edges
+    VertexSet& N_PS = PS._E.find( v_i )->second;  // neighbors of v_1 in PolygonSpanner edges
     find_s_1( PS, C, N_P ); // verified
 
     done = C;                      // remember where we started
@@ -219,8 +219,8 @@ void PolygonSpanner( DelaunayGraph<T>& P ) {
         if( N_PS.size() > 5 ) {
             std::cout<<v_i->point()<<" N_PS:"<<N_PS.size()<<" N_P:"<<N_P.size()<<std::endl;
 
-            GeometricSpannerPrinter printer( .25f );
-            printer.draw( PS, "PolygonSpanner" );
+//            GeometricSpannerPrinter printer( .25f );
+//            printer.draw( PS, "PolygonSpanner" );
         }
         assert( N_PS.size() <= 5 ); // Lemma 3.3
 

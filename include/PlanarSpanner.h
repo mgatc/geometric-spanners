@@ -16,13 +16,13 @@ template< class T >
 void PlanarSpanner( DelaunayGraph<T>& G ) {
 
     GeometricSpannerPrinter printer( .25f );
-    //printer.draw( G._DT, "Triangulation" );
+    printer.draw( G._DT, "Triangulation" );
 
     SpanningGraph( G );
-    //printer.draw( G, "SpanningGraph" );
+    printer.draw( G, "SpanningGraph" );
 
     PolygonSpanner( G );
-    //printer.draw( G, "PolygonSpanner" );
+    printer.draw( G, "PolygonSpanner" );
 
 }
 

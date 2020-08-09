@@ -12,7 +12,7 @@ inline size_t getN( const DG& G ) {
 }
 
 template< class DG >
-inline typename DG::FT getDistance( const DG& G, const typename DG::Vertex_handle a, const typename DG::Vertex_handle b ) {
+inline typename DG::FT getDistance( const typename DG::Vertex_handle a, const typename DG::Vertex_handle b ) {
     return a == b ? 0 : CGAL::sqrt( CGAL::squared_distance( a->point(), b->point() ) );
 }
 
@@ -29,7 +29,6 @@ void createVertexToIndexMap( const DG& G, typename DG::template VertexMap<size_t
 
 template< class DG >
 void EuclideanDistanceMatrix( const DG& G, const typename DG::template VertexMap<size_t>& index, vector< vector< optional<typename DG::FT> > >& euclidean ) {
-    using Vertex_handle = typename DG::Vertex_handle;
     size_t N = getN(G);
 
     // Create an NxN table to hold distances.
@@ -39,7 +38,7 @@ void EuclideanDistanceMatrix( const DG& G, const typename DG::template VertexMap
         for( auto j = G._DT.finite_vertices_begin(); j != G._DT.finite_vertices_end(); ++j )
             eucl.at(index.at(i)).at(index.at(j)) =
                 make_optional(
-                    getDistance( G, i->handle(), j->handle() )
+                    getDistance<DG>( i->handle(), j->handle() )
                 );
 
     // Make sure we added distances for all pairs, none should be nullopt (infinite)
@@ -54,7 +53,6 @@ void EuclideanDistanceMatrix( const DG& G, const typename DG::template VertexMap
 
 template< class DG >
 void StretchFactorMatrix( const DG& G, vector< vector< optional<typename DG::FT> > >& stretch ) {
-    using Vertex_handle = typename DG::Vertex_handle;
     size_t N = getN(G);
 
     // First, create a vertex-to-index map

@@ -12,8 +12,8 @@ namespace gsnunf {
     namespace spanning_graph {
 
     template< class T >
-    void add_first_edge( T& G, typename T::Vertex_handle v, typename T::Vertex_circulator C ) {
-        typename T::Vertex_handle v2 = C->handle();
+    void add_first_edge( DelaunayGraph<T>& G, Vertex_handle<T> v, Vertex_circulator<T> C ) {
+        Vertex_handle<T> v2 = C->handle();
         G.add_edge( v, v2 );
         G.addToEventQueue( v, 1 );
         G.addToEventQueue( v2, 2 );
@@ -21,9 +21,9 @@ namespace gsnunf {
     }
 
     template< class T >
-    void add_second_edge( T& G, typename T::Vertex_handle v, typename T::Vertex_circulator C ) {
+    void add_second_edge( DelaunayGraph<T>& G, Vertex_handle<T> v, Vertex_circulator<T> C ) {
         while( G._DT.is_infinite(++C) );
-        typename T::Vertex_handle v2 = C->handle();
+        Vertex_handle<T> v2 = C->handle();
         G.add_edge( v, v2 );
         G.addToEventQueue( v, 1 );
         G.addToEventQueue( v2, 2 );
@@ -31,13 +31,13 @@ namespace gsnunf {
     }
 
     template< class T >
-    void add_last_edge( T& G, typename T::Vertex_handle v, typename T::Vertex_circulator C, typename T::VertexHash is_removed ) {
+    void add_last_edge( DelaunayGraph<T>& G, Vertex_handle<T> v, Vertex_circulator<T> C, VertexHash<T> is_removed ) {
         --C;
-        typename T::Vertex_circulator done(C);
+        Vertex_circulator<T> done(C);
 
         while( ( contains( is_removed, C ) || G._DT.is_infinite(C) ) && --C != done );
 
-        typename T::Vertex_handle v2 = C->handle();
+        Vertex_handle<T> v2 = C->handle();
 
         G.add_edge( v, v2 );
 
@@ -47,8 +47,8 @@ namespace gsnunf {
     }
 
     template< class T >
-    void remove_first_edge( T& G, typename T::Vertex_circulator C ) {
-        typename T::Vertex_handle v1 = C->handle(),
+    void remove_first_edge( DelaunayGraph<T>& G, Vertex_circulator<T> C ) {
+        Vertex_handle<T> v1 = C->handle(),
                                   v2 = (++C)->handle();
         G.remove_edge( v1, v2 );
 
@@ -58,9 +58,9 @@ namespace gsnunf {
     }
 
     template< class T >
-    void remove_second_edge( T& G, typename T::Vertex_circulator C ) {
-        typename T::Vertex_handle v1 = (++C)->handle(),
-                                  v2 = (++C)->handle();
+    void remove_second_edge( DelaunayGraph<T>& G, Vertex_circulator<T> C ) {
+        Vertex_handle<T> v1 = (++C)->handle(),
+                         v2 = (++C)->handle();
         G.remove_edge( v1, v2 );
 
         G.addToEventQueue( v1, 1 );
@@ -69,15 +69,15 @@ namespace gsnunf {
     }
 
     template< class T >
-    void remove_last_edge( T& G, typename T::Vertex_circulator C, typename T::VertexHash is_removed ) {
+    void remove_last_edge( DelaunayGraph<T>& G, Vertex_circulator<T> C, VertexHash<T> is_removed ) {
         --C;
 
-        typename T::Vertex_circulator done(C);
+        Vertex_circulator<T> done(C);
 
         while( ( contains( is_removed, C ) || G._DT.is_infinite(C) ) && --C != done );
 
-        typename T::Vertex_handle v1 = C->handle(),
-                                  v2 = (--C)->handle();
+        Vertex_handle<T> v1 = C->handle(),
+                         v2 = (--C)->handle();
         G.remove_edge( v1, v2 );
 
         G.addToEventQueue( v1, 1 );
@@ -91,22 +91,18 @@ namespace gsnunf {
 template< class T >
 void SpanningGraph( DelaunayGraph<T>& DT ) {
 
-    using Vertex_handle = typename T::Vertex_handle;
-    using Vertex_circulator = typename T::Vertex_circulator;
-    using VertexHash = typename DelaunayGraph<T>::VertexHash;
-
     using namespace spanning_graph;
 
-    std::list<Vertex_handle> canonical;
-    typename std::list<Vertex_handle>::iterator c_iter;
+    std::list< Vertex_handle<T> > canonical;
+    typename std::list< Vertex_handle<T> >::iterator c_iter;
 
-    Vertex_handle triangle[3];
-    Vertex_circulator v_n, done;
-    int i;
+    Vertex_handle<T> triangle[3];
+    Vertex_circulator<T> v_n, done;
+    size_t i;
 
     DT.canonical_order( canonical );
 
-    VertexHash is_removed( canonical.begin(), canonical.end() );
+    VertexHash<T> is_removed( canonical.begin(), canonical.end() );
 
     // Add first three vertices from canonical
     for( i=0, c_iter=canonical.begin(); i<3&&i<canonical.size(); ++c_iter, ++i ) {
@@ -117,7 +113,8 @@ void SpanningGraph( DelaunayGraph<T>& DT ) {
     }
 
     for( i=0; i<3&&i<canonical.size(); ++i ) { // Add edges of triangle
-        DT.add_edge( triangle[i], triangle[(i+1)%3] );        DT.addToEventQueue( { triangle[i], triangle[(i+1)%3] }, true );
+        DT.add_edge( triangle[i], triangle[(i+1)%3] );
+        DT.addToEventQueue( { triangle[i], triangle[(i+1)%3] }, true );
         DT.addToEventQueue( { triangle[i], triangle[(i+1)%3] }, true );
     }
 

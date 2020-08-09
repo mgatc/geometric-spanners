@@ -416,7 +416,7 @@
 1588865172 source:/home/matt/UDC/udc/src/ExperimentalHex2.cpp
 	"ExperimentalHex2.h"
 
-1595434863 source:/home/matt/GeometricSpanners/main.cpp
+1596651962 source:/home/matt/GeometricSpanners/main.cpp
 	<chrono>
 	<list>
 	<memory>
@@ -470,7 +470,7 @@
 1589915120 /home/matt/GeometricSpanners/include/GeometricSpannerSolutionChecker.h
 	"CgalComponents.h"
 
-1595361548 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
+1596139588 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
 	"DelaunayGraph.h"
 
 1589914889 source:/home/matt/GeometricSpanners/src/GeometricSpannerExperiment.cpp
@@ -496,10 +496,11 @@
 	"PolygonSpanner.h"
 	"GeometricSpannerPrinter.h"
 
-1595440779 /home/matt/GeometricSpanners/include/PlanarSpanner.h
+1596746453 /home/matt/GeometricSpanners/include/PlanarSpanner.h
 	<list>
 	"DelaunayGraph.h"
 	"SpanningGraph.h"
+	"TransformPolygon.h"
 	"PolygonSpanner.h"
 	"GeometricSpannerPrinter.h"
 
@@ -513,7 +514,7 @@
 	<list>
 	"CGALComponents.h"
 
-1595267142 /home/matt/GeometricSpanners/include/SpanningGraph.h
+1596139588 /home/matt/GeometricSpanners/include/SpanningGraph.h
 	<list>
 	"DelaunayGraph.h"
 
@@ -537,7 +538,7 @@
 	<algorithm>
 	<cassert>
 
-1595441547 /home/matt/GeometricSpanners/include/PolygonSpanner.h
+1596995676 /home/matt/GeometricSpanners/include/PolygonSpanner.h
 	<algorithm>
 	<queue>
 	"DelaunayGraph.h"
@@ -613,17 +614,21 @@
 1592945885 source:/home/david/Programs/geometric-spanners/src/GeometricSpannerPrinter.cpp
 	"GeometricSpannerPrinter.h"
 
-1595267142 /home/matt/GeometricSpanners/include/TransformPolygon.h
+1596812164 /home/matt/GeometricSpanners/include/TransformPolygon.h
+	<algorithm>
+	<experimental/memory_resource>
+	<functional>
 	<unordered_map>
-	"CGALComponents.h"
-	"SpanningGraph.h"
+	<utility>
+	<vector>
+	"DelaunayGraph.h"
 
 1593883307 source:/home/matt/GeometricSpanners/src/TransformPolygon.cpp
 	"TransformPolygon.h"
 	"SpanningGraph.h"
 	"DelaunayGraph.h"
 
-1595350039 /home/matt/GeometricSpanners/include/DelaunayGraph.h
+1596481529 /home/matt/GeometricSpanners/include/DelaunayGraph.h
 	<list>
 	<memory>
 	<queue>
@@ -638,14 +643,7 @@
 1593883307 source:/home/matt/GeometricSpanners/src/DelaunayGraph.cpp
 	"DelaunayGraph.h"
 
-1594056641 source:/home/matt/GeometricSpanners/src/GeometricSpanners.cpp
-	"CGALComponents.h"
-	"DelaunayGraph.h"
-	"GeometricSpannerPrinter.h"
-	"PlanarSpanner.h"
-	"PolygonSpanner.h"
-	"SpanningGraph.h"
-	"TransformPolygon.h"
+1595441800 source:/home/matt/GeometricSpanners/src/GeometricSpanners.cpp
 
 1595358800 /home/matt/GeometricSpanners/include/FloydWarshall.h
 	<algorithm>
@@ -658,7 +656,7 @@
 	<CGAL/utils.h>
 	"DelaunayGraph.h"
 
-1595358800 /home/matt/GeometricSpanners/include/StretchFactor.h
+1596139740 /home/matt/GeometricSpanners/include/StretchFactor.h
 	"DelaunayGraph.h"
 	"FloydWarshall.h"
 

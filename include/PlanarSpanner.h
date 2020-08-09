@@ -5,6 +5,7 @@
 
 #include "DelaunayGraph.h"
 #include "SpanningGraph.h"
+#include "TransformPolygon.h"
 #include "PolygonSpanner.h"
 #include "GeometricSpannerPrinter.h"
 
@@ -21,8 +22,15 @@ void PlanarSpanner( DelaunayGraph<T>& G ) {
     SpanningGraph( G );
     printer.draw( G, "SpanningGraph" );
 
-    PolygonSpanner( G );
-    printer.draw( G, "PolygonSpanner" );
+    SplitVertexMap<T> V;
+    SplitVertexEdgeMap<T> P;
+
+    TransformPolygon( G, V, P );
+
+    PolygonSpanner( G, V, P );
+    //print_vertices<T>(V);
+    //print_edges<T>(P);
+    //printer.draw( G, "PolygonSpanner" );
 
 }
 

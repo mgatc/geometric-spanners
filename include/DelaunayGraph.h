@@ -137,6 +137,16 @@ class DelaunayGraph {
         return result;
     }
 
+    Vertex_circulator orient_circulator( const Vertex_circulator& C, const Vertex_handle& v ) const {
+        Vertex_circulator out(C),
+                          done(C);
+        do {
+            if( out->handle() == v )
+                return out;
+        } while( --out != done );
+        return Vertex_circulator();
+    }
+
     /**
      *  Given a Delaunay Triangulation DT and an output list out, compute the canonical ordering of
      *  the underlying point set.
@@ -419,6 +429,20 @@ class DelaunayGraph {
     }
 
 }; // class DelaunayGraph
+
+
+// Make some key types of DelaunayGraph public in the namespace
+
+template< class T, class V >
+using VertexMap = typename DelaunayGraph<T>::template VertexMap<V>;
+template< class T >
+using VertexSet = typename DelaunayGraph<T>::VertexSet;
+template< class T >
+using VertexHash = typename DelaunayGraph<T>::VertexHash;
+template< class T >
+using Vertex_handle = typename DelaunayGraph<T>::Vertex_handle;
+template< class T >
+using Vertex_circulator = typename DelaunayGraph<T>::Vertex_circulator;
 
 } // namespace gsnunf
 

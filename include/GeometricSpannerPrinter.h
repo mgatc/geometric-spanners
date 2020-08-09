@@ -37,11 +37,11 @@ class GeometricSpannerPrinter {
 
         std::cout << "\nOutput PDF generation started...\n";
         std::string command = "pdflatex " + fName + " > /dev/null";
-        system(command.c_str());
+        std::ignore = system(command.c_str());
         std::cout << "PDF generation terminated...\n";
 
         command = "evince " + fName + ".pdf &";
-        system(command.c_str());
+        std::ignore = system(command.c_str());
 
     }
 
@@ -73,11 +73,11 @@ class GeometricSpannerPrinter {
 
         std::cout << "\nOutput PDF generation started...\n";
         std::string command = "pdflatex " + fName + " > /dev/null";
-        system(command.c_str());
+        std::ignore = system(command.c_str());
         std::cout << "PDF generation terminated...\n";
 
         command = "evince " + fName + ".pdf &";
-        system(command.c_str());
+        std::ignore = system(command.c_str());
 
     }
 

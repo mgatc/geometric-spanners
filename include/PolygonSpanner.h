@@ -179,9 +179,9 @@ namespace polygon_spanner {
          * assumption that edges are only added to non-complete
          * vertices.
          */
-        if( !contains( E_P.at(p.key), q.key ) )
+        if( !contains( E_P, p.key) || !contains( E_P.at(p.key), q.key ) )
             add_polygon_spanner_edge<T>( SG, E_P, p, q, status );
-        if( !contains( E_P.at(q.key), r.key ) )
+        if( !contains( E_P, q.key) || !contains( E_P.at(q.key), r.key ) )
             add_polygon_spanner_edge<T>( SG, E_P, q, r, status );
     }
 

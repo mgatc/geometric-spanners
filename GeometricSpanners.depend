@@ -416,7 +416,7 @@
 1588865172 source:/home/matt/UDC/udc/src/ExperimentalHex2.cpp
 	"ExperimentalHex2.h"
 
-1596651962 source:/home/matt/GeometricSpanners/main.cpp
+1597332780 source:/home/matt/GeometricSpanners/main.cpp
 	<chrono>
 	<list>
 	<memory>
@@ -496,7 +496,7 @@
 	"PolygonSpanner.h"
 	"GeometricSpannerPrinter.h"
 
-1596746453 /home/matt/GeometricSpanners/include/PlanarSpanner.h
+1597332898 /home/matt/GeometricSpanners/include/PlanarSpanner.h
 	<list>
 	"DelaunayGraph.h"
 	"SpanningGraph.h"
@@ -538,13 +538,15 @@
 	<algorithm>
 	<cassert>
 
-1596995676 /home/matt/GeometricSpanners/include/PolygonSpanner.h
+1597333155 /home/matt/GeometricSpanners/include/PolygonSpanner.h
 	<algorithm>
 	<queue>
 	"DelaunayGraph.h"
 	"GeometricSpannerPrinter.h"
 	"SpanningGraph.h"
+	"SplitVertex.h"
 	"StretchFactor.h"
+	"TransformPolygon.h"
 
 1592943458 source:/home/david/Programs/geometric-spanners/main.cpp
 	"CGALComponents.h"
@@ -614,7 +616,7 @@
 1592945885 source:/home/david/Programs/geometric-spanners/src/GeometricSpannerPrinter.cpp
 	"GeometricSpannerPrinter.h"
 
-1596812164 /home/matt/GeometricSpanners/include/TransformPolygon.h
+1597267305 /home/matt/GeometricSpanners/include/TransformPolygon.h
 	<algorithm>
 	<experimental/memory_resource>
 	<functional>
@@ -622,6 +624,7 @@
 	<utility>
 	<vector>
 	"DelaunayGraph.h"
+	"SplitVertex.h"
 
 1593883307 source:/home/matt/GeometricSpanners/src/TransformPolygon.cpp
 	"TransformPolygon.h"
@@ -662,4 +665,7 @@
 
 1595267142 /home/matt/GeometricSpanners/include/GraphAlgorithmEvent.h
 	<vector>
+
+1597332569 /home/matt/GeometricSpanners/include/SplitVertex.h
+	<memory>
 

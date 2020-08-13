@@ -16,20 +16,20 @@ namespace gsnunf {
 template< class T >
 void PlanarSpanner( DelaunayGraph<T>& G ) {
 
-    GeometricSpannerPrinter printer( .25f );
-    printer.draw( G._DT, "Triangulation" );
+    //GeometricSpannerPrinter printer( .25f );
+    //printer.draw( G._DT, "Triangulation" );
 
     SpanningGraph( G );
-    printer.draw( G, "SpanningGraph" );
+    //printer.draw( G, "SpanningGraph" );
 
-    SplitVertexMap<T> V;
+    SplitVertexSet<T> V;
     SplitVertexEdgeMap<T> P;
 
     TransformPolygon( G, V, P );
+    //print( V, P );
 
     PolygonSpanner( G, V, P );
     //print_vertices<T>(V);
-    //print_edges<T>(P);
     //printer.draw( G, "PolygonSpanner" );
 
 }

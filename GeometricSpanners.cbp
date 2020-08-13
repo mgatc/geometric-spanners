@@ -69,6 +69,7 @@
 		<Unit filename="include/PlanarSpanner.h" />
 		<Unit filename="include/PolygonSpanner.h" />
 		<Unit filename="include/SpanningGraph.h" />
+		<Unit filename="include/SplitVertex.h" />
 		<Unit filename="include/StretchFactor.h" />
 		<Unit filename="include/TransformPolygon.h" />
 		<Unit filename="main.cpp" />

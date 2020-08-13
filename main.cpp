@@ -37,39 +37,43 @@ int main() {
         be useful throughout the project.
     */
 
-    //auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width/2 );
-   // auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>( width/2 );
-    //auto g3 = CGAL::Random_points_on_circle_2<Point,Creator>( width/2 );
-    //auto g4 = CGAL::Random_points_on_square_2<Point,Creator>( width/2 );
+    auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width/2 );
+    auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>( width/2 );
+    auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width/2 );
+    auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width/2 );
 
-    size_t i = 10;
+    size_t i = 9;
     GeometricSpannerPrinter printer( .25f );
 
 //
 //    //for( i=2; i<=10; ++i ) {
         // SET POINT SET
-        list<Point> points = {
-            {
-                0,0
-            },
-            {
-                0,2
-            },
-            {
-                3,1
-            },
-            {
-                -3,1
-            },
-            {
-                2,-1
-            },
-            {
-                -2,-1
-            }
-        };
+        list<Point> points;// = {
+//            {
+//                0,0
+//            },
+//            {
+//                0,2
+//            },
+//            {
+//                3,1
+//            },
+//            {
+//                -3,1
+//            },
+//            {
+//                2,-1
+//            },
+//            {
+//                -2,-1
+//            }
+//        };
         const int n = pow(2, i);
-        //std::copy_n( g2, n, std::back_inserter(points) );
+      //  std::copy_n( g1, n/3, std::back_inserter(points) );
+        std::copy_n( g2, n/3, std::back_inserter(points) );
+        std::copy_n( g3, n/6, std::back_inserter(points) );
+       // std::copy_n( g4, n/6, std::back_inserter(points) );
+        //points.emplace_back( 0, 0 );
 
         auto start = chrono::steady_clock::now();
 
@@ -88,7 +92,7 @@ int main() {
             <<" b:"<<(PI+1)*(2*PI/(3*cos(PI/6)))
             <<" runtime:"<<chrono::duration_cast<chrono::microseconds>(stop - start).count()<<"us"
             <<"\n";
-        //printer.draw( S, "temp");
+        printer.draw( S, "PlanarSpanner");
     //}
 
 

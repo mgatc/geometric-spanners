@@ -1,42 +1,47 @@
 #ifndef GSNUNF_PLANARSPANNER_H
 #define GSNUNF_PLANARSPANNER_H
 
+#include <iostream>
 #include <list>
 
+#include "Timer.h"
 #include "DelaunayGraph.h"
 #include "SpanningGraph.h"
 #include "TransformPolygon.h"
 #include "PolygonSpanner.h"
 #include "GeometricSpannerPrinter.h"
 
-
-
 namespace gsnunf {
 
-template< class T >
-void PlanarSpanner( DelaunayGraph<T>& G ) {
-
+template< typename RandomAccessIterator, typename OutputIterator >
+void PlanarSpanner( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result ) {
     //GeometricSpannerPrinter printer( .25f );
-    //printer.draw( G._DT, "Triangulation" );
+    Timer t(",");
 
+    DelaunayGraph G( pointsBegin, pointsEnd );
     SpanningGraph( G );
-    //printer.draw( G, "SpanningGraph" );
 
-    SplitVertexSet<T> V;
-    SplitVertexEdgeMap<T> P;
-
-    TransformPolygon( G, V, P );
-    //print( V, P );
-
-    PolygonSpanner( G, V, P );
-    //print_vertices<T>(V);
+    SplitVertexSet V;
+    SplitVertexEdgeMap P;
+    {
+        Timer timer(",");
+        TransformPolygon( G, V, P );
+    }
+    {
+        Timer timer(",");
+        PolygonSpanner( G, V, P );
+    }
     //printer.draw( G, "PolygonSpanner" );
 
+    // send resulting edge list to output iterator
+    for( auto const& adj : G._E ) {
+        Vertex_handle v_1 = adj.first;
+        for( auto const& v_2 : adj.second ) {
+            *result = make_pair( v_1->point(), v_2->point() );
+            ++result;
+        }
+    }
 }
-
-namespace planar_spanner {
-
-} // namespace planar_spanner
 
 } // namespace gsnunf
 

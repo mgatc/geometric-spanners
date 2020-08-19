@@ -1,13 +1,13 @@
 #ifndef GSNUNF_FLOYDWARSHALL_H
 #define GSNUNF_FLOYDWARSHALL_H
 
-#include <algorithm>
-#include <array>
+#include <algorithm> // swap
 #include <iostream>
 #include <optional>
+#include <utility> // pair
 #include <vector>
 
-#include <CGAL/number_utils.h>
+#include <CGAL/number_utils.h> // min
 #include <CGAL/squared_distance_2.h>
 #include <CGAL/utils.h>
 
@@ -16,6 +16,8 @@
 namespace gsnunf {
 
 using namespace std;
+
+namespace floyd_warshall {
 
 template< typename N >
 optional<N> min( const optional<N>& ij, const pair< optional<N>,optional<N> >& ikj ) {
@@ -30,18 +32,20 @@ optional<N> min( const optional<N>& ij, const pair< optional<N>,optional<N> >& i
     return newPathLength;
 }
 
-template< class DG >
-void FloydWarshall( const DG& G, const typename DG::template VertexMap<size_t>& index, vector< vector< optional<typename DG::FT> > >& distances ) {
-    using Vertex_handle = typename DG::Vertex_handle;
-    size_t N = getN(G);
+} // namespace floyd_warshall
+
+void FloydWarshall( const DelaunayGraph& G, const DelaunayGraph::template VertexMap<size_t>& index, vector< vector< optional<DelaunayGraph::FT> > >& distances ) {
+    using namespace floyd_warshall;
+    using Vertex_handle = DelaunayGraph::Vertex_handle;
+    size_t N = G.n();
 
     // Create an NxN table to hold distances.
-    vector< vector< optional<typename DG::FT> > > dist( N, vector< optional<typename DG::FT> >( N, nullopt ) );
+    vector< vector< optional<DelaunayGraph::FT> > > dist( N, vector< optional<DelaunayGraph::FT> >( N, nullopt ) );
     // container constructor should initialize optionals using default constructor, aka nullopt, aka infinity
 
     // Set all i==j to 0 (distance to self)
     for( size_t i=0; i<N; ++i )
-        dist.at(i).at(i) = make_optional( typename DG::FT(0) );
+        dist.at(i).at(i) = make_optional( DelaunayGraph::FT(0) );
 
     assert( index.size() == N );
 
@@ -58,7 +62,7 @@ void FloydWarshall( const DG& G, const typename DG::template VertexMap<size_t>& 
     for( size_t k=0; k<N; ++k )
         for( size_t i=0; i<N; ++i )
             for( size_t j=0; j<N; ++j )
-                dist.at(i).at(j) = gsnunf::min(
+                dist.at(i).at(j) = floyd_warshall::min(
                     dist.at(i).at(j),
                   { dist.at(i).at(k), dist.at(k).at(j) }
                 );

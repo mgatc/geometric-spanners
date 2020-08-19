@@ -1,162 +1,146 @@
 #ifndef GSNUNF_SPANNINGGRAPH_H
 #define GSNUNF_SPANNINGGRAPH_H
 
-#include <list>
+#include <vector>
 
 #include "DelaunayGraph.h"
 
-
-
 namespace gsnunf {
 
-    namespace spanning_graph {
+using namespace std;
 
-    template< class T >
-    void add_first_edge( DelaunayGraph<T>& G, Vertex_handle<T> v, Vertex_circulator<T> C ) {
-        Vertex_handle<T> v2 = C->handle();
-        G.add_edge( v, v2 );
-        G.addToEventQueue( v, 1 );
-        G.addToEventQueue( v2, 2 );
-        G.addToEventQueue( { v, v2 }, true );
-    }
+namespace spanning_graph {
 
-    template< class T >
-    void add_second_edge( DelaunayGraph<T>& G, Vertex_handle<T> v, Vertex_circulator<T> C ) {
-        while( G._DT.is_infinite(++C) );
-        Vertex_handle<T> v2 = C->handle();
-        G.add_edge( v, v2 );
-        G.addToEventQueue( v, 1 );
-        G.addToEventQueue( v2, 2 );
-        G.addToEventQueue( { v, v2 }, true );
-    }
+void add_first_edge( DelaunayGraph& G, Vertex_handle v, Vertex_circulator C ) {
+    Vertex_handle v2 = C->handle();
+    G.add_edge( v, v2 );
 
-    template< class T >
-    void add_last_edge( DelaunayGraph<T>& G, Vertex_handle<T> v, Vertex_circulator<T> C, VertexHash<T> is_removed ) {
-        --C;
-        Vertex_circulator<T> done(C);
+    //G.addToEventQueue( v, 1 );
+    //G.addToEventQueue( v2, 2 );
+    //G.addToEventQueue( { v, v2 }, true );
+}
 
-        while( ( contains( is_removed, C ) || G._DT.is_infinite(C) ) && --C != done );
+void add_second_edge( DelaunayGraph& G, Vertex_handle v, Vertex_circulator C ) {
+    while( G._DT.is_infinite(++C) );
+    Vertex_handle v2 = C->handle();
+    G.add_edge( v, v2 );
 
-        Vertex_handle<T> v2 = C->handle();
+//        G.addToEventQueue( v, 1 );
+//        G.addToEventQueue( v2, 2 );
+//        G.addToEventQueue( { v, v2 }, true );
+}
 
-        G.add_edge( v, v2 );
+void add_last_edge( DelaunayGraph& G, Vertex_handle v, Vertex_circulator C, const VertexHash& is_removed ) {
+    --C;
+    Vertex_circulator done(C);
 
-        G.addToEventQueue( v, 1 );
-        G.addToEventQueue( v2, 2 );
-        G.addToEventQueue( { v, v2 }, true );
-    }
+    while( ( contains( is_removed, C ) || G._DT.is_infinite(C) ) && --C != done );
 
-    template< class T >
-    void remove_first_edge( DelaunayGraph<T>& G, Vertex_circulator<T> C ) {
-        Vertex_handle<T> v1 = C->handle(),
-                                  v2 = (++C)->handle();
-        G.remove_edge( v1, v2 );
+    Vertex_handle v2 = C->handle();
 
-        G.addToEventQueue( v1, 1 );
-        G.addToEventQueue( v2, 2 );
-        G.addToEventQueue( { v1, v2 }, false );
-    }
+    G.add_edge( v, v2 );
 
-    template< class T >
-    void remove_second_edge( DelaunayGraph<T>& G, Vertex_circulator<T> C ) {
-        Vertex_handle<T> v1 = (++C)->handle(),
-                         v2 = (++C)->handle();
-        G.remove_edge( v1, v2 );
+//        G.addToEventQueue( v, 1 );
+//        G.addToEventQueue( v2, 2 );
+//        G.addToEventQueue( { v, v2 }, true );
+}
 
-        G.addToEventQueue( v1, 1 );
-        G.addToEventQueue( v2, 2 );
-        G.addToEventQueue( { v1, v2 }, false );
-    }
+void remove_first_edge( DelaunayGraph& G, Vertex_circulator C ) {
+    Vertex_handle v1 = C->handle(),
+                  v2 = (++C)->handle();
+    G.remove_edge( v1, v2 );
 
-    template< class T >
-    void remove_last_edge( DelaunayGraph<T>& G, Vertex_circulator<T> C, VertexHash<T> is_removed ) {
-        --C;
+//        G.addToEventQueue( v1, 1 );
+//        G.addToEventQueue( v2, 2 );
+//        G.addToEventQueue( { v1, v2 }, false );
+}
 
-        Vertex_circulator<T> done(C);
+void remove_second_edge( DelaunayGraph& G, Vertex_circulator C ) {
+    Vertex_handle v1 = (++C)->handle(),
+                  v2 = (++C)->handle();
+    G.remove_edge( v1, v2 );
 
-        while( ( contains( is_removed, C ) || G._DT.is_infinite(C) ) && --C != done );
+//        G.addToEventQueue( v1, 1 );
+//        G.addToEventQueue( v2, 2 );
+//        G.addToEventQueue( { v1, v2 }, false );
+}
 
-        Vertex_handle<T> v1 = C->handle(),
-                         v2 = (--C)->handle();
-        G.remove_edge( v1, v2 );
+void remove_last_edge( DelaunayGraph& G, Vertex_circulator C, const VertexHash& is_removed ) {
+    --C;
 
-        G.addToEventQueue( v1, 1 );
-        G.addToEventQueue( v2, 2 );
-        G.addToEventQueue( { v1, v2 }, false );
-    }
+    Vertex_circulator done(C);
+
+    while( ( contains( is_removed, C ) || G._DT.is_infinite(C) ) && --C != done );
+
+    Vertex_handle v1 = C->handle(),
+                     v2 = (--C)->handle();
+    G.remove_edge( v1, v2 );
+
+//        G.addToEventQueue( v1, 1 );
+//        G.addToEventQueue( v2, 2 );
+//        G.addToEventQueue( { v1, v2 }, false );
+}
 
 }; // namespace spanning_graph
 
-
-template< class T >
-void SpanningGraph( DelaunayGraph<T>& DT ) {
-
+void SpanningGraph( DelaunayGraph& G ) {
     using namespace spanning_graph;
 
-    std::list< Vertex_handle<T> > canonical;
-    typename std::list< Vertex_handle<T> >::iterator c_iter;
+    vector< Vertex_handle > canonical;
 
-    Vertex_handle<T> triangle[3];
-    Vertex_circulator<T> v_n, done;
+    G.canonical_order( inserter( canonical, canonical.end() ) );
+    Timer timer(",");
+
+    Vertex_circulator v_n, done;
     size_t i;
 
-    DT.canonical_order( canonical );
-
-    VertexHash<T> is_removed( canonical.begin(), canonical.end() );
+    VertexHash is_removed( canonical.begin(), canonical.end() );
 
     // Add first three vertices from canonical
-    for( i=0, c_iter=canonical.begin(); i<3&&i<canonical.size(); ++c_iter, ++i ) {
-        is_removed.erase( *c_iter );
-        triangle[i] = *c_iter; // save in array for quick addition of edges
-        DT.addToEventQueue( *c_iter, 0 );
-        DT.addToEventQueue( *c_iter, true );
+    for( i=0; i<3; ++i ) { // Add edges of triangle
+        is_removed.erase( canonical.at(i) );
+        G.add_edge( canonical.at(i), canonical.at((i+1)%3) );
+        //G.addToEventQueue( { canonical.at(i), canonical.at((i+1)%3) }, true );
+        //G.addToEventQueue( { canonical.at(i), canonical.at((i+1)%3) }, true );
     }
-
-    for( i=0; i<3&&i<canonical.size(); ++i ) { // Add edges of triangle
-        DT.add_edge( triangle[i], triangle[(i+1)%3] );
-        DT.addToEventQueue( { triangle[i], triangle[(i+1)%3] }, true );
-        DT.addToEventQueue( { triangle[i], triangle[(i+1)%3] }, true );
-    }
-
     // Add the rest of the vertices from canonical
-    for( i=i; i<canonical.size(); ++c_iter, ++i ) {
-        is_removed.erase( *c_iter );
-        DT.addToEventQueue( *c_iter, 0 );        // activate c_iter
-        DT.addToEventQueue( *c_iter, true );
+    for( i=i; i<canonical.size(); ++i ) {
+        is_removed.erase( canonical.at(i) );
+//        G.addToEventQueue( *c_iter, 0 );        // activate c_iter
+//        G.addToEventQueue( *c_iter, true );
 
-        v_n = DT._DT.incident_vertices( *c_iter );
+        v_n = G._DT.incident_vertices( canonical.at(i) );
         done = v_n;
 
-        DT.normalize_circulator( v_n, is_removed );
-
+        G.normalize_circulator( v_n, is_removed );
         done = v_n;
 
-        int k = DT.count_valid_neighbors( v_n, is_removed );
+        int k = G.count_valid_neighbors( v_n, is_removed );
 
         if( k == 2 ) {
             // remove edge between first two vertices
-            remove_first_edge( DT, v_n );
+            remove_first_edge( G, v_n );
             // add edge between canonical iterator and first vertex
-            add_first_edge( DT, *c_iter, v_n );
+            add_first_edge( G, canonical.at(i), v_n );
             // add edge between canonical iterator and second vertex
-            add_second_edge( DT, *c_iter, v_n );
+            add_second_edge( G, canonical.at(i), v_n );
 
         } else if( k > 2 ) {
             // remove edge between first two vertices
-            remove_first_edge( DT, v_n );
+            remove_first_edge( G, v_n );
             // remove edge between last two vertices
-            remove_last_edge( DT, v_n, is_removed );
+            remove_last_edge( G, v_n, is_removed );
             // add edge between canonical iterator and first vertex
-            add_first_edge( DT, *c_iter, v_n );
+            add_first_edge( G, canonical.at(i), v_n );
             // add edge between canonical iterator and second vertex
-            add_second_edge( DT, *c_iter, v_n );
+            add_second_edge( G, canonical.at(i), v_n );
             // add edge between canonical iterator and last vertex
-            add_last_edge( DT, *c_iter, v_n, is_removed );
+            add_last_edge( G, canonical.at(i), v_n, is_removed );
         }
     }
 
     // Test assumption
-    for( auto it=DT._E.begin(); it!=DT._E.end(); ++it ) { // for all v_i, 1<=i<=n
+    for( auto it=G._E.begin(); it!=G._E.end(); ++it ) { // for all v_i, 1<=i<=n
         assert( it->second.size() <= 3 );                 // |v_i| <= 3
     }
 }

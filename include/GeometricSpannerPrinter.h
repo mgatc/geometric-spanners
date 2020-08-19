@@ -1,9 +1,15 @@
 #ifndef GSNUNF_GEOMETRICSPANNERPRINTER_H
 #define GSNUNF_GEOMETRICSPANNERPRINTER_H
 
+#include <iostream>
+#include <string>
+#include <tuple> // ignore
+
 #include "DelaunayGraph.h"
 
 namespace gsnunf {
+
+using namespace std;
 
 class GeometricSpannerPrinter {
   public:
@@ -13,7 +19,7 @@ class GeometricSpannerPrinter {
     GeometricSpannerPrinter( double radiusOfPoints = 0.09 ) : radiusOfPoints(radiusOfPoints) {}
 
     template< typename T >
-    void draw( const T &Triangulation, std::string fName ) {
+    void draw( const T &Triangulation, string fName ) {
         FILE *fp = fopen(  fName.c_str() ,"w");
         fprintf(fp,"\\documentclass{standalone} \n\\usepackage{tikz} \n \n\n\\begin{document}\n");
         fprintf(fp,"\n\n\n\\begin{tikzpicture}\n\n");
@@ -35,24 +41,23 @@ class GeometricSpannerPrinter {
         fprintf(fp,"\n\n\\end{document}");
         fclose(fp);
 
-        std::cout << "\nOutput PDF generation started...\n";
-        std::string command = "pdflatex " + fName + " > /dev/null";
-        std::ignore = system(command.c_str());
-        std::cout << "PDF generation terminated...\n";
+        cout << "\nOutput PDF generation started...\n";
+        string command = "pdflatex " + fName + " > /dev/null";
+        ignore = system(command.c_str());
+        cout << "PDF generation terminated...\n";
 
         command = "evince " + fName + ".pdf &";
-        std::ignore = system(command.c_str());
+        ignore = system(command.c_str());
 
     }
 
-    template< typename T >
-    void draw( const DelaunayGraph<T>& DG, std::string fName ) {
+    void draw( const DelaunayGraph& DG, string fName ) {
         FILE *fp = fopen(  fName.c_str() ,"w");
         fprintf(fp,"\\documentclass{standalone} \n\\usepackage{tikz} \n \n\n\\begin{document}\n");
         fprintf(fp,"\n\n\n\\begin{tikzpicture}\n\n");
 
         // Draw vertices
-        for( typename T::Finite_vertices_iterator it = DG._DT.finite_vertices_begin(); it != DG._DT.finite_vertices_end(); ++it)
+        for( DelaunayGraph::Finite_vertices_iterator it = DG._DT.finite_vertices_begin(); it != DG._DT.finite_vertices_end(); ++it)
             fprintf(fp,"\\draw [fill=red,stroke=red] (%f,%f) circle [radius=%f];\n",it->point().x(),it->point().y(),radiusOfPoints);
 
         // draw spanning graph
@@ -71,14 +76,13 @@ class GeometricSpannerPrinter {
         fprintf(fp,"\n\n\\end{document}");
         fclose(fp);
 
-        std::cout << "\nOutput PDF generation started...\n";
-        std::string command = "pdflatex " + fName + " > /dev/null";
-        std::ignore = system(command.c_str());
-        std::cout << "PDF generation terminated...\n";
+        cout << "\nOutput PDF generation started...\n";
+        string command = "pdflatex " + fName + " > /dev/null";
+        ignore = system(command.c_str());
+        cout << "PDF generation terminated...\n";
 
         command = "evince " + fName + ".pdf &";
-        std::ignore = system(command.c_str());
-
+        ignore = system(command.c_str());
     }
 
 }; // class TriangulationPrinter

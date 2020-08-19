@@ -1,29 +1,19 @@
 #include <chrono>
 #include <list>
-#include <memory>
+#include <utility>
 
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h> // CGAL
-#include <CGAL/Delaunay_triangulation_2.h>                      // Triangulations
 #include <CGAL/point_generators_2.h>                            // Random point generation, testing
 
-#include "DelaunayGraph.h"
+#include "Timer.h"
 #include "FloydWarshall.h"
 #include "PlanarSpanner.h"
 #include "StretchFactor.h"
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef K::Point_2 Point;
-
-typedef CGAL::Delaunay_triangulation_2<K> Delaunay_triangulation_2;
+using namespace gsnunf;
 typedef CGAL::Creator_uniform_2<double,Point> Creator;
 
-using namespace gsnunf;
-using namespace std;
-
-
-
 int main() {
-
+    using namespace std;
 
     const double width = 100;
 
@@ -37,16 +27,13 @@ int main() {
         be useful throughout the project.
     */
 
-    auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width/2 );
-    auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>( width/2 );
-    auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width/2 );
-    auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width/2 );
+    size_t i = 50;
 
-    size_t i = 20;
-    GeometricSpannerPrinter printer( .25f );
-
-//
-    //for( i=2; i<=20; ++i ) {
+    for( i=1; i<=17; ++i ) {
+        auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
+        auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
+        auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
+        auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
         // SET POINT SET
         list<Point> points;// = {
 //            {
@@ -68,34 +55,21 @@ int main() {
 //                -2,-1
 //            }
 //        };
-        const int n = i;
-        std::copy_n( g1, n/3, std::back_inserter(points) );
-        std::copy_n( g2, n/3, std::back_inserter(points) );
-        std::copy_n( g3, n/6, std::back_inserter(points) );
-        std::copy_n( g4, n/6, std::back_inserter(points) );
+        const int n = i*250000;
+        std::copy_n( g1, n/3, back_inserter(points) );
+        std::copy_n( g2, n/3, back_inserter(points) );
+        std::copy_n( g3, n/6, back_inserter(points) );
+        std::copy_n( g4, n/6, back_inserter(points) );
         //points.emplace_back( 0, 0 );
 
-        auto start = chrono::steady_clock::now();
+        cout<<points.size();
+        cout<<",";
+        list< pair< Point, Point > > result;
 
-        Delaunay_triangulation_2 DT( points.begin(), points.end() );
-        DelaunayGraph<Delaunay_triangulation_2> S(DT);
+        PlanarSpanner( points.begin(), points.end(), back_inserter(result) );
 
-        PlanarSpanner(S);
-
-        auto stop = chrono::steady_clock::now();
-
-        cout
-            <<i<<"--------------------------"
-            <<" n:"<<n
-            <<" w:"<<width
-            <<" t:"<<StretchFactor(S)
-            <<" b:"<<(PI+1)*(2*PI/(3*cos(PI/6)))
-            <<" runtime:"<<chrono::duration_cast<chrono::microseconds>(stop - start).count()<<"us"
-            <<"\n";
-        //printer.draw( S, "PlanarSpanner");
-   // }
-
-
+        cout<<"\n";
+    }
 
     return 0;
 }

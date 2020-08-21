@@ -118,7 +118,7 @@ void experiment() {
             auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
             // SET POINT SET
             list<Point> points;
-            const int n = 3000000;//i*25000;
+            const int n = 300000;//i*25000;
             std::copy_n( g1, n/3, back_inserter(points) );
             std::copy_n( g2, n/3, back_inserter(points) );
             std::copy_n( g3, n/6, back_inserter(points) );

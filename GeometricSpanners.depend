@@ -416,14 +416,15 @@
 1588865172 source:/home/matt/UDC/udc/src/ExperimentalHex2.cpp
 	"ExperimentalHex2.h"
 
-1597782043 source:/home/matt/GeometricSpanners/main.cpp
+1598037990 source:/home/matt/GeometricSpanners/main.cpp
 	<chrono>
 	<list>
 	<utility>
 	<CGAL/point_generators_2.h>
 	"Timer.h"
 	"FloydWarshall.h"
-	"PlanarSpanner.h"
+	"BGS2002.h"
+	"LW2004.h"
 	"StretchFactor.h"
 
 1589914637 /home/matt/GeometricSpanners/include/Greedy.h
@@ -468,10 +469,13 @@
 1589915120 /home/matt/GeometricSpanners/include/GeometricSpannerSolutionChecker.h
 	"CgalComponents.h"
 
-1597765022 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
+1598022156 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
+	<cstdlib>
 	<iostream>
+	<list>
 	<string>
 	<tuple>
+	<utility>
 	"DelaunayGraph.h"
 
 1589914889 source:/home/matt/GeometricSpanners/src/GeometricSpannerExperiment.cpp
@@ -517,7 +521,7 @@
 	<list>
 	"CGALComponents.h"
 
-1597764126 /home/matt/GeometricSpanners/include/SpanningGraph.h
+1598013379 /home/matt/GeometricSpanners/include/SpanningGraph.h
 	<vector>
 	"DelaunayGraph.h"
 
@@ -541,7 +545,7 @@
 	<algorithm>
 	<cassert>
 
-1597768948 /home/matt/GeometricSpanners/include/PolygonSpanner.h
+1598037619 /home/matt/GeometricSpanners/include/PolygonSpanner.h
 	<algorithm>
 	<functional>
 	<queue>
@@ -623,7 +627,7 @@
 1592945885 source:/home/david/Programs/geometric-spanners/src/GeometricSpannerPrinter.cpp
 	"GeometricSpannerPrinter.h"
 
-1597767685 /home/matt/GeometricSpanners/include/TransformPolygon.h
+1598038530 /home/matt/GeometricSpanners/include/TransformPolygon.h
 	<utility>
 	"DelaunayGraph.h"
 	"SplitVertex.h"
@@ -633,7 +637,7 @@
 	"SpanningGraph.h"
 	"DelaunayGraph.h"
 
-1597767694 /home/matt/GeometricSpanners/include/DelaunayGraph.h
+1598013379 /home/matt/GeometricSpanners/include/DelaunayGraph.h
 	<iostream>
 	<queue>
 	<set>
@@ -673,11 +677,32 @@
 1597764346 /home/matt/GeometricSpanners/include/GraphAlgorithmEvent.h
 	<vector>
 
-1597767885 /home/matt/GeometricSpanners/include/SplitVertex.h
+1598038411 /home/matt/GeometricSpanners/include/SplitVertex.h
 	<memory>
 
 1597423060 /home/matt/GeometricSpanners/include/Timer.h
 	<chrono>
 	<iostream>
 	<string>
+
+1598037921 /home/matt/GeometricSpanners/include/BGS2002.h
+	<iostream>
+	<list>
+	"Timer.h"
+	"DelaunayGraph.h"
+	"SpanningGraph.h"
+	"TransformPolygon.h"
+	"PolygonSpanner.h"
+	"GeometricSpannerPrinter.h"
+
+1598018899 /home/matt/GeometricSpanners/include/LW2004.h
+	<iostream>
+	<optional>
+	<vector>
+	"Timer.h"
+	"DelaunayGraph.h"
+	"SpanningGraph.h"
+	"TransformPolygon.h"
+	"PolygonSpanner.h"
+	"GeometricSpannerPrinter.h"
 

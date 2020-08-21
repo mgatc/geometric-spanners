@@ -89,7 +89,7 @@ void SpanningGraph( DelaunayGraph& G ) {
     vector< Vertex_handle > canonical;
 
     G.canonical_order( inserter( canonical, canonical.end() ) );
-    Timer timer(",");
+    //Timer timer(",");
 
     Vertex_circulator v_n, done;
     size_t i;

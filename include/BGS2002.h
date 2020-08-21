@@ -27,7 +27,7 @@ void BGS2002( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 //    //printer.drawEdges( G, { {"", "thick"} } );
 //
     size_t split_size_estimate = G._DT.number_of_vertices();
-    SplitVertexSet V( split_size_estimate );
+    SplitVertexSet V;
     SplitVertexEdgeMap P;
 //    {
 //        //Timer timer(",");

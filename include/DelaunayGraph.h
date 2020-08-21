@@ -79,7 +79,7 @@ class DelaunayGraph {
     void add_edge( const Vertex_handle& v1, const Vertex_handle& v2 ) {
         add_half_edge( v1, v2 );
         add_half_edge( v2, v1 );
-
+        //cout<<"    add edge ("<<v1->point()<<", "<<v2->point()<<")\n";
         //_algoTV.addToEventQueue( std::make_pair(v1,v2), true );
     }
 
@@ -133,7 +133,7 @@ class DelaunayGraph {
      */
     template< typename OutputIterator >
     void canonical_order( OutputIterator ordering ) const {
-        Timer t(",");
+        //Timer t(",");
         VertexHash on_outer_face, complete;
         queue<Vertex_handle> ready;
         size_t i = n();
@@ -228,6 +228,13 @@ class DelaunayGraph {
 
     size_t n() const {
         return _DT.number_of_vertices();
+    }
+
+    size_t degree() const {
+        size_t max_d = 0;
+        for( auto& v : _E )
+            max_d = std::max( v.second.size(), max_d );
+        return max_d;
     }
 
   private:

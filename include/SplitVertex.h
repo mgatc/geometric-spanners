@@ -1,9 +1,7 @@
 #ifndef GSNUNF_SPLITVERTEX_H
 #define GSNUNF_SPLITVERTEX_H
 
-#include <map>
 #include <memory>
-#include <vector>
 
 namespace gsnunf {
 
@@ -26,19 +24,19 @@ struct SplitVertex {
     v_type s_1_handle;
     key_type key;
 
-    SplitVertex() : V(nullptr) {}
+    SplitVertex() {}
     SplitVertex( const v_type& v )
-        : V(nullptr), v(v) {}
+        : v(v) {}
     SplitVertex( const v_type& v, const SplitVertex& s_1 )
-        : V(nullptr), v(v), s_1( s_1.key ), s_1_handle(s_1.v) {}
+        : v(v), s_1( s_1.key ), s_1_handle(s_1.v) {}
     SplitVertex( const v_type& v, const key_type& s_1 )
-        : V(nullptr), v(v), s_1( s_1 ) {}
+        : v(v), s_1( s_1 ) {}
     SplitVertex( const SplitVertex& other )
         : V(other.V), v(other.v), s_1(other.s_1), s_1_handle( other.s_1_handle ), key(other.key) {}
 
     SplitVertex& operator=( const SplitVertex& other ) { //copy assignment
         if( this != &other ) {
-           // V = other.V;
+            V = other.V;
             v = other.v;
             key = other.key;
             s_1 = other.s_1;
@@ -76,13 +74,9 @@ using IncidentSplitVertexContainer = std::set< key_type >;
 using SplitVertexEdgeMap = std::unordered_map< key_type, IncidentSplitVertexContainer >;
 
 struct SplitVertexSet {
-    VertexMap< map< Vertex_handle,size_t > > index;
+    VertexMap< VertexMap< size_t > > index;
 
-    double _increase_factor;
     vector< SplitVertex > V;
-    size_t pos;
-
-    SplitVertexSet() {}
 
     size_t insert( const SplitVertex& v ) {
         size_t vector_key;
@@ -98,12 +92,11 @@ struct SplitVertexSet {
         return vector_key;
     }
     size_t insert_in_container( SplitVertex& v ) {
-        size_t key = V.size();
-        v.key = key;
+        size_t vector_key = V.size();
+        v.key = vector_key;
         v.V = this;
         V.push_back(v);
-        //V[key].V = this;
-        return key;
+        return vector_key;
     }
     void insert_in_map( const SplitVertex& v ) {
         index[v.v].insert_or_assign( v.s_1_handle, v.key );

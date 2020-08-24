@@ -1,6 +1,7 @@
 #ifndef GSNUNF_BGS2002_H
 #define GSNUNF_BGS2002_H
 
+#include <algorithm> //sort
 #include <iostream>
 #include <list>
 
@@ -15,38 +16,57 @@ namespace gsnunf {
 
 template< typename RandomAccessIterator, typename OutputIterator >
 void BGS2002( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result ) {
-    //GeometricSpannerPrinter printer;
+    GeometricSpannerPrinter printer;
     //Timer t(",");
-    cout<<"DelaunayGraph\n";
+    //cout<<"DelaunayGraph\n";
+//    vector<Point> S( pointsBegin, pointsEnd );
+//    sort( S.begin(), S.end() );
     DelaunayGraph G( pointsBegin, pointsEnd );
 
-//    //printer.drawEdges( G._DT, { {"color", "gray"} } );
-    cout<<"SpanningGraph\n";
+
+    printer.drawEdges( G._DT, {
+        { "line width", "2pt" },
+        { "color", "gray" }
+    });
+    //cout<<"SpanningGraph\n";
 //
     SpanningGraph( G );
-//    //printer.drawEdges( G, { {"", "thick"} } );
+    printer.drawEdges( G, {
+        { "line width", "13pt" },
+        { "color", "cyan" }
+    });
 //
-    size_t split_size_estimate = G._DT.number_of_vertices();
+    //size_t split_size_estimate = G._DT.number_of_vertices();
     SplitVertexSet V;
     SplitVertexEdgeMap P;
 //    {
 //        //Timer timer(",");
-            cout<<"TransformPolygon\n";
+           // cout<<"TransformPolygon\n";
 //
         TransformPolygon( G, V, P );
 //    }
-//    {
-//        //Timer timer(",");
-            cout<<"PolygonSpanner\n";
-//
+    //cout<<sizeof(*P.begin())<<"\n";
+////    {
+////        //Timer timer(",");
+            //cout<<"PolygonSpanner\n";
+
         PolygonSpanner( G, V, P );
+
+//        cout<<"V:"<< sizeof(*V.index.begin())*V.V.size()<<" "
+//            <<"E:"<< sizeof(*P.begin())*P.size()<<" \n";
 //    }
 //    cout<<"\n";
-//    printer.drawEdges( G, {{"color", "blue"}} );
-//    printer.drawVertices( G._DT, {{"color","red"}} );
-//    printer.print( "PolygonSpanner" );
-//    cout<<StretchFactor(G)<<",";
-//    cout<<G.degree()<<",";
+    printer.drawEdges( G, {
+        { "line width", "5pt" },
+        { "color", "cyan" }
+    });
+    printer.drawVertices( G._DT, 5, {
+        { "fill", "blue" },
+        { "draw", "white" }
+    });
+    printer.print( "PolygonSpanner" );
+    cout<<StretchFactor(G)<<",";
+    cout<<G.degree()<<",";
 
     // send resulting edge list to output iterator
 //    for( auto const& adj : G._E ) {

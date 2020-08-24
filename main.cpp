@@ -91,6 +91,7 @@ void scratch() {
         //LW2004( points.begin(), points.end(), back_inserter(result) );
         BGS2002( points.begin(), points.end(), back_inserter(result) );
 
+
         cout<<"\n";
 
 }
@@ -110,6 +111,8 @@ void experiment() {
 
     size_t i = 50;
 
+    cout<<"ordered\n";
+
     //for( size_t trial=1; trial<=5; ++trial ) {
         //for( i=1; i<=10; ++i ) {
             auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
@@ -118,18 +121,21 @@ void experiment() {
             auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
             // SET POINT SET
             list<Point> points;
-            const int n = 300000;//i*25000;
-            std::copy_n( g1, n/3, back_inserter(points) );
-            std::copy_n( g2, n/3, back_inserter(points) );
+            const int n = 1000;
+            //std::copy_n( g1, n/3, back_inserter(points) );
+            //std::copy_n( g2, n/3, back_inserter(points) );
             std::copy_n( g3, n/6, back_inserter(points) );
-            std::copy_n( g4, n/6, back_inserter(points) );
-            //points.emplace_back( 0, 0 );
+            //std::copy_n( g4, n/6, back_inserter(points) );
+            points.emplace_back( 0, 0 );
 
             cout<<points.size();
             cout<<",";
-            list< pair< Point, Point > > result;
+            {
 
+            list< pair< Point, Point > > result;
+            Timer t(",");
             BGS2002( points.begin(), points.end(), back_inserter(result) );
+            }
 
             cout<<"\n";
         //}

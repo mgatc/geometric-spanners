@@ -7,7 +7,7 @@
 #include "Timer.h"
 #include "FloydWarshall.h"
 #include "BGS2002.h"
-#include "LW2004.h"
+#include "LW2004_2.h"
 #include "StretchFactor.h"
 
 using namespace gsnunf;
@@ -79,17 +79,21 @@ void scratch() {
 //        { 9, 1 }
 //    };
 
-       // cout<<points.size();
-        //cout<<",";
+        n = 3000000;
 
-            //std::copy_n( g1, n/3, back_inserter(points) );
-            //std::copy_n( g2, n/3, back_inserter(points) );
-            std::copy_n( g3, n/6, back_inserter(points) );
-            std::copy_n( g4, n/6, back_inserter(points) );
+        std::copy_n( g1, n/3, back_inserter(points) );
+        std::copy_n( g2, n/3, back_inserter(points) );
+        std::copy_n( g3, n/6, back_inserter(points) );
+        std::copy_n( g4, n/6, back_inserter(points) );
+
+        cout<<points.size();
+        cout<<",";
+
+        double alpha = PI/2;
         list< pair< Point, Point > > result;
 
-        //LW2004( points.begin(), points.end(), back_inserter(result) );
-        BGS2002( points.begin(), points.end(), back_inserter(result) );
+        LW2004_2( points.begin(), points.end(), back_inserter(result), alpha );
+        //BGS2002( points.begin(), points.end(), back_inserter(result) );
 
         cout<<"\n";
 
@@ -111,14 +115,14 @@ void experiment() {
     size_t i = 50;
 
     //for( size_t trial=1; trial<=5; ++trial ) {
-        //for( i=1; i<=10; ++i ) {
+        for( i=1; i<=10; ++i ) {
             auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
             auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
             auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
             auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
             // SET POINT SET
             list<Point> points;
-            const int n = 300000;//i*25000;
+            const int n = i*2500;
             std::copy_n( g1, n/3, back_inserter(points) );
             std::copy_n( g2, n/3, back_inserter(points) );
             std::copy_n( g3, n/6, back_inserter(points) );
@@ -129,10 +133,10 @@ void experiment() {
             cout<<",";
             list< pair< Point, Point > > result;
 
-            BGS2002( points.begin(), points.end(), back_inserter(result) );
+            LW2004_2( points.begin(), points.end(), back_inserter(result) );
 
             cout<<"\n";
-        //}
+        }
     //}
 }
 

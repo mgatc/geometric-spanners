@@ -18,11 +18,11 @@ struct SplitVertex {
     using v_type = Vertex_handle;
     using key_type = size_t;
 
-    SplitVertexSet* V;
+    //SplitVertexSet* V;
     v_type v;
     key_type s_1;
-    v_type s_1_handle;
     key_type key;
+    v_type s_1_handle;
 
     SplitVertex() {}
     SplitVertex( const v_type& v )
@@ -32,11 +32,10 @@ struct SplitVertex {
     SplitVertex( const v_type& v, const key_type& s_1 )
         : v(v), s_1( s_1 ) {}
     SplitVertex( const SplitVertex& other )
-        : V(other.V), v(other.v), s_1(other.s_1), s_1_handle( other.s_1_handle ), key(other.key) {}
+        : v(other.v), s_1(other.s_1), s_1_handle( other.s_1_handle ), key(other.key) {}
 
     SplitVertex& operator=( const SplitVertex& other ) { //copy assignment
         if( this != &other ) {
-            V = other.V;
             v = other.v;
             key = other.key;
             s_1 = other.s_1;
@@ -94,7 +93,6 @@ struct SplitVertexSet {
     size_t insert_in_container( SplitVertex& v ) {
         size_t vector_key = V.size();
         v.key = vector_key;
-        v.V = this;
         V.push_back(v);
         return vector_key;
     }
@@ -156,7 +154,7 @@ struct SplitVertexHasher {
             // http://stackoverflow.com/a/1646913/126995
         size_t res = 17;
          res = res * 31 + hash< Vertex_handle >()( k.v );
-         res = res * 31 + hash< Vertex_handle >()( k.V->at(k.s_1).v );
+         res = res * 31 + hash< Vertex_handle >()( k.s_1_handle );
         return res;
     }
 };

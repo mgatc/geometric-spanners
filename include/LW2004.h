@@ -106,7 +106,7 @@ template< typename RandomAccessIterator, typename OutputIterator >
 void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result ) {
     using namespace lw2004;
     //GeometricSpannerPrinter printer( .25f );
-    //Timer t(",");
+    Timer t(",");
 
     // Step 1
 
@@ -116,16 +116,16 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     // Step 2
 
     vector<Vertex_handle> pi( Del.n(), Del._DT.infinite_vertex() );
-    auto order = pi.begin();
+    auto order = pi.end(); // starting at the end.. decrement, then set
 
     using SingleVertexIncidenceListIterator = DelaunayGraph::AdjacencyList::iterator;
     struct SingleVertexIncidenceListCompare {
         bool operator()( const SingleVertexIncidenceListIterator& lhs, const SingleVertexIncidenceListIterator& rhs ) const {
             //bool less_than = true;
             return (
-                lhs->second.size() > rhs->second.size()
+                lhs->second.size() < rhs->second.size()
               ||
-                ( lhs->second.size() == rhs->second.size() && lhs->first->point() > rhs->first->point() )
+                ( lhs->second.size() == rhs->second.size() && lhs->first->point() < rhs->first->point() )
             );
         }
     };
@@ -137,8 +137,8 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     while( !G.empty() ) {
         u = *G.begin();
         G.erase(u);
-        *order = u->first;
-        ++order;
+        *(--order) = u->first; // decrement, then set
+
         Vertex_circulator N = Del._DT.incident_vertices( u->first ),
             done(N);
 
@@ -159,31 +159,31 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
     // Step 3
 
-    VertexSet processed;
-
-    for( Vertex_handle u : pi ) {
-        assert( Del._E[u].size() <= 5 );
-        cout<<u->point()<<"\n";
-
-        Vertex_circulator N = Del._DT.incident_vertices(u);
-        Vertex_handle done = N->handle(), last;
-        // orient to a processed vertex
-        while( !contains( processed, (--N)->handle() ) && N->handle() != done );
-        done = N;
-        last = N;
-
-        do {
-            --N;
-            if( contains( processed, N->handle() ) || N->handle() == done ) {
-                add_edges( Del, last, u, N->handle() );
-                last = N;
-            } else if( N->handle() == done ) {
-
-            }
-        } while( N->handle() != done );
-
-        processed.insert(u);
-    }
+//    VertexSet processed;
+//
+//    for( Vertex_handle u : pi ) {
+//        assert( Del._E[u].size() <= 5 );
+//        cout<<u->point()<<"\n";
+//
+//        Vertex_circulator N = Del._DT.incident_vertices(u);
+//        Vertex_handle done = N->handle(), last;
+//        // orient to a processed vertex
+//        while( !contains( processed, (--N)->handle() ) && N->handle() != done );
+//        done = N;
+//        last = N;
+//
+//        do {
+//            --N;
+//            if( contains( processed, N->handle() ) || N->handle() == done ) {
+//                add_edges( Del, last, u, N->handle() );
+//                last = N;
+//            } else if( N->handle() == done ) {
+//
+//            }
+//        } while( N->handle() != done );
+//
+//        processed.insert(u);
+//    }
 
     //printer.print( "BGS2002" );
 

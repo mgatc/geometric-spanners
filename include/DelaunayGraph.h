@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include <CGAL/boost/graph/graph_traits_Delaunay_triangulation_2.h>
 #include <CGAL/circulator.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
@@ -53,6 +54,10 @@ class DelaunayGraph {
     typedef K::FT FT;
     typedef CGAL::Vector_2<K> Vector_2;
     typedef CGAL::Container_from_circulator<Vertex_circulator> Vertex_container;
+    typedef boost::graph_traits<Delaunay_triangulation_2>::vertex_descriptor vertex_descriptor;
+    typedef boost::graph_traits<Delaunay_triangulation_2>::vertex_iterator vertex_iterator;
+    typedef std::map<vertex_descriptor, size_t> VertexIndexMap;
+    typedef boost::associative_property_map<VertexIndexMap> VertexIdPropertyMap;
 
     typedef set<Vertex_handle> VertexSet;
     typedef unordered_set<Vertex_handle> VertexHash;
@@ -67,14 +72,23 @@ class DelaunayGraph {
     /* Data */
     Delaunay_triangulation_2 _DT;
     AdjacencyList _E;
-
+    VertexIndexMap _vertex_id_map;
+    VertexIdPropertyMap _vertex_index_pmap;
     //GraphAlgoTV _algoTV;
 
 
 
     /* Functions */
     template< typename RandomAccessIterator >
-    DelaunayGraph( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd ) : _DT( pointsBegin, pointsEnd ) {}
+    DelaunayGraph( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd ) : _DT( pointsBegin, pointsEnd ), _vertex_index_pmap( _vertex_id_map ) {
+        size_t index = 0;
+        for( vertex_descriptor vd : vertices(_DT) )
+            _vertex_id_map[vd] = index++;
+
+        std::vector<double> distance(num_vertices(_DT));
+        boost::iterator_property_map<std::vector<double>::iterator, VertexIdPropertyMap>
+        distance_pmap(distance.begin(), _vertex_index_pmap);
+    }
 
     void add_edge( const Vertex_handle& v1, const Vertex_handle& v2 ) {
         add_half_edge( v1, v2 );

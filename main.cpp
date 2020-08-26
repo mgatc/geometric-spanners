@@ -8,6 +8,7 @@
 #include "FloydWarshall.h"
 #include "BGS2002.h"
 #include "LW2004.h"
+#include "LW2004_2.h"
 #include "StretchFactor.h"
 
 using namespace gsnunf;
@@ -18,8 +19,8 @@ void scratch();
 void stretchFactorAndDegreeExperiment();
 
 int main() {
-    experiment();
-    //scratch();
+    //experiment();
+    scratch();
 
     return 0;
 }
@@ -30,7 +31,7 @@ void scratch() {
     const double width = 100;
     size_t n = 30, i=n;
 
-    //for( i=1; i<=17; ++i ) {
+   // for( i=1; i<=8; ++i ) {
         auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
         auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
         auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
@@ -79,20 +80,21 @@ void scratch() {
 //        { 9, 1 }
 //    };
 
-       // cout<<points.size();
-        //cout<<",";
-
-            //std::copy_n( g1, n/3, back_inserter(points) );
-            //std::copy_n( g2, n/3, back_inserter(points) );
+        n = 20;
+            std::copy_n( g1, n/3, back_inserter(points) );
+            std::copy_n( g2, n/3, back_inserter(points) );
             std::copy_n( g3, n/6, back_inserter(points) );
             std::copy_n( g4, n/6, back_inserter(points) );
-        list< pair< Point, Point > > result;
 
+        cout<<points.size();
+        cout<<",";
+        list< pair< Point, Point > > result;
         //LW2004( points.begin(), points.end(), back_inserter(result) );
+        //LW2004_2( points.begin(), points.end(), back_inserter(result) );
         BGS2002( points.begin(), points.end(), back_inserter(result) );
 
-
         cout<<"\n";
+    //}
 
 }
 
@@ -111,22 +113,21 @@ void experiment() {
 
     size_t i = 50;
 
-    cout<<"ordered\n";
 
-    //for( size_t trial=1; trial<=5; ++trial ) {
-        //for( i=1; i<=10; ++i ) {
+    for( size_t trial=1; trial<=5; ++trial ) {
+        for( i=1; i<=10; ++i ) {
             auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
             auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
             auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
             auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
             // SET POINT SET
             list<Point> points;
-            const int n = 1000;
-            //std::copy_n( g1, n/3, back_inserter(points) );
-            //std::copy_n( g2, n/3, back_inserter(points) );
+            const int n = 250000*i;
+            std::copy_n( g1, n/3, back_inserter(points) );
+            std::copy_n( g2, n/3, back_inserter(points) );
             std::copy_n( g3, n/6, back_inserter(points) );
-            //std::copy_n( g4, n/6, back_inserter(points) );
-            points.emplace_back( 0, 0 );
+            std::copy_n( g4, n/6, back_inserter(points) );
+            //points.emplace_back( 0, 0 );
 
             cout<<points.size();
             cout<<",";
@@ -134,12 +135,13 @@ void experiment() {
 
             list< pair< Point, Point > > result;
             Timer t(",");
+            //LW2004_2( points.begin(), points.end(), back_inserter(result) );
             BGS2002( points.begin(), points.end(), back_inserter(result) );
             }
 
             cout<<"\n";
-        //}
-    //}
+        }
+    }
 }
 
 void stretchFactorAndDegreeExperiment() {

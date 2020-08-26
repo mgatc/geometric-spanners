@@ -175,9 +175,9 @@ void add_polygon_edges( const DelaunayGraph& SG, SplitVertexEdgeMap& E_P,
      * assumption that edges are only added to non-complete
      * vertices.
      */
-    if( !contains( E_P, p.key) || !contains( E_P.at(p.key), q.key ) )
+    if( p.key >= E_P.size() || !contains( E_P.at(p.key), q.key ) )
         add_polygon_spanner_edge( SG, E_P, p, q, status );
-    if( !contains( E_P, q.key) || !contains( E_P.at(q.key), r.key ) )
+    if( q.key >= E_P.size() || !contains( E_P.at(q.key), r.key ) )
         add_polygon_spanner_edge( SG, E_P, q, r, status );
 }
 
@@ -271,10 +271,10 @@ void PolygonSpanner( DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEdgeMap& E
     Vertex_handle v1;
 
     // Add all edges from E_P to SG
-    for( auto& edge : E_P ) {
+    for( size_t i=0; i<E_P.size(); ++i ) { //auto& edge : E_P ) {
         // Each edge is a pair of size_t, unordered_set<size_t>
-        v1 = V.at( edge.first ).v;
-        for( auto v2 : edge.second ) {
+        v1 = V.at(i).v;
+        for( auto v2 : E_P.at(i) ) {
             SG.add_edge( v1, V.at(v2).v );
         }
     }

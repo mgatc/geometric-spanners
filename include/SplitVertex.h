@@ -70,7 +70,7 @@ inline bool operator!=( const SplitVertex& lhs,
 
 using key_type = typename SplitVertex::key_type;
 using IncidentSplitVertexContainer = std::set< key_type >;
-using SplitVertexEdgeMap = std::unordered_map< key_type, IncidentSplitVertexContainer >;
+using SplitVertexEdgeMap = vector< IncidentSplitVertexContainer >;
 
 struct SplitVertexSet {
     VertexMap< VertexMap< size_t > > index;
@@ -111,6 +111,7 @@ struct SplitVertexSet {
 };
 
 void add_half_edge( SplitVertexEdgeMap& E, const SplitVertex& a, const SplitVertex& b ) {
+    if( a.key >= E.size() ) E.resize( a.key+1 );
     E[a.key].emplace(b.key);
 }
 
@@ -129,11 +130,10 @@ void add_edge( const DelaunayGraph& SG, SplitVertexEdgeMap& E, const SplitVertex
 
 // Print the contents of a split vertex edge list
 void print( const SplitVertexSet& V, const SplitVertexEdgeMap& E ) {
-    for( auto v1 : E ) {
-        key_type k = v1.first;
-        SplitVertex u = V.at(k);
+    for( size_t i=0; i<E.size(); ++i ) {
+        SplitVertex u = V.at(i);
         cout<< "u: "<<u.v->point()<<" s1: "<<V.at(u.s_1).v->point()<<"\n";
-        for( auto v2 : v1.second )
+        for( auto v2 : E.at(i) )
             cout<<"  v: "<<V.at(v2).v->point()<<" s1: "<<V.at(V.at(v2).s_1).v->point()<<"\n";
         cout<<"\n";
 

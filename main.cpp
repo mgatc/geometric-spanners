@@ -135,6 +135,9 @@ void experiment() {
 
             LW2004_2( points.begin(), points.end(), back_inserter(result) );
 
+            cout<<result.size();
+            cout<<",";
+
             cout<<"\n";
         }
     //}

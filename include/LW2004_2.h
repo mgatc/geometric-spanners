@@ -286,7 +286,7 @@ void LW2004_2( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
 
     //************* Step 3 ****************//
     // In this step we assume alpha = pi/2 in order to minimize the degree
-    unordered_set<size_tPair,boost::hash <pair<size_t, size_t>>> ePrime; // without set duplicate edges could be inserted (use the example down below)
+    size_tPairSet ePrime; // without set duplicate edges could be inserted (use the example down below)
     vector<bool> isProcessed(n, false);
 
     for(size_t u : piIndexedByPiU) {
@@ -440,6 +440,12 @@ void LW2004_2( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
                 createNewEdge(ePrime,closestToUInTheCurrentCone,u, n);
             isProcessed[u] = true;
         }
+    }
+    for( size_tPair e : ePrime ) {
+        *result = make_pair( points[e.first], points[e.second] );
+        ++result;
+        *result = make_pair( points[e.second], points[e.first] );
+        ++result;
     }
     //cout << "------------------------\nEdges: " << ePrime.size() << endl;
     //GraphPrinter gp(points, ePrime);

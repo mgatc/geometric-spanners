@@ -112,9 +112,12 @@ void experiment() {
         be useful throughout the project.
     */
 
+    GeometricSpannerPrinter printer;
+
+
     size_t i = 50;
 
-    //for( size_t trial=1; trial<=5; ++trial ) {
+    for( size_t trial=1; trial<=5; ++trial ) {
         for( i=1; i<=10; ++i ) {
             auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
             auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
@@ -122,25 +125,38 @@ void experiment() {
             auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
             // SET POINT SET
             list<Point> points;
-            const int n = i*2500;
+            const int n = i*25;
             std::copy_n( g1, n/3, back_inserter(points) );
             std::copy_n( g2, n/3, back_inserter(points) );
             std::copy_n( g3, n/6, back_inserter(points) );
             std::copy_n( g4, n/6, back_inserter(points) );
             //points.emplace_back( 0, 0 );
 
-            cout<<points.size();
-            cout<<",";
+            cout<< points.size();
+            cout<< ",";
             list< pair< Point, Point > > result;
 
             LW2004_2( points.begin(), points.end(), back_inserter(result) );
 
-            cout<<result.size();
+            pair<pair<Vertex_handle,Vertex_handle>,double> t = StretchFactor( result.begin(), result.end() );
+            cout<< t.second;
+            cout<<",";
+            if(t.second>50){
+                printer.drawEdges( result.begin(), result.end() );
+                printer.drawVertexPair( t.first, {{"color","red"}} );
+                printer.print( "big_ole_t" );
+                return;
+            }
+
+            result.clear();
+
+            BGS2002( points.begin(), points.end(), back_inserter(result) );
+            cout<< StretchFactor( result.begin(), result.end() ).second;
             cout<<",";
 
             cout<<"\n";
         }
-    //}
+    }
 }
 
 void stretchFactorAndDegreeExperiment() {

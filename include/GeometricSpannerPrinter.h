@@ -25,8 +25,14 @@ class GeometricSpannerPrinter {
 
     }
 
-    void drawEdges( const DelaunayGraph::Delaunay_triangulation_2 &Triangulation, const vector<pair<string,string>>& options = {} ) {
+    template< typename RandomAccessIterator >
+    void drawEdges( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd, const vector<pair<string,string>>& options = {} ) {
+        for( auto e=edgesBegin; e!=edgesEnd; ++e ) {
+            drawLine( e->first.x(), e->first.y(), e->second.x(), e->second.y(), options );
+        }
+    }
 
+    void drawEdges( const DelaunayGraph::Delaunay_triangulation_2 &Triangulation, const vector<pair<string,string>>& options = {} ) {
         for( auto eit = Triangulation.finite_edges_begin(); eit != Triangulation.finite_edges_end(); ++eit ) {
             auto e = *eit;
             double x1 = e.first->vertex( (e.second+1)%3 )->point().x();
@@ -40,15 +46,23 @@ class GeometricSpannerPrinter {
 
     template< typename T >
     void drawVertices( const T &Triangulation, const vector<pair<string,string>>& options = {} ) {
+        double radius = 0.09;
         for( typename T::Finite_vertices_iterator it = Triangulation.finite_vertices_begin(); it != Triangulation.finite_vertices_end(); ++it )
             _document += "\\draw [" + parseOptions( options ) + "] ("
-                + to_string(it->point().x()) + ","+ to_string(it->point().y()) +") circle [radius="+to_string(0.09)+"];\n";
+                + to_string(it->point().x()) + ","+ to_string(it->point().y()) +") circle [radius="+to_string(radius)+"];\n";
 
         _document += "\n";
     }
+    void drawVertexPair( const pair<Vertex_handle,Vertex_handle>& vertices, const vector<pair<string,string>>& options = {} ) {
+        string optionsStr = parseOptions( options );
+        double radius = 3;
+        _document += "\\draw [" + optionsStr + "] ("
+            + to_string(vertices.first->point().x()) + ","+ to_string(vertices.first->point().y()) +") circle [radius="+to_string(radius)+"];\n";
+        _document += "\\draw [" + optionsStr + "] ("
+            + to_string(vertices.second->point().x()) + ","+ to_string(vertices.second->point().y()) +") circle [radius="+to_string(radius)+"];\n";
+    }
 
     void drawEdges( const DelaunayGraph& DG, const vector<pair<string,string>>& options = {} ) {
-
         for( auto el : DG._E ) {
             for( auto v : el.second ) {
                 //std::cout << el.first->point() << " " << v->point() << "\n";

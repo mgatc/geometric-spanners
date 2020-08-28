@@ -51,6 +51,7 @@ class DelaunayGraph {
     typedef Delaunay_triangulation_2::Finite_edges_iterator Finite_edges_iterator;
     typedef Delaunay_triangulation_2::Face_handle Face_handle;
     typedef K::FT FT;
+    typedef K::Point_2 Point;
     typedef CGAL::Vector_2<K> Vector_2;
     typedef CGAL::Container_from_circulator<Vertex_circulator> Vertex_container;
 
@@ -73,8 +74,22 @@ class DelaunayGraph {
 
 
     /* Functions */
+    DelaunayGraph() {}
     template< typename RandomAccessIterator >
     DelaunayGraph( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd ) : _DT( pointsBegin, pointsEnd ) {}
+
+    template< typename RandomAccessIterator >
+    // kitty: bnnnnn23333333333333333333333,m000000000000000000000000000000000000000000000000000000000re	IIIKKKKKKKKKKKHUG0
+    void buildFromEdgeList( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+        vector<pair<Point,Point>> edges( edgesBegin, edgesEnd );
+        std::sort( edges.begin(), edges.end() );
+
+        for( auto e=edgesBegin; e!=edgesEnd; ++e ) {
+            Vertex_handle u = _DT.insert(e->first);
+            Vertex_handle v = _DT.insert(e->second);
+            add_edge(u,v);
+        }
+    }
 
     void add_edge( const Vertex_handle& v1, const Vertex_handle& v2 ) {
         add_half_edge( v1, v2 );

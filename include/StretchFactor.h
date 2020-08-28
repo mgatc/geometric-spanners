@@ -18,14 +18,18 @@ inline DelaunayGraph::FT getDistance( const DelaunayGraph::Vertex_handle a, cons
     return a == b ? 0 : CGAL::sqrt( CGAL::squared_distance( a->point(), b->point() ) );
 }
 
-void createVertexToIndexMap( const DelaunayGraph& G, DelaunayGraph::template VertexMap<size_t>& index ) {
-    index.clear();
-    index.reserve( G.n() );
+void createVertexToIndexMaps( const DelaunayGraph& G, DelaunayGraph::template VertexMap<size_t>& handleToIndex, vector<Vertex_handle>& indexToHandle ) {
+    handleToIndex.clear();
+    indexToHandle.clear();
+    handleToIndex.reserve( G.n() );
+    indexToHandle.reserve( G.n() );
     size_t i=0;
     for( auto it = G._DT.finite_vertices_begin();
         it != G._DT.finite_vertices_end();
-        ++it
-    ) index.emplace( it, i++ );
+        ++it ) {
+        handleToIndex.emplace( it, i++ );
+        indexToHandle.emplace_back( it );
+    }
 }
 
 } // namespace stretch_factor
@@ -54,22 +58,58 @@ void EuclideanDistanceMatrix( const DelaunayGraph& G, const DelaunayGraph::templ
     return;
 }
 
-void StretchFactorMatrix( const DelaunayGraph& G, vector< vector< optional<DelaunayGraph::FT> > >& stretch ) {
-    using namespace stretch_factor;
+//void StretchFactorMatrix( const DelaunayGraph& G, vector< vector< optional<DelaunayGraph::FT> > >& stretch ) {
+//    using namespace stretch_factor;
+//
+//    size_t N = G.n();
+//
+//    // First, create a vertex-to-index map
+//    // Add all vertices to a vertex map and assign an index
+//
+//    DelaunayGraph::template VertexMap< size_t > index;
+//    createVertexToIndexMap( G, index );
+//
+//    // Next, conduct Floyd-Warshall to determine all paths' cost
+//    FloydWarshall( G, index, stretch );
+//    // Next, determine Euclidean distance between all vertices
+//    vector< vector< optional<DelaunayGraph::FT> > > euclidean;
+//    EuclideanDistanceMatrix( G, index, euclidean );
+//
+//    vector< vector< optional<DelaunayGraph::FT> > > quotient( N, vector< optional<DelaunayGraph::FT> >(N) );
+//
+//    for( size_t i=0; i<N; ++i )
+//        for( size_t j=0; j<N; ++j )
+//            quotient.at(i).at(j) =
+//                stretch.at(i).at(j) ?
+//                    make_optional( i==j ? 0 : *stretch.at(i).at(j) / *euclidean.at(i).at(j) )
+//                    : nullopt;
+//
+//    swap( quotient, stretch );
+//
+//    return;
+//}
 
+using StretchFactorIndexEntry = pair<pair<       size_t,       size_t>, DelaunayGraph::FT>;
+using StretchFactorVertexHandleEntry = pair<pair<Vertex_handle,Vertex_handle>, DelaunayGraph::FT>;
+
+StretchFactorVertexHandleEntry StretchFactor( const DelaunayGraph& G ) {
+    using namespace stretch_factor;
+    vector< vector< optional<DelaunayGraph::FT> > > stretch;
+    //StretchFactorMatrix( G, stretch );
     size_t N = G.n();
 
     // First, create a vertex-to-index map
     // Add all vertices to a vertex map and assign an index
 
-    DelaunayGraph::template VertexMap< size_t > index;
-    createVertexToIndexMap( G, index );
+    DelaunayGraph::template VertexMap< size_t > handleToIndex;
+    vector<Vertex_handle> indexToHandle;
+    createVertexToIndexMaps( G, handleToIndex, indexToHandle );
 
     // Next, conduct Floyd-Warshall to determine all paths' cost
-    FloydWarshall( G, index, stretch );
+    FloydWarshall( G, handleToIndex, stretch );
     // Next, determine Euclidean distance between all vertices
     vector< vector< optional<DelaunayGraph::FT> > > euclidean;
-    EuclideanDistanceMatrix( G, index, euclidean );
+    EuclideanDistanceMatrix( G, handleToIndex, euclidean );
 
     vector< vector< optional<DelaunayGraph::FT> > > quotient( N, vector< optional<DelaunayGraph::FT> >(N) );
 
@@ -82,23 +122,28 @@ void StretchFactorMatrix( const DelaunayGraph& G, vector< vector< optional<Delau
 
     swap( quotient, stretch );
 
-    return;
+    StretchFactorIndexEntry maxVal = make_pair( make_pair(0, 0), 1.0 );
+    // Find max in stretch
+    for( size_t i=0; i<stretch.size(); ++i ) {
+        for( size_t j=0; j<stretch.at(i).size(); ++j ) {
+            if( stretch.at(i).at(j) > maxVal.second ) {
+                maxVal = make_pair( make_pair( i, j ), *stretch.at(i).at(j) );
+            }
+        }
+    }
+    return make_pair(
+        make_pair(
+            indexToHandle.at( maxVal.first.first  ),
+            indexToHandle.at( maxVal.first.second )
+        ), maxVal.second
+    );
 }
 
-DelaunayGraph::FT StretchFactor( const DelaunayGraph& G ) {
-    using namespace stretch_factor;
-    vector< vector< optional<DelaunayGraph::FT> > > stretch;
-    StretchFactorMatrix( G, stretch );
-
-    DelaunayGraph::FT maxValue = 1.0;
-    // Find max in stretch
-    for( auto i : stretch )
-        for( auto j : i ) {
-            maxValue = CGAL::max( *j, maxValue );
-            //cout<<*j<<"\n";
-        }
-
-    return maxValue;
+template< typename RandomAccessIterator >
+StretchFactorVertexHandleEntry StretchFactor( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+    DelaunayGraph G;
+    G.buildFromEdgeList( edgesBegin, edgesEnd );
+    return StretchFactor(G);
 }
 
 } // namespace gsnunf

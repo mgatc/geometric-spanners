@@ -17,27 +17,27 @@ template< typename RandomAccessIterator, typename OutputIterator >
 void BGS2002( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result ) {
     //GeometricSpannerPrinter printer;
     //Timer t(",");
-    cout<<"DelaunayGraph\n";
+    //cout<<"DelaunayGraph\n";
     DelaunayGraph G( pointsBegin, pointsEnd );
 
 //    //printer.drawEdges( G._DT, { {"color", "gray"} } );
-    cout<<"SpanningGraph\n";
+   // cout<<"SpanningGraph\n";
 //
     SpanningGraph( G );
 //    //printer.drawEdges( G, { {"", "thick"} } );
 //
-    size_t split_size_estimate = G._DT.number_of_vertices();
+    //size_t split_size_estimate = G._DT.number_of_vertices();
     SplitVertexSet V;
     SplitVertexEdgeMap P;
 //    {
 //        //Timer timer(",");
-            cout<<"TransformPolygon\n";
+           // cout<<"TransformPolygon\n";
 //
         TransformPolygon( G, V, P );
 //    }
 //    {
 //        //Timer timer(",");
-            cout<<"PolygonSpanner\n";
+           // cout<<"PolygonSpanner\n";
 //
         PolygonSpanner( G, V, P );
 //    }
@@ -47,6 +47,8 @@ void BGS2002( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 //    printer.print( "PolygonSpanner" );
 //    cout<<StretchFactor(G)<<",";
 //    cout<<G.degree()<<",";
+
+   // cout<<G._E.size()<<",";
 
     // send resulting edge list to output iterator
     for( auto const& adj : G._E ) {

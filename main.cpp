@@ -7,7 +7,7 @@
 #include "Timer.h"
 #include "FloydWarshall.h"
 #include "BGS2002.h"
-#include "LW2004_2.h"
+#include "LW2004_3.h"
 #include "StretchFactor.h"
 
 using namespace gsnunf;
@@ -26,6 +26,8 @@ int main() {
 
 void scratch() {
     using namespace std;
+
+    GeometricSpannerPrinter printer;
 
     const double width = 100;
     size_t n = 30, i=n;
@@ -79,7 +81,7 @@ void scratch() {
 //        { 9, 1 }
 //    };
 
-        n = 3000000;
+        n = 30;
 
         std::copy_n( g1, n/3, back_inserter(points) );
         std::copy_n( g2, n/3, back_inserter(points) );
@@ -92,8 +94,11 @@ void scratch() {
         double alpha = PI/2;
         list< pair< Point, Point > > result;
 
-        LW2004_2( points.begin(), points.end(), back_inserter(result), alpha );
+        LW2004_3( points.begin(), points.end(), back_inserter(result), alpha );
         //BGS2002( points.begin(), points.end(), back_inserter(result) );
+
+        printer.drawEdges( result.begin(), result.end() );
+        printer.print("lw2004");
 
         cout<<"\n";
 
@@ -125,7 +130,7 @@ void experiment() {
             auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
             // SET POINT SET
             list<Point> points;
-            const int n = i*25;
+            const int n = i*250;
             std::copy_n( g1, n/3, back_inserter(points) );
             std::copy_n( g2, n/3, back_inserter(points) );
             std::copy_n( g3, n/6, back_inserter(points) );
@@ -136,17 +141,17 @@ void experiment() {
             cout<< ",";
             list< pair< Point, Point > > result;
 
-            LW2004_2( points.begin(), points.end(), back_inserter(result) );
+            LW2004_3( points.begin(), points.end(), back_inserter(result) );
 
             pair<pair<Vertex_handle,Vertex_handle>,double> t = StretchFactor( result.begin(), result.end() );
             cout<< t.second;
             cout<<",";
-            if(t.second>50){
-                printer.drawEdges( result.begin(), result.end() );
-                printer.drawVertexPair( t.first, {{"color","red"}} );
-                printer.print( "big_ole_t" );
-                return;
-            }
+//            if(t.second>50){
+//                printer.drawEdges( result.begin(), result.end() );
+//                printer.drawVertexPair( t.first, {{"color","red"}} );
+//                printer.print( "big_ole_t" );
+//                return;
+//            }
 
             result.clear();
 

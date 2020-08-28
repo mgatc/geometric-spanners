@@ -416,7 +416,7 @@
 1588865172 source:/home/matt/UDC/udc/src/ExperimentalHex2.cpp
 	"ExperimentalHex2.h"
 
-1598558725 source:/home/matt/GeometricSpanners/main.cpp
+1598626801 source:/home/matt/GeometricSpanners/main.cpp
 	<chrono>
 	<list>
 	<utility>
@@ -424,7 +424,7 @@
 	"Timer.h"
 	"FloydWarshall.h"
 	"BGS2002.h"
-	"LW2004_2.h"
+	"LW2004_3.h"
 	"StretchFactor.h"
 
 1589914637 /home/matt/GeometricSpanners/include/Greedy.h
@@ -469,7 +469,7 @@
 1589915120 /home/matt/GeometricSpanners/include/GeometricSpannerSolutionChecker.h
 	"CgalComponents.h"
 
-1598463587 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
+1598624985 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
 	<cstdlib>
 	<iostream>
 	<list>
@@ -637,7 +637,7 @@
 	"SpanningGraph.h"
 	"DelaunayGraph.h"
 
-1598555297 /home/matt/GeometricSpanners/include/DelaunayGraph.h
+1598624985 /home/matt/GeometricSpanners/include/DelaunayGraph.h
 	<iostream>
 	<queue>
 	<set>
@@ -667,7 +667,7 @@
 	<CGAL/utils.h>
 	"DelaunayGraph.h"
 
-1598555141 /home/matt/GeometricSpanners/include/StretchFactor.h
+1598624985 /home/matt/GeometricSpanners/include/StretchFactor.h
 	<algorithm>
 	<optional>
 	<vector>
@@ -685,7 +685,7 @@
 	<iostream>
 	<string>
 
-1598558458 /home/matt/GeometricSpanners/include/BGS2002.h
+1598624985 /home/matt/GeometricSpanners/include/BGS2002.h
 	<iostream>
 	<list>
 	"Timer.h"
@@ -728,4 +728,25 @@
 	<CGAL/Triangulation_vertex_base_with_info_2.h>
 
 1575469541 /usr/lib/gcc/x86_64-linux-gnu/7/include/float.h
+
+1598626785 /home/matt/GeometricSpanners/include/LW2004_3.h
+	<cmath>
+	<float.h>
+	<forward_list>
+	<fstream>
+	<list>
+	<queue>
+	<unordered_set>
+	<vector>
+	<boost/functional/hash.hpp>
+	<boost/heap/fibonacci_heap.hpp>
+	<CGAL/Aff_transformation_2.h>
+	<CGAL/algorithm.h>
+	<CGAL/boost/iterator/transform_iterator.hpp>
+	<CGAL/Delaunay_triangulation_2.h>
+	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
+	<CGAL/point_generators_2.h>
+	<CGAL/random_convex_set_2.h>
+	<CGAL/random_selection.h>
+	<CGAL/Triangulation_vertex_base_with_info_2.h>
 

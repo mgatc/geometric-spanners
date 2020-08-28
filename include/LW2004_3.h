@@ -1,5 +1,5 @@
-#ifndef GSNUNF_LW2004_2_H
-#define GSNUNF_LW2004_2_H
+#ifndef GSNUNF_LW2004_3_H
+#define GSNUNF_LW2004_3_H
 
 #include <cmath>
 #include <float.h>
@@ -29,7 +29,7 @@ namespace gsnunf {
 
 using namespace std;
 
-namespace lw2004_2 {
+namespace lw2004_3 {
 
 using namespace CGAL;
 
@@ -39,7 +39,9 @@ typedef CGAL::Triangulation_face_base_2<K>                          Fb;
 typedef CGAL::Triangulation_data_structure_2<Vb, Fb>                Tds;
 typedef CGAL::Delaunay_triangulation_2<K, Tds>                      Delaunay;
 typedef CGAL::Aff_transformation_2<K>                               Transformation;
-typedef CGAL::Vector_2<K> Vector;
+typedef Delaunay::Vertex_handle                                     Vertex_handle;
+typedef Delaunay::Vertex_circulator                                 Vertex_circulator;
+typedef CGAL::Vector_2<K>                                           Vector_2;
 typedef Delaunay::Point                                             Point;
 typedef Delaunay::Finite_vertices_iterator                          Finite_vertices_iterator;
 typedef Delaunay::Finite_edges_iterator                             Finite_edges_iterator;
@@ -195,8 +197,8 @@ typedef Heap::handle_type handle;
 
 inline Point rotateByThetaAround(const Point &pivot, const Point &p, const long double theta) {
     Transformation rotate(ROTATION, sin(theta), cos(theta));
-    Transformation translate1(TRANSLATION, Vector(-pivot.x(),-pivot.y()));
-    Transformation translate2(TRANSLATION, Vector(pivot.x(),pivot.y()));
+    Transformation translate1(TRANSLATION, Vector_2(-pivot.x(),-pivot.y()));
+    Transformation translate2(TRANSLATION, Vector_2(pivot.x(),pivot.y()));
 
     Point r = translate1(p);
     r = rotate(r);
@@ -211,20 +213,42 @@ inline void createNewEdge( size_tPairSet &E, const size_t i, const size_t j, con
     E.insert(make_pair(std::min(i,j), std::max(i,j) ));
 }
 
+template< class DT >
+double get_angle( const DT& T, typename DT::Vertex_handle &p, const typename DT::Vertex_handle &q, const typename DT::Vertex_handle &r ) {
+    assert( !T.is_infinite(p) );
+    assert( !T.is_infinite(q) );
+    assert( !T.is_infinite(r) );
+
+    Vector_2 pq( p->point(), q->point() );
+    Vector_2 rq( r->point(), q->point() );
+
+    double result = atan2( rq.y(), rq.x()) - atan2(pq.y(), pq.x() );
+
+    // atan() returns a value between -PI and PI. From zero ("up"), CCW rotation is negative and CW is positive.
+    // Our zero is also "up," but we only want positive values between 0 and 2*PI:
+
+    result *= -1; // First, invert the result. This will associate CW rotation with positive values.
+    if( result < EPSILON ) // Then, if the result is less than 0 (or epsilon for floats) add 2*PI.
+        result += 2*PI;
+
+    return result;
+}
+
 } // namespace lw2004_2
 
 // alpha is set to pi/2
 template< typename RandomAccessIterator, typename OutputIterator >
-void LW2004_2( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, double alpha = PI/2 ) {
-    using namespace lw2004_2;
+void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, double alpha = PI/2 ) {
+    using namespace lw2004_3;
+
     //Timer t(",");
     vector<Point> points( pointsBegin, pointsEnd );
     const size_t n = points.size();
     //cout << "Step 1 starts...\n";
     Delaunay T;
 
-    T.insert( boost::make_transform_iterator(points.begin(),lw2004_2::AutoCount()),
-              boost::make_transform_iterator(points.end(),  lw2004_2::AutoCount()));
+    T.insert( boost::make_transform_iterator(points.begin(),AutoCount()),
+              boost::make_transform_iterator(points.end(),  AutoCount()));
 
     //cout << "Step 1 is over...\n";
     // TriangulationPrinter tp(T);
@@ -288,166 +312,81 @@ void LW2004_2( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
     // In this step we assume alpha = pi/2 in order to minimize the degree
     size_tPairSet ePrime; // without set duplicate edges could be inserted (use the example down below)
     vector<bool> isProcessed(n, false);
+    Delaunay::Vertex_handle v_inf = T.infinite_vertex(),
+        u_handle;
 
-    for(size_t u : piIndexedByPiU) {
-        //cout << "\n" << u <<": \n===================\n";
-
-        bool sectorBoundaryVertexFound = false;
-        Delaunay::Vertex_circulator vc = T.incident_vertices(pointID2VertexHandle[u]), done(vc), hold(vc);
-
-        size_t numProcessedNeighbors = 0;
-        do {
-            if( !T.is_infinite(vc) && piIndexedByV[vc->info()] < piIndexedByV[u] )
-                ++numProcessedNeighbors;
-        } while( ++vc!=done );
-
-        assert( numProcessedNeighbors <= 5 );
-
-        // Note: vc++ moves counterclockwise and vc-- moves clockwise
-        if (vc != 0) {
-            // Using this do-while loop, find the first boundary point adjacent to u
-            do {
-                if(!T.is_infinite(vc) && (piIndexedByV[vc->info()] < piIndexedByV[u]) && isProcessed[vc->info()]) {
-                    sectorBoundaryVertexFound = true;
-                    hold = vc;
-                    break;
-                }
-            } while(++vc != done);
-
-            // Now using the boundary point make a circular journey around u
-            Point coneStart = vc->point();
-            Point coneEnd   = rotateByThetaAround( points[u], coneStart, M_PI_2 );
-            long double closestDistanceSquared = LDBL_MAX; // stores the distance to the closest vertex in the current cone
-            size_t closestToUInTheCurrentCone; // stores the ID of the point that achieves closestDistanceSquared
-            size_t prev; // stores the prev point in the cone
-            bool currentConeIsEmptySoFar = true;
-
-            if( !sectorBoundaryVertexFound ) { // every neighbour is unprocessed; this is required otherwise gives incorrect graphs sometimes
-                // counterexample:
-                // 0.182387 2.19867 8.55689 -4.48489 -8.67484 1.56996
-                if(T.is_infinite(hold))
-                    hold++;
-
-                Delaunay::Vertex_circulator tempVC = hold, done(tempVC);
-
-                if ( tempVC != 0) {
-                    coneStart = tempVC->point();
-                    createNewEdge(ePrime,tempVC->info(), u, n);
-                    coneEnd = rotateByThetaAround( points[u], coneStart, M_PI_2 );
-                    closestDistanceSquared = LDBL_MAX;
-                    currentConeIsEmptySoFar = true;
-                    tempVC++;
-
-                    while(tempVC != done) {
-                        if(T.is_infinite(tempVC) ) {
-                            tempVC++;
-                            continue;
-                        }
-                        // lies inside the cone
-                        if( left_turn( coneEnd, points[u], tempVC->point()  ) && !left_turn( coneStart, points[u], tempVC->point()  )) {
-                            long double distanceFromU = squared_distance(points[u],tempVC->point());
-
-                            if( distanceFromU < closestDistanceSquared) {
-                                closestDistanceSquared     = distanceFromU;
-                                closestToUInTheCurrentCone = tempVC->info();
-                            }
-
-                            if( !currentConeIsEmptySoFar )
-                                createNewEdge(ePrime,tempVC->info(), prev, n);
-
-                            currentConeIsEmptySoFar = false;
-
-                            prev = tempVC->info();
-                            tempVC++;
-                        } else if ( collinear(coneEnd, points[u], tempVC->point()) ) {
-                            //cout << "Case 2-Special " << endl;
-                            createNewEdge(ePrime,tempVC->info(), u, n);
-                            currentConeIsEmptySoFar = true;
-                            closestDistanceSquared = LDBL_MAX;
-                            coneStart = coneEnd;
-                            coneEnd = rotateByThetaAround( points[u], coneStart, M_PI_2 );
-                            tempVC++;
-                            continue;
-                        } else { // outside cone
-                            if(!currentConeIsEmptySoFar)
-                                createNewEdge(ePrime,closestToUInTheCurrentCone,u, n);
-
-                            coneStart = coneEnd;
-                            coneEnd   = rotateByThetaAround( points[u], coneStart, M_PI_2 );
-                            currentConeIsEmptySoFar = true;
-                            closestDistanceSquared = LDBL_MAX;
-                            continue;
-                        }
-                    }
-                    if(!currentConeIsEmptySoFar )
-                        createNewEdge(ePrime,closestToUInTheCurrentCone,u, n);
-                }
-                isProcessed[u] = true;
-                continue;
-            }
-
-            vc++; // required
-            while ( vc != hold ) {
-                // do nothing if vc is an infinite vertex
-                if( T.is_infinite(vc) ) {
-                    vc++;
-                    continue;
-                }
-                // vc is a sector boundary vertex
-                if( (piIndexedByV[vc->info()] < piIndexedByV[u]) && isProcessed[vc->info()] ) {
-                    coneStart = vc->point();
-                    coneEnd = rotateByThetaAround( points[u], coneStart, M_PI_2 );
-                    if( !currentConeIsEmptySoFar )
-                        createNewEdge(ePrime,u,closestToUInTheCurrentCone, n);
-
-                    closestDistanceSquared = LDBL_MAX;
-                    currentConeIsEmptySoFar = true;
-                }
-                // vc lies on the cone boundary (rarely happens)
-                else if( collinear( coneEnd, points[u], vc->point() ) ) {
-                    coneStart = vc->point();
-                    if( !currentConeIsEmptySoFar )
-                        createNewEdge(ePrime,u,closestToUInTheCurrentCone, n);
-
-                    coneEnd = rotateByThetaAround( points[u], coneStart, M_PI_2 );
-                    currentConeIsEmptySoFar = true;
-                    closestDistanceSquared = LDBL_MAX;
-                }
-                // vc is inside the current cone having angle <= pi/2 (one side open)
-                else if( !isProcessed[u] && right_turn( coneStart, points[u], vc->point() )
-                         && left_turn ( coneEnd, points[u], vc->point() ) ) {
-
-                    if(!currentConeIsEmptySoFar)
-                        createNewEdge(ePrime,prev,vc->info(), n);
-                    else
-                        currentConeIsEmptySoFar = false;
-
-                    long double distBetweenUandVC = squared_distance( points[u], vc->point());
-                    prev = vc->info();
-
-                    if( distBetweenUandVC < closestDistanceSquared ) {
-                        closestDistanceSquared = distBetweenUandVC;
-                        closestToUInTheCurrentCone = vc->info();
-                    }
-                }
-                // vc lies outside the cone
-                else { //if( right_turn( coneEnd, points[u], vc->point() ) && right_turn( coneStart, points[u], vc->point() ) )
-                    if(!currentConeIsEmptySoFar)
-                        createNewEdge(ePrime,closestToUInTheCurrentCone,u, n);
-
-                    coneStart = coneEnd;
-                    coneEnd = rotateByThetaAround( points[u], coneStart, M_PI_2 );
-                    currentConeIsEmptySoFar = true;
-                    closestDistanceSquared = LDBL_MAX;
-                    continue;
-                }
-
-                vc++;
-            }
-            if(!currentConeIsEmptySoFar )
-                createNewEdge(ePrime,closestToUInTheCurrentCone,u, n);
-            isProcessed[u] = true;
+    // Iterate through vertices by pi ordering
+    for( size_t u : piIndexedByPiU ) {
+        u_handle = pointID2VertexHandle.at(u);
+        // Get neighbors of u
+        Delaunay::Vertex_circulator N = T.incident_vertices( u_handle );
+        while( T.is_infinite(++N) ); // Make sure N isn't infinite
+        Delaunay::Vertex_circulator done(N);
+        // Rotate N until reaching a processed vertex or the original vertex
+        while( ( T.is_infinite(++N) || !isProcessed.at(N->info()) ) && N != done );
+        // We need to find and store sector boundaries, start with N
+        vector<Delaunay::Vertex_handle> sectorBoundaries{ N->handle() };
+        while( ++N != sectorBoundaries.front() ) {
+            if( !T.is_infinite(N) && isProcessed.at(N->info()) )
+                sectorBoundaries.push_back( N->handle() );
         }
+        assert( sectorBoundaries.size() <= 5 );
+
+        // Now, compute the angles of the sectors, the number of cones in each sector,
+        // and the actual angles
+        vector<double> alphaReal( sectorBoundaries.size() );
+        vector< vector<Delaunay::Vertex_handle> > closest( sectorBoundaries.size() );
+
+        for( size_t i=0; i<sectorBoundaries.size(); ++i ) {
+            double sectorAngle = get_angle(
+                T,
+                sectorBoundaries.at(i),
+                u_handle,
+                sectorBoundaries.at( (i+1)%sectorBoundaries.size() )
+            );
+            size_t numCones = rint( ceil( sectorAngle / alpha ) );
+            alphaReal[i] = sectorAngle / numCones;
+            closest.at(i).resize( numCones, v_inf );
+        }
+
+        Delaunay::Vertex_handle lastN = N->handle();
+        ++N;
+        size_t sector = 0;
+
+        do { // Loop through neighbors and add appropriate edges
+            if( T.is_infinite(N) ) continue;
+
+            if( isProcessed.at( N->info() ) ) {
+                ++sector;
+            } else {
+                // evaluate possible forward edges
+                double theta = get_angle(
+                    T,
+                    sectorBoundaries.at(sector),
+                    u_handle,
+                    N->handle()
+                );
+                if( theta > 2*PI-EPSILON )
+                    theta = 0;
+                //i = std::min( int(theta/beta), subangles-1 );
+                size_t cone = int( theta / alphaReal.at(sector) );
+                // Store value until after all neighbors are processed, then add
+                if( T.is_infinite( closest.at(sector).at(cone) )
+                  || Vector_2( u_handle->point(), N->point() ).squared_length() < Vector_2( u_handle->point(), closest.at(sector).at(cone)->point() ).squared_length() )
+                    closest.at(sector).at(cone) = N->handle();   // if the saved vertex is infinite or longer than the current one, update
+
+                // cross edges
+                if( !T.is_infinite(lastN) && !isProcessed.at( lastN->info() ) )
+                    createNewEdge( ePrime, lastN->info(), N->info(), n );
+            }
+            lastN = N->handle();
+        } while( ++N != done );
+
+        // Add edges in closest
+        for( auto segment : closest )
+            for( auto v : segment )
+                if( !T.is_infinite(v) )
+                    createNewEdge( ePrime, u, v->info(), n );
     }
     for( size_tPair e : ePrime ) {
         *result = make_pair( points[e.first], points[e.second] );
@@ -463,4 +402,4 @@ void LW2004_2( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
 
 } // namespace gsnunf
 
-#endif // GSNUNF_LW2004_2_H
+#endif // GSNUNF_LW2004_3_H

@@ -76,6 +76,7 @@
 		<Unit filename="include/GraphAlgorithmEvent.h" />
 		<Unit filename="include/LW2004.h" />
 		<Unit filename="include/LW2004_2.h" />
+		<Unit filename="include/LW2004_3.h" />
 		<Unit filename="include/PolygonSpanner.h" />
 		<Unit filename="include/SpanningGraph.h" />
 		<Unit filename="include/SplitVertex.h" />

@@ -6,7 +6,9 @@
 
 #include "Timer.h"
 #include "FloydWarshall.h"
+#include "GeometricSpannerPrinter.h"
 #include "BGS2002.h"
+#include "LW2004_2.h"
 #include "LW2004_3.h"
 #include "StretchFactor.h"
 
@@ -16,6 +18,51 @@ typedef CGAL::Creator_uniform_2<double,Point> Creator;
 void experiment();
 void scratch();
 void stretchFactorAndDegreeExperiment();
+void generateRandomPoints( vector<Point> &points, const size_t n, const string outputFileName = "" );
+
+template< class OutputIterator >
+void readPointsFromFile( OutputIterator out, const string outputFileName ) {
+    ifstream in (outputFileName);
+    if (in.is_open()) {
+        double x,y;
+        while ( in >> x >> y ) {
+            *out = Point(x,y);
+            ++out;
+        }
+        in.close();
+    }
+}
+
+template< class OutputIterator >
+void generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
+    typedef CGAL::Creator_uniform_2<double,Point> Creator;
+    //Random_points_in_disc_2<Point,Creator> g(10);
+    //Random_points_in_square_2<Point,Creator> g(10);
+
+    auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( size*sqrt(size)/2 );
+    auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( size*sqrt(size)/2 );
+
+    //random_convex_set_2(n,std::back_inserter(points), g);
+    // Random_points_on_circle_2<Point,Creator> gen(50);
+    // std::copy_n( gen, n, std::back_inserter(points));
+
+    vector<Point> points;
+    points.reserve(n);
+
+    std::copy_n( g3, n/2, back_inserter(points) );
+    std::copy_n( g4, n/2, back_inserter(points) );
+
+    // copy points to output iterator
+    for( Point p : points )
+        *(pointsOut++) = p;
+
+    // copy points to file
+    ofstream out;
+    out.open( to_string(n) + "_" + to_string(size) + "x" + to_string(size) + ".txt", ios::trunc );
+    for( Point p : points )
+        out << p << endl;
+    out.close();
+}
 
 int main() {
     experiment();
@@ -83,10 +130,12 @@ void scratch() {
 
         n = 30;
 
-        std::copy_n( g1, n/3, back_inserter(points) );
-        std::copy_n( g2, n/3, back_inserter(points) );
-        std::copy_n( g3, n/6, back_inserter(points) );
-        std::copy_n( g4, n/6, back_inserter(points) );
+//        std::copy_n( g1, n/3, back_inserter(points) );
+//        std::copy_n( g2, n/3, back_inserter(points) );
+//        std::copy_n( g3, n/6, back_inserter(points) );
+//        std::copy_n( g4, n/6, back_inserter(points) );
+
+        readPointsFromFile( back_inserter( points ), "in2.txt" );
 
         cout<<points.size();
         cout<<",";
@@ -97,8 +146,15 @@ void scratch() {
         LW2004_3( points.begin(), points.end(), back_inserter(result), alpha );
         //BGS2002( points.begin(), points.end(), back_inserter(result) );
 
+        pair<pair<Vertex_handle,Vertex_handle>,double> t = StretchFactor( result.begin(), result.end() );
+        cout<< t.second;
+        cout<<",";
+
         printer.drawEdges( result.begin(), result.end() );
-        printer.print("lw2004");
+        //printer.drawVertexPair( t.first, {{"color","red"}} );
+        printer.print( "big_t" );
+        //printer.print("bgs2002");
+
 
         cout<<"\n";
 
@@ -119,86 +175,47 @@ void experiment() {
 
     GeometricSpannerPrinter printer;
 
-
     size_t i = 50;
 
-    for( size_t trial=1; trial<=5; ++trial ) {
-        for( i=1; i<=10; ++i ) {
-            auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
-            auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
-            auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
-            auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
+    for( size_t trial=1; trial<=10; ++trial ) {
+        for( i=1; i<=17; ++i ) {
+            double size = width*sqrt(i)/2;
+            auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( size );
+            auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   size );
+            auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( size );
+            auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( size );
             // SET POINT SET
             list<Point> points;
-            const int n = i*250;
-            std::copy_n( g1, n/3, back_inserter(points) );
-            std::copy_n( g2, n/3, back_inserter(points) );
-            std::copy_n( g3, n/6, back_inserter(points) );
-            std::copy_n( g4, n/6, back_inserter(points) );
+            const int n = i*100;
+            //std::copy_n( g1, n/3, back_inserter(points) );
+            //std::copy_n( g2, n/3, back_inserter(points) );
+//            std::copy_n( g3, n/6, back_inserter(points) );
+//            std::copy_n( g4, n/6, back_inserter(points) );
             //points.emplace_back( 0, 0 );
+
+            generateRandomPoints( n, size, back_inserter(points) );
 
             cout<< points.size();
             cout<< ",";
             list< pair< Point, Point > > result;
-
-            LW2004_3( points.begin(), points.end(), back_inserter(result) );
+            {
+                Timer t;
+                LW2004_3( points.begin(), points.end(), back_inserter(result) );
+            }
 
             pair<pair<Vertex_handle,Vertex_handle>,double> t = StretchFactor( result.begin(), result.end() );
             cout<< t.second;
             cout<<",";
-//            if(t.second>50){
-//                printer.drawEdges( result.begin(), result.end() );
-//                printer.drawVertexPair( t.first, {{"color","red"}} );
-//                printer.print( "big_ole_t" );
-//                return;
-//            }
-
             result.clear();
+            {
+                Timer t;
+                BGS2002( points.begin(), points.end(), back_inserter(result) );
+            }
 
-            BGS2002( points.begin(), points.end(), back_inserter(result) );
-            cout<< StretchFactor( result.begin(), result.end() ).second;
+            t = StretchFactor( result.begin(), result.end() );
+            cout<< t.second;
             cout<<",";
-
-            cout<<"\n";
-        }
-    }
-}
-
-void stretchFactorAndDegreeExperiment() {
-    const double width = 100;
-
-    /*
-        g1-g4 are the random point generators. Currently, they must be
-        manually changed in the code to effect the point set properties.
-        I tried to put them in a vector of the base class and loop through
-        it to change the generator. However, their base class doesn't
-        implement the ++ operator, required by copy_n. Therefore, we need
-        to create a random point set factory for this purpose, which will
-        be useful throughout the project.
-    */
-
-    size_t i = 50;
-
-    for( size_t trial=1; trial<=5; ++trial ) {
-        for( i=1; i<=10; ++i ) {
-            auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
-            auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
-            auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
-            auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
-            // SET POINT SET
-            list<Point> points;
-            const int n = i*250;
-            std::copy_n( g1, n/3, back_inserter(points) );
-            std::copy_n( g2, n/3, back_inserter(points) );
-            std::copy_n( g3, n/6, back_inserter(points) );
-            std::copy_n( g4, n/6, back_inserter(points) );
-            //points.emplace_back( 0, 0 );
-
-            cout<<points.size();
-            cout<<",";
-            list< pair< Point, Point > > result;
-
-            BGS2002( points.begin(), points.end(), back_inserter(result) );
+            result.clear();
 
             cout<<"\n";
         }

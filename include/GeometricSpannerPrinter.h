@@ -16,11 +16,13 @@ using namespace std;
 
 class GeometricSpannerPrinter {
   public:
-
-    double radiusOfPoints;
+    double _scaleFactor;
+    double _radiusOfPoints;
 
     GeometricSpannerPrinter()
-        : _header( "\\documentclass{standalone} \n\\usepackage{tikz} \n \n\n\\begin{document}\n\n\n\n\\begin{tikzpicture}\n\n" ),
+        : _scaleFactor(0.005),
+          _radiusOfPoints(0.1),
+          _header( "\\documentclass{standalone} \n\\usepackage{tikz} \n \n\n\\begin{document}\n\n\n\n\\begin{tikzpicture}\n\n" ),
           _footer( "\n\n\\end{tikzpicture}\n\n\\end{document}") {
 
     }
@@ -46,20 +48,27 @@ class GeometricSpannerPrinter {
 
     template< typename T >
     void drawVertices( const T &Triangulation, const vector<pair<string,string>>& options = {} ) {
-        double radius = 0.09;
         for( typename T::Finite_vertices_iterator it = Triangulation.finite_vertices_begin(); it != Triangulation.finite_vertices_end(); ++it )
-            _document += "\\draw [" + parseOptions( options ) + "] ("
-                + to_string(it->point().x()) + ","+ to_string(it->point().y()) +") circle [radius="+to_string(radius)+"];\n";
+            drawVertex( it->point().x(), it->point().y(), options );
+//            _document += "\\draw [" + parseOptions( options ) + "] ("
+//                + to_string(it->point().x()) + ","+ to_string(it->point().y()) +") circle [radius="+to_string(radius)+"];\n";
 
         _document += "\n";
     }
     void drawVertexPair( const pair<Vertex_handle,Vertex_handle>& vertices, const vector<pair<string,string>>& options = {} ) {
-        string optionsStr = parseOptions( options );
-        double radius = 3;
-        _document += "\\draw [" + optionsStr + "] ("
-            + to_string(vertices.first->point().x()) + ","+ to_string(vertices.first->point().y()) +") circle [radius="+to_string(radius)+"];\n";
-        _document += "\\draw [" + optionsStr + "] ("
-            + to_string(vertices.second->point().x()) + ","+ to_string(vertices.second->point().y()) +") circle [radius="+to_string(radius)+"];\n";
+//        string optionsStr = parseOptions( options );
+//        double radius = 3;
+//        _document += "\\draw [" + optionsStr + "] ("
+//            + to_string(vertices.first->point().x()) + ","+ to_string(vertices.first->point().y()) +") circle [radius="+to_string(radius)+"];\n";
+//        _document += "\\draw [" + optionsStr + "] ("
+//            + to_string(vertices.second->point().x()) + ","+ to_string(vertices.second->point().y()) +") circle [radius="+to_string(radius)+"];\n";
+        drawVertex( vertices.first->point().x(), vertices.first->point().y(), options );
+        drawVertex( vertices.second->point().x(), vertices.second->point().y(), options );
+    }
+
+    void drawVertex( double x, double y, const vector<pair<string,string>>& options = {} ) {
+        _document += "\\draw [" + parseOptions( options ) + "] ("
+            + to_string(x*_scaleFactor) + ","+ to_string(y*_scaleFactor) +") circle [radius="+to_string(_radiusOfPoints*_scaleFactor)+"];\n";
     }
 
     void drawEdges( const DelaunayGraph& DG, const vector<pair<string,string>>& options = {} ) {
@@ -78,8 +87,8 @@ class GeometricSpannerPrinter {
 
     void drawLine( double x1, double y1, double x2, double y2, const vector<pair<string,string>>& options = {} ) {
         _document += "\\draw [" + parseOptions( options ) + "] ("
-            + to_string(x1) + "," + to_string(y1) + ") -- ("
-            + to_string(x2) + "," + to_string(y2) + ");\n";
+            + to_string(x1*_scaleFactor) + "," + to_string(y1*_scaleFactor) + ") -- ("
+            + to_string(x2*_scaleFactor) + "," + to_string(y2*_scaleFactor) + ");\n";
     }
 
     string parseOptions( const vector<pair<string,string>>& options ) {

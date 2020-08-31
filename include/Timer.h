@@ -10,7 +10,7 @@ namespace gsnunf {
 class Timer
 {
 public:
-    Timer( std::string delimiter = "" ) : m_delimiter(delimiter) {
+    Timer( std::string delimiter = "," ) : m_delimiter(delimiter) {
         m_startTime = std::chrono::high_resolution_clock::now();
     }
     ~Timer() {

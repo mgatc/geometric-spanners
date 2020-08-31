@@ -1,6 +1,7 @@
 #ifndef GSNUNF_DELAUNAYGRAPH_H
 #define GSNUNF_DELAUNAYGRAPH_H
 
+#include <cmath>
 #include <iostream>
 #include <queue>
 #include <set>
@@ -20,7 +21,7 @@ namespace gsnunf {
 
 using namespace std;
 
-const double PI = 3.14159265359;
+const double PI = M_PI;
 const double EPSILON = 0.000001;
 
 template< class T >

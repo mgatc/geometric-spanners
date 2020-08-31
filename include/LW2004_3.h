@@ -18,9 +18,6 @@
 #include <CGAL/boost/iterator/transform_iterator.hpp>
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/point_generators_2.h>
-#include <CGAL/random_convex_set_2.h>
-#include <CGAL/random_selection.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
 
@@ -50,96 +47,6 @@ typedef pair<size_t,size_t>                                         size_tPair;
 typedef boost::hash<size_tPair>                                     size_tPairHash;
 typedef unordered_set<size_tPair,size_tPairHash>                    size_tPairSet;
 
-class GraphPrinter {
-    vector<Point> points;
-    size_tPairSet E;
-    double radiusOfPoints;
-
-    public:
-        GraphPrinter(const vector<Point>& points, const size_tPairSet& E, double radiusOfPoints = 0.09)
-            : points(points), E(E), radiusOfPoints(radiusOfPoints) {}
-
-        void draw(string fName = "temp") {
-            FILE *fp = fopen(  fName.c_str(),"w");
-            fprintf(fp,"\\documentclass{standalone} \n\\usepackage{tikz} \n \n\n\\begin{document}\n");
-            fprintf(fp,"\n\n\n\\begin{tikzpicture}\n\n");
-
-            for(pair<size_t,size_t> p : E) {
-                double x1 = points[p.first].x();
-                double y1 = points[p.first].y();
-                double x2 = points[p.second].x();
-                double y2 = points[p.second].y();
-                fprintf(fp, "\\draw [thick] (%f,%f) -- (%f,%f);\n", x1,y1, x2,y2);
-            }
-
-            for(size_t i = 0; i < points.size(); i++)
-                fprintf(fp,"\\draw [fill=red,stroke=red] (%f,%f) circle [radius=%f] node[label=above:%zu] {};\n",points[i].x(),points[i].y(),radiusOfPoints,i);
-
-            //for(size_t i = 0; i < points.size(); i++)
-              //  fprintf(fp,"\\draw [fill=red,stroke=red] (%f,%f) circle [radius=%f]  {};\n",points[i].x(),points[i].y(),radiusOfPoints);
-
-
-            fprintf(fp,"\n\n\\end{tikzpicture}");
-            fprintf(fp,"\n\n\\end{document}");
-            fclose(fp);
-
-            cout << "\nOutput PDF generation started...\n";
-            string command = "pdflatex " + fName + " > /dev/null";
-            system(command.c_str());
-            cout << "PDF generation terminated...\n";
-
-            command = "evince " + fName + ".pdf &";
-            system(command.c_str());
-        }
-};
-
-class TriangulationPrinter {
-    double radiusOfPoints;
-    Delaunay T;
-public:
-    TriangulationPrinter(Delaunay T, double radiusOfPoints = 0.09) {
-        this-> T = T;
-        this->radiusOfPoints = radiusOfPoints;
-    }
-    void draw(string fName = "temp") {
-        FILE *fp = fopen(  fName.c_str(),"w");
-        fprintf(fp,"\\documentclass{standalone} \n\\usepackage{tikz} \n \n\n\\begin{document}\n");
-        fprintf(fp,"\n\n\n\\begin{tikzpicture}\n\n");
-
-        for(Finite_edges_iterator eit = T.finite_edges_begin();  eit != T.finite_edges_end(); ++eit) {
-            Delaunay::Edge e = *eit;
-            double x1 = e.first->vertex( (e.second+1)%3 )->point().x();
-            double y1 = e.first->vertex( (e.second+1)%3 )->point().y();
-            double x2 = e.first->vertex( (e.second+2)%3 )->point().x();
-            double y2 = e.first->vertex( (e.second+2)%3 )->point().y();
-            fprintf(fp, "\\draw [thick] (%f,%f) -- (%f,%f);\n", x1,y1, x2,y2);
-        }
-
-        for(Finite_vertices_iterator it = T.finite_vertices_begin();  it != T.finite_vertices_end(); ++it)
-            fprintf(fp,"\\draw [fill=red,stroke=red] (%f,%f) circle [radius=%f] node[label=above:%zu] {};\n",it->point().x(),it->point().y(),radiusOfPoints,it->info());
-
-
-        fprintf(fp,"\n\n\\end{tikzpicture}");
-        fprintf(fp,"\n\n\\end{document}");
-        fclose(fp);
-
-        cout << "\nOutput PDF generation started...\n";
-        string command = "pdflatex " + fName + " > /dev/null";
-        system(command.c_str());
-        cout << "PDF generation terminated...\n";
-
-        command = "evince " + fName + ".pdf &";
-        system(command.c_str());
-
-    }
-};
-
-// Use high degree delaunay for testing
-// See if connected
-// Find degree
-// Find stretch factor
-// check planar
-
 template<class ArgumentType, class ResultType>
 struct unary_funct {
     typedef ArgumentType argument_type;
@@ -154,37 +61,6 @@ struct AutoCount : public unary_funct<const Point&,std::pair<Point,size_t> > {
     }
 };
 
-void generateRandomPoints(vector<Point> &points, const size_t n, const string outputFileName = "") {
-    typedef Creator_uniform_2<double,Point>  Creator;
-    //Random_points_in_disc_2<Point,Creator> g(10);
-    Random_points_in_square_2<Point,Creator> g(10);
-
-    //random_convex_set_2(n,std::back_inserter(points), g);
-    // Random_points_on_circle_2<Point,Creator> gen(50);
-    // std::copy_n( gen, n, std::back_inserter(points));
-
-    std::copy_n( g, n, std::back_inserter(points));
-
-    if( outputFileName != "") {
-        ofstream out;
-        out.open(outputFileName);
-        for(Point p : points)
-            out << p << endl;
-        out.close();
-    }
-}
-
-void readPointsFromFile( vector<Point> &points, const string outputFileName ) {
-    ifstream in (outputFileName);
-    if (in.is_open()) {
-        long double x,y;
-        while ( in >> x >> y ) {
-            points.push_back(Point(x,y));
-        }
-        in.close();
-    }
-}
-
 struct comparatorForMinHeap {
     bool operator()(const size_tPair &n1, const size_tPair &n2) const {
         return (n1.first > n2.first) || ((n1.first == n2.first) && (n1.second > n2.second));
@@ -194,20 +70,10 @@ struct comparatorForMinHeap {
 typedef boost::heap::fibonacci_heap<size_tPair,boost::heap::compare<comparatorForMinHeap>> Heap;
 typedef Heap::handle_type handle;
 
+inline void createNewEdge( const Delaunay& T, const vector<Finite_vertices_iterator>& handles, size_tPairSet &E, const size_t i, const size_t j, const size_t n ) {
+    // need access to T and pointID2VertexHandle
+    assert( T.is_edge( handles.at(i), handles.at(j) ) );
 
-inline Point rotateByThetaAround(const Point &pivot, const Point &p, const long double theta) {
-    Transformation rotate(ROTATION, sin(theta), cos(theta));
-    Transformation translate1(TRANSLATION, Vector_2(-pivot.x(),-pivot.y()));
-    Transformation translate2(TRANSLATION, Vector_2(pivot.x(),pivot.y()));
-
-    Point r = translate1(p);
-    r = rotate(r);
-    r = translate2(r);
-
-    return r;
-}
-
-inline void createNewEdge( size_tPairSet &E, const size_t i, const size_t j, const size_t n ) {
     if( std::max(i,j) > n-1)
         cout <<  "Ooops! out-of-range pointID found! -> " << std::max(i,j) << endl;
     E.insert(make_pair(std::min(i,j), std::max(i,j) ));
@@ -324,7 +190,7 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
         Delaunay::Vertex_circulator done(N);
         // Rotate N until reaching a processed vertex or the original vertex
         while( ( T.is_infinite(++N) || !isProcessed.at(N->info()) ) && N != done );
-        // We need to find and store sector boundaries, start with N
+        // Find and store sector boundaries, start with N
         vector<Delaunay::Vertex_handle> sectorBoundaries{ N->handle() };
         while( ++N != sectorBoundaries.front() ) {
             if( !T.is_infinite(N) && isProcessed.at(N->info()) )
@@ -349,35 +215,35 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
             closest.at(i).resize( numCones, v_inf );
         }
 
-        Delaunay::Vertex_handle lastN = N->handle();
-        ++N;
+        Delaunay::Vertex_handle lastN = v_inf;
+        if( isProcessed.at( N->info() ) ) ++N; // if current neighbor is processed, step
         size_t sector = 0;
 
         do { // Loop through neighbors and add appropriate edges
-            if( T.is_infinite(N) ) continue;
+            if( !T.is_infinite(N) ) {
+                if( isProcessed.at( N->info() ) ) {
+                    ++sector;
+                } else {
+                    // evaluate possible forward edges
+                    double theta = get_angle(
+                        T,
+                        sectorBoundaries.at(sector),
+                        u_handle,
+                        N->handle()
+                    );
+                    if( theta > 2*PI-EPSILON )
+                        theta = 0;
+                    //i = std::min( int(theta/beta), subangles-1 );
+                    size_t cone = int( theta / alphaReal.at(sector) );
+                    // Store value until after all neighbors are processed, then add
+                    if( T.is_infinite( closest.at(sector).at(cone) )
+                      || Vector_2( u_handle->point(), N->point() ).squared_length() < Vector_2( u_handle->point(), closest.at(sector).at(cone)->point() ).squared_length() )
+                        closest.at(sector).at(cone) = N->handle();   // if the saved vertex is infinite or longer than the current one, update
 
-            if( isProcessed.at( N->info() ) ) {
-                ++sector;
-            } else {
-                // evaluate possible forward edges
-                double theta = get_angle(
-                    T,
-                    sectorBoundaries.at(sector),
-                    u_handle,
-                    N->handle()
-                );
-                if( theta > 2*PI-EPSILON )
-                    theta = 0;
-                //i = std::min( int(theta/beta), subangles-1 );
-                size_t cone = int( theta / alphaReal.at(sector) );
-                // Store value until after all neighbors are processed, then add
-                if( T.is_infinite( closest.at(sector).at(cone) )
-                  || Vector_2( u_handle->point(), N->point() ).squared_length() < Vector_2( u_handle->point(), closest.at(sector).at(cone)->point() ).squared_length() )
-                    closest.at(sector).at(cone) = N->handle();   // if the saved vertex is infinite or longer than the current one, update
-
-                // cross edges
-                if( !T.is_infinite(lastN) && !isProcessed.at( lastN->info() ) )
-                    createNewEdge( ePrime, lastN->info(), N->info(), n );
+                    // cross edges
+                    if( !T.is_infinite( lastN ) && !isProcessed.at( lastN->info() ) )
+                        createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n );
+                }
             }
             lastN = N->handle();
         } while( ++N != done );
@@ -386,7 +252,7 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
         for( auto segment : closest )
             for( auto v : segment )
                 if( !T.is_infinite(v) )
-                    createNewEdge( ePrime, u, v->info(), n );
+                    createNewEdge( T, pointID2VertexHandle, ePrime, u, v->info(), n );
     }
     for( size_tPair e : ePrime ) {
         *result = make_pair( points[e.first], points[e.second] );

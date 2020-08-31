@@ -27,8 +27,9 @@ void createVertexToIndexMaps( const DelaunayGraph& G, DelaunayGraph::template Ve
     for( auto it = G._DT.finite_vertices_begin();
         it != G._DT.finite_vertices_end();
         ++it ) {
-        handleToIndex.emplace( it, i++ );
         indexToHandle.emplace_back( it );
+        handleToIndex.emplace( it, i );
+        ++i;
     }
 }
 

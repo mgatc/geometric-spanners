@@ -39,8 +39,8 @@ void generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
     //Random_points_in_disc_2<Point,Creator> g(10);
     //Random_points_in_square_2<Point,Creator> g(10);
 
-    auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( size*sqrt(size)/2 );
-    auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( size*sqrt(size)/2 );
+    auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( size );
+    auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( size );
 
     //random_convex_set_2(n,std::back_inserter(points), g);
     // Random_points_on_circle_2<Point,Creator> gen(50);
@@ -178,7 +178,7 @@ void experiment() {
     size_t i = 50;
 
     for( size_t trial=1; trial<=10; ++trial ) {
-        for( i=1; i<=17; ++i ) {
+        for( i=1; i<=12; ++i ) {
             double size = width*sqrt(i)/2;
             auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( size );
             auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   size );
@@ -186,36 +186,48 @@ void experiment() {
             auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( size );
             // SET POINT SET
             list<Point> points;
-            const int n = i*100;
-            //std::copy_n( g1, n/3, back_inserter(points) );
-            //std::copy_n( g2, n/3, back_inserter(points) );
+            const int n = i*1000000;
+//            std::copy_n( g1, n/3, back_inserter(points) );
+//            std::copy_n( g2, n/3, back_inserter(points) );
 //            std::copy_n( g3, n/6, back_inserter(points) );
 //            std::copy_n( g4, n/6, back_inserter(points) );
             //points.emplace_back( 0, 0 );
 
             generateRandomPoints( n, size, back_inserter(points) );
 
+            //readPointsFromFile( back_inserter( points ), "40000_100.000000x100.000000.txt" );
+
             cout<< points.size();
             cout<< ",";
             list< pair< Point, Point > > result;
+            pair<pair<Vertex_handle,Vertex_handle>,double> t;
+
+            // Get t of Delaunay triangulation
+//            { // scope it so it doesn't stay in memory
+//                DelaunayGraph Del( points.begin(), points.end() );
+//                Del.add_all_edges();
+//                t = StretchFactor(Del);
+//                cout<< t.second;
+//                cout<<",";
+//            }
+
             {
-                Timer t;
+//                Timer tim;
                 LW2004_3( points.begin(), points.end(), back_inserter(result) );
             }
-
-            pair<pair<Vertex_handle,Vertex_handle>,double> t = StretchFactor( result.begin(), result.end() );
-            cout<< t.second;
-            cout<<",";
+//            t = StretchFactor( result.begin(), result.end() );
+//            cout<< t.second;
+//            cout<<",";
             result.clear();
-            {
-                Timer t;
-                BGS2002( points.begin(), points.end(), back_inserter(result) );
-            }
 
-            t = StretchFactor( result.begin(), result.end() );
-            cout<< t.second;
-            cout<<",";
-            result.clear();
+//            {
+//                Timer tim;
+//                BGS2002( points.begin(), points.end(), back_inserter(result) );
+//            }
+//            t = StretchFactor( result.begin(), result.end() );
+//            cout<< t.second;
+//            cout<<",";
+//            result.clear();
 
             cout<<"\n";
         }

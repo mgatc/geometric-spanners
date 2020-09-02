@@ -16,9 +16,12 @@
 #include <CGAL/Aff_transformation_2.h>
 #include <CGAL/algorithm.h>
 #include <CGAL/boost/iterator/transform_iterator.hpp>
+#include <CGAL/circulator.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/Vector_2.h>
+
 
 
 
@@ -70,7 +73,7 @@ struct comparatorForMinHeap {
 typedef boost::heap::fibonacci_heap<size_tPair,boost::heap::compare<comparatorForMinHeap>> Heap;
 typedef Heap::handle_type handle;
 
-inline void createNewEdge( const Delaunay& T, const vector<Finite_vertices_iterator>& handles, size_tPairSet &E, const size_t i, const size_t j, const size_t n ) {
+inline void createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_handle>& handles, size_tPairSet &E, const size_t i, const size_t j, const size_t n ) {
     // need access to T and pointID2VertexHandle
     assert( T.is_edge( handles.at(i), handles.at(j) ) );
 
@@ -88,7 +91,7 @@ double get_angle( const DT& T, typename DT::Vertex_handle &p, const typename DT:
     Vector_2 pq( p->point(), q->point() );
     Vector_2 rq( r->point(), q->point() );
 
-    double result = atan2( rq.y(), rq.x()) - atan2(pq.y(), pq.x() );
+    double result = atan2( rq.y(), rq.x() ) - atan2( pq.y(), pq.x() );
 
     // atan() returns a value between -PI and PI. From zero ("up"), CCW rotation is negative and CW is positive.
     // Our zero is also "up," but we only want positive values between 0 and 2*PI:
@@ -97,7 +100,7 @@ double get_angle( const DT& T, typename DT::Vertex_handle &p, const typename DT:
     if( result < EPSILON ) // Then, if the result is less than 0 (or epsilon for floats) add 2*PI.
         result += 2*PI;
 
-    return result;
+    return CGAL::min( result, 2*PI );
 }
 
 } // namespace lw2004_2
@@ -107,22 +110,34 @@ template< typename RandomAccessIterator, typename OutputIterator >
 void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, double alpha = PI/2 ) {
     using namespace lw2004_3;
 
-    //Timer t(",");
+    // ensure valid alpha
+    alpha = CGAL::max( EPSILON, CGAL::min( alpha, PI/2 ) );
+
+    // add points to vector and remove any duplicates or AutoCount() will fail
     vector<Point> points( pointsBegin, pointsEnd );
+    std::sort( points.begin(), points.end() );
+    auto last = std::unique( points.begin(), points.end() );
+    points.erase( last, points.end() );
+
     const size_t n = points.size();
+//    cout<<n<<",";
     //cout << "Step 1 starts...\n";
     Delaunay T;
 
     T.insert( boost::make_transform_iterator(points.begin(),AutoCount()),
               boost::make_transform_iterator(points.end(),  AutoCount()));
 
+    Delaunay::Vertex_handle v_inf = T.infinite_vertex();
+
     //cout << "Step 1 is over...\n";
     // TriangulationPrinter tp(T);
     // tp.draw("del");
     //************* Step 2 ****************//
-    vector<Finite_vertices_iterator> pointID2VertexHandle(n);
-    for (auto vit = T.finite_vertices_begin(); vit != T.finite_vertices_end(); ++vit)
+    vector<Delaunay::Vertex_handle> pointID2VertexHandle(n, v_inf);
+    for( auto vit = T.finite_vertices_begin(); vit != T.finite_vertices_end(); ++vit ) {
+        //assert( !T.is_infinite(vit) );
         pointID2VertexHandle[ vit->info() ] = vit;
+    }
 
     Heap H;
     vector<handle> handleToHeap(n);
@@ -131,42 +146,45 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
 
    // size_t maxDegree = 0;
     // Initialize the vector currentNeighbours with appropriate neighbours for every vertex
-    for(size_t it = 0; it < n; it++) {
-        Delaunay::Vertex_circulator vc = T.incident_vertices(pointID2VertexHandle[it]), done(vc);
-        if (vc != 0) {
-            do {
-                if(!T.is_infinite(vc)) {
-                    //degree++;
-                    currentNeighbours[it].insert(vc->info());
-                }
-            } while(++vc != done);
-        }
+    for( size_t it = 0; it < n; it++ ) {
+        Delaunay::Vertex_circulator N = T.incident_vertices( pointID2VertexHandle.at(it) ),
+            done(N);
+        //if (vc != 0) {
+        do {
+            if( !T.is_infinite(N) ) {
+                //degree++;
+                currentNeighbours.at(it).insert( N->info() );
+            }
+        } while( ++N != done );
+        //}
        // if(degree > maxDegree)
         //    maxDegree = degree;
 
-        size_t degree = currentNeighbours[it].size();
-        handleToHeap[it] = H.push(make_pair(degree,it));
+        size_t degree = currentNeighbours.at(it).size();
+        handleToHeap[it] = H.emplace( degree,it );
     }
 
     //cout << "Maximum degree in the Delaunay Triangulation: " << maxDegree << endl;
     // Use a heap to walk through G_0 to G_{n-1} and set up the Pi for every vertex
-    size_t i = 1;
+    size_t i = n-1; // start at the last valid index
     while(!H.empty()) {
         size_tPair p = H.top();
         H.pop();
 
-        for(size_t neighbour : currentNeighbours[p.second]) {
-            if(!currentNeighbours[neighbour].empty()) {
-                currentNeighbours[neighbour].erase(p.second);
-            }
-            size_tPair q = make_pair((*handleToHeap[neighbour]).first-1,neighbour);
-            H.update(handleToHeap[neighbour],q);
-            H.update(handleToHeap[neighbour]);
+        for( size_t neighbour : currentNeighbours.at( p.second ) ) {
+            currentNeighbours.at(neighbour).erase(p.second);
+
+            handle h = handleToHeap.at(neighbour);
+            size_t degree = (*h).first;
+            assert( degree > 0 );
+            size_tPair q = make_pair( degree-1, neighbour );
+            H.update(h,q);
+            H.update(h);
         }
-        currentNeighbours[p.second].clear();
-        piIndexedByV[p.second] = n-i;
-        piIndexedByPiU[n-i] = p.second;
-        i++;
+        currentNeighbours.at(p.second).clear();
+        piIndexedByV[p.second] = i;
+        piIndexedByPiU[i] = p.second;
+        --i;
     }
 
     handleToHeap.clear();
@@ -178,18 +196,21 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
     // In this step we assume alpha = pi/2 in order to minimize the degree
     size_tPairSet ePrime; // without set duplicate edges could be inserted (use the example down below)
     vector<bool> isProcessed(n, false);
-    Delaunay::Vertex_handle v_inf = T.infinite_vertex(),
-        u_handle;
+    Delaunay::Vertex_handle u_handle = v_inf;
+
+    //cout<<piIndexedByPiU.size()<<"\n";
 
     // Iterate through vertices by pi ordering
     for( size_t u : piIndexedByPiU ) {
         u_handle = pointID2VertexHandle.at(u);
+        assert( !T.is_infinite(u_handle) );
+        //cout<<u_handle->point()<<"\n";
         // Get neighbors of u
         Delaunay::Vertex_circulator N = T.incident_vertices( u_handle );
-        while( T.is_infinite(++N) ); // Make sure N isn't infinite
+        while( T.is_infinite(N) ) ++N; // Make sure N isn't infinite to start with
         Delaunay::Vertex_circulator done(N);
         // Rotate N until reaching a processed vertex or the original vertex
-        while( ( T.is_infinite(++N) || !isProcessed.at(N->info()) ) && N != done );
+        while( ( T.is_infinite( ++N ) || !isProcessed.at( N->info() ) ) && N != done );
         // Find and store sector boundaries, start with N
         vector<Delaunay::Vertex_handle> sectorBoundaries{ N->handle() };
         while( ++N != sectorBoundaries.front() ) {
@@ -211,6 +232,7 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
                 sectorBoundaries.at( (i+1)%sectorBoundaries.size() )
             );
             size_t numCones = rint( ceil( sectorAngle / alpha ) );
+            assert( numCones > 0 ); // guard against /0
             alphaReal[i] = sectorAngle / numCones;
             closest.at(i).resize( numCones, v_inf );
         }
@@ -231,14 +253,17 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
                         u_handle,
                         N->handle()
                     );
-                    if( theta > 2*PI-EPSILON )
-                        theta = 0;
-                    //i = std::min( int(theta/beta), subangles-1 );
-                    size_t cone = int( theta / alphaReal.at(sector) );
+                    // Due to floating point inaccuracies, a sector of size 360
+                    // can result in an out-of-range cone.
+                    size_t cone = CGAL::min(
+                        size_t( theta / alphaReal.at(sector) ),
+                        closest.at(sector).size()-1
+                    );
                     // Store value until after all neighbors are processed, then add
                     if( T.is_infinite( closest.at(sector).at(cone) )
-                      || Vector_2( u_handle->point(), N->point() ).squared_length() < Vector_2( u_handle->point(), closest.at(sector).at(cone)->point() ).squared_length() )
-                        closest.at(sector).at(cone) = N->handle();   // if the saved vertex is infinite or longer than the current one, update
+                      || Vector_2( u_handle->point(), N->point() ).squared_length()
+                       < Vector_2( u_handle->point(), closest.at(sector).at(cone)->point() ).squared_length() )
+                            closest.at(sector).at(cone) = N->handle();   // if the saved vertex is infinite or longer than the current one, update
 
                     // cross edges
                     if( !T.is_infinite( lastN ) && !isProcessed.at( lastN->info() ) )

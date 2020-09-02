@@ -416,7 +416,7 @@
 1588865172 source:/home/matt/UDC/udc/src/ExperimentalHex2.cpp
 	"ExperimentalHex2.h"
 
-1598732436 source:/home/matt/GeometricSpanners/main.cpp
+1599051460 source:/home/matt/GeometricSpanners/main.cpp
 	<chrono>
 	<list>
 	<utility>
@@ -471,7 +471,7 @@
 1589915120 /home/matt/GeometricSpanners/include/GeometricSpannerSolutionChecker.h
 	"CgalComponents.h"
 
-1598728545 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
+1598881452 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
 	<cstdlib>
 	<iostream>
 	<list>
@@ -639,7 +639,8 @@
 	"SpanningGraph.h"
 	"DelaunayGraph.h"
 
-1598624985 /home/matt/GeometricSpanners/include/DelaunayGraph.h
+1598881452 /home/matt/GeometricSpanners/include/DelaunayGraph.h
+	<cmath>
 	<iostream>
 	<queue>
 	<set>
@@ -669,7 +670,7 @@
 	<CGAL/utils.h>
 	"DelaunayGraph.h"
 
-1598728976 /home/matt/GeometricSpanners/include/StretchFactor.h
+1598881452 /home/matt/GeometricSpanners/include/StretchFactor.h
 	<algorithm>
 	<optional>
 	<vector>
@@ -682,7 +683,7 @@
 1598548392 /home/matt/GeometricSpanners/include/SplitVertex.h
 	<memory>
 
-1597423060 /home/matt/GeometricSpanners/include/Timer.h
+1598881452 /home/matt/GeometricSpanners/include/Timer.h
 	<chrono>
 	<iostream>
 	<string>
@@ -731,7 +732,7 @@
 
 1575469541 /usr/lib/gcc/x86_64-linux-gnu/7/include/float.h
 
-1598731340 /home/matt/GeometricSpanners/include/LW2004_3.h
+1599054789 /home/matt/GeometricSpanners/include/LW2004_3.h
 	<cmath>
 	<float.h>
 	<forward_list>
@@ -745,7 +746,9 @@
 	<CGAL/Aff_transformation_2.h>
 	<CGAL/algorithm.h>
 	<CGAL/boost/iterator/transform_iterator.hpp>
+	<CGAL/circulator.h>
 	<CGAL/Delaunay_triangulation_2.h>
 	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
 	<CGAL/Triangulation_vertex_base_with_info_2.h>
+	<CGAL/Vector_2.h>
 

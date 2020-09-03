@@ -416,18 +416,20 @@
 1588865172 source:/home/matt/UDC/udc/src/ExperimentalHex2.cpp
 	"ExperimentalHex2.h"
 
-1599051460 source:/home/matt/GeometricSpanners/main.cpp
+1599151248 source:/home/matt/GeometricSpanners/main.cpp
 	<chrono>
 	<list>
 	<utility>
 	<CGAL/point_generators_2.h>
+	<CGAL/Delaunay_triangulation_2.h>
+	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
 	"Timer.h"
 	"FloydWarshall.h"
 	"GeometricSpannerPrinter.h"
 	"BGS2002.h"
 	"LW2004_2.h"
 	"LW2004_3.h"
-	"StretchFactor.h"
+	"metrics.h"
 
 1589914637 /home/matt/GeometricSpanners/include/Greedy.h
 	"CgalComponents.h"
@@ -471,7 +473,7 @@
 1589915120 /home/matt/GeometricSpanners/include/GeometricSpannerSolutionChecker.h
 	"CgalComponents.h"
 
-1598881452 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
+1599074823 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
 	<cstdlib>
 	<iostream>
 	<list>
@@ -670,12 +672,7 @@
 	<CGAL/utils.h>
 	"DelaunayGraph.h"
 
-1598881452 /home/matt/GeometricSpanners/include/StretchFactor.h
-	<algorithm>
-	<optional>
-	<vector>
-	"DelaunayGraph.h"
-	"FloydWarshall.h"
+1599070560 /home/matt/GeometricSpanners/include/StretchFactor.h
 
 1597764346 /home/matt/GeometricSpanners/include/GraphAlgorithmEvent.h
 	<vector>
@@ -732,7 +729,7 @@
 
 1575469541 /usr/lib/gcc/x86_64-linux-gnu/7/include/float.h
 
-1599054789 /home/matt/GeometricSpanners/include/LW2004_3.h
+1599152907 /home/matt/GeometricSpanners/include/LW2004_3.h
 	<cmath>
 	<float.h>
 	<forward_list>
@@ -751,4 +748,12 @@
 	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
 	<CGAL/Triangulation_vertex_base_with_info_2.h>
 	<CGAL/Vector_2.h>
+
+1599077825 /home/matt/GeometricSpanners/include/metrics.h
+	<algorithm>
+	<optional>
+	<vector>
+	<boost/functional/hash.hpp>
+	"DelaunayGraph.h"
+	"FloydWarshall.h"
 

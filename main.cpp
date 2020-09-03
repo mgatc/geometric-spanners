@@ -4,16 +4,20 @@
 
 #include <CGAL/point_generators_2.h>                            // Random point generation, testing
 
+#include <CGAL/Delaunay_triangulation_2.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+
 #include "Timer.h"
 #include "FloydWarshall.h"
 #include "GeometricSpannerPrinter.h"
 #include "BGS2002.h"
 #include "LW2004_2.h"
 #include "LW2004_3.h"
-#include "StretchFactor.h"
+#include "metrics.h"
 
 using namespace gsnunf;
 typedef CGAL::Creator_uniform_2<double,Point> Creator;
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 
 void experiment();
 void scratch();
@@ -65,8 +69,8 @@ void generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
 }
 
 int main() {
-    experiment();
-    //scratch();
+    //experiment();
+    scratch();
 
     return 0;
 }
@@ -74,7 +78,7 @@ int main() {
 void scratch() {
     using namespace std;
 
-    GeometricSpannerPrinter printer;
+    GeometricSpannerPrinter printer(0.1);
 
     const double width = 100;
     size_t n = 30, i=n;
@@ -128,27 +132,60 @@ void scratch() {
 //        { 9, 1 }
 //    };
 
-        n = 30;
+        n = 300;
 
 //        std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
 //        std::copy_n( g3, n/6, back_inserter(points) );
-//        std::copy_n( g4, n/6, back_inserter(points) );
+        std::copy_n( g4, n/6, back_inserter(points) );
 
-        readPointsFromFile( back_inserter( points ), "in2.txt" );
+        points.emplace_back( 0,0 );
 
-        cout<<points.size();
-        cout<<",";
+        //readPointsFromFile( back_inserter( points ), "in2.txt" );
 
-        double alpha = PI/2;
+
+        cout<< points.size();
+        cout<< ",";
         list< pair< Point, Point > > result;
+        pair<pair<Vertex_handle,Vertex_handle>,double> t;
 
-        LW2004_3( points.begin(), points.end(), back_inserter(result), alpha );
-        //BGS2002( points.begin(), points.end(), back_inserter(result) );
+        // Get t of Delaunay triangulation
+            { // scope it so it doesn't stay in memory
+                DelaunayGraph Del( points.begin(), points.end() );
+                cout<<degree(Del._DT);
+                cout<<",";
+                cout << weight( Del._DT );
+                cout <<",";
+//               Del.add_all_edges();
+//                t = StretchFactor(Del);
+//                cout<< t.second;
+//                cout<<",";
+            }
 
-        pair<pair<Vertex_handle,Vertex_handle>,double> t = StretchFactor( result.begin(), result.end() );
-        cout<< t.second;
-        cout<<",";
+        {
+//                Timer tim;
+            LW2004_3( points.begin(), points.end(), back_inserter(result) );
+            //BGS2002( points.begin(), points.end(), back_inserter(result) );
+        }
+        cout << degree( result.begin(), result.end() );
+        cout <<",";
+        cout << weight( result.begin(), result.end() )/2;
+        cout <<",";
+//            t = StretchFactor( result.begin(), result.end() );
+//            cout<< t.second;
+//            cout<<",";
+//        result.clear();
+
+//            {
+//                Timer tim;
+//                BGS2002( points.begin(), points.end(), back_inserter(result) );
+//            }
+//            t = StretchFactor( result.begin(), result.end() );
+//            cout<< t.second;
+//            cout<<",";
+//            result.clear();
+
+        cout<<"\n";
 
         printer.drawEdges( result.begin(), result.end() );
         //printer.drawVertexPair( t.first, {{"color","red"}} );
@@ -186,7 +223,7 @@ void experiment() {
             auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( size );
             // SET POINT SET
             list<Point> points;
-            const int n = i*1000000;
+            const int n = i*10000;
 //            std::copy_n( g1, n/3, back_inserter(points) );
 //            std::copy_n( g2, n/3, back_inserter(points) );
 //            std::copy_n( g3, n/6, back_inserter(points) );
@@ -202,34 +239,43 @@ void experiment() {
             list< pair< Point, Point > > result;
             pair<pair<Vertex_handle,Vertex_handle>,double> t;
 
-            // Get t of Delaunay triangulation
-//            { // scope it so it doesn't stay in memory
-//                DelaunayGraph Del( points.begin(), points.end() );
-//                Del.add_all_edges();
-//                t = StretchFactor(Del);
-//                cout<< t.second;
-//                cout<<",";
-//            }
+            // Delaunay triangulation
+            { // scope it so it doesn't stay in memory
+                CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
+                cout << degree(DT);
+                cout << ",";
+                cout << weight(DT);
+                cout << ",";
+            }
 
             {
-//                Timer tim;
+                Timer tim;
                 LW2004_3( points.begin(), points.end(), back_inserter(result) );
             }
+            cout << degree( result.begin(), result.end() );
+            cout <<",";
+            cout << weight( result.begin(), result.end() );
+            cout <<",";
+////            t = StretchFactor( result.begin(), result.end() );
+////            cout<< t.second;
+////            cout<<",";
+            result.clear();
+
+            {
+                Timer tim;
+                BGS2002( points.begin(), points.end(), back_inserter(result) );
+            }
+            cout << degree( result.begin(), result.end() );
+            cout << ",";
+            cout << weight( result.begin(), result.end() );
+            cout << ",";
 //            t = StretchFactor( result.begin(), result.end() );
 //            cout<< t.second;
 //            cout<<",";
             result.clear();
 
-//            {
-//                Timer tim;
-//                BGS2002( points.begin(), points.end(), back_inserter(result) );
-//            }
-//            t = StretchFactor( result.begin(), result.end() );
-//            cout<< t.second;
-//            cout<<",";
-//            result.clear();
-
             cout<<"\n";
         }
     }
 }
+

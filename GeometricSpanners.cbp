@@ -83,6 +83,7 @@
 		<Unit filename="include/StretchFactor.h" />
 		<Unit filename="include/Timer.h" />
 		<Unit filename="include/TransformPolygon.h" />
+		<Unit filename="include/metrics.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<envvars set="openmp" />

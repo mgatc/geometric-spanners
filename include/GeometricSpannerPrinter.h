@@ -19,8 +19,8 @@ class GeometricSpannerPrinter {
     double _scaleFactor;
     double _radiusOfPoints;
 
-    GeometricSpannerPrinter()
-        : _scaleFactor(0.005),
+    GeometricSpannerPrinter( double scale = 0.01 )
+        : _scaleFactor(scale),
           _radiusOfPoints(0.1),
           _header( "\\documentclass{standalone} \n\\usepackage{tikz} \n \n\n\\begin{document}\n\n\n\n\\begin{tikzpicture}\n\n" ),
           _footer( "\n\n\\end{tikzpicture}\n\n\\end{document}") {

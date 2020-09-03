@@ -74,12 +74,10 @@ typedef boost::heap::fibonacci_heap<size_tPair,boost::heap::compare<comparatorFo
 typedef Heap::handle_type handle;
 
 inline void createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_handle>& handles, size_tPairSet &E, const size_t i, const size_t j, const size_t n ) {
-    // need access to T and pointID2VertexHandle
+    assert( std::max(i,j) < n );
     assert( T.is_edge( handles.at(i), handles.at(j) ) );
 
-    if( std::max(i,j) > n-1)
-        cout <<  "Ooops! out-of-range pointID found! -> " << std::max(i,j) << endl;
-    E.insert(make_pair(std::min(i,j), std::max(i,j) ));
+    E.insert( make_pair( std::min(i,j), std::max(i,j) ) );
 }
 
 template< class DT >
@@ -170,14 +168,15 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
     while(!H.empty()) {
         size_tPair p = H.top();
         H.pop();
+        // make sure our math is correct, e.g., degree from heap key matches neighbor container size
+        assert( p.first == currentNeighbours.at( p.second ).size() );
+        // make sure our assumptions about the graph G_i are correct (see p. 5 in LW2004)
+        assert( 0 <= p.first && p.first <= 5 );
 
         for( size_t neighbour : currentNeighbours.at( p.second ) ) {
             currentNeighbours.at(neighbour).erase(p.second);
-
             handle h = handleToHeap.at(neighbour);
-            size_t degree = (*h).first;
-            assert( degree > 0 );
-            size_tPair q = make_pair( degree-1, neighbour );
+            size_tPair q = make_pair( currentNeighbours.at( p.second ).size(), neighbour );
             H.update(h,q);
             H.update(h);
         }
@@ -204,7 +203,7 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
     for( size_t u : piIndexedByPiU ) {
         u_handle = pointID2VertexHandle.at(u);
         assert( !T.is_infinite(u_handle) );
-        //cout<<u_handle->point()<<"\n";
+        cout<<u_handle->point()<<"\n";
         // Get neighbors of u
         Delaunay::Vertex_circulator N = T.incident_vertices( u_handle );
         while( T.is_infinite(N) ) ++N; // Make sure N isn't infinite to start with

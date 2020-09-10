@@ -5,6 +5,7 @@
 #include <float.h>
 #include <forward_list>
 #include <fstream>
+#include <limits>
 #include <list>
 #include <queue>
 #include <unordered_set>
@@ -22,6 +23,8 @@
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/Vector_2.h>
 
+
+#include "GeometricSpannerPrinter.h"
 
 
 
@@ -73,11 +76,15 @@ struct comparatorForMinHeap {
 typedef boost::heap::fibonacci_heap<size_tPair,boost::heap::compare<comparatorForMinHeap>> Heap;
 typedef Heap::handle_type handle;
 
-inline void createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_handle>& handles, size_tPairSet &E, const size_t i, const size_t j, const size_t n ) {
+inline size_tPair createEdge( const size_t i, const size_t j ) {
+    return make_pair( std::min(i,j), std::max(i,j) );
+}
+
+inline void createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_handle>& handles, size_tPairSet &E, const size_t i, const size_t j, const size_t n, bool printLog = false ) {
     assert( std::max(i,j) < n );
     assert( T.is_edge( handles.at(i), handles.at(j) ) );
-
-    E.insert( make_pair( std::min(i,j), std::max(i,j) ) );
+    if( printLog ) cout<<"add:("<<i<<","<<j<<") ";
+    E.insert( createEdge( i, j ) );
 }
 
 template< class DT >
@@ -95,35 +102,91 @@ double get_angle( const DT& T, typename DT::Vertex_handle &p, const typename DT:
     // Our zero is also "up," but we only want positive values between 0 and 2*PI:
 
     result *= -1; // First, invert the result. This will associate CW rotation with positive values.
-    if( result < EPSILON ) // Then, if the result is less than 0 (or epsilon for floats) add 2*PI.
+    if( result < 0 ) // Then, if the result is less than 0 (or epsilon for floats) add 2*PI.
         result += 2*PI;
-
-    return CGAL::min( result, 2*PI );
+    result = CGAL::min( result, 2*PI );
+    //cout<<"angle("<<p->info()<<","<<q->info()<<","<<r->info()<<")="<<result<<" ";
+    return result;
 }
 
 } // namespace lw2004_2
 
 // alpha is set to pi/2
 template< typename RandomAccessIterator, typename OutputIterator >
-void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, double alpha = PI/2 ) {
+void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, double alpha = PI/2, bool printLog = false ) {
     using namespace lw2004_3;
 
     // ensure valid alpha
     alpha = CGAL::max( EPSILON, CGAL::min( alpha, PI/2 ) );
 
     // add points to vector and remove any duplicates or AutoCount() will fail
-    vector<Point> points( pointsBegin, pointsEnd );
-    std::sort( points.begin(), points.end() );
-    auto last = std::unique( points.begin(), points.end() );
-    points.erase( last, points.end() );
+//    vector<Point> points( pointsBegin, pointsEnd );
+//    std::sort( points.begin(), points.end() );
+//    auto last = std::unique( points.begin(), points.end() );
+//    points.erase( last, points.end() );
 
-    const size_t n = points.size();
-//    cout<<n<<",";
     //cout << "Step 1 starts...\n";
     Delaunay T;
 
-    T.insert( boost::make_transform_iterator(points.begin(),AutoCount()),
-              boost::make_transform_iterator(points.end(),  AutoCount()));
+    T.insert( pointsBegin, pointsEnd );
+
+    // Add IDs
+    size_t i=0;
+    for( auto v=T.finite_vertices_begin(); v!=T.finite_vertices_end(); ++v )
+        v->info() = i++;
+
+    assert( i == T.number_of_vertices() );
+
+    size_t n = i;
+    //cout<<n<<",";
+
+
+    //
+    //
+    // START PRINTER NONSENSE
+    //
+    //
+
+//                GraphPrinter printer(0.007);
+//                GraphPrinter::OptionsList options;
+//
+//                options = {
+//                    { "color", printer.inactiveEdgeColor },
+//                    { "line width", to_string(printer.inactiveEdgeWidth) }
+//                };
+//                printer.drawEdges( T, options );
+//
+//                options = {
+//                    { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+//                    { "color", make_optional( printer.backgroundColor ) }, // text color
+//                    { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+//                    { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+//                };
+//                GraphPrinter::OptionsList borderOptions = {
+//                    { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
+//                    { "color", printer.activeEdgeColor }, // additional border color
+//                    { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+//                };
+//                printer.drawVerticesWithInfo( T, options, borderOptions );
+//
+//                options = { // active edge options
+//                    { "color", printer.activeEdgeColor },
+//                    { "line width", to_string(printer.activeEdgeWidth) }
+//                };
+//                printer.print( "lw2004" );
+
+
+
+
+
+    //
+    //
+    // END PRINTER NONSENSE
+    //
+    //
+
+
+
 
     Delaunay::Vertex_handle v_inf = T.infinite_vertex();
 
@@ -164,7 +227,7 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
 
     //cout << "Maximum degree in the Delaunay Triangulation: " << maxDegree << endl;
     // Use a heap to walk through G_0 to G_{n-1} and set up the Pi for every vertex
-    size_t i = n-1; // start at the last valid index
+    i = n-1; // start at the last valid index
     while(!H.empty()) {
         size_tPair p = H.top();
         H.pop();
@@ -176,7 +239,7 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
         for( size_t neighbour : currentNeighbours.at( p.second ) ) {
             currentNeighbours.at(neighbour).erase(p.second);
             handle h = handleToHeap.at(neighbour);
-            size_tPair q = make_pair( currentNeighbours.at( p.second ).size(), neighbour );
+            size_tPair q = make_pair( currentNeighbours.at( neighbour ).size(), neighbour );
             H.update(h,q);
             H.update(h);
         }
@@ -199,24 +262,63 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
 
     //cout<<piIndexedByPiU.size()<<"\n";
 
+
     // Iterate through vertices by pi ordering
     for( size_t u : piIndexedByPiU ) {
         u_handle = pointID2VertexHandle.at(u);
         assert( !T.is_infinite(u_handle) );
-        cout<<u_handle->point()<<"\n";
+        isProcessed[u] = true;
+        if( printLog ) cout<<"\nu:"<<u<<" ";
+
+
+//        { // EDGE PRINTING NONSENSE
+//            vector< pair<Point,Point> > edgeList;
+//            edgeList.reserve( ePrime.size() );
+//            // Send resultant graph to output iterator
+//            for( size_tPair e : ePrime )
+//                edgeList.emplace_back( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.first)->point() );
+//
+//            printer.drawEdges( edgeList.begin(), edgeList.end(), options );
+//            printer.print( "lw2004" );
+//        }
+
+
+
         // Get neighbors of u
         Delaunay::Vertex_circulator N = T.incident_vertices( u_handle );
-        while( T.is_infinite(N) ) ++N; // Make sure N isn't infinite to start with
+        if( printLog ) cout<<"N_init:"<<(T.is_infinite(N)?size_t(numeric_limits<size_t>::max):size_t(N->info()))<<" ";
         Delaunay::Vertex_circulator done(N);
-        // Rotate N until reaching a processed vertex or the original vertex
-        while( ( T.is_infinite( ++N ) || !isProcessed.at( N->info() ) ) && N != done );
+        // find a processed neighbor if it exists or we reach the start again
+        while( ( T.is_infinite(--N) || !isProcessed.at(N->info()) ) && N!=done );
+        done = N; // update N
+        // Rotate N until reaching an infinite vertex (check first) or the original vertex
+        while( !T.is_infinite(--N) && N != done ); //
+        if( T.is_infinite(N) ) --N; // if we stopped on an infinite vertex, move to its successor
+        if( printLog ) cout<<"N_ready:"<<N->info()<<" ";
+
         // Find and store sector boundaries, start with N
+        size_t processedNeighbors = isProcessed.at( N->info() ) ? 1 : 0;
         vector<Delaunay::Vertex_handle> sectorBoundaries{ N->handle() };
-        while( ++N != sectorBoundaries.front() ) {
-            if( !T.is_infinite(N) && isProcessed.at(N->info()) )
+        while( --N != sectorBoundaries.front() ) {
+            if( ( !T.is_infinite(N) && isProcessed.at( N->info() ) ) ) { // check for v_inf first or isProcessed will be out of range
                 sectorBoundaries.push_back( N->handle() );
+                ++processedNeighbors;
+            } else if( T.is_infinite(N) ) {
+                ++N; // move to predecessor
+                // Add predecessor if not already added.
+                if( N->handle() != sectorBoundaries.back() )
+                    sectorBoundaries.push_back( N->handle() );
+                // Note, if we've reached this branch, we know that
+                // v_inf's successor is sectorBoundaries.front()
+                --N; // move back to N (infinite vertex) to naturally exit the loop
+            }
         }
-        assert( sectorBoundaries.size() <= 5 );
+        assert( processedNeighbors <= 5 );
+
+        // for debugging, print sector boundaries
+        if( printLog ) for ( size_t i=0; i<sectorBoundaries.size(); ++i ) {
+            cout<<"v"<<i<<":"<<sectorBoundaries.at(i)->info()<<" ";
+        }
 
         // Now, compute the angles of the sectors, the number of cones in each sector,
         // and the actual angles
@@ -230,6 +332,7 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
                 u_handle,
                 sectorBoundaries.at( (i+1)%sectorBoundaries.size() )
             );
+            if( sectorAngle < EPSILON ) sectorAngle = 360.0;
             size_t numCones = rint( ceil( sectorAngle / alpha ) );
             assert( numCones > 0 ); // guard against /0
             alphaReal[i] = sectorAngle / numCones;
@@ -237,7 +340,7 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
         }
 
         Delaunay::Vertex_handle lastN = v_inf;
-        if( isProcessed.at( N->info() ) ) ++N; // if current neighbor is processed, step
+        if( isProcessed.at( N->info() ) ) --N; // if N is processed, step
         size_t sector = 0;
 
         do { // Loop through neighbors and add appropriate edges
@@ -245,6 +348,7 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
                 if( isProcessed.at( N->info() ) ) {
                     ++sector;
                 } else {
+                    assert( sector < sectorBoundaries.size() );
                     // evaluate possible forward edges
                     double theta = get_angle(
                         T,
@@ -252,43 +356,108 @@ void LW2004_3( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd,
                         u_handle,
                         N->handle()
                     );
-                    // Due to floating point inaccuracies, a sector of size 360
-                    // can result in an out-of-range cone.
-                    size_t cone = CGAL::min(
-                        size_t( theta / alphaReal.at(sector) ),
-                        closest.at(sector).size()-1
-                    );
+                    // get angle will return 360 for any angle(vuv) (we want it to be 0 here)
+                    size_t cone = size_t( (theta-EPSILON) / alphaReal.at(sector) );
+                    if( cone >= closest.at(sector).size() )
+                        cone = 0;
                     // Store value until after all neighbors are processed, then add
                     if( T.is_infinite( closest.at(sector).at(cone) )
                       || Vector_2( u_handle->point(), N->point() ).squared_length()
-                       < Vector_2( u_handle->point(), closest.at(sector).at(cone)->point() ).squared_length() )
+                       < Vector_2( u_handle->point(), closest.at(sector).at(cone)->point() ).squared_length() ) {
                             closest.at(sector).at(cone) = N->handle();   // if the saved vertex is infinite or longer than the current one, update
-
+                            if( printLog ) cout<<"s_closest["<<sector<<"]["<<cone<<"]:"<<N->info()<<" ";
+                    }
                     // cross edges
-                    if( !T.is_infinite( lastN ) && !isProcessed.at( lastN->info() ) )
-                        createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n );
+                    if( !T.is_infinite( lastN ) && !isProcessed.at( lastN->info() ) ) {
+                        if( printLog ) cout<<"cross_";
+                        createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n, printLog );
+                    }
                 }
             }
             lastN = N->handle();
-        } while( ++N != done );
+        } while( --N != sectorBoundaries.front() );
+
+        // If N and lastN are not processed, add final cross edge
+        if( !T.is_infinite(     N ) && !isProcessed.at(     N->info() )
+         && !T.is_infinite( lastN ) && !isProcessed.at( lastN->info() ) )
+        {
+            if( printLog ) cout<<"cross_";
+            createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n, printLog );
+        }
 
         // Add edges in closest
         for( auto segment : closest )
             for( auto v : segment )
-                if( !T.is_infinite(v) )
-                    createNewEdge( T, pointID2VertexHandle, ePrime, u, v->info(), n );
+                if( !T.is_infinite(v) ) {
+                    if( printLog ) cout<<"forward_";
+                    createNewEdge( T, pointID2VertexHandle, ePrime, u, v->info(), n, printLog );
+                }
     }
+    // Edge list is only needed for printing. Remove for production.
+    vector< pair<Point,Point> > edgeList;
+    edgeList.reserve( ePrime.size() );
+    // Send resultant graph to output iterator
     for( size_tPair e : ePrime ) {
-        *result = make_pair( points[e.first], points[e.second] );
+        edgeList.emplace_back( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
+
+        *result = make_pair( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
         ++result;
-        *result = make_pair( points[e.second], points[e.first] );
+        *result = make_pair( pointID2VertexHandle.at(e.second)->point(), pointID2VertexHandle.at(e.first)->point() );
         ++result;
     }
-    //cout << "------------------------\nEdges: " << ePrime.size() << endl;
-    //GraphPrinter gp(points, ePrime);
-    //gp.draw();
 
-}
+
+    //
+    //
+    // START PRINTER NONSENSE
+    //
+    //
+
+
+    if( printLog ) {
+        GraphPrinter printer(0.007);
+        GraphPrinter::OptionsList options;
+
+        options = {
+            { "color", printer.inactiveEdgeColor },
+            { "line width", to_string(printer.inactiveEdgeWidth) }
+        };
+        printer.drawEdges( T, options );
+
+        options = { // active edge options
+            { "color", printer.activeEdgeColor },
+            { "line width", to_string(printer.activeEdgeWidth) }
+        };
+        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
+
+
+        options = {
+            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+            { "color", make_optional( printer.backgroundColor ) }, // text color
+            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+        };
+        GraphPrinter::OptionsList borderOptions = {
+            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
+            { "color", printer.activeEdgeColor }, // additional border color
+            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+        };
+        printer.drawVerticesWithInfo( T, options, borderOptions );
+
+        printer.print( "lw2004" );
+        cout<<"\n";
+    }
+
+
+
+
+    //
+    //
+    // END PRINTER NONSENSE
+    //
+    //
+
+} // function LW2004_3
 
 } // namespace gsnunf
 

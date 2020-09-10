@@ -1,5 +1,6 @@
 #include <chrono>
 #include <list>
+#include <optional>
 #include <utility>
 
 #include <CGAL/point_generators_2.h>                            // Random point generation, testing
@@ -11,7 +12,7 @@
 #include "FloydWarshall.h"
 #include "GeometricSpannerPrinter.h"
 #include "BGS2002.h"
-#include "LW2004_2.h"
+//#include "LW2004_2.h"
 #include "LW2004_3.h"
 #include "metrics.h"
 
@@ -19,10 +20,10 @@ using namespace gsnunf;
 typedef CGAL::Creator_uniform_2<double,Point> Creator;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 
-void experiment();
+bool experiment(size_t,size_t,size_t,size_t=1);
+bool singleRun(size_t,double,string,optional<string> = nullopt,bool=false,bool=false);
 void scratch();
 void stretchFactorAndDegreeExperiment();
-void generateRandomPoints( vector<Point> &points, const size_t n, const string outputFileName = "" );
 
 template< class OutputIterator >
 void readPointsFromFile( OutputIterator out, const string outputFileName ) {
@@ -38,23 +39,23 @@ void readPointsFromFile( OutputIterator out, const string outputFileName ) {
 }
 
 template< class OutputIterator >
-void generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
+string generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
     typedef CGAL::Creator_uniform_2<double,Point> Creator;
-    //Random_points_in_disc_2<Point,Creator> g(10);
-    //Random_points_in_square_2<Point,Creator> g(10);
 
+    auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( size );
+    auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   size );
     auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( size );
     auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( size );
-
-    //random_convex_set_2(n,std::back_inserter(points), g);
-    // Random_points_on_circle_2<Point,Creator> gen(50);
-    // std::copy_n( gen, n, std::back_inserter(points));
 
     vector<Point> points;
     points.reserve(n);
 
+//    std::copy_n( g1, n/3, back_inserter(points) );
+//    std::copy_n( g2, n/3, back_inserter(points) );
     std::copy_n( g3, n/2, back_inserter(points) );
     std::copy_n( g4, n/2, back_inserter(points) );
+
+    points.emplace_back(0,0);
 
     // copy points to output iterator
     for( Point p : points )
@@ -62,15 +63,24 @@ void generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
 
     // copy points to file
     ofstream out;
-    out.open( to_string(n) + "_" + to_string(size) + "x" + to_string(size) + ".txt", ios::trunc );
+    string fName;
+    fName = to_string(n) + "_" + to_string(size) + "x" + to_string(size) + ".txt";
+    out.open( fName, ios::trunc );
     for( Point p : points )
         out << p << endl;
+
     out.close();
+
+    return fName;
 }
 
 int main() {
-    //experiment();
-    scratch();
+    size_t n = 20;
+    for( size_t i=4; i<=n; ++i )
+        if( !experiment( 1, i, i*1000, i*100 ) )
+            break;
+
+   // scratch();
 
     return 0;
 }
@@ -78,18 +88,19 @@ int main() {
 void scratch() {
     using namespace std;
 
-    GeometricSpannerPrinter printer(0.1);
-
-    const double width = 100;
-    size_t n = 30, i=n;
-
-    //for( i=1; i<=17; ++i ) {
-        auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
-        auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
-        auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
-        auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
+    //GraphPrinter printer(0.05);
+//
+//    const double width = 100;
+//    size_t n = 30, i=n;
+//
+//    //for( i=1; i<=17; ++i ) {
+//        auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
+//        auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
+//        auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
+//        auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
+        list<Point> points;
         // SET POINT SET
-//        list<Point> points = {
+//        points = {
 //            {
 //                0,0
 //            },
@@ -111,7 +122,7 @@ void scratch() {
 //        };
 
             // POINT SET FROM PAPER, PAGE 253
-    list<Point> points;// = {
+//    points = {
 //        { -1, 0.1 },
 //        { -0.9, 3 },
 //        { -2, 6 },
@@ -131,17 +142,18 @@ void scratch() {
 //        { 5, -2 },
 //        { 9, 1 }
 //    };
-
-        n = 300;
+//
+//        n = 60;
 
 //        std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
 //        std::copy_n( g3, n/6, back_inserter(points) );
-        std::copy_n( g4, n/6, back_inserter(points) );
+        //std::copy_n( g4, n/6, back_inserter(points) );
 
-        points.emplace_back( 0,0 );
+        //points.emplace_back( 0,0 );
+        string filename = "11_1658.312395x1658.312395.txt";
 
-        //readPointsFromFile( back_inserter( points ), "in2.txt" );
+        readPointsFromFile( back_inserter( points ), filename );
 
 
         cout<< points.size();
@@ -150,30 +162,32 @@ void scratch() {
         pair<pair<Vertex_handle,Vertex_handle>,double> t;
 
         // Get t of Delaunay triangulation
-            { // scope it so it doesn't stay in memory
                 DelaunayGraph Del( points.begin(), points.end() );
-                cout<<degree(Del._DT);
-                cout<<",";
-                cout << weight( Del._DT );
-                cout <<",";
+//                cout<<degree(Del._DT);
+//                cout<<",";
+//                cout << weight( Del._DT );
+//                cout <<",";
 //               Del.add_all_edges();
 //                t = StretchFactor(Del);
 //                cout<< t.second;
 //                cout<<",";
-            }
 
         {
 //                Timer tim;
-            LW2004_3( points.begin(), points.end(), back_inserter(result) );
+            LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, true );
             //BGS2002( points.begin(), points.end(), back_inserter(result) );
         }
-        cout << degree( result.begin(), result.end() );
-        cout <<",";
-        cout << weight( result.begin(), result.end() )/2;
-        cout <<",";
-//            t = StretchFactor( result.begin(), result.end() );
-//            cout<< t.second;
-//            cout<<",";
+//        cout << degree( result.begin(), result.end() );
+//        cout <<",";
+//        cout << weight( result.begin(), result.end() )/2;
+//        cout <<",";
+            t = StretchFactor( result.begin(), result.end() );
+            cout<< t.second;
+            cout<<",";
+//            cout << " Dumping edge set..."<<result.size()<<" edges.\n\n";
+
+
+//            for( auto e : result ) cout <<"("<< e.first << ", " << e.second<<")" << "\n";
 //        result.clear();
 
 //            {
@@ -185,97 +199,131 @@ void scratch() {
 //            cout<<",";
 //            result.clear();
 
-        cout<<"\n";
+//        cout<<"\n";
 
-        printer.drawEdges( result.begin(), result.end() );
-        //printer.drawVertexPair( t.first, {{"color","red"}} );
-        printer.print( "big_t" );
+//        printer.drawEdges( Del._DT );
+//        printer.drawEdges( result.begin(), result.end(), {{"red",""}} );
+//        printer.drawVertices( Del._DT );
+//        printer.print( "lw2004scratch" );
         //printer.print("bgs2002");
 
 
-        cout<<"\n";
+//        cout<<"\n";
+
+        string resultFileName = filename;
+        // strip file extension
+        const std::string ext(".txt");
+        if ( resultFileName != ext &&
+             resultFileName.size() > ext.size() &&
+             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
+        {
+           // if so then strip them off
+           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
+        }
+        resultFileName += "_result-";
+        resultFileName += "redo";
+
+        singleRun( 30, 30, resultFileName, filename, true, true );
 
 }
 
-void experiment() {
-    const double width = 100;
+bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment ) {
+    const double width = 1000;
 
-    /*
-        g1-g4 are the random point generators. Currently, they must be
-        manually changed in the code to effect the point set properties.
-        I tried to put them in a vector of the base class and loop through
-        it to change the generator. However, their base class doesn't
-        implement the ++ operator, required by copy_n. Therefore, we need
-        to create a random point set factory for this purpose, which will
-        be useful throughout the project.
-    */
+    size_t invalid = 0;
 
-    GeometricSpannerPrinter printer;
-
-    size_t i = 50;
-
-    for( size_t trial=1; trial<=10; ++trial ) {
-        for( i=1; i<=12; ++i ) {
-            double size = width*sqrt(i)/2;
-            auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( size );
-            auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   size );
-            auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( size );
-            auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( size );
-            // SET POINT SET
-            list<Point> points;
-            const int n = i*10000;
-//            std::copy_n( g1, n/3, back_inserter(points) );
-//            std::copy_n( g2, n/3, back_inserter(points) );
-//            std::copy_n( g3, n/6, back_inserter(points) );
-//            std::copy_n( g4, n/6, back_inserter(points) );
-            //points.emplace_back( 0, 0 );
-
-            generateRandomPoints( n, size, back_inserter(points) );
-
-            //readPointsFromFile( back_inserter( points ), "40000_100.000000x100.000000.txt" );
-
-            cout<< points.size();
-            cout<< ",";
-            list< pair< Point, Point > > result;
-            pair<pair<Vertex_handle,Vertex_handle>,double> t;
-
-            // Delaunay triangulation
-            { // scope it so it doesn't stay in memory
-                CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
-                cout << degree(DT);
-                cout << ",";
-                cout << weight(DT);
-                cout << ",";
+    for( size_t trial=0; trial<trials; ++trial ) {
+        for( size_t n=n_start; n<=n_end; n+=increment ) {
+            if( !singleRun( n, width*sqrt(n), "output", nullopt, false, false ) ) {
+                ++invalid;
+                return false;
             }
+        }
+    }
+    cout<<"\nTesting complete. "<< invalid << " of "<<(trials*(n_end-n_start))<<" invalid results.\n\n";
+    return invalid == 0;
+}
 
-            {
-                Timer tim;
-                LW2004_3( points.begin(), points.end(), back_inserter(result) );
-            }
-            cout << degree( result.begin(), result.end() );
-            cout <<",";
-            cout << weight( result.begin(), result.end() );
-            cout <<",";
-////            t = StretchFactor( result.begin(), result.end() );
-////            cout<< t.second;
-////            cout<<",";
-            result.clear();
+bool singleRun( size_t n, double width, string resultFilename, optional<string> filename, bool forcePrint, bool printLog ) {
+    double size = width/2; // cgal's generators produce width 2x given value
 
-            {
-                Timer tim;
-                BGS2002( points.begin(), points.end(), back_inserter(result) );
-            }
-            cout << degree( result.begin(), result.end() );
-            cout << ",";
-            cout << weight( result.begin(), result.end() );
-            cout << ",";
+    // SET POINT SET
+    list<Point> points;
+    optional<string> generatedFile = nullopt;
+
+    if( filename )
+        readPointsFromFile( back_inserter( points ), *filename );
+    else
+        generatedFile = make_optional( generateRandomPoints( n, size, back_inserter(points) ) );
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+
+    list< pair< Point, Point > > result;
+    pair<pair<Vertex_handle,Vertex_handle>,double> t;
+    size_t deg = 0;
+
+    // Delaunay triangulation
+    CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
+//                cout << degree(DT);
+//                cout << ",";
+//                cout << weight(DT);
+//                cout << ",";
+
+    {
+        //Timer tim;
+        LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, printLog );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+//            cout << weight( result.begin(), result.end() );
+//            cout <<",";
+    t = StretchFactor( result.begin(), result.end() );
+    cout<< t.second;
+    cout<<",";
+    //result.clear();
+
+    if( t.second > 10.01602 || deg > 23 || forcePrint ) {
+        string resultFileName = ( filename ? *filename : *generatedFile );
+        // strip file extension
+        const std::string ext(".txt");
+        if ( resultFileName != ext &&
+             resultFileName.size() > ext.size() &&
+             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
+        {
+           // if so then strip them off
+           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
+        }
+        resultFileName += "_result-";
+        resultFileName += ( filename ? "redo" : "orig" );
+
+//        cout << " Dumping edge set..."<<result.size()<<" edges.\n\n";
+//        for( auto e : result )
+//            cout <<"("<< e.first << ", " << e.second<<")" << "\n";
+
+
+        if( generatedFile )
+            singleRun( n, width, resultFileName, *generatedFile, true, true );
+
+        return false;
+    }
+    result.clear();
+//            {
+//                Timer tim;
+//                BGS2002( points.begin(), points.end(), back_inserter(result) );
+//            }
+//            cout << degree( result.begin(), result.end() );
+//            cout << ",";
+//            cout << weight( result.begin(), result.end() );
+//            cout << ",";
 //            t = StretchFactor( result.begin(), result.end() );
 //            cout<< t.second;
 //            cout<<",";
-            result.clear();
+    cout<<"\n";
 
-            cout<<"\n";
-        }
-    }
+    return true;
 }
 

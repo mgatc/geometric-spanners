@@ -240,7 +240,7 @@ bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment )
             }
         }
     }
-    cout<<"\nTesting complete. "<< invalid << " of "<<(trials*(n_end-n_start))<<" invalid results.\n\n";
+    //cout<<"\nTesting complete. "<< invalid << " of "<<(trials*(n_end-n_start))<<" invalid results.\n\n";
     return invalid == 0;
 }
 

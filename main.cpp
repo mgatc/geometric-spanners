@@ -75,12 +75,12 @@ string generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
 }
 
 int main() {
-    size_t n = 20;
-    for( size_t i=4; i<=n; ++i )
-        if( !experiment( 1, i, i*1000, i*100 ) )
-            break;
+//    size_t n = 20;
+//    for( size_t i=4; i<=n; ++i )
+//        if( !experiment( 1, i, i*1000, i*100 ) )
+//            break;
 
-   // scratch();
+    scratch();
 
     return 0;
 }

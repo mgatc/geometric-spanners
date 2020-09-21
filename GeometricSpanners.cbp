@@ -70,6 +70,7 @@
 		<Unit filename="CMakeLists.txt" />
 		<Unit filename="cmake/GeometricSpannersConfig.cmake" />
 		<Unit filename="include/BGS2002.h" />
+		<Unit filename="include/BSX2009.h" />
 		<Unit filename="include/DelaunayGraph.h" />
 		<Unit filename="include/FloydWarshall.h" />
 		<Unit filename="include/GeometricSpannerPrinter.h" />

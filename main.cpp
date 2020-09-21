@@ -366,22 +366,22 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout<<",";
 
     // measure stretch factor using experimental method
-    double t_exp = 0;
+    double t = 0;
+//    {
+//        Timer tim;
+//        t_exp = StretchFactorDjikstra( result.begin(), result.end() );
+//    }
+//    cout<< t_exp;
+//    cout<<",";
     {
         Timer tim;
-        t_exp = StretchFactorDjikstra( result.begin(), result.end() );
+        t = StretchFactorDjikstraParallel( result.begin(), result.end() );
     }
-    cout<< t_exp;
-    cout<<",";
-    {
-        Timer tim;
-        t_exp = StretchFactorDjikstraParallel( result.begin(), result.end() );
-    }
-    cout<< t_exp;
+    cout<< t;
     cout<<",";
     //result.clear();
 
-    if( t_floydwarshall.second > 10.01602 || deg > 23 || forcePrint ) {
+    if( t > 10.01602 || deg > 23 || forcePrint ) {
         string resultFileName = ( filename ? *filename : *generatedFile );
         // strip file extension
         const std::string ext(".txt");

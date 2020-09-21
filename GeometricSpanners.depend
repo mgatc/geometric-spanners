@@ -416,7 +416,7 @@
 1588865172 source:/home/matt/UDC/udc/src/ExperimentalHex2.cpp
 	"ExperimentalHex2.h"
 
-1599776326 source:/home/matt/GeometricSpanners/main.cpp
+1600695233 source:/home/matt/GeometricSpanners/main.cpp
 	<chrono>
 	<list>
 	<optional>
@@ -473,12 +473,14 @@
 1589915120 /home/matt/GeometricSpanners/include/GeometricSpannerSolutionChecker.h
 	"CgalComponents.h"
 
-1599748276 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
+1600183676 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
 	<cctype>
 	<cstdlib>
+	<iomanip>
 	<iostream>
 	<list>
 	<optional>
+	<sstream>
 	<string>
 	<tuple>
 	<utility>
@@ -675,7 +677,7 @@
 	<CGAL/utils.h>
 	"DelaunayGraph.h"
 
-1599153800 /home/matt/GeometricSpanners/include/StretchFactor.h
+1599778379 /home/matt/GeometricSpanners/include/StretchFactor.h
 
 1597764346 /home/matt/GeometricSpanners/include/GraphAlgorithmEvent.h
 	<vector>
@@ -732,7 +734,7 @@
 
 1575469541 /usr/lib/gcc/x86_64-linux-gnu/7/include/float.h
 
-1599775864 /home/matt/GeometricSpanners/include/LW2004_3.h
+1599778379 /home/matt/GeometricSpanners/include/LW2004_3.h
 	<cmath>
 	<float.h>
 	<forward_list>
@@ -754,11 +756,18 @@
 	<CGAL/Vector_2.h>
 	"GeometricSpannerPrinter.h"
 
-1599153800 /home/matt/GeometricSpanners/include/metrics.h
+1600695851 /home/matt/GeometricSpanners/include/metrics.h
 	<algorithm>
+	<functional>
+	<limits>
 	<optional>
+	<unordered_map>
 	<vector>
 	<boost/functional/hash.hpp>
+	<boost/heap/fibonacci_heap.hpp>
+	<CGAL/number_utils.h>
+	<CGAL/squared_distance_2.h>
+	<omp.h>
 	"DelaunayGraph.h"
 	"FloydWarshall.h"
 

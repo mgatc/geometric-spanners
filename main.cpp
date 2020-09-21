@@ -23,6 +23,7 @@ typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 bool experiment(size_t,size_t,size_t,size_t=1);
 bool singleRun(size_t,double,string,optional<string> = nullopt,bool=false,bool=false);
 void scratch();
+void stretchScratch();
 void stretchFactorAndDegreeExperiment();
 
 template< class OutputIterator >
@@ -79,10 +80,86 @@ int main() {
 //    for( size_t i=4; i<=n; ++i )
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
-
-    scratch();
+    experiment( 10, 1000, 50000, 1000 );
+    //scratch();
+    //stretchScratch();
 
     return 0;
+}
+
+void stretchScratch() {
+    // 1. Create a graph. In this case it will be the DT of the point set
+    list<Point> points;
+    points = {
+        { -1, 0.1 },
+        { -0.9, 3 },
+        { -2, 6 },
+        { -7, 3.1 },
+        { -6, -0.1 },
+        { -9, -0.2 },
+        { -7.7, -1 },
+        { -6.1, -1.5 },
+        { -10, -4 },
+        { -4, -3 },
+        { -1.5, -6 },
+        { 1, -9 },
+        { 4, -4 },
+        { 4.1, 0 },
+        { 3.9, 5.9 },
+        { 5, 3 },
+        { 5, -2 },
+        { 9, 1 }
+    };
+    list< pair< Point, Point > > result;
+
+    DelaunayGraph Del( points.begin(), points.end() );
+    Del.add_all_edges();
+
+    // 2. Create a subgraph of that graph
+    LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, false );
+
+    // measure stretch factor using Floyd Warshall (StretchFactor function)
+    pair<pair<Vertex_handle,Vertex_handle>,double> t_fw = StretchFactor( result.begin(), result.end() );
+    // measure stretch factor using experimental method
+    double t_exp = StretchFactorDjikstra( result.begin(), result.end() );
+    // print measurements
+    cout<< points.size();
+    cout<< ",";
+    cout<< t_fw.second;
+    cout<<",";
+    cout<< t_exp;
+    cout<<",";
+
+    GraphPrinter printer(1);
+    GraphPrinter::OptionsList options;
+
+    options = {
+        { "color", printer.inactiveEdgeColor },
+        { "line width", to_string(printer.inactiveEdgeWidth) }
+    };
+    printer.drawEdges( Del._DT, options );
+
+    options = { // active edge options
+        { "color", printer.activeEdgeColor },
+        { "line width", to_string(printer.activeEdgeWidth) }
+    };
+    printer.drawEdges( result.begin(), result.end(), options );
+
+
+    options = {
+        { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+        { "color", make_optional( printer.backgroundColor ) }, // text color
+        { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+        { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+    };
+//    GraphPrinter::OptionsList borderOptions = {
+//        { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
+//        { "color", printer.activeEdgeColor }, // additional border color
+//        { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+//    };
+    printer.drawVertices( Del._DT, options );
+
+    printer.print( "stretchscratch" );
 }
 
 void scratch() {
@@ -262,7 +339,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout<< ",";
 
     list< pair< Point, Point > > result;
-    pair<pair<Vertex_handle,Vertex_handle>,double> t;
+    pair<pair<Vertex_handle,Vertex_handle>,double> t_floydwarshall;
     size_t deg = 0;
 
     // Delaunay triangulation
@@ -273,7 +350,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //                cout << ",";
 
     {
-        //Timer tim;
+        Timer tim;
         LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, printLog );
     }
     deg = degree( result.begin(), result.end() );
@@ -281,12 +358,30 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout <<",";
 //            cout << weight( result.begin(), result.end() );
 //            cout <<",";
-    t = StretchFactor( result.begin(), result.end() );
-    cout<< t.second;
+//    {
+//        Timer tim;
+//        t_floydwarshall = StretchFactor( result.begin(), result.end() );
+//    }
+//    cout<< t_floydwarshall.second;
+//    cout<<",";
+
+    // measure stretch factor using experimental method
+    double t_exp = 0;
+    {
+        Timer tim;
+        t_exp = StretchFactorDjikstra( result.begin(), result.end() );
+    }
+    cout<< t_exp;
+    cout<<",";
+    {
+        Timer tim;
+        t_exp = StretchFactorDjikstraParallel( result.begin(), result.end() );
+    }
+    cout<< t_exp;
     cout<<",";
     //result.clear();
 
-    if( t.second > 10.01602 || deg > 23 || forcePrint ) {
+    if( t_floydwarshall.second > 10.01602 || deg > 23 || forcePrint ) {
         string resultFileName = ( filename ? *filename : *generatedFile );
         // strip file extension
         const std::string ext(".txt");

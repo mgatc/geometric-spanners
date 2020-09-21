@@ -1,11 +1,14 @@
 #ifndef GSNUNF_GRAPHPRINTER_H
 #define GSNUNF_GRAPHPRINTER_H
 
+
 #include <cctype>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <list>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <tuple> // ignore
 #include <utility> // pair
@@ -71,9 +74,9 @@ class GraphPrinter {
     }
 
     template< typename T >
-    void drawVertices( const T &Triangulation, const OptionsList& options = {} ) {
+    void drawVertices( const T &Triangulation, const OptionsList& options = {}, const OptionsList& borderOptions = {} ) {
         for( typename T::Finite_vertices_iterator it = Triangulation.finite_vertices_begin(); it != Triangulation.finite_vertices_end(); ++it )
-            drawVertex( it->point().x(), it->point().y(), options );
+            drawVertexWithLabel( it->point().x(), it->point().y(), "", options, borderOptions );
         _document += "\n";
     }
 
@@ -94,6 +97,13 @@ class GraphPrinter {
     }
 
     void drawVertexWithLabel( double x, double y, string label, const OptionsList& options = {}, const OptionsList& borderOptions = {} ) {
+
+        if( label == "" ){
+            stringstream stream;
+            stream << fixed << setprecision(1);
+            stream << x << "," << y;
+            label = stream.str();
+        }
         _document += "\\node (vertex" + label + ") [fill,"
                 + expandOptions( options )
             + "] at ("

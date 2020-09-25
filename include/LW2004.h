@@ -25,6 +25,7 @@
 
 #include "GeometricSpannerPrinter.h"
 #include "GraphAlgoTV.h"
+#include "utilities.h"
 
 namespace gsnunf {
 
@@ -51,20 +52,6 @@ typedef pair<size_t,size_t>                                         size_tPair;
 typedef boost::hash<size_tPair>                                     size_tPairHash;
 typedef unordered_set<size_tPair,size_tPairHash>                    size_tPairSet;
 
-template<class ArgumentType, class ResultType>
-struct unary_funct {
-    typedef ArgumentType argument_type;
-    typedef ResultType result_type;
-};
-
-struct AutoCount : public unary_funct<const Point&,std::pair<Point,size_t> > {
-    mutable size_t i;
-    AutoCount() : i(0) {}
-    pair<Point,size_t> operator()(const Point& p) const {
-        return make_pair(p,i++);
-    }
-};
-
 struct comparatorForMinHeap {
     bool operator()(const size_tPair &n1, const size_tPair &n2) const {
         return (n1.first > n2.first) || ((n1.first == n2.first) && (n1.second > n2.second));
@@ -85,34 +72,12 @@ inline void createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_hand
     E.insert( createEdge( i, j ) );
 }
 
-template< class DT >
-double get_angle( const DT& T, typename DT::Vertex_handle &p, const typename DT::Vertex_handle &q, const typename DT::Vertex_handle &r ) {
-    assert( !T.is_infinite(p) );
-    assert( !T.is_infinite(q) );
-    assert( !T.is_infinite(r) );
-
-    Vector_2 pq( p->point(), q->point() );
-    Vector_2 rq( r->point(), q->point() );
-
-    double result = atan2( rq.y(), rq.x() ) - atan2( pq.y(), pq.x() );
-
-    // atan() returns a value between -PI and PI. From zero ("up"), CCW rotation is negative and CW is positive.
-    // Our zero is also "up," but we only want positive values between 0 and 2*PI:
-
-    result *= -1; // First, invert the result. This will associate CW rotation with positive values.
-    if( result < 0 ) // Then, if the result is less than 0 (or epsilon for floats) add 2*PI.
-        result += 2*PI;
-    result = CGAL::min( result, 2*PI );
-    //cout<<"angle("<<p->info()<<","<<q->info()<<","<<r->info()<<")="<<result<<" ";
-    return result;
-}
-
-} // namespace lw2004_2
+} // namespace lw2004
 
 // alpha is set to pi/2
 template< typename RandomAccessIterator, typename OutputIterator >
-void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, double alpha = PI/2, bool printLog = false ) {
-    using namespace lw2004_3;
+void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, GraphAlgoTV& tv, double alpha = PI/2 ) {
+    using namespace lw2004;
 
     // ensure valid alpha
     alpha = CGAL::max( EPSILON, CGAL::min( alpha, PI/2 ) );
@@ -136,6 +101,12 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     assert( i == T.number_of_vertices() );
 
     size_t n = i;
+
+    vector<string> labels(n);
+    getVertexInfo( T, back_inserter(labels) );
+
+    ignore = tv.registerTriangulation( T, labels );
+
     //cout<<n<<",";
 
 
@@ -266,7 +237,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         u_handle = pointID2VertexHandle.at(u);
         assert( !T.is_infinite(u_handle) );
         isProcessed[u] = true;
-        if( printLog ) cout<<"\nu:"<<u<<" ";
+        //if( printLog ) cout<<"\nu:"<<u<<" ";
 
 
 //        { // EDGE PRINTING NONSENSE
@@ -284,7 +255,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
         // Get neighbors of u
         Delaunay::Vertex_circulator N = T.incident_vertices( u_handle );
-        if( printLog ) cout<<"N_init:"<<(T.is_infinite(N)?size_t(numeric_limits<size_t>::max):size_t(N->info()))<<" ";
+        //if( printLog ) cout<<"N_init:"<<(T.is_infinite(N)?size_t(numeric_limits<size_t>::max):size_t(N->info()))<<" ";
         Delaunay::Vertex_circulator done(N);
         // find a processed neighbor if it exists or we reach the start again
         while( ( T.is_infinite(--N) || !isProcessed.at(N->info()) ) && N!=done );
@@ -292,7 +263,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         // Rotate N until reaching an infinite vertex (check first) or the original vertex
         while( !T.is_infinite(--N) && N != done ); //
         if( T.is_infinite(N) ) --N; // if we stopped on an infinite vertex, move to its successor
-        if( printLog ) cout<<"N_ready:"<<N->info()<<" ";
+        //if( printLog ) cout<<"N_ready:"<<N->info()<<" ";
 
         // Find and store sector boundaries, start with N
         size_t processedNeighbors = isProcessed.at( N->info() ) ? 1 : 0;
@@ -314,9 +285,9 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         assert( processedNeighbors <= 5 );
 
         // for debugging, print sector boundaries
-        if( printLog ) for ( size_t i=0; i<sectorBoundaries.size(); ++i ) {
-            cout<<"v"<<i<<":"<<sectorBoundaries.at(i)->info()<<" ";
-        }
+//        if( printLog ) for ( size_t i=0; i<sectorBoundaries.size(); ++i ) {
+//            cout<<"v"<<i<<":"<<sectorBoundaries.at(i)->info()<<" ";
+//        }
 
         // Now, compute the angles of the sectors, the number of cones in each sector,
         // and the actual angles
@@ -363,12 +334,12 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
                       || Vector_2( u_handle->point(), N->point() ).squared_length()
                        < Vector_2( u_handle->point(), closest.at(sector).at(cone)->point() ).squared_length() ) {
                             closest.at(sector).at(cone) = N->handle();   // if the saved vertex is infinite or longer than the current one, update
-                            if( printLog ) cout<<"s_closest["<<sector<<"]["<<cone<<"]:"<<N->info()<<" ";
+//                            if( printLog ) cout<<"s_closest["<<sector<<"]["<<cone<<"]:"<<N->info()<<" ";
                     }
                     // cross edges
                     if( !T.is_infinite( lastN ) && !isProcessed.at( lastN->info() ) ) {
-                        if( printLog ) cout<<"cross_";
-                        createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n, printLog );
+//                        if( printLog ) cout<<"cross_";
+                        createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n, false );
                     }
                 }
             }
@@ -379,16 +350,16 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         if( !T.is_infinite(     N ) && !isProcessed.at(     N->info() )
          && !T.is_infinite( lastN ) && !isProcessed.at( lastN->info() ) )
         {
-            if( printLog ) cout<<"cross_";
-            createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n, printLog );
+//            if( printLog ) cout<<"cross_";
+            createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n, false );
         }
 
         // Add edges in closest
         for( auto segment : closest )
             for( auto v : segment )
                 if( !T.is_infinite(v) ) {
-                    if( printLog ) cout<<"forward_";
-                    createNewEdge( T, pointID2VertexHandle, ePrime, u, v->info(), n, printLog );
+//                    if( printLog ) cout<<"forward_";
+                    createNewEdge( T, pointID2VertexHandle, ePrime, u, v->info(), n, false );
                 }
     }
     // Edge list is only needed for printing. Remove for production.
@@ -412,39 +383,39 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     //
 
 
-    if( printLog ) {
-        GraphPrinter printer(0.007);
-        GraphPrinter::OptionsList options;
-
-        options = {
-            { "color", printer.inactiveEdgeColor },
-            { "line width", to_string(printer.inactiveEdgeWidth) }
-        };
-        printer.drawEdges( T, options );
-
-        options = { // active edge options
-            { "color", printer.activeEdgeColor },
-            { "line width", to_string(printer.activeEdgeWidth) }
-        };
-        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
-
-
-        options = {
-            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
-            { "color", make_optional( printer.backgroundColor ) }, // text color
-            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
-            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-        };
-        GraphPrinter::OptionsList borderOptions = {
-            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
-            { "color", printer.activeEdgeColor }, // additional border color
-            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-        };
-        printer.drawVerticesWithInfo( T, options, borderOptions );
-
-        printer.print( "lw2004" );
-        cout<<"\n";
-    }
+//    if( printLog ) {
+//        GraphPrinter printer(0.007);
+//        GraphPrinter::OptionsList options;
+//
+//        options = {
+//            { "color", printer.inactiveEdgeColor },
+//            { "line width", to_string(printer.inactiveEdgeWidth) }
+//        };
+//        printer.drawEdges( T, options );
+//
+//        options = { // active edge options
+//            { "color", printer.activeEdgeColor },
+//            { "line width", to_string(printer.activeEdgeWidth) }
+//        };
+//        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
+//
+//
+//        options = {
+//            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+//            { "color", make_optional( printer.backgroundColor ) }, // text color
+//            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+//            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+//        };
+//        GraphPrinter::OptionsList borderOptions = {
+//            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
+//            { "color", printer.activeEdgeColor }, // additional border color
+//            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+//        };
+//        printer.drawVerticesWithInfo( T, options, borderOptions );
+//
+//        printer.print( "lw2004" );
+//        cout<<"\n";
+//    }
 
 
 

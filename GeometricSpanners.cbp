@@ -69,6 +69,7 @@
 		<Unit filename=".gitignore" />
 		<Unit filename="CMakeLists.txt" />
 		<Unit filename="cmake/GeometricSpannersConfig.cmake" />
+		<Unit filename="include/BGS2005.h" />
 		<Unit filename="include/BSX2009.h" />
 		<Unit filename="include/DelaunayGraph.h" />
 		<Unit filename="include/FloydWarshall.h" />
@@ -76,6 +77,7 @@
 		<Unit filename="include/GraphAlgoTV.h" />
 		<Unit filename="include/LW2004.h" />
 		<Unit filename="include/metrics.h" />
+		<Unit filename="include/utilities.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<envvars set="openmp" />

@@ -1,7 +1,6 @@
 #ifndef GSNUNF_DELAUNAYGRAPH_H
 #define GSNUNF_DELAUNAYGRAPH_H
 
-#include <cmath>
 #include <iostream>
 #include <queue>
 #include <set>
@@ -15,30 +14,11 @@
 #include <CGAL/Vector_2.h>
 
 #include "GraphAlgoTV.h"
+#include "utilities.h"
 
 namespace gsnunf {
 
 using namespace std;
-
-const double PI = M_PI;
-const double EPSILON = 0.000001;
-
-template< class T >
-bool contains( const T& V, const typename T::key_type& v ) {
-    return V.find(v) != V.end();
-}
-
-/* If V contains v, remove v.
- * If V does not contain v, add it.
- * Return new value.
- */
-template< class T >
-bool toggle( T& V, const typename T::key_type& v ) {
-    bool found = contains( V, v );
-    if( found ) V.erase( v );
-    else V.insert( v );
-    return !found;
-}
 
 class DelaunayGraph {
   public:
@@ -95,13 +75,13 @@ class DelaunayGraph {
         add_half_edge( v1, v2 );
         add_half_edge( v2, v1 );
         //cout<<"    add edge ("<<v1->point()<<", "<<v2->point()<<")\n";
-        _algoTV.addToEventQueue( std::make_pair(v1,v2), true );
+        //_algoTV.addToEventQueue( std::make_pair(v1,v2), true );
     }
 
     void remove_edge( const Vertex_handle& v1, const Vertex_handle& v2 ) {
         remove_half_edge( v1, v2 );
         remove_half_edge( v2, v1 );
-        _algoTV.addToEventQueue( std::make_pair(v1,v2), false );
+        //_algoTV.addToEventQueue( std::make_pair(v1,v2), false );
     }
 
     void add_all_edges() {
@@ -161,14 +141,14 @@ class DelaunayGraph {
         do { // cycle through convex hull to set vertex info
             on_outer_face.insert( v_convex_hull->handle() );
             ready.push( v_convex_hull->handle() );
-            _algoTV.addToEventQueue( v_convex_hull, 0 );
+            //_algoTV.addToEventQueue( v_convex_hull, 0 );
         } while( ++v_convex_hull != done );
 
         // Reserve v_1 and v_2 so we can guarantee they are on the convex hull
         for( size_t i=0; i<2; ++i ) {
             order[i] = ready.front();
             ready.pop();
-            _algoTV.addToEventQueue(order[i], 0 );
+            //_algoTV.addToEventQueue(order[i], 0 );
         }
 
         Vertex_handle v_k = ready.front();
@@ -177,8 +157,8 @@ class DelaunayGraph {
             v_k = ready.front();
             //std::cout<<v_k->point()<<" ";
             ready.pop();
-            _algoTV.addToEventQueue( v_k, 0 );
-            _algoTV.addToEventQueue( v_k, false );
+//            _algoTV.addToEventQueue( v_k, 0 );
+//            _algoTV.addToEventQueue( v_k, false );
 
             if( incident_chords( on_outer_face, v_k ) > 0 ) {
                 ready.push(v_k);

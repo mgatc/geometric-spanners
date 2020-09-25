@@ -21,12 +21,12 @@
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
-#include <CGAL/Vector_2.h>
 
 
 #include "GeometricSpannerPrinter.h"
 #include "GraphAlgoTV.h"
 #include "metrics.h"
+#include "utilities.h"
 
 
 namespace gsnunf {
@@ -54,20 +54,6 @@ typedef pair<size_t,size_t>                                         size_tPair;
 typedef boost::hash<size_tPair>                                     size_tPairHash;
 typedef unordered_set<size_tPair,size_tPairHash>                    size_tPairSet;
 
-template<class ArgumentType, class ResultType>
-struct unary_funct {
-    typedef ArgumentType argument_type;
-    typedef ResultType result_type;
-};
-
-struct AutoCount : public unary_funct<const Point&,std::pair<Point,size_t> > {
-    mutable size_t i;
-    AutoCount() : i(0) {}
-    pair<Point,size_t> operator()(const Point& p) const {
-        return make_pair(p,i++);
-    }
-};
-
 struct comparatorForMinHeap {
     bool operator()(const size_tPair &n1, const size_tPair &n2) const {
         return (n1.first > n2.first) || ((n1.first == n2.first) && (n1.second > n2.second));
@@ -77,14 +63,6 @@ struct comparatorForMinHeap {
 typedef boost::heap::fibonacci_heap<size_tPair,boost::heap::compare<comparatorForMinHeap>> Heap;
 typedef Heap::handle_type handle;
 
-template< typename T >
-inline std::pair<T,T> makeNormalizedPair( const T& i, const T& j ) {
-    return make_pair(
-        CGAL::min(i,j),
-        CGAL::max(i,j)
-    );
-}
-
 inline bool createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_handle>& handles, size_tPairSet &E, const size_t i, const size_t j, const size_t n, bool printLog = false ) {
     assert( std::max(i,j) < n );
     assert( T.is_edge( handles.at(i), handles.at(j) ) );
@@ -93,28 +71,6 @@ inline bool createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_hand
     bool inserted = false;
     tie(ignore,inserted) = E.insert( makeNormalizedPair(i,j) );
     return inserted;
-}
-
-template< class DT >
-double get_angle( const DT& T, const typename DT::Vertex_handle &p, const typename DT::Vertex_handle &q, const typename DT::Vertex_handle &r ) {
-    assert( !T.is_infinite(p) );
-    assert( !T.is_infinite(q) );
-    assert( !T.is_infinite(r) );
-
-    Vector_2 pq( p->point(), q->point() );
-    Vector_2 rq( r->point(), q->point() );
-
-    double result = atan2( rq.y(), rq.x() ) - atan2( pq.y(), pq.x() );
-
-    // atan() returns a value between -PI and PI. From zero ("up"), CCW rotation is negative and CW is positive.
-    // Our zero is also "up," but we only want positive values between 0 and 2*PI:
-
-    result *= -1; // First, invert the result. This will associate CW rotation with positive values.
-    if( result < 0 ) // Then, if the result is less than 0 (or epsilon for floats) add 2*PI.
-        result += 2*PI;
-    result = CGAL::min( result, 2*PI );
-    //cout<<"angle("<<p->info()<<","<<q->info()<<","<<r->info()<<")="<<result<<" ";
-    return result;
 }
 
 } // namespace bsx2009

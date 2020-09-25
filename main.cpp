@@ -14,6 +14,7 @@
 #include "BGS2002.h"
 //#include "LW2004_2.h"
 #include "LW2004_3.h"
+#include "BSX2009.h"
 #include "metrics.h"
 
 using namespace gsnunf;
@@ -51,8 +52,8 @@ string generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
     vector<Point> points;
     points.reserve(n);
 
-//    std::copy_n( g1, n/3, back_inserter(points) );
-//    std::copy_n( g2, n/3, back_inserter(points) );
+    //std::copy_n( g1, n/3, back_inserter(points) );
+    //std::copy_n( g2, n/3, back_inserter(points) );
     std::copy_n( g3, n/2, back_inserter(points) );
     std::copy_n( g4, n/2, back_inserter(points) );
 
@@ -80,7 +81,8 @@ int main() {
 //    for( size_t i=4; i<=n; ++i )
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
-    experiment( 10, 1000, 50000, 1000 );
+    //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
+    experiment( 100, 1000, 10000, 1000 );
     //scratch();
     //stretchScratch();
 
@@ -251,8 +253,9 @@ void scratch() {
 
         {
 //                Timer tim;
-            LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, true );
+            //LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, true );
             //BGS2002( points.begin(), points.end(), back_inserter(result) );
+            BSX2009( points.begin(), points.end(), back_inserter(result), PI/2, true );
         }
 //        cout << degree( result.begin(), result.end() );
 //        cout <<",";
@@ -300,7 +303,7 @@ void scratch() {
         resultFileName += "_result-";
         resultFileName += "redo";
 
-        singleRun( 30, 30, resultFileName, filename, true, true );
+       // singleRun( 30, 30, resultFileName, filename, true, true );
 
 }
 
@@ -351,37 +354,26 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
     {
         Timer tim;
-        LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, printLog );
+        BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3, printLog );
     }
     deg = degree( result.begin(), result.end() );
     cout << deg;
     cout <<",";
-//            cout << weight( result.begin(), result.end() );
-//            cout <<",";
-//    {
-//        Timer tim;
-//        t_floydwarshall = StretchFactor( result.begin(), result.end() );
-//    }
-//    cout<< t_floydwarshall.second;
-//    cout<<",";
 
-    // measure stretch factor using experimental method
     double t = 0;
-//    {
-//        Timer tim;
-//        t_exp = StretchFactorDjikstra( result.begin(), result.end() );
-//    }
-//    cout<< t_exp;
-//    cout<<",";
+
     {
-        Timer tim;
+        //Timer tim;
         t = StretchFactorDjikstraParallel( result.begin(), result.end() );
     }
     cout<< t;
     cout<<",";
-    //result.clear();
 
-    if( t > 10.01602 || deg > 23 || forcePrint ) {
+    if( t > 29.1 || deg > 17 || forcePrint ) {
+        pair<pair<Vertex_handle,Vertex_handle>,double> t_fw;
+        t_fw = StretchFactor( result.begin(), result.end() );
+        cout<<t_fw.second<<",";
+
         string resultFileName = ( filename ? *filename : *generatedFile );
         // strip file extension
         const std::string ext(".txt");
@@ -395,28 +387,55 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
         resultFileName += "_result-";
         resultFileName += ( filename ? "redo" : "orig" );
 
-//        cout << " Dumping edge set..."<<result.size()<<" edges.\n\n";
-//        for( auto e : result )
-//            cout <<"("<< e.first << ", " << e.second<<")" << "\n";
-
-
         if( generatedFile )
             singleRun( n, width, resultFileName, *generatedFile, true, true );
 
         return false;
     }
     result.clear();
-//            {
-//                Timer tim;
-//                BGS2002( points.begin(), points.end(), back_inserter(result) );
-//            }
-//            cout << degree( result.begin(), result.end() );
-//            cout << ",";
-//            cout << weight( result.begin(), result.end() );
-//            cout << ",";
-//            t = StretchFactor( result.begin(), result.end() );
-//            cout<< t.second;
-//            cout<<",";
+
+    {
+        Timer tim;
+        LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, printLog );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+    t = 0;
+
+    {
+        //Timer tim;
+        t = StretchFactorDjikstraParallel( result.begin(), result.end() );
+    }
+    cout<< t;
+    cout<<",";
+
+    if( t > 7.79 || deg > 23 || forcePrint ) {
+        pair<pair<Vertex_handle,Vertex_handle>,double> t_fw;
+        t_fw = StretchFactor( result.begin(), result.end() );
+        cout<<t_fw.second<<",";
+
+        string resultFileName = ( filename ? *filename : *generatedFile );
+        // strip file extension
+        const std::string ext(".txt");
+        if ( resultFileName != ext &&
+             resultFileName.size() > ext.size() &&
+             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
+        {
+           // if so then strip them off
+           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
+        }
+        resultFileName += "_result-";
+        resultFileName += ( filename ? "redo" : "orig" );
+
+        if( generatedFile )
+            singleRun( n, width, resultFileName, *generatedFile, true, false );
+
+        return false;
+    }
+    result.clear();
+
     cout<<"\n";
 
     return true;

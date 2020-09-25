@@ -74,6 +74,7 @@
 		<Unit filename="include/DelaunayGraph.h" />
 		<Unit filename="include/FloydWarshall.h" />
 		<Unit filename="include/GeometricSpannerPrinter.h" />
+		<Unit filename="include/GraphAlgoTV.h" />
 		<Unit filename="include/GraphAlgorithmEvent.h" />
 		<Unit filename="include/LW2004.h" />
 		<Unit filename="include/LW2004_2.h" />

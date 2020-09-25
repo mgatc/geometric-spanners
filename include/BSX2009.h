@@ -25,7 +25,7 @@
 
 
 #include "GeometricSpannerPrinter.h"
-
+#include "metrics.h"
 
 
 namespace gsnunf {
@@ -76,19 +76,26 @@ struct comparatorForMinHeap {
 typedef boost::heap::fibonacci_heap<size_tPair,boost::heap::compare<comparatorForMinHeap>> Heap;
 typedef Heap::handle_type handle;
 
-inline size_tPair createEdge( const size_t i, const size_t j ) {
-    return make_pair( std::min(i,j), std::max(i,j) );
+template< typename T >
+inline std::pair<T,T> makeNormalizedPair( const T& i, const T& j ) {
+    return make_pair(
+        CGAL::min(i,j),
+        CGAL::max(i,j)
+    );
 }
 
-inline void createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_handle>& handles, size_tPairSet &E, const size_t i, const size_t j, const size_t n, bool printLog = false ) {
+inline bool createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_handle>& handles, size_tPairSet &E, const size_t i, const size_t j, const size_t n, bool printLog = false ) {
     assert( std::max(i,j) < n );
     assert( T.is_edge( handles.at(i), handles.at(j) ) );
     if( printLog ) cout<<"add:("<<i<<","<<j<<") ";
-    E.insert( createEdge( i, j ) );
+
+    bool inserted = false;
+    tie(ignore,inserted) = E.insert( makeNormalizedPair(i,j) );
+    return inserted;
 }
 
 template< class DT >
-double get_angle( const DT& T, typename DT::Vertex_handle &p, const typename DT::Vertex_handle &q, const typename DT::Vertex_handle &r ) {
+double get_angle( const DT& T, const typename DT::Vertex_handle &p, const typename DT::Vertex_handle &q, const typename DT::Vertex_handle &r ) {
     assert( !T.is_infinite(p) );
     assert( !T.is_infinite(q) );
     assert( !T.is_infinite(r) );
@@ -111,26 +118,19 @@ double get_angle( const DT& T, typename DT::Vertex_handle &p, const typename DT:
 
 } // namespace bsx2009
 
-// THIS IS STILL LW2004, THE NAMES HAVE JUST BEEN CHANGED.
-// THE ORDERING IS THE SAME, BUT BACKWARDS BETWEEN THE TWO ALGORITHMS.
-// THE ALGORITHM ITSELF SHOULD BE SIMPLER THAN LW2004.
 template< typename RandomAccessIterator, typename OutputIterator >
-void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, double alpha = PI/2, bool printLog = false ) {
+void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, double alpha = 2*PI/3, bool printLog = false ) {
     using namespace bsx2009;
 
     // ensure valid alpha
-    alpha = CGAL::max( EPSILON, CGAL::min( alpha, PI/2 ) );
-
-    // add points to vector and remove any duplicates or AutoCount() will fail
-//    vector<Point> points( pointsBegin, pointsEnd );
-//    std::sort( points.begin(), points.end() );
-//    auto last = std::unique( points.begin(), points.end() );
-//    points.erase( last, points.end() );
+    alpha = CGAL::max( EPSILON, CGAL::min( alpha, 2*PI/3 ) );
+    size_t numCones = rint( ceil( 2*PI / alpha ) );
+    assert( numCones > 0 ); // guard against /0
+    double alphaReal = 2*PI / numCones;
+    size_t FINAL_DEGREE_BOUND = 14 + numCones;
 
     //cout << "Step 1 starts...\n";
-    Delaunay T;
-
-    T.insert( pointsBegin, pointsEnd );
+    Delaunay T( pointsBegin, pointsEnd );
 
     // Add IDs
     size_t i=0;
@@ -140,6 +140,12 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     assert( i == T.number_of_vertices() );
 
     size_t n = i;
+    Delaunay::Vertex_handle v_inf = T.infinite_vertex();
+
+
+
+
+
     //cout<<n<<",";
 
 
@@ -190,62 +196,55 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
 
 
-    Delaunay::Vertex_handle v_inf = T.infinite_vertex();
 
-    //cout << "Step 1 is over...\n";
-    // TriangulationPrinter tp(T);
-    // tp.draw("del");
+
+
+
+
+
+
     //************* Step 2 ****************//
     vector<Delaunay::Vertex_handle> pointID2VertexHandle(n, v_inf);
-    for( auto vit = T.finite_vertices_begin(); vit != T.finite_vertices_end(); ++vit ) {
-        //assert( !T.is_infinite(vit) );
+    for( auto vit = T.finite_vertices_begin(); vit != T.finite_vertices_end(); ++vit )
         pointID2VertexHandle[ vit->info() ] = vit;
-    }
 
     Heap H;
     vector<handle> handleToHeap(n);
     vector<size_t> piIndexedByV(n), piIndexedByPiU(n);
-    vector<unordered_set<size_t>> currentNeighbours(n);
+    vector<unordered_set<size_t>> currentNeighbors(n);
 
-   // size_t maxDegree = 0;
-    // Initialize the vector currentNeighbours with appropriate neighbours for every vertex
-    for( size_t it = 0; it < n; it++ ) {
+    // Initialize the vector currentNeighbors with appropriate neighbors for every vertex
+    for( size_t it=0; it<n; ++it ) {
         Delaunay::Vertex_circulator N = T.incident_vertices( pointID2VertexHandle.at(it) ),
             done(N);
-        //if (vc != 0) {
         do {
-            if( !T.is_infinite(N) ) {
-                //degree++;
-                currentNeighbours.at(it).insert( N->info() );
-            }
+            if( !T.is_infinite(N) )
+                currentNeighbors.at(it).insert( N->info() );
         } while( ++N != done );
-        //}
-       // if(degree > maxDegree)
-        //    maxDegree = degree;
 
-        size_t degree = currentNeighbours.at(it).size();
-        handleToHeap[it] = H.emplace( degree,it );
+        size_t degree = currentNeighbors.at(it).size();
+        handleToHeap[it] = H.emplace( degree, it );
     }
 
-    //cout << "Maximum degree in the Delaunay Triangulation: " << maxDegree << endl;
     // Use a heap to walk through G_0 to G_{n-1} and set up the Pi for every vertex
     i = n-1; // start at the last valid index
-    while(!H.empty()) {
+
+    while( !H.empty() ) {
         size_tPair p = H.top();
         H.pop();
         // make sure our math is correct, e.g., degree from heap key matches neighbor container size
-        assert( p.first == currentNeighbours.at( p.second ).size() );
-        // make sure our assumptions about the graph G_i are correct (see p. 5 in LW2004)
-        assert( 0 <= p.first && p.first <= 5 );
+        assert( p.first == currentNeighbors.at( p.second ).size() );
+        assert( 0 <= p.first && p.first <= 5 ); // Lemma 1
 
-        for( size_t neighbour : currentNeighbours.at( p.second ) ) {
-            currentNeighbours.at(neighbour).erase(p.second);
-            handle h = handleToHeap.at(neighbour);
-            size_tPair q = make_pair( currentNeighbours.at( neighbour ).size(), neighbour );
+        // Erase this vertex from incidence list of neighbors and update the neighbors' key in the heap
+        for( size_t neighbor : currentNeighbors.at( p.second ) ) {
+            currentNeighbors.at(neighbor).erase(p.second);
+            handle h = handleToHeap.at(neighbor);
+            size_tPair q = make_pair( currentNeighbors.at( neighbor ).size(), neighbor );
             H.update(h,q);
             H.update(h);
         }
-        currentNeighbours.at(p.second).clear();
+        currentNeighbors.at(p.second).clear();
         piIndexedByV[p.second] = i;
         piIndexedByPiU[i] = p.second;
         --i;
@@ -253,22 +252,23 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
     handleToHeap.clear();
     H.clear();
-    currentNeighbours.clear();
+    currentNeighbors.clear();
     //cout << "Step 2 is over...\n";
 
+
+
+
+
     //************* Step 3 ****************//
-    // In this step we assume alpha = pi/2 in order to minimize the degree
-    size_tPairSet ePrime; // without set duplicate edges could be inserted (use the example down below)
+    size_tPairSet ePrime;
     vector<bool> isProcessed(n, false);
     Delaunay::Vertex_handle u_handle = v_inf;
 
-    //cout<<piIndexedByPiU.size()<<"\n";
-
-
-    // Iterate through vertices by pi ordering
+    // Iterate through vertices by piU ordering
     for( size_t u : piIndexedByPiU ) {
         u_handle = pointID2VertexHandle.at(u);
         assert( !T.is_infinite(u_handle) );
+        Point u_point = u_handle->point();
         isProcessed[u] = true;
         if( printLog ) cout<<"\nu:"<<u<<" ";
 
@@ -289,117 +289,111 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         // Get neighbors of u
         Delaunay::Vertex_circulator N = T.incident_vertices( u_handle );
         if( printLog ) cout<<"N_init:"<<(T.is_infinite(N)?size_t(numeric_limits<size_t>::max):size_t(N->info()))<<" ";
-        Delaunay::Vertex_circulator done(N);
-        // find a processed neighbor if it exists or we reach the start again
-        while( ( T.is_infinite(--N) || !isProcessed.at(N->info()) ) && N!=done );
-        done = N; // update N
-        // Rotate N until reaching an infinite vertex (check first) or the original vertex
-        while( !T.is_infinite(--N) && N != done ); //
-        if( T.is_infinite(N) ) --N; // if we stopped on an infinite vertex, move to its successor
-        if( printLog ) cout<<"N_ready:"<<N->info()<<" ";
+        if( T.is_infinite(N) ) --N;
 
-        // Find and store sector boundaries, start with N
-        size_t processedNeighbors = isProcessed.at( N->info() ) ? 1 : 0;
-        vector<Delaunay::Vertex_handle> sectorBoundaries{ N->handle() };
-        while( --N != sectorBoundaries.front() ) {
-            if( ( !T.is_infinite(N) && isProcessed.at( N->info() ) ) ) { // check for v_inf first or isProcessed will be out of range
-                sectorBoundaries.push_back( N->handle() );
-                ++processedNeighbors;
-            } else if( T.is_infinite(N) ) {
-                ++N; // move to predecessor
-                // Add predecessor if not already added.
-                if( N->handle() != sectorBoundaries.back() )
-                    sectorBoundaries.push_back( N->handle() );
-                // Note, if we've reached this branch, we know that
-                // v_inf's successor is sectorBoundaries.front()
-                --N; // move back to N (infinite vertex) to naturally exit the loop
+        Delaunay::Vertex_circulator
+            closest(N),
+            done(N);
+
+        // Track degree and number of processed neighbors to ensure correctness
+        size_t processedNeighbors = 0;
+        size_t degree = 0;
+        bool inserted = false;
+
+        do { // Find closest unprocessed neighbor, also count processed neighbors and neighbors in ePrime
+            if( !T.is_infinite(N) ) {
+                if( gsnunf::contains( ePrime, makeNormalizedPair( u, N->info() ) ) )
+                    ++degree;
+
+                if( isProcessed.at( N->info() ) )
+                    ++processedNeighbors;
+                else if( d(u_point,N->point()) < d(u_point,closest->point()) )
+                    closest = N;
+            }
+        } while( --N != done );
+
+        if( printLog ) cout<<"degree:"<<degree<<",";
+        assert( processedNeighbors <= 5 ); // Lemma 1, proof for Lemma 3
+        assert( degree <= 15 ); // Proof for Lemma 3
+
+        // We will add a max of numCones-1 since we are guaranteed to add the closest
+        // but cannot add to the two cones touching closest.
+        vector<Delaunay::Vertex_handle> closestInCones( numCones-1, v_inf );
+        closestInCones.front() = closest; // add closest to "add" list
+        while( --N != closest ); // start from the closest vertex
+
+        // Loop through neighbors and consider forward edges
+        while( --N != closest ) {
+            if( !T.is_infinite(N) && !isProcessed.at(N->info()) ) {
+                // evaluate possible forward edges
+                double theta = get_angle(
+                    T,
+                    closest->handle(),
+                    u_handle,
+                    N->handle()
+                );
+                size_t cone = size_t( (theta-EPSILON) / alphaReal );
+                // trap neighbors in forbidden cones by putting them in 0 (which is already guaranteed to be closest)
+                cone = ( cone < closestInCones.size() ? cone : 0 );
+
+                if( cone > 0 // banish the forbidden cones
+                    && ( T.is_infinite( closestInCones.at(cone) )
+                        || d(u_point,N->point()) < d(u_point,closestInCones.at(cone)->point()) ) )
+                {   // If we made it through all that, it's the current closestInCone!
+                    closestInCones[cone] = N->handle();
+                    if( printLog ) cout<<"s_closest["<<cone<<"]:"<<N->info()<<" ";
+                }
             }
         }
-        assert( processedNeighbors <= 5 );
-
-        // for debugging, print sector boundaries
-        if( printLog ) for ( size_t i=0; i<sectorBoundaries.size(); ++i ) {
-            cout<<"v"<<i<<":"<<sectorBoundaries.at(i)->info()<<" ";
+        // We've found all the closest neighbors in each now,
+        // now add edges from each to the current vertex (u)
+        for( auto v : closestInCones ) {
+            if( !T.is_infinite(v) ) {
+                if( printLog ) cout<<"forward_";
+                inserted = createNewEdge( T, pointID2VertexHandle, ePrime, u, v->info(), n, printLog );
+                degree += size_t(inserted);
+                if( printLog ) cout<<"degree:"<<degree<<",";
+            }
         }
 
-        // Now, compute the angles of the sectors, the number of cones in each sector,
-        // and the actual angles
-        vector<double> alphaReal( sectorBoundaries.size() );
-        vector< vector<Delaunay::Vertex_handle> > closest( sectorBoundaries.size() );
-
-        for( size_t i=0; i<sectorBoundaries.size(); ++i ) {
-            double sectorAngle = get_angle(
-                T,
-                sectorBoundaries.at(i),
-                u_handle,
-                sectorBoundaries.at( (i+1)%sectorBoundaries.size() )
-            );
-            if( sectorAngle < EPSILON ) sectorAngle = 360.0;
-            size_t numCones = rint( ceil( sectorAngle / alpha ) );
-            assert( numCones > 0 ); // guard against /0
-            alphaReal[i] = sectorAngle / numCones;
-            closest.at(i).resize( numCones, v_inf );
-        }
-
-        Delaunay::Vertex_handle lastN = v_inf;
-        if( isProcessed.at( N->info() ) ) --N; // if N is processed, step
-        size_t sector = 0;
-
-        do { // Loop through neighbors and add appropriate edges
-            if( !T.is_infinite(N) ) {
-                if( isProcessed.at( N->info() ) ) {
-                    ++sector;
-                } else {
-                    assert( sector < sectorBoundaries.size() );
-                    // evaluate possible forward edges
-                    double theta = get_angle(
-                        T,
-                        sectorBoundaries.at(sector),
-                        u_handle,
-                        N->handle()
-                    );
-                    // get angle will return 360 for any angle(vuv) (we want it to be 0 here)
-                    size_t cone = size_t( (theta-EPSILON) / alphaReal.at(sector) );
-                    if( cone >= closest.at(sector).size() )
-                        cone = 0;
-                    // Store value until after all neighbors are processed, then add
-                    if( T.is_infinite( closest.at(sector).at(cone) )
-                      || Vector_2( u_handle->point(), N->point() ).squared_length()
-                       < Vector_2( u_handle->point(), closest.at(sector).at(cone)->point() ).squared_length() ) {
-                            closest.at(sector).at(cone) = N->handle();   // if the saved vertex is infinite or longer than the current one, update
-                            if( printLog ) cout<<"s_closest["<<sector<<"]["<<cone<<"]:"<<N->info()<<" ";
-                    }
-                    // cross edges
-                    if( !T.is_infinite( lastN ) && !isProcessed.at( lastN->info() ) ) {
-                        if( printLog ) cout<<"cross_";
-                        createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n, printLog );
-                    }
+        // Loop through neighbors again and add cross edges between
+        // consecutive neighbors that are NOT processed (or infinite).
+        Delaunay::Vertex_handle lastN = N;
+        do {
+            --N; // Increment first, then check validity
+            if( !( T.is_infinite(N) || isProcessed.at(N->info()) ) ) {
+                if( !( T.is_infinite(lastN) || isProcessed.at(lastN->info()) ) ) {
+                    // don't add to degree for cross edges, they are not incident on u!
+                    if( printLog ) cout<<"cross_";
+                    inserted = createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n, printLog );
                 }
             }
             lastN = N->handle();
-        } while( --N != sectorBoundaries.front() );
+        } while( N != closest );
 
-        // If N and lastN are not processed, add final cross edge
-        if( !T.is_infinite(     N ) && !isProcessed.at(     N->info() )
-         && !T.is_infinite( lastN ) && !isProcessed.at( lastN->info() ) )
-        {
-            if( printLog ) cout<<"cross_";
-            createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n, printLog );
+
+
+        if( printLog && degree>FINAL_DEGREE_BOUND ) {
+            break; // exit to printer
+        } else if( !printLog && degree>FINAL_DEGREE_BOUND ) {
+            // recurse to print log
+            cout<<"BOUND:"<<FINAL_DEGREE_BOUND<<",deg:"<<degree<<"\n";
+            list<pair<Point,Point> > result;
+            BSX2009( pointsBegin, pointsEnd, back_inserter(result), alpha, true );
         }
+        assert( degree <= FINAL_DEGREE_BOUND ); // Lemma 3
 
-        // Add edges in closest
-        for( auto segment : closest )
-            for( auto v : segment )
-                if( !T.is_infinite(v) ) {
-                    if( printLog ) cout<<"forward_";
-                    createNewEdge( T, pointID2VertexHandle, ePrime, u, v->info(), n, printLog );
-                }
-    }
+    } // END OF STEP 3 LOOP
+
+
+
     // Edge list is only needed for printing. Remove for production.
     vector< pair<Point,Point> > edgeList;
     edgeList.reserve( ePrime.size() );
+
     // Send resultant graph to output iterator
     for( size_tPair e : ePrime ) {
+        // Edge list is only needed for printing. Remove for production.
         edgeList.emplace_back( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
 
         *result = make_pair( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );

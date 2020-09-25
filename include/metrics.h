@@ -2,9 +2,12 @@
 #define GSNUNF_METRICS_H
 
 #include <algorithm> // swap
+#include <chrono>
 #include <functional>
+#include <iostream>
 #include <limits>
 #include <optional>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -28,6 +31,27 @@ void forBoth( const std::pair<T1,T2>& p, F func ) {
     func( p.first, p.second );
     func( p.second, p.first );
 }
+
+class Timer {
+  public:
+    Timer( std::string delimiter = "," ) : m_delimiter(delimiter) {
+        m_startTime = std::chrono::high_resolution_clock::now();
+    }
+    ~Timer() {
+        stop();
+    }
+    void stop() {
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_startTime).time_since_epoch().count();
+        auto end = std::chrono::time_point_cast<std::chrono::microseconds>(endTime).time_since_epoch().count();
+        auto duration = end - start;
+
+        std::cout << duration << m_delimiter;
+    }
+  private:
+    std::chrono::time_point< std::chrono::high_resolution_clock > m_startTime;
+    std::string m_delimiter;
+};
 
 namespace metrics {
 

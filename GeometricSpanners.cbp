@@ -69,22 +69,12 @@
 		<Unit filename=".gitignore" />
 		<Unit filename="CMakeLists.txt" />
 		<Unit filename="cmake/GeometricSpannersConfig.cmake" />
-		<Unit filename="include/BGS2002.h" />
 		<Unit filename="include/BSX2009.h" />
 		<Unit filename="include/DelaunayGraph.h" />
 		<Unit filename="include/FloydWarshall.h" />
 		<Unit filename="include/GeometricSpannerPrinter.h" />
 		<Unit filename="include/GraphAlgoTV.h" />
-		<Unit filename="include/GraphAlgorithmEvent.h" />
 		<Unit filename="include/LW2004.h" />
-		<Unit filename="include/LW2004_2.h" />
-		<Unit filename="include/LW2004_3.h" />
-		<Unit filename="include/PolygonSpanner.h" />
-		<Unit filename="include/SpanningGraph.h" />
-		<Unit filename="include/SplitVertex.h" />
-		<Unit filename="include/StretchFactor.h" />
-		<Unit filename="include/Timer.h" />
-		<Unit filename="include/TransformPolygon.h" />
 		<Unit filename="include/metrics.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>

@@ -8,12 +8,10 @@
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
-#include "Timer.h"
 #include "FloydWarshall.h"
 #include "GeometricSpannerPrinter.h"
-#include "BGS2002.h"
-//#include "LW2004_2.h"
-#include "LW2004_3.h"
+#include "BGS2005.h"
+#include "LW2004.h"
 #include "BSX2009.h"
 #include "metrics.h"
 
@@ -396,7 +394,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
     {
         Timer tim;
-        LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, printLog );
+        LW2004( points.begin(), points.end(), back_inserter(result), PI/2, printLog );
     }
     deg = degree( result.begin(), result.end() );
     cout << deg;

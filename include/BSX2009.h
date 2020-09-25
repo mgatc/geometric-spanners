@@ -25,6 +25,7 @@
 
 
 #include "GeometricSpannerPrinter.h"
+#include "GraphAlgoTV.h"
 #include "metrics.h"
 
 

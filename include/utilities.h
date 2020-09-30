@@ -37,14 +37,10 @@ inline std::pair<T,T> makeNormalizedPair( const T& i, const T& j ) {
     );
 }
 
-template< class DT >
-double get_angle( const DT& T, const typename DT::Vertex_handle &p, const typename DT::Vertex_handle &q, const typename DT::Vertex_handle &r ) {
-    assert( !T.is_infinite(p) );
-    assert( !T.is_infinite(q) );
-    assert( !T.is_infinite(r) );
-
-    CGAL::Vector_2 pq( p->point(), q->point() );
-    CGAL::Vector_2 rq( r->point(), q->point() );
+template< class K >
+double get_angle( const typename K::Point_2& p, const typename K::Point_2& q, const typename K::Point_2& r ) {
+    CGAL::Vector_2<K> pq( p, q );
+    CGAL::Vector_2<K> rq( r, p );
 
     double result = atan2( rq.y(), rq.x() ) - atan2( pq.y(), pq.x() );
 

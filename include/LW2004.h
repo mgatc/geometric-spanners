@@ -295,11 +295,10 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         vector< vector<Delaunay::Vertex_handle> > closest( sectorBoundaries.size() );
 
         for( size_t i=0; i<sectorBoundaries.size(); ++i ) {
-            double sectorAngle = get_angle(
-                T,
-                sectorBoundaries.at(i),
-                u_handle,
-                sectorBoundaries.at( (i+1)%sectorBoundaries.size() )
+            double sectorAngle = get_angle<K>(
+                sectorBoundaries.at(i)->point(),
+                u_handle->point(),
+                sectorBoundaries.at( (i+1)%sectorBoundaries.size() )->point()
             );
             if( sectorAngle < EPSILON ) sectorAngle = 360.0;
             size_t numCones = rint( ceil( sectorAngle / alpha ) );
@@ -319,11 +318,10 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
                 } else {
                     assert( sector < sectorBoundaries.size() );
                     // evaluate possible forward edges
-                    double theta = get_angle(
-                        T,
-                        sectorBoundaries.at(sector),
-                        u_handle,
-                        N->handle()
+                    double theta = get_angle<K>(
+                        sectorBoundaries.at(sector)->point(),
+                        u_handle->point(),
+                        N->point()
                     );
                     // get angle will return 360 for any angle(vuv) (we want it to be 0 here)
                     size_t cone = size_t( (theta-EPSILON) / alphaReal.at(sector) );

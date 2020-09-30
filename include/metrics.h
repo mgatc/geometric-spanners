@@ -2,13 +2,11 @@
 #define GSNUNF_METRICS_H
 
 #include <algorithm> // swap
-#include <chrono>
 #include <functional>
-#include <iostream>
 #include <limits>
 #include <optional>
-#include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include <boost/functional/hash.hpp>
@@ -31,27 +29,6 @@ void forBoth( const std::pair<T1,T2>& p, F func ) {
     func( p.first, p.second );
     func( p.second, p.first );
 }
-
-class Timer {
-  public:
-    Timer( std::string delimiter = "," ) : m_delimiter(delimiter) {
-        m_startTime = std::chrono::high_resolution_clock::now();
-    }
-    ~Timer() {
-        stop();
-    }
-    void stop() {
-        auto endTime = std::chrono::high_resolution_clock::now();
-        auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_startTime).time_since_epoch().count();
-        auto end = std::chrono::time_point_cast<std::chrono::microseconds>(endTime).time_since_epoch().count();
-        auto duration = end - start;
-
-        std::cout << duration << m_delimiter;
-    }
-  private:
-    std::chrono::time_point< std::chrono::high_resolution_clock > m_startTime;
-    std::string m_delimiter;
-};
 
 namespace metrics {
 
@@ -103,7 +80,7 @@ void EuclideanDistanceMatrix( const DelaunayGraph& G, const DelaunayGraph::templ
 using StretchFactorIndexEntry = pair<pair<size_t,size_t>, DelaunayGraph::FT>;
 using StretchFactorVertexHandleEntry = pair<pair<Vertex_handle,Vertex_handle>, DelaunayGraph::FT>;
 
-StretchFactorVertexHandleEntry StretchFactor( const DelaunayGraph& G ) {
+StretchFactorVertexHandleEntry StretchFactorFloydWarshall( const DelaunayGraph& G ) {
     using namespace metrics;
     vector< vector< optional<DelaunayGraph::FT> > > stretch;
     size_t N = G.n();
@@ -150,10 +127,10 @@ StretchFactorVertexHandleEntry StretchFactor( const DelaunayGraph& G ) {
 }
 
 template< typename RandomAccessIterator >
-StretchFactorVertexHandleEntry StretchFactor( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+StretchFactorVertexHandleEntry StretchFactorFloydWarshall( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
     DelaunayGraph G;
     G.buildFromEdgeList( edgesBegin, edgesEnd );
-    return StretchFactor(G);
+    return StretchFactorFloydWarshall(G);
 }
 
 struct PointHasher {
@@ -242,6 +219,13 @@ template<typename T>
 struct MinHeapCompare {
     bool operator()( const T &n1, const T &n2 ) const {
         return (n1.first > n2.first) || ((n1.first == n2.first) && (n1.second > n2.second));
+    }
+};
+
+template<typename T>
+struct MaxHeapCompare {
+    bool operator()( const T &n1, const T &n2 ) const {
+        return (n1.first < n2.first) || ((n1.first == n2.first) && (n1.second < n2.second));
     }
 };
 
@@ -423,37 +407,31 @@ double StretchFactorDjikstra( RandomAccessIterator edgesBegin, RandomAccessItera
     }
     size_t n = V.size();
     const double INF = numeric_limits<double>::max();
-    vector<vector<double> > ShortestPaths(n, vector<double>(n, INF) );
-    vector<vector<double> > D(n, vector<double>(n, INF) ); // Euclidean distances
     vector<double> T( n, INF );
 
     // calculate euclidean distance between all pairs
     //#pragma omp parallel for
     for( size_t i=0; i<n; ++i ) {
+        vector<double> ShortestPaths( n, INF );
+        vector<double> D( n, INF );     // Euclidean distances
+
         for( size_t j=0; j<n; ++j ) {
-            D.at(i).at(j) =
+            D.at(j) =
                 i==j ? 0 : d( V.at(i), V.at(j) );
         }
-    }
 
-    // linear scan over vertices, perform single-source shortest paths
-    //#pragma omp parallel for
-    for( size_t i=0; i<n; ++i ) {
-        Djikstra( i, V, G, ShortestPaths.at(i) );
-    }
+        Djikstra( i, V, G, ShortestPaths );
 
-    // Divide each shortest path distance by the euclidean distance between the vertices.
-    //#pragma omp parallel for
-    for( size_t i=0; i<n; ++i ) {
+        // Divide each shortest path distance by the euclidean distance between the vertices.
         for( size_t j=0; j<n; ++j ) {
-            ShortestPaths.at(i).at(j) = ( // avoid /0
-                i==j ? 0 : ShortestPaths.at(i).at(j)/D.at(i).at(j)
+            ShortestPaths.at(j) = ( // avoid /0
+                i==j ? 0 : ShortestPaths.at(j)/D.at(j)
             );
         }
         // Find max t and place in T
         T.at(i) = *max_element(
-            begin( ShortestPaths.at(i) ),
-            end(   ShortestPaths.at(i) )
+            begin( ShortestPaths ),
+            end(   ShortestPaths )
         );
     }
     // Find the big mac daddy t aka big money
@@ -495,37 +473,31 @@ double StretchFactorDjikstraParallel( RandomAccessIterator edgesBegin, RandomAcc
     }
     size_t n = V.size();
     const double INF = numeric_limits<double>::max();
-    vector<vector<double> > ShortestPaths(n, vector<double>(n, INF) );
-    vector<vector<double> > D(n, vector<double>(n, INF) ); // Euclidean distances
     vector<double> T( n, INF );
 
     // calculate euclidean distance between all pairs
     #pragma omp parallel for
     for( size_t i=0; i<n; ++i ) {
+        vector<double> ShortestPaths( n, INF );
+        vector<double> D( n, INF );     // Euclidean distances
+
         for( size_t j=0; j<n; ++j ) {
-            D.at(i).at(j) =
+            D.at(j) =
                 i==j ? 0 : d( V.at(i), V.at(j) );
         }
-    }
 
-    // linear scan over vertices, perform single-source shortest paths
-    #pragma omp parallel for
-    for( size_t i=0; i<n; ++i ) {
-        Djikstra( i, V, G, ShortestPaths.at(i) );
-    }
+        Djikstra( i, V, G, ShortestPaths );
 
     // Divide each shortest path distance by the euclidean distance between the vertices.
-    #pragma omp parallel for
-    for( size_t i=0; i<n; ++i ) {
         for( size_t j=0; j<n; ++j ) {
-            ShortestPaths.at(i).at(j) = ( // avoid /0
-                i==j ? 0 : ShortestPaths.at(i).at(j)/D.at(i).at(j)
+            ShortestPaths.at(j) = ( // avoid /0
+                i==j ? 0 : ShortestPaths.at(j)/D.at(j)
             );
         }
         // Find max t and place in T
         T.at(i) = *max_element(
-            begin( ShortestPaths.at(i) ),
-            end(   ShortestPaths.at(i) )
+            begin( ShortestPaths ),
+            end(   ShortestPaths )
         );
     }
     // Find the big mac daddy t aka big money
@@ -656,9 +628,74 @@ double StretchFactor( RandomAccessIterator edgesBegin, RandomAccessIterator edge
     return t_max;
 }
 
+
+// edgelists are range-supporting containers containing pairs of Points
+template< typename RandomAccessIterator >
+double StretchFactorExperimental( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+    // First, parse input to structures that are convenient for our purposes
+    vector<Point> V; // container for vertices
+    unordered_map< Point, size_t, PointHasher > vMap; // map point to index in V
+    unordered_map< size_t,unordered_set<size_t> > E; // adjacency list
+    size_t index = 0;
+
+    // Create list of vertices, map to their indices, and adjacency list
+    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
+        // If vMap doesn't contain p, put it in V
+        Point p = eit->first;
+        size_t i_p = index;
+        bool inserted = false;
+        auto vMapIt = vMap.begin();
+        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(p);
+            ++index;
+        }
+        i_p = vMapIt->second;
+
+        // If vMap doesn't contain q, put it in V
+        Point q = eit->second;
+        size_t i_q = index;
+        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(q);
+            ++index;
+        }
+        i_q = vMapIt->second;
+
+        E[i_p].insert(i_q); // add edge to adjacency list
+    }
+    size_t n = V.size();
+    const double INF = numeric_limits<double>::max();
+
+    // Step 1. Prepare the PQ (as a Fibonacci maxheap)
+    typedef pair< size_t, size_t >
+        StretchPair;
+    typedef pair< double, StretchPair >
+        tWithStretchPair;
+    typedef boost::heap::fibonacci_heap< tWithStretchPair,boost::heap::compare<MaxHeapCompare<tWithStretchPair>>>
+        Heap;
+    typedef Heap::handle_type
+        HeapHandle;
+    Heap upperBounds;
+    vector< vector<HeapHandle> > handleToHeap( n, vector<HeapHandle>(n) );
+
+    // Place all unique pairs that are not edges in E in upperBounds with t=inf
+    for( size_t i=0; i<n; ++i ) {
+        for( size_t j=0; j<n; ++j ) {
+            if( !contains( E.at(i), j ) )
+                handleToHeap[i][j] = upperBounds.emplace( INF, make_pair(i,j) );
+        }
+    }
+
+
+    double t_max = 1;
+
+    return t_max;
+}
+
 } // namespace gsnunf
 
 
-#endif // GSNUNF_STRETCHFACTOR_H
+#endif // GSNUNF_METRICS_H
 
 

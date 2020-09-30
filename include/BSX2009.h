@@ -283,11 +283,10 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         while( --N != closest ) {
             if( !T.is_infinite(N) && !isProcessed.at(N->info()) ) {
                 // evaluate possible forward edges
-                double theta = get_angle(
-                    T,
-                    closest->handle(),
-                    u_handle,
-                    N->handle()
+                double theta = get_angle<K>(
+                    closest->point(),
+                    u_point,
+                    N->point()
                 );
                 size_t cone = size_t( (theta-EPSILON) / alphaReal );
                 // trap neighbors in forbidden cones by putting them in 0 (which is already guaranteed to be closest)

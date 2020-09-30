@@ -49,7 +49,7 @@ class DelaunayGraph {
     Delaunay_triangulation_2 _DT;
     AdjacencyList _E;
 
-    GraphAlgoTV _algoTV;
+    //GraphAlgoTV _algoTV;
 
 
 

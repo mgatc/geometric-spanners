@@ -635,10 +635,9 @@ double StretchFactorExperimental( RandomAccessIterator edgesBegin, RandomAccessI
     // First, parse input to structures that are convenient for our purposes
     vector<Point> V; // container for vertices
     unordered_map< Point, size_t, PointHasher > vMap; // map point to index in V
-    unordered_map< size_t,unordered_set<size_t> > E; // adjacency list
     size_t index = 0;
 
-    // Create list of vertices, map to their indices, and adjacency list
+    // Create list of vertices and map to their indices
     for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
         // If vMap doesn't contain p, put it in V
         Point p = eit->first;
@@ -661,10 +660,17 @@ double StretchFactorExperimental( RandomAccessIterator edgesBegin, RandomAccessI
             ++index;
         }
         i_q = vMapIt->second;
+    }
 
+    // Fill adjacency list E
+    size_t n = V.size();
+    vector<unordered_set<size_t> > E(n); // adjacency list
+    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
+        size_t i_p = vMap.at( eit->first ),
+               i_q = vMap.at( eit->second );
         E[i_p].insert(i_q); // add edge to adjacency list
     }
-    size_t n = V.size();
+
     const double INF = numeric_limits<double>::max();
 
     // Step 1. Prepare the PQ (as a Fibonacci maxheap)
@@ -682,13 +688,26 @@ double StretchFactorExperimental( RandomAccessIterator edgesBegin, RandomAccessI
     // Place all unique pairs that are not edges in E in upperBounds with t=inf
     for( size_t i=0; i<n; ++i ) {
         for( size_t j=0; j<n; ++j ) {
-            if( !contains( E.at(i), j ) )
+            if( !contains( E.at(i), j ) ) // if i,j is not an edge
                 handleToHeap[i][j] = upperBounds.emplace( INF, make_pair(i,j) );
         }
     }
-
+    // Step 2. Prepare the shortest known paths matrix
+    vector< vector< double > > ShortestKnownPaths(n, vector<double>(n, INF) );
+    for( size_t i=0; i<n; ++i ) { // Set self-loops to 0
+        ShortestKnownPaths[i][i] = 0;
+    }
+    for( size_t i=0; i<n; ++i ) { // Set edges to their euclidean distance
+        for( auto j : E.at(i) ) {
+            ShortestKnownPaths[i][j] = d( V.at(i), V.at(j) );
+        }
+    }
 
     double t_max = 1;
+
+    while( upperBounds.top() > t_max ) {
+
+    }
 
     return t_max;
 }

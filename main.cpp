@@ -10,7 +10,7 @@
 
 #include "FloydWarshall.h"
 #include "GeometricSpannerPrinter.h"
-#include "GraphAlgoTV.h"
+//#include "GraphAlgoTV.h"
 #include "BGS2005.h"
 #include "LW2004.h"
 #include "BSX2009.h"
@@ -84,14 +84,13 @@ int main() {
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
     //experiment( 100, 1000, 10000, 1000 );
     //scratch();
-    //stretchScratch();
-    algoTVScratch();
+    stretchScratch();
+    //algoTVScratch();
 
     return 0;
 }
 
-void algoTVScratch() {
-
+void stretchScratch() {
     // 1. Create a graph. In this case it will be the DT of the point set
     list<Point> points;
     points = {
@@ -116,87 +115,59 @@ void algoTVScratch() {
     };
     list< pair< Point, Point > > result;
 
-    GraphAlgoTV tv;
+    DelaunayGraph Del( points.begin(), points.end() );
+    Del.add_all_edges();
 
-    LW2004( points.begin(), points.end(), back_inserter(result), tv, PI/2 );
+    // 2. Create a subgraph of that graph
+    LW2004( points.begin(), points.end(), back_inserter(result), PI/2 );
 
+    // measure stretch factor using Floyd Warshall (StretchFactor function)
+    pair<pair<Vertex_handle,Vertex_handle>,double> t_fw = StretchFactorFloydWarshall( result.begin(), result.end() );
+    // measure stretch factor using experimental method
+    double t_djik = StretchFactorDjikstraParallel( result.begin(), result.end() );
+    double t_exp = StretchFactorExperimental( result.begin(), result.end() );
+    // print measurements
+    cout<< points.size();
+    cout<< ",";
+    cout<< t_fw.second;
+    cout<<",";
+    cout<< t_djik;
+    cout<<",";
+    cout<< t_exp;
+    cout<<",";
+
+    GraphPrinter printer(1);
+    GraphPrinter::OptionsList options;
+
+    options = {
+        { "color", printer.inactiveEdgeColor },
+        { "line width", to_string(printer.inactiveEdgeWidth) }
+    };
+    printer.drawEdges( Del._DT, options );
+
+    options = { // active edge options
+        { "color", printer.activeEdgeColor },
+        { "line width", to_string(printer.activeEdgeWidth) }
+    };
+    printer.drawEdges( result.begin(), result.end(), options );
+
+
+    options = {
+        { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+        { "color", make_optional( printer.backgroundColor ) }, // text color
+        { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+        { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+    };
+//    GraphPrinter::OptionsList borderOptions = {
+//        { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
+//        { "color", printer.activeEdgeColor }, // additional border color
+//        { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+//    };
+    printer.drawVertices( Del._DT, options );
+
+    printer.print( "stretchscratch" );
 }
-//
-//void stretchScratch() {
-//    // 1. Create a graph. In this case it will be the DT of the point set
-//    list<Point> points;
-//    points = {
-//        { -1, 0.1 },
-//        { -0.9, 3 },
-//        { -2, 6 },
-//        { -7, 3.1 },
-//        { -6, -0.1 },
-//        { -9, -0.2 },
-//        { -7.7, -1 },
-//        { -6.1, -1.5 },
-//        { -10, -4 },
-//        { -4, -3 },
-//        { -1.5, -6 },
-//        { 1, -9 },
-//        { 4, -4 },
-//        { 4.1, 0 },
-//        { 3.9, 5.9 },
-//        { 5, 3 },
-//        { 5, -2 },
-//        { 9, 1 }
-//    };
-//    list< pair< Point, Point > > result;
-//
-//    DelaunayGraph Del( points.begin(), points.end() );
-//    Del.add_all_edges();
-//
-//    // 2. Create a subgraph of that graph
-//    LW2004( points.begin(), points.end(), back_inserter(result), PI/2, false );
-//
-//    // measure stretch factor using Floyd Warshall (StretchFactor function)
-//    pair<pair<Vertex_handle,Vertex_handle>,double> t_fw = StretchFactor( result.begin(), result.end() );
-//    // measure stretch factor using experimental method
-//    double t_exp = StretchFactorDjikstra( result.begin(), result.end() );
-//    // print measurements
-//    cout<< points.size();
-//    cout<< ",";
-//    cout<< t_fw.second;
-//    cout<<",";
-//    cout<< t_exp;
-//    cout<<",";
-//
-//    GraphPrinter printer(1);
-//    GraphPrinter::OptionsList options;
-//
-//    options = {
-//        { "color", printer.inactiveEdgeColor },
-//        { "line width", to_string(printer.inactiveEdgeWidth) }
-//    };
-//    printer.drawEdges( Del._DT, options );
-//
-//    options = { // active edge options
-//        { "color", printer.activeEdgeColor },
-//        { "line width", to_string(printer.activeEdgeWidth) }
-//    };
-//    printer.drawEdges( result.begin(), result.end(), options );
-//
-//
-//    options = {
-//        { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
-//        { "color", make_optional( printer.backgroundColor ) }, // text color
-//        { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
-//        { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-//    };
-////    GraphPrinter::OptionsList borderOptions = {
-////        { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
-////        { "color", printer.activeEdgeColor }, // additional border color
-////        { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-////    };
-//    printer.drawVertices( Del._DT, options );
-//
-//    printer.print( "stretchscratch" );
-//}
-//
+
 //void scratch() {
 //    using namespace std;
 //

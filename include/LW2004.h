@@ -24,7 +24,7 @@
 #include <CGAL/Vector_2.h>
 
 #include "GeometricSpannerPrinter.h"
-#include "GraphAlgoTV.h"
+//#include "GraphAlgoTV.h"
 #include "utilities.h"
 
 namespace gsnunf {
@@ -76,7 +76,7 @@ inline void createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_hand
 
 // alpha is set to pi/2
 template< typename RandomAccessIterator, typename OutputIterator >
-void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, GraphAlgoTV& tv, double alpha = PI/2 ) {
+void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, double alpha = PI/2 ) {
     using namespace lw2004;
 
     // ensure valid alpha
@@ -103,9 +103,9 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     size_t n = i;
 
     vector<string> labels(n);
-    getVertexInfo( T, back_inserter(labels) );
-
-    ignore = tv.registerTriangulation( T, labels );
+//    getVertexInfo( T, back_inserter(labels) );
+//
+//    ignore = tv.registerTriangulation( T, labels );
 
     //cout<<n<<",";
 

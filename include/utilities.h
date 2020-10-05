@@ -1,7 +1,10 @@
 #ifndef GSNUNF_UTILITIES_H
 #define GSNUNF_UTILITIES_H
 
+#include <chrono>
 #include <cmath>
+#include <iostream>
+#include <string>
 
 #include <CGAL/Vector_2.h>
 

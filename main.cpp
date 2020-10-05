@@ -15,6 +15,7 @@
 #include "LW2004.h"
 #include "BSX2009.h"
 #include "metrics.h"
+//#include "utilities.h"
 
 using namespace gsnunf;
 typedef CGAL::Creator_uniform_2<double,Point> Creator;
@@ -82,9 +83,9 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    //experiment( 100, 1000, 10000, 1000 );
+    experiment( 100, 10000, 100000, 10000 );
     //scratch();
-    stretchScratch();
+    //stretchScratch();
     //algoTVScratch();
 
     return 0;
@@ -125,7 +126,6 @@ void stretchScratch() {
     pair<pair<Vertex_handle,Vertex_handle>,double> t_fw = StretchFactorFloydWarshall( result.begin(), result.end() );
     // measure stretch factor using experimental method
     double t_djik = StretchFactorDjikstraParallel( result.begin(), result.end() );
-    double t_exp = StretchFactorExperimental( result.begin(), result.end() );
     // print measurements
     cout<< points.size();
     cout<< ",";
@@ -133,8 +133,11 @@ void stretchScratch() {
     cout<<",";
     cout<< t_djik;
     cout<<",";
+    double t_exp = StretchFactorDjikstraReduction( result.begin(), result.end() );
     cout<< t_exp;
     cout<<",";
+
+
 
     GraphPrinter printer(1);
     GraphPrinter::OptionsList options;
@@ -310,69 +313,75 @@ void stretchScratch() {
 //       // singleRun( 30, 30, resultFileName, filename, true, true );
 //
 //}
-//
-//bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment ) {
-//    const double width = 1000;
-//
-//    size_t invalid = 0;
-//
-//    for( size_t trial=0; trial<trials; ++trial ) {
-//        for( size_t n=n_start; n<=n_end; n+=increment ) {
-//            if( !singleRun( n, width*sqrt(n), "output", nullopt, false, false ) ) {
-//                ++invalid;
-//                return false;
-//            }
-//        }
-//    }
-//    //cout<<"\nTesting complete. "<< invalid << " of "<<(trials*(n_end-n_start))<<" invalid results.\n\n";
-//    return invalid == 0;
-//}
-//
-//bool singleRun( size_t n, double width, string resultFilename, optional<string> filename, bool forcePrint, bool printLog ) {
-//    double size = width/2; // cgal's generators produce width 2x given value
-//
-//    // SET POINT SET
-//    list<Point> points;
-//    optional<string> generatedFile = nullopt;
-//
-//    if( filename )
-//        readPointsFromFile( back_inserter( points ), *filename );
-//    else
-//        generatedFile = make_optional( generateRandomPoints( n, size, back_inserter(points) ) );
-//
-//    cout<< points.size();
-//    cout<< ",";
-//    cout<< size;
-//    cout<< ",";
-//
-//    list< pair< Point, Point > > result;
-//    pair<pair<Vertex_handle,Vertex_handle>,double> t_floydwarshall;
-//    size_t deg = 0;
-//
-//    // Delaunay triangulation
-//    CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
-////                cout << degree(DT);
-////                cout << ",";
-////                cout << weight(DT);
-////                cout << ",";
-//
-//    {
-//        Timer tim;
-//        BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3, printLog );
-//    }
-//    deg = degree( result.begin(), result.end() );
-//    cout << deg;
-//    cout <<",";
-//
-//    double t = 0;
-//
-//    {
-//        //Timer tim;
-//        t = StretchFactorDjikstraParallel( result.begin(), result.end() );
-//    }
-//    cout<< t;
-//    cout<<",";
-//
+
+bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment ) {
+    const double width = 1000;
+
+    size_t invalid = 0;
+
+    for( size_t trial=0; trial<trials; ++trial ) {
+        for( size_t n=n_start; n<=n_end; n+=increment ) {
+            if( !singleRun( n, width*sqrt(n), "output", nullopt, false, false ) ) {
+                ++invalid;
+                return false;
+            }
+        }
+    }
+    //cout<<"\nTesting complete. "<< invalid << " of "<<(trials*(n_end-n_start))<<" invalid results.\n\n";
+    return invalid == 0;
+}
+
+bool singleRun( size_t n, double width, string resultFilename, optional<string> filename, bool forcePrint, bool printLog ) {
+    double size = width/2; // cgal's generators produce width 2x given value
+
+    // SET POINT SET
+    list<Point> points;
+    optional<string> generatedFile = nullopt;
+
+    if( filename )
+        readPointsFromFile( back_inserter( points ), *filename );
+    else
+        generatedFile = make_optional( generateRandomPoints( n, size, back_inserter(points) ) );
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+
+    list< pair< Point, Point > > result;
+
+    // Delaunay triangulation
+    //CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
+//                cout << degree(DT);
+//                cout << ",";
+//                cout << weight(DT);
+//                cout << ",";
+
+    {
+        Timer tim;
+        BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3, printLog );
+    }
+    size_t deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+    // measure stretch factor using parallel Djikstra
+    double t_djik;
+    {
+        Timer tim;
+        t_djik = StretchFactorDjikstraParallel( result.begin(), result.end() );
+    }
+    cout<< t_djik;
+    cout<<",";
+    // measure stretch factor using parallel reduction
+    double t_exp;
+    {
+        Timer tim;
+        t_exp = StretchFactorDjikstraReduction( result.begin(), result.end() );
+    }
+    cout<< t_exp;
+    cout<<",";
+
 //    if( t > 29.1 || deg > 17 || forcePrint ) {
 //        pair<pair<Vertex_handle,Vertex_handle>,double> t_fw;
 //        t_fw = StretchFactor( result.begin(), result.end() );
@@ -438,10 +447,10 @@ void stretchScratch() {
 //
 //        return false;
 //    }
-//    result.clear();
-//
-//    cout<<"\n";
-//
-//    return true;
-//}
+    result.clear();
+
+    cout<<"\n";
+
+    return true;
+}
 

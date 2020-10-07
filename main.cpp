@@ -83,7 +83,7 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    experiment( 100, 10000, 100000, 10000 );
+    experiment( 5, 1000, 10000, 1000 );
     //scratch();
     //stretchScratch();
     //algoTVScratch();
@@ -378,6 +378,12 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     {
         Timer tim;
         t_exp = StretchFactorDjikstraReduction( result.begin(), result.end() );
+    }
+    cout<< t_exp;
+    cout<<",";
+    {
+        Timer tim;
+        t_exp = StretchFactorExperimental( result.begin(), result.end() );
     }
     cout<< t_exp;
     cout<<",";

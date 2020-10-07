@@ -574,6 +574,160 @@ double StretchFactorDjikstraReduction( RandomAccessIterator edgesBegin, RandomAc
     return t_max;
 }
 
+
+namespace exp_stretch {
+    // Create types for heaps
+    typedef pair<double,size_t>
+        HeapPair;
+    template< typename CompareType >
+    using Heap = boost::heap::fibonacci_heap< HeapPair, boost::heap::compare<CompareType>>;
+    template< typename CompareType >
+    using HeapHandle = typename Heap<CompareType>::handle_type;
+    using Min = MinHeapCompare<HeapPair>;
+    using Max = MaxHeapCompare<HeapPair>;
+}
+
+template< typename RandomAccessIterator >
+double StretchFactorExperimental( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+    using namespace exp_stretch;
+    vector<Point> V; // container for vertices
+    unordered_map< Point, size_t, PointHasher > vMap; // map point to index in V
+    unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
+    size_t index = 0;
+
+    // Create list of vertices, map to their indices, and adjacency list
+    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
+        // If vMap doesn't contain p, put it in V
+        Point p = eit->first;
+        size_t i_p = index;
+        bool inserted = false;
+        auto vMapIt = vMap.begin();
+        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(p);
+            ++index;
+        }
+        i_p = vMapIt->second;
+
+        // If vMap doesn't contain q, put it in V
+        Point q = eit->second;
+        size_t i_q = index;
+        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(q);
+            ++index;
+        }
+        i_q = vMapIt->second;
+
+        G[i_p].insert(i_q); // add edge to adjacency list
+    }
+    size_t n = V.size();
+    const double INF = numeric_limits<double>::max();
+    //vector<double> T( n, INF );
+    double t_max = 0;
+
+    // calculate euclidean distance between all pairs
+    #pragma omp parallel for reduction( max: t_max )
+    for( size_t i=0; i<n; ++i ) {
+        vector<double> ShortestPaths( n, INF );
+        vector<double> D( n, INF );     // Euclidean distances
+
+        for( size_t j=0; j<n; ++j ) {
+            D.at(j) =
+                i==j ? 0 : d( V.at(i), V.at(j) );
+        }
+
+        //Djikstra( i, V, G, ShortestPaths );
+
+        size_t n = V.size();
+        size_t inf = numeric_limits<size_t>::max();
+        Point startPoint = V.at(i);
+
+        Heap<Min> open;
+        Heap<Max> T;
+        unordered_map<size_t,HeapHandle<Min>> handleToOpenHeap(n);
+        unordered_map<size_t,HeapHandle<Max>> handleToTHeap(n);
+        handleToOpenHeap[i] = open.emplace( 0, i );
+        handleToTHeap[i] = T.emplace( 0, i );
+
+        //unordered_set<size_t> closed(n);
+        //vector<size_t> parents(n);
+
+        ShortestPaths[i] = 0;
+
+        HeapPair current = open.top(); // initialize current vertex to start
+        size_t u_index = current.second;
+        Point currentPoint = startPoint;
+        Point neighborPoint;
+        double t_local = 0;
+        double t_lower = INF;
+        size_t count=0;
+    //    cout<<"\n    A* start:"<<startPoint;
+    //    cout<<",";
+    //    cout<<" goal:"<<V.at(goal)->point();
+    //    cout<<",";
+
+        do {
+            current = open.top();
+            open.pop();
+            T.erase( handleToTHeap[current.second] );
+            ++count;
+
+            u_index = current.second;
+            currentPoint = V.at(u_index);
+
+    //        cout<<"\n      current:"<<currentPoint;
+    //        cout<<",";
+            // loop through neighbors of current
+            for( size_t neighbor : G.at(u_index) ) {
+                neighborPoint = V.at(neighbor);
+    //            cout<<"\n        n:"<<neighborPoint;
+    //            cout<<",";
+                double newScore = ShortestPaths.at(u_index)
+                    + d( currentPoint, neighborPoint );
+    //            cout<<"g:"<<newScore;
+    //            cout<<",";
+                if( newScore < ShortestPaths.at( neighbor ) ) {
+                    //parents[neighbor] = u_index;
+                    // Update shortest paths
+                    ShortestPaths[neighbor] = newScore;
+                    HeapPair path = make_pair( ShortestPaths.at(neighbor), neighbor );
+
+                    if( contains( handleToOpenHeap, neighbor ) ) {
+                        HeapHandle<Min> neighborHandle = handleToOpenHeap.at(neighbor);
+                        open.update( neighborHandle, path );
+                        open.update( neighborHandle );
+                    } else {
+                        handleToOpenHeap[neighbor] = open.push( path );
+                    }
+                    // Update T
+                    HeapPair t = make_pair(
+                        ( i==neighbor ? 0 : ShortestPaths.at(neighbor) / D.at(neighbor) ),
+                        neighbor
+                    );
+
+                    if( contains( handleToTHeap, neighbor ) ) {
+                        HeapHandle<Max> neighborHandle = handleToTHeap.at(neighbor);
+                        T.update( neighborHandle, t );
+                        T.update( neighborHandle );
+                    } else {
+                        handleToTHeap[neighbor] = T.push(t);
+                    }
+                }
+            }
+            t_local = max( t_local, current.first / D.at(current.second) );
+            t_lower = T.empty() ? 0 : T.top().first;
+            // Make sure we have a value for every vertex before checking t
+        } while( ( count < n || ( t_lower > t_local && t_lower > t_max ) ) && !open.empty() );
+
+        if( t_local > t_max ) {
+            t_max = t_local;
+        }
+    }
+    // Find the big mac daddy t aka big money
+    return t_max;
+}
+
 template< typename VertexContainer, typename VertexMap, typename AdjacencyList >
 optional<double> ShortestPath( VertexContainer V, VertexMap vMap, AdjacencyList G_prime, size_t start, size_t goal ) {
     return AStar( V, vMap, G_prime, start, goal );
@@ -782,222 +936,222 @@ void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_pr
 }*/
 
 // edgelists are range-supporting containers containing pairs of Points
-template< typename RandomAccessIterator >
-double StretchFactorExperimental( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
-    // First, parse input to structures that are convenient for our purposes
-    vector<Point> V; // container for vertices
-    unordered_map< Point, size_t, PointHasher > vMap; // map point to index in V
-    size_t index = 0;
-
-    // Create list of vertices and map to their indices
-    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
-        // If vMap doesn't contain p, put it in V
-        Point p = eit->first;
-        size_t i_p = index;
-        bool inserted = false;
-        auto vMapIt = vMap.begin();
-        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
-        if( inserted ) {
-            V.push_back(p);
-            ++index;
-        }
-        i_p = vMapIt->second;
-
-        // If vMap doesn't contain q, put it in V
-        Point q = eit->second;
-        size_t i_q = index;
-        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
-        if( inserted ) {
-            V.push_back(q);
-            ++index;
-        }
-        i_q = vMapIt->second;
-    }
-
-    // Fill adjacency list E
-    size_t n = V.size();
-    vector<unordered_set<size_t> > E(n); // adjacency list
-    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
-        size_t i_p = vMap.at( eit->first ),
-               i_q = vMap.at( eit->second );
-        E[i_p].insert(i_q); // add edge to adjacency list
-    }
-
-    const double INF = numeric_limits<double>::max();
-
-    // Fill euclidean distance matrix
-    vector< vector< double > > EuclideanDistances( n, vector<double>(n,INF) );
-    for( size_t i=0; i<n; ++i ) {
-        for( size_t j=0; j<n; ++j ) {
-            EuclideanDistances.at(i).at(j) = ( i==j ?
-                0 : d( V.at(i), V.at(j) )
-            );
-        }
-    }
-
-    // Step 1. Prepare the PQ (as a Fibonacci maxheap)
-    typedef pair< size_t, size_t >
-        StretchPair;
-    typedef pair< double, StretchPair >
-        tWithStretchPair;
-    typedef boost::heap::fibonacci_heap< tWithStretchPair,boost::heap::compare<MaxHeapCompare<tWithStretchPair>>>
-        UpperBoundHeap;
-    typedef UpperBoundHeap::handle_type
-        UpperBoundHeapHandle;
-    UpperBoundHeap upperBounds;
-
-    vector< vector<UpperBoundHeapHandle> > upperBoundHandles( n, vector<UpperBoundHeapHandle>(n) );
-
-    // Place all unique pairs that are not edges in E in upperBounds with t=inf
-    for( size_t i=0; i<n; ++i ) {
-        for( size_t j=0; j<n; ++j ) {
-            double t = INF;
-            t = (i==j ? 0 : t);
-            t = (contains( E.at(i), j ) ? 1 : t);
-            upperBoundHandles[i][j] = upperBounds.emplace( t, make_pair(i,j) );
-        }
-    }
-    // Step 2. Prepare the shortest known paths matrix
-    vector< vector< double > > ShortestKnownPaths(n, vector<double>(n, INF) );
-    for( size_t i=0; i<n; ++i ) { // Set self-loops to 0
-        ShortestKnownPaths[i][i] = 0;
-    }
-//    for( size_t i=0; i<n; ++i ) { // Set edges to their euclidean distance
-//        for( auto j : E.at(i) ) {
-//            ShortestKnownPaths[i][j] = EuclideanDistances.at(i).at(j);
+//template< typename RandomAccessIterator >
+//double StretchFactorExperimental( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+//    // First, parse input to structures that are convenient for our purposes
+//    vector<Point> V; // container for vertices
+//    unordered_map< Point, size_t, PointHasher > vMap; // map point to index in V
+//    size_t index = 0;
+//
+//    // Create list of vertices and map to their indices
+//    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
+//        // If vMap doesn't contain p, put it in V
+//        Point p = eit->first;
+//        size_t i_p = index;
+//        bool inserted = false;
+//        auto vMapIt = vMap.begin();
+//        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
+//        if( inserted ) {
+//            V.push_back(p);
+//            ++index;
+//        }
+//        i_p = vMapIt->second;
+//
+//        // If vMap doesn't contain q, put it in V
+//        Point q = eit->second;
+//        size_t i_q = index;
+//        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
+//        if( inserted ) {
+//            V.push_back(q);
+//            ++index;
+//        }
+//        i_q = vMapIt->second;
+//    }
+//
+//    // Fill adjacency list E
+//    size_t n = V.size();
+//    vector<unordered_set<size_t> > E(n); // adjacency list
+//    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
+//        size_t i_p = vMap.at( eit->first ),
+//               i_q = vMap.at( eit->second );
+//        E[i_p].insert(i_q); // add edge to adjacency list
+//    }
+//
+//    const double INF = numeric_limits<double>::max();
+//
+//    // Fill euclidean distance matrix
+//    vector< vector< double > > EuclideanDistances( n, vector<double>(n,INF) );
+//    for( size_t i=0; i<n; ++i ) {
+//        for( size_t j=0; j<n; ++j ) {
+//            EuclideanDistances.at(i).at(j) = ( i==j ?
+//                0 : d( V.at(i), V.at(j) )
+//            );
 //        }
 //    }
-
-    double t_currentPair = 1,
-           t_max = t_currentPair,
-           shortestKnownForCurrentPair = INF,
-           distance = INF;
-
-    tWithStretchPair currentPair = upperBounds.top();
-    size_t start = currentPair.second.first,
-           goal = currentPair.second.second;
-
-    while( upperBounds.top().first > t_max ) {
-        currentPair = upperBounds.top();
-        start = currentPair.second.first,
-        goal = currentPair.second.second;
-        cout<<"upperBounds.top():";
-        cout<<start<<","<<goal;
-        cout<<"("<<currentPair.first<<")";
-        cout<<",";
-
-        // START A*
-
-        typedef pair<double,size_t>
-            DistanceIndexPair;
-        typedef boost::heap::fibonacci_heap< DistanceIndexPair,boost::heap::compare<MinHeapCompare<DistanceIndexPair>>>
-            DistanceIndexHeap;
-        typedef DistanceIndexHeap::handle_type
-            DistanceIndexHeapHandle;
-
-        Point startPoint = V.at(start);
-        Point goalPoint = V.at(goal);
-        EuclideanDistance h = { V.at(goal) }; // initialize heuristic functor
-
-        DistanceIndexHeap open;
-        unordered_map<size_t,DistanceIndexHeapHandle> openHeapHandle(n);
-        openHeapHandle[start] = open.emplace( h( startPoint ), start );
-
-        //unordered_set<size_t> closed(n);
-        //vector<size_t> parents(n);
-
-        vector<double>& g = ShortestKnownPaths.at(start);
-
-        vector<double> f( n, INF );
-        f[start] = h( startPoint );
-
-        DistanceIndexPair current = open.top(); // initialize current vertex to start
-        size_t u_index = current.second;
-        Point currentPoint = startPoint;
-        Point neighborPoint;
-        cout<<"\n    A* start:"<<startPoint;
-        cout<<",";
-        cout<<" goal:"<<V.at(goal);
-        cout<<",";
-
-        do {
-            current = open.top();
-            open.pop();
-
-            u_index = current.second;
-            currentPoint = V.at(u_index);
-            cout<<"\n      current:"<<currentPoint;
-            cout<<",";
-            if( u_index == goal ) { // found the optimal path to the goal, quit
-                open.clear();
-                cout<<"found optimal path to goal\n";
-                break;
-            }
-//            cout<<" no goal, ";
-            double t_new = 0;
-            // loop through neighbors of current
-            for( size_t neighbor : E.at(u_index) ) {
-                neighborPoint = V.at(neighbor);
-                cout<<"\n        n:"<<neighborPoint;
-                cout<<",";
-                double newScore = g.at(u_index)
-                    + EuclideanDistances.at(u_index).at(neighbor);
-                cout<<"g_old:"<<g.at(neighbor);
-                cout<<",";
-                cout<<"g_new:"<<newScore;
-                cout<<",";
-                if( newScore < g.at( neighbor ) ) {
-                    //parents[neighbor] = u_index;
-                    g[neighbor] = newScore;
-                    f[neighbor] = g.at(neighbor) + h(neighborPoint);
-                    DistanceIndexPair q = make_pair( f.at(neighbor), neighbor );
-
-                    // calculate the new path's t
-                    t_new = newScore / EuclideanDistances.at(start).at(u_index);
-                    cout<<"t_new:";
-                    cout<<t_new;
-                    cout<<",";
-                    // update t_upper in t-Heap
-                    UpperBoundHeapHandle tHandle = upperBoundHandles.at(start).at(u_index);
-                    auto tValue = make_pair( t_new, make_pair(start,u_index) );
-                    upperBounds.update( tHandle, tValue );
-
-                    if( contains( openHeapHandle, neighbor ) ) {
-                        DistanceIndexHeapHandle neighborHandle = openHeapHandle.at(neighbor);
-                        open.update( neighborHandle, q );
-                        open.update( neighborHandle );
-                    } else {
-                        openHeapHandle[neighbor] = open.push(q);
-                    }
-                    // if we found the goal and the t is good, quit
-                    // this may not be a good idea, honestly, but it might save a lot of time
-                    if( neighbor == goal && t_new < t_max ) {
-                        open.clear();
-                        cout<<"found a path to goal\n";
-                        break;
-                    }
-                }
-            }
-        } while( !open.empty() );
-
-        // END ASTAR
-
-        // Calculate new t for this pair and set new t_max if necessary
-        t_currentPair = ShortestKnownPaths.at(start).at(goal) / EuclideanDistances.at(start).at(goal);
-        cout<<"t_current:";
-        cout<<t_currentPair;
-        cout<<",";
-
-        t_max = CGAL::max( t_max, t_currentPair );
-        cout<<"t_max:";
-        cout<<t_max;
-        cout<<",";
-
-        cout<<"\n";
-    }
-
-    return t_max;
-}
+//
+//    // Step 1. Prepare the PQ (as a Fibonacci maxheap)
+//    typedef pair< size_t, size_t >
+//        StretchPair;
+//    typedef pair< double, StretchPair >
+//        tWithStretchPair;
+//    typedef boost::heap::fibonacci_heap< tWithStretchPair,boost::heap::compare<MaxHeapCompare<tWithStretchPair>>>
+//        UpperBoundHeap;
+//    typedef UpperBoundHeap::handle_type
+//        UpperBoundHeapHandle;
+//    UpperBoundHeap upperBounds;
+//
+//    vector< vector<UpperBoundHeapHandle> > upperBoundHandles( n, vector<UpperBoundHeapHandle>(n) );
+//
+//    // Place all unique pairs that are not edges in E in upperBounds with t=inf
+//    for( size_t i=0; i<n; ++i ) {
+//        for( size_t j=0; j<n; ++j ) {
+//            double t = INF;
+//            t = (i==j ? 0 : t);
+//            t = (contains( E.at(i), j ) ? 1 : t);
+//            upperBoundHandles[i][j] = upperBounds.emplace( t, make_pair(i,j) );
+//        }
+//    }
+//    // Step 2. Prepare the shortest known paths matrix
+//    vector< vector< double > > ShortestKnownPaths(n, vector<double>(n, INF) );
+//    for( size_t i=0; i<n; ++i ) { // Set self-loops to 0
+//        ShortestKnownPaths[i][i] = 0;
+//    }
+////    for( size_t i=0; i<n; ++i ) { // Set edges to their euclidean distance
+////        for( auto j : E.at(i) ) {
+////            ShortestKnownPaths[i][j] = EuclideanDistances.at(i).at(j);
+////        }
+////    }
+//
+//    double t_currentPair = 1,
+//           t_max = t_currentPair,
+//           shortestKnownForCurrentPair = INF,
+//           distance = INF;
+//
+//    tWithStretchPair currentPair = upperBounds.top();
+//    size_t start = currentPair.second.first,
+//           goal = currentPair.second.second;
+//
+//    while( upperBounds.top().first > t_max ) {
+//        currentPair = upperBounds.top();
+//        start = currentPair.second.first,
+//        goal = currentPair.second.second;
+//        cout<<"upperBounds.top():";
+//        cout<<start<<","<<goal;
+//        cout<<"("<<currentPair.first<<")";
+//        cout<<",";
+//
+//        // START A*
+//
+//        typedef pair<double,size_t>
+//            DistanceIndexPair;
+//        typedef boost::heap::fibonacci_heap< DistanceIndexPair,boost::heap::compare<MinHeapCompare<DistanceIndexPair>>>
+//            DistanceIndexHeap;
+//        typedef DistanceIndexHeap::handle_type
+//            DistanceIndexHeapHandle;
+//
+//        Point startPoint = V.at(start);
+//        Point goalPoint = V.at(goal);
+//        EuclideanDistance h = { V.at(goal) }; // initialize heuristic functor
+//
+//        DistanceIndexHeap open;
+//        unordered_map<size_t,DistanceIndexHeapHandle> openHeapHandle(n);
+//        openHeapHandle[start] = open.emplace( h( startPoint ), start );
+//
+//        //unordered_set<size_t> closed(n);
+//        //vector<size_t> parents(n);
+//
+//        vector<double>& g = ShortestKnownPaths.at(start);
+//
+//        vector<double> f( n, INF );
+//        f[start] = h( startPoint );
+//
+//        DistanceIndexPair current = open.top(); // initialize current vertex to start
+//        size_t u_index = current.second;
+//        Point currentPoint = startPoint;
+//        Point neighborPoint;
+//        cout<<"\n    A* start:"<<startPoint;
+//        cout<<",";
+//        cout<<" goal:"<<V.at(goal);
+//        cout<<",";
+//
+//        do {
+//            current = open.top();
+//            open.pop();
+//
+//            u_index = current.second;
+//            currentPoint = V.at(u_index);
+//            cout<<"\n      current:"<<currentPoint;
+//            cout<<",";
+//            if( u_index == goal ) { // found the optimal path to the goal, quit
+//                open.clear();
+//                cout<<"found optimal path to goal\n";
+//                break;
+//            }
+////            cout<<" no goal, ";
+//            double t_new = 0;
+//            // loop through neighbors of current
+//            for( size_t neighbor : E.at(u_index) ) {
+//                neighborPoint = V.at(neighbor);
+//                cout<<"\n        n:"<<neighborPoint;
+//                cout<<",";
+//                double newScore = g.at(u_index)
+//                    + EuclideanDistances.at(u_index).at(neighbor);
+//                cout<<"g_old:"<<g.at(neighbor);
+//                cout<<",";
+//                cout<<"g_new:"<<newScore;
+//                cout<<",";
+//                if( newScore < g.at( neighbor ) ) {
+//                    //parents[neighbor] = u_index;
+//                    g[neighbor] = newScore;
+//                    f[neighbor] = g.at(neighbor) + h(neighborPoint);
+//                    DistanceIndexPair q = make_pair( f.at(neighbor), neighbor );
+//
+//                    // calculate the new path's t
+//                    t_new = newScore / EuclideanDistances.at(start).at(u_index);
+//                    cout<<"t_new:";
+//                    cout<<t_new;
+//                    cout<<",";
+//                    // update t_upper in t-Heap
+//                    UpperBoundHeapHandle tHandle = upperBoundHandles.at(start).at(u_index);
+//                    auto tValue = make_pair( t_new, make_pair(start,u_index) );
+//                    upperBounds.update( tHandle, tValue );
+//
+//                    if( contains( openHeapHandle, neighbor ) ) {
+//                        DistanceIndexHeapHandle neighborHandle = openHeapHandle.at(neighbor);
+//                        open.update( neighborHandle, q );
+//                        open.update( neighborHandle );
+//                    } else {
+//                        openHeapHandle[neighbor] = open.push(q);
+//                    }
+//                    // if we found the goal and the t is good, quit
+//                    // this may not be a good idea, honestly, but it might save a lot of time
+//                    if( neighbor == goal && t_new < t_max ) {
+//                        open.clear();
+//                        cout<<"found a path to goal\n";
+//                        break;
+//                    }
+//                }
+//            }
+//        } while( !open.empty() );
+//
+//        // END ASTAR
+//
+//        // Calculate new t for this pair and set new t_max if necessary
+//        t_currentPair = ShortestKnownPaths.at(start).at(goal) / EuclideanDistances.at(start).at(goal);
+//        cout<<"t_current:";
+//        cout<<t_currentPair;
+//        cout<<",";
+//
+//        t_max = CGAL::max( t_max, t_currentPair );
+//        cout<<"t_max:";
+//        cout<<t_max;
+//        cout<<",";
+//
+//        cout<<"\n";
+//    }
+//
+//    return t_max;
+//}
 
 class Timer {
   public:

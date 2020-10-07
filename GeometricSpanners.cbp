@@ -75,6 +75,7 @@
 		<Unit filename="include/FloydWarshall.h" />
 		<Unit filename="include/GeometricSpannerPrinter.h" />
 		<Unit filename="include/GraphAlgoTV.h" />
+		<Unit filename="include/KPX2010.h" />
 		<Unit filename="include/LW2004.h" />
 		<Unit filename="include/metrics.h" />
 		<Unit filename="include/utilities.h" />

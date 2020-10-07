@@ -78,10 +78,10 @@ inline bool createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_hand
 
 template< typename RandomAccessIterator, typename OutputIterator >
 void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, size_t k, bool printLog = false ) {
-    using namespace kpx2009;
+    using namespace kpx2010;
 
     // ensure valid alpha
-    alpha = CGAL::max( EPSILON, CGAL::min( alpha, 2*PI/3 ) );
+    double alpha = PI/2;
     size_t numCones = rint( ceil( 2*PI / alpha ) );
     assert( numCones > 0 ); // guard against /0
     double alphaReal = 2*PI / numCones;

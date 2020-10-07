@@ -14,6 +14,7 @@
 #include "BGS2005.h"
 #include "LW2004.h"
 #include "BSX2009.h"
+#include "KPX2010.h"
 #include "metrics.h"
 //#include "utilities.h"
 
@@ -83,8 +84,8 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    experiment( 5, 1000, 10000, 1000 );
-    //scratch();
+    //experiment( 5, 1000, 10000, 1000 );
+    scratch();
     //stretchScratch();
     //algoTVScratch();
 
@@ -171,132 +172,131 @@ void stretchScratch() {
     printer.print( "stretchscratch" );
 }
 
-//void scratch() {
-//    using namespace std;
+void scratch() {
+    using namespace std;
+
+    //GraphPrinter printer(0.05);
 //
-//    //GraphPrinter printer(0.05);
-////
-////    const double width = 100;
-////    size_t n = 30, i=n;
-////
-////    //for( i=1; i<=17; ++i ) {
-////        auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
-////        auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
-////        auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
-////        auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
-//        list<Point> points;
-//        // SET POINT SET
-////        points = {
-////            {
-////                0,0
-////            },
-////            {
-////                0,2
-////            },
-////            {
-////                3,1
-////            },
-////            {
-////                -3,1
-////            },
-////            {
-////                2,-1
-////            },
-////            {
-////                -2,-1
-////            }
-////        };
+//    const double width = 100;
+//    size_t n = 30, i=n;
 //
-//            // POINT SET FROM PAPER, PAGE 253
-////    points = {
-////        { -1, 0.1 },
-////        { -0.9, 3 },
-////        { -2, 6 },
-////        { -7, 3.1 },
-////        { -6, -0.1 },
-////        { -9, -0.2 },
-////        { -7.7, -1 },
-////        { -6.1, -1.5 },
-////        { -10, -4 },
-////        { -4, -3 },
-////        { -1.5, -6 },
-////        { 1, -9 },
-////        { 4, -4 },
-////        { 4.1, 0 },
-////        { 3.9, 5.9 },
-////        { 5, 3 },
-////        { 5, -2 },
-////        { 9, 1 }
-////    };
-////
-////        n = 60;
+//    //for( i=1; i<=17; ++i ) {
+//        auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
+//        auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
+//        auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
+//        auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
+        list<Point> points;
+        // SET POINT SET
+//        points = {
+//            {
+//                0,0
+//            },
+//            {
+//                0,2
+//            },
+//            {
+//                3,1
+//            },
+//            {
+//                -3,1
+//            },
+//            {
+//                2,-1
+//            },
+//            {
+//                -2,-1
+//            }
+//        };
+
+            // POINT SET FROM PAPER, PAGE 253
+    points = {
+        { -1, 0.1 },
+        { -0.9, 3 },
+        { -2, 6 },
+        { -7, 3.1 },
+        { -6, -0.1 },
+        { -9, -0.2 },
+        { -7.7, -1 },
+        { -6.1, -1.5 },
+        { -10, -4 },
+        { -4, -3 },
+        { -1.5, -6 },
+        { 1, -9 },
+        { 4, -4 },
+        { 4.1, 0 },
+        { 3.9, 5.9 },
+        { 5, 3 },
+        { 5, -2 },
+        { 9, 1 }
+    };
 //
-////        std::copy_n( g1, n/3, back_inserter(points) );
-////        std::copy_n( g2, n/3, back_inserter(points) );
-////        std::copy_n( g3, n/6, back_inserter(points) );
-//        //std::copy_n( g4, n/6, back_inserter(points) );
-//
-//        //points.emplace_back( 0,0 );
+//        n = 60;
+
+//        std::copy_n( g1, n/3, back_inserter(points) );
+//        std::copy_n( g2, n/3, back_inserter(points) );
+//        std::copy_n( g3, n/6, back_inserter(points) );
+        //std::copy_n( g4, n/6, back_inserter(points) );
+
+        //points.emplace_back( 0,0 );
 //        string filename = "11_1658.312395x1658.312395.txt";
 //
 //        readPointsFromFile( back_inserter( points ), filename );
-//
-//
-//        cout<< points.size();
-//        cout<< ",";
-//        list< pair< Point, Point > > result;
-//        pair<pair<Vertex_handle,Vertex_handle>,double> t;
-//
-//        // Get t of Delaunay triangulation
-//                DelaunayGraph Del( points.begin(), points.end() );
-////                cout<<degree(Del._DT);
-////                cout<<",";
-////                cout << weight( Del._DT );
-////                cout <<",";
-////               Del.add_all_edges();
-////                t = StretchFactor(Del);
-////                cout<< t.second;
-////                cout<<",";
-//
-//        {
-////                Timer tim;
-//            //LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, true );
-//            //BGS2002( points.begin(), points.end(), back_inserter(result) );
-//            BSX2009( points.begin(), points.end(), back_inserter(result), PI/2, true );
-//        }
-////        cout << degree( result.begin(), result.end() );
-////        cout <<",";
-////        cout << weight( result.begin(), result.end() )/2;
-////        cout <<",";
+
+
+        cout<< points.size();
+        cout<< ",";
+        list< pair< Point, Point > > result;
+
+        // Get t of Delaunay triangulation
+                DelaunayGraph Del( points.begin(), points.end() );
+//                cout<<degree(Del._DT);
+//                cout<<",";
+//                cout << weight( Del._DT );
+//                cout <<",";
+//               Del.add_all_edges();
+//                t = StretchFactor(Del);
+//                cout<< t.second;
+//                cout<<",";
+
+        {
+//                Timer tim;
+            //LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, true );
+            //BGS2002( points.begin(), points.end(), back_inserter(result) );
+            KPX2010( points.begin(), points.end(), back_inserter(result), PI/2, true );
+        }
+//        cout << degree( result.begin(), result.end() );
+//        cout <<",";
+//        cout << weight( result.begin(), result.end() )/2;
+//        cout <<",";
+            double t = StretchFactorDjikstraReduction( result.begin(), result.end() );
+            cout<< t;
+            cout<<",";
+//            cout << " Dumping edge set..."<<result.size()<<" edges.\n\n";
+
+
+//            for( auto e : result ) cout <<"("<< e.first << ", " << e.second<<")" << "\n";
+//        result.clear();
+
+//            {
+//                Timer tim;
+//                BGS2002( points.begin(), points.end(), back_inserter(result) );
+//            }
 //            t = StretchFactor( result.begin(), result.end() );
 //            cout<< t.second;
 //            cout<<",";
-////            cout << " Dumping edge set..."<<result.size()<<" edges.\n\n";
-//
-//
-////            for( auto e : result ) cout <<"("<< e.first << ", " << e.second<<")" << "\n";
-////        result.clear();
-//
-////            {
-////                Timer tim;
-////                BGS2002( points.begin(), points.end(), back_inserter(result) );
-////            }
-////            t = StretchFactor( result.begin(), result.end() );
-////            cout<< t.second;
-////            cout<<",";
-////            result.clear();
-//
-////        cout<<"\n";
-//
-////        printer.drawEdges( Del._DT );
-////        printer.drawEdges( result.begin(), result.end(), {{"red",""}} );
-////        printer.drawVertices( Del._DT );
-////        printer.print( "lw2004scratch" );
-//        //printer.print("bgs2002");
-//
-//
-////        cout<<"\n";
-//
+//            result.clear();
+
+//        cout<<"\n";
+
+//        printer.drawEdges( Del._DT );
+//        printer.drawEdges( result.begin(), result.end(), {{"red",""}} );
+//        printer.drawVertices( Del._DT );
+//        printer.print( "lw2004scratch" );
+        //printer.print("bgs2002");
+
+
+//        cout<<"\n";
+
 //        string resultFileName = filename;
 //        // strip file extension
 //        const std::string ext(".txt");
@@ -309,10 +309,10 @@ void stretchScratch() {
 //        }
 //        resultFileName += "_result-";
 //        resultFileName += "redo";
-//
-//       // singleRun( 30, 30, resultFileName, filename, true, true );
-//
-//}
+
+       // singleRun( 30, 30, resultFileName, filename, true, true );
+
+}
 
 bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment ) {
     const double width = 1000;

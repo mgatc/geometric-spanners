@@ -64,13 +64,12 @@ struct comparatorForMinHeap {
 typedef boost::heap::fibonacci_heap<size_tPair,boost::heap::compare<comparatorForMinHeap>> Heap;
 typedef Heap::handle_type handle;
 
-inline bool createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_handle>& handles, size_tPairSet &E, const size_t i, const size_t j, const size_t n, bool printLog = false ) {
-    assert( std::max(i,j) < n );
-    assert( T.is_edge( handles.at(i), handles.at(j) ) );
-    if( printLog ) cout<<"add:("<<i<<","<<j<<") ";
+inline bool createNewEdge( const Delaunay& T, size_tPairSet &E, const Vertex_handle i, const Vertex_handle j, const size_t n, bool printLog = false ) {
+    assert( T.is_edge( i, j ) );
+    if( printLog ) cout<<"add:("<<i->info()<<","<<j->info()<<") ";
 
     bool inserted = false;
-    tie(ignore,inserted) = E.insert( makeNormalizedPair(i,j) );
+    tie(ignore,inserted) = E.insert( makeNormalizedPair( i->info(), j->info() ) );
     return inserted;
 }
 
@@ -80,24 +79,24 @@ template< typename RandomAccessIterator, typename OutputIterator >
 void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, size_t k, bool printLog = false ) {
     using namespace kpx2010;
 
-    // ensure valid alpha
-    double alpha = PI/2;
-    size_t numCones = rint( ceil( 2*PI / alpha ) );
-    assert( numCones > 0 ); // guard against /0
-    double alphaReal = 2*PI / numCones;
-    size_t FINAL_DEGREE_BOUND = 14 + numCones;
+    // ensure k >= 14
+    k = std::max( k, size_t(14) );
+    double alpha = 2*PI / k;
 
-    //cout << "Step 1 starts...\n";
+    // Construct Delaunay triangulation
     Delaunay T( pointsBegin, pointsEnd );
+    size_t n = T.number_of_vertices();
+
+    vector<kpx2010::Vertex_handle> handles(n);
 
     // Add IDs
     size_t i=0;
-    for( auto v=T.finite_vertices_begin(); v!=T.finite_vertices_end(); ++v )
-        v->info() = i++;
+    for( auto v=T.finite_vertices_begin(); v!=T.finite_vertices_end(); ++v ) {
+        v->info() = i;
+        handles[i] = v;
+        ++i;
+    }
 
-    assert( i == T.number_of_vertices() );
-
-    size_t n = i;
     Delaunay::Vertex_handle v_inf = T.infinite_vertex();
 
 
@@ -113,33 +112,33 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     //
     //
 
-//                GraphPrinter printer(0.007);
-//                GraphPrinter::OptionsList options;
-//
-//                options = {
-//                    { "color", printer.inactiveEdgeColor },
-//                    { "line width", to_string(printer.inactiveEdgeWidth) }
-//                };
-//                printer.drawEdges( T, options );
-//
-//                options = {
-//                    { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
-//                    { "color", make_optional( printer.backgroundColor ) }, // text color
-//                    { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
-//                    { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-//                };
-//                GraphPrinter::OptionsList borderOptions = {
-//                    { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
-//                    { "color", printer.activeEdgeColor }, // additional border color
-//                    { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-//                };
-//                printer.drawVerticesWithInfo( T, options, borderOptions );
-//
-//                options = { // active edge options
-//                    { "color", printer.activeEdgeColor },
-//                    { "line width", to_string(printer.activeEdgeWidth) }
-//                };
-//                printer.print( "lw2004" );
+                GraphPrinter printer(1);
+                GraphPrinter::OptionsList options;
+
+                options = {
+                    { "color", printer.inactiveEdgeColor },
+                    { "line width", to_string(printer.inactiveEdgeWidth) }
+                };
+                printer.drawEdges( T, options );
+
+                options = {
+                    { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+                    { "color", make_optional( printer.backgroundColor ) }, // text color
+                    { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+                    { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+                };
+                GraphPrinter::OptionsList borderOptions = {
+                    { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
+                    { "color", printer.activeEdgeColor }, // additional border color
+                    { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+                };
+                printer.drawVerticesWithInfo( T, options, borderOptions );
+
+                options = { // active edge options
+                    { "color", printer.activeEdgeColor },
+                    { "line width", to_string(printer.activeEdgeWidth) }
+                };
+                printer.print( "kpx2010" );
 
 
 
@@ -161,74 +160,15 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
 
 
-    //************* Step 2 ****************//
-    vector<Delaunay::Vertex_handle> pointID2VertexHandle(n, v_inf);
-    for( auto vit = T.finite_vertices_begin(); vit != T.finite_vertices_end(); ++vit )
-        pointID2VertexHandle[ vit->info() ] = vit;
-
-    Heap H;
-    vector<handle> handleToHeap(n);
-    vector<size_t> piIndexedByV(n), piIndexedByPiU(n);
-    vector<unordered_set<size_t>> currentNeighbors(n);
-
-    // Initialize the vector currentNeighbors with appropriate neighbors for every vertex
-    for( size_t it=0; it<n; ++it ) {
-        Delaunay::Vertex_circulator N = T.incident_vertices( pointID2VertexHandle.at(it) ),
-            done(N);
-        do {
-            if( !T.is_infinite(N) )
-                currentNeighbors.at(it).insert( N->info() );
-        } while( ++N != done );
-
-        size_t degree = currentNeighbors.at(it).size();
-        handleToHeap[it] = H.emplace( degree, it );
-    }
-
-    // Use a heap to walk through G_0 to G_{n-1} and set up the Pi for every vertex
-    i = n-1; // start at the last valid index
-
-    while( !H.empty() ) {
-        size_tPair p = H.top();
-        H.pop();
-        // make sure our math is correct, e.g., degree from heap key matches neighbor container size
-        assert( p.first == currentNeighbors.at( p.second ).size() );
-        assert( 0 <= p.first && p.first <= 5 ); // Lemma 1
-
-        // Erase this vertex from incidence list of neighbors and update the neighbors' key in the heap
-        for( size_t neighbor : currentNeighbors.at( p.second ) ) {
-            currentNeighbors.at(neighbor).erase(p.second);
-            handle h = handleToHeap.at(neighbor);
-            size_tPair q = make_pair( currentNeighbors.at( neighbor ).size(), neighbor );
-            H.update(h,q);
-            H.update(h);
-        }
-        currentNeighbors.at(p.second).clear();
-        piIndexedByV[p.second] = i;
-        piIndexedByPiU[i] = p.second;
-        --i;
-    }
-
-    handleToHeap.clear();
-    H.clear();
-    currentNeighbors.clear();
-    //cout << "Step 2 is over...\n";
-
-
 
 
 
     //************* Step 3 ****************//
     size_tPairSet ePrime;
-    vector<bool> isProcessed(n, false);
-    Delaunay::Vertex_handle u_handle = v_inf;
 
-    // Iterate through vertices by piU ordering
-    for( size_t u : piIndexedByPiU ) {
-        u_handle = pointID2VertexHandle.at(u);
-        assert( !T.is_infinite(u_handle) );
-        Point u_point = u_handle->point();
-        isProcessed[u] = true;
-        if( printLog ) cout<<"\nu:"<<u<<" ";
+    // Iterate through vertices in T
+    for( auto m=T.finite_vertices_begin(); m!=T.finite_vertices_end(); ++m ) {
+        if( printLog ) cout<<"\nm:"<<m->info()<<" ";
 
 
 //        { // EDGE PRINTING NONSENSE
@@ -244,101 +184,120 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
 
 
-        // Get neighbors of u
-        Delaunay::Vertex_circulator N = T.incident_vertices( u_handle );
+        // Get neighbors of m
+        Delaunay::Vertex_circulator N = T.incident_vertices(m);
         if( printLog ) cout<<"N_init:"<<(T.is_infinite(N)?size_t(numeric_limits<size_t>::max):size_t(N->info()))<<" ";
         if( T.is_infinite(N) ) --N;
 
-        Delaunay::Vertex_circulator
-            closest(N),
-            done(N);
+        Delaunay::Vertex_circulator done(N);
 
-        // Track degree and number of processed neighbors to ensure correctness
-        size_t processedNeighbors = 0;
-        size_t degree = 0;
-        bool inserted = false;
+        vector<Delaunay::Vertex_handle> closestInCones( k, v_inf );
 
-        do { // Find closest unprocessed neighbor, also count processed neighbors and neighbors in ePrime
+        do { // Loop through neighbors and consider forward edges
             if( !T.is_infinite(N) ) {
-                if( gsnunf::contains( ePrime, makeNormalizedPair( u, N->info() ) ) )
-                    ++degree;
-
-                if( isProcessed.at( N->info() ) )
-                    ++processedNeighbors;
-                else if( d(u_point,N->point()) < d(u_point,closest->point()) )
-                    closest = N;
-            }
-        } while( --N != done );
-
-        if( printLog ) cout<<"degree:"<<degree<<",";
-        assert( processedNeighbors <= 5 ); // Lemma 1, proof for Lemma 3
-        assert( degree <= 15 ); // Proof for Lemma 3
-
-        // We will add a max of numCones-1 since we are guaranteed to add the closest
-        // but cannot add to the two cones touching closest.
-        vector<Delaunay::Vertex_handle> closestInCones( numCones-1, v_inf );
-        closestInCones.front() = closest; // add closest to "add" list
-        while( --N != closest ); // start from the closest vertex
-
-        // Loop through neighbors and consider forward edges
-        while( --N != closest ) {
-            if( !T.is_infinite(N) && !isProcessed.at(N->info()) ) {
                 // evaluate possible forward edges
                 double theta = get_angle<K>(
-                    closest->point(),
-                    u_point,
+                    done->point(),
+                    m->point(),
                     N->point()
                 );
-                size_t cone = size_t( (theta-EPSILON) / alphaReal );
-                // trap neighbors in forbidden cones by putting them in 0 (which is already guaranteed to be closest)
-                cone = ( cone < closestInCones.size() ? cone : 0 );
+                size_t cone = size_t( (theta-EPSILON) / alpha );
 
-                if( cone > 0 // banish the forbidden cones
-                    && ( T.is_infinite( closestInCones.at(cone) )
-                        || d(u_point,N->point()) < d(u_point,closestInCones.at(cone)->point()) ) )
+
+                if( T.is_infinite( closestInCones.at(cone) )
+                    || d(m->point(),N->point()) < d(m->point(),closestInCones.at(cone)->point()) )
                 {   // If we made it through all that, it's the current closestInCone!
                     closestInCones[cone] = N->handle();
                     if( printLog ) cout<<"s_closest["<<cone<<"]:"<<N->info()<<" ";
                 }
             }
+        } while( --N != done );
+        // We've found all the closest neighbors in each cone
+
+        // Now, let's put the neighbors found so far into a hashed set for quick lookup
+        unordered_set<kpx2010::Vertex_handle> selected(k);
+        for( auto v : closestInCones )
+            if( !T.is_infinite(v) )
+                selected.emplace(v);
+
+        // Now we must find every maximal sequence of empty cones
+        size_t l = 0; // size of maximal empty sequence
+        size_t l_local = 0; // size of current empty sequence
+        size_t offset = 0; // offset in case an empty set "wraps" through the end and start of the vector
+        size_t startOfSequence = 0; // start of current empty sequence
+        unordered_set<size_t> startOfMaximalSequences(k/2);
+
+        for( size_t i=0; i<k+offset; ++i ) {
+            if( T.is_infinite( closestInCones.at(i%k) ) ) { // empty
+                ++l_local;          // increment
+                if( l_local > l ) {  // biggest thus far, clear old starts and update l
+                    startOfMaximalSequences.clear();
+                    l = l_local;
+                }
+                if( l_local >= l )  // place the current start in the list
+                    startOfMaximalSequences.emplace( startOfSequence );
+                if( i+1 == k+offset )   // if we're about to end but on an empty sequence, keep going
+                    ++offset;
+                if(printLog) cout<<"l_local:"<<l_local<<",";
+            } else {                    // filled
+                l_local = 0;                 // reset l_local
+                startOfSequence = (i+1) % k; // set the start of sequence to the next i
+            }
         }
-        // We've found all the closest neighbors in each now,
+        if( printLog ) {
+            cout<<"l:"<<l<<",";
+            cout<<"num_seq:"<<startOfMaximalSequences.size()<<",";
+        }
+        // loop through starts of maximal sequences and add edges for them
+        for( auto start : startOfMaximalSequences ) {
+            //while( --N != handles.at(start) ); // point N at the start
+            if( l > 1 ) {
+                // select the first ceil(l/2) unselected edges CCW
+                double startAngle = start*alpha;
+                size_t remainingToAdd = size_t(rint(ceil(l/2)));
+
+                while( --N != done ); // point N to reference point
+                // point N to first neighbor past the empty sequence
+                while( T.is_infinite(--N) || get_angle<K>( done->point(), m->point(), N->point() ) < startAngle );
+                kpx2010::Vertex_circulator afterSequence(N),
+                                          beforeSequence(N);
+                ++beforeSequence;
+
+                while( remainingToAdd > 0 && ++N != afterSequence ) {
+                    if( !T.is_infinite(N) && !contains( selected, N ) ) {
+                        selected.emplace(N);
+                        --remainingToAdd;
+                    }
+                }
+                // select the first floor(l/2) unselected edges CW
+                double endAngle = startAngle + l*alpha;
+                remainingToAdd = size_t(rint(floor(l/2)));
+
+                N = beforeSequence; // move N to the neighbor before the sequence
+
+                while( remainingToAdd > 0 && --N != beforeSequence ) {
+                    if( !T.is_infinite(N) && !contains( selected, N ) ) {
+                        selected.emplace(N);
+                        --remainingToAdd;
+                    }
+                }
+            } else if( l == 1 ) {
+                // consider the first CW and CCW edges
+                // if one is selected already, add the other
+                // otherwise, add the shorter
+            }
+        }
+
+        bool inserted = false;
         // now add edges from each to the current vertex (u)
         for( auto v : closestInCones ) {
             if( !T.is_infinite(v) ) {
                 if( printLog ) cout<<"forward_";
-                inserted = createNewEdge( T, pointID2VertexHandle, ePrime, u, v->info(), n, printLog );
-                degree += size_t(inserted);
-                if( printLog ) cout<<"degree:"<<degree<<",";
+                inserted = createNewEdge( T, ePrime, m, v, n, printLog );
+                //degree += size_t(inserted);
+                //if( printLog ) cout<<"degree:"<<degree<<",";
             }
         }
-
-        // Loop through neighbors again and add cross edges between
-        // consecutive neighbors that are NOT processed (or infinite).
-        Delaunay::Vertex_handle lastN = N;
-        do {
-            --N; // Increment first, then check validity
-            if( !( T.is_infinite(N) || isProcessed.at(N->info()) ) ) {
-                if( !( T.is_infinite(lastN) || isProcessed.at(lastN->info()) ) ) {
-                    // don't add to degree for cross edges, they are not incident on u!
-                    if( printLog ) cout<<"cross_";
-                    inserted = createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n, printLog );
-                }
-            }
-            lastN = N->handle();
-        } while( N != closest );
-
-
-
-        if( printLog && degree>FINAL_DEGREE_BOUND ) {
-            break; // exit to printer
-        } else if( !printLog && degree>FINAL_DEGREE_BOUND ) {
-            // recurse to print log
-            cout<<"BOUND:"<<FINAL_DEGREE_BOUND<<",deg:"<<degree<<"\n";
-            list<pair<Point,Point> > result;
-            BSX2009( pointsBegin, pointsEnd, back_inserter(result), alpha, true );
-        }
-        assert( degree <= FINAL_DEGREE_BOUND ); // Lemma 3
 
     } // END OF STEP 3 LOOP
 
@@ -351,11 +310,11 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     // Send resultant graph to output iterator
     for( size_tPair e : ePrime ) {
         // Edge list is only needed for printing. Remove for production.
-        edgeList.emplace_back( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
+        edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
 
-        *result = make_pair( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
+        *result = make_pair( handles.at(e.first)->point(), handles.at(e.second)->point() );
         ++result;
-        *result = make_pair( pointID2VertexHandle.at(e.second)->point(), pointID2VertexHandle.at(e.first)->point() );
+        *result = make_pair( handles.at(e.second)->point(), handles.at(e.first)->point() );
         ++result;
     }
 
@@ -368,7 +327,7 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
 
     if( printLog ) {
-        GraphPrinter printer(0.007);
+        GraphPrinter printer(1);
         GraphPrinter::OptionsList options;
 
         options = {

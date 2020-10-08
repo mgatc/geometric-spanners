@@ -25,7 +25,7 @@
 
 
 #include "GeometricSpannerPrinter.h"
-//#include "GraphAlgoTV.h"
+#include "GraphAlgoTV.h"
 #include "metrics.h"
 #include "utilities.h"
 
@@ -79,6 +79,7 @@ template< typename RandomAccessIterator, typename OutputIterator >
 void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, size_t k, bool printLog = false ) {
     using namespace kpx2010;
 
+
     // ensure k >= 14
     k = std::max( k, size_t(14) );
     double alpha = 2*PI / k;
@@ -100,8 +101,12 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     Delaunay::Vertex_handle v_inf = T.infinite_vertex();
 
 
-
-
+    GraphAlgoTV tv;
+    vector<string> vertexInfo;
+    vertexInfo.reserve(n);
+    getVertexInfo( T, back_inserter(vertexInfo) );
+    tv.registerTriangulation( T, vertexInfo );
+    tv.play();
 
     //cout<<n<<",";
 

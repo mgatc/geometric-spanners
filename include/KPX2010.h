@@ -25,7 +25,7 @@
 
 
 #include "GeometricSpannerPrinter.h"
-#include "GraphAlgoTV.h"
+//#include "GraphAlgoTV.h"
 #include "metrics.h"
 #include "utilities.h"
 
@@ -101,12 +101,12 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     Delaunay::Vertex_handle v_inf = T.infinite_vertex();
 
 
-    GraphAlgoTV tv;
+    //GraphAlgoTV tv;
     vector<string> vertexInfo;
     vertexInfo.reserve(n);
-    getVertexInfo( T, back_inserter(vertexInfo) );
-    tv.registerTriangulation( T, vertexInfo );
-    tv.play();
+//    getVertexInfo( T, back_inserter(vertexInfo) );
+//    tv.registerTriangulation( T, vertexInfo );
+//    tv.play();
 
     //cout<<n<<",";
 

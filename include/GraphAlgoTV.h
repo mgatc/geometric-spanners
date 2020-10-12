@@ -4,7 +4,7 @@
 #include <vector>
 
 #include <boost/functional/hash.hpp>
-#include <QApplication>
+//#include <QApplication>
 
 #include "../qt/graphscene.h"
 #include "../qt/mainwindow.h"

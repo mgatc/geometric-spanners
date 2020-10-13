@@ -268,7 +268,7 @@ bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment )
 
 bool singleRun( size_t n, double width, string resultFilename, optional<string> filename, bool forcePrint, bool printLog ) {
     double size = width/2; // cgal's generators produce width 2x given value
-    size_t k = 18;
+    size_t k = 14;
     // SET POINT SET
     list<Point> points;
     optional<string> generatedFile = nullopt;
@@ -292,9 +292,12 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //                cout << weight(DT);
 //                cout << ",";
 
+
+
+
     {
         Timer tim;
-        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
+        BGS2005( points.begin(), points.end(), back_inserter(result) );
     }
     size_t deg = degree( result.begin(), result.end() );
     cout << deg;
@@ -304,6 +307,63 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     t = StretchFactorDijkstraReduction( result.begin(), result.end() );
     cout << t;
     cout <<",";
+
+    result.clear();
+
+
+
+
+    {
+        Timer tim;
+        LW2004( points.begin(), points.end(), back_inserter(result) );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+    cout << t;
+    cout <<",";
+
+    result.clear();
+
+
+
+
+
+
+
+    {
+        Timer tim;
+        BSX2009( points.begin(), points.end(), back_inserter(result) );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+    cout << t;
+    cout <<",";
+
+    result.clear();
+
+
+
+
+    {
+        Timer tim;
+        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+    cout << t;
+    cout <<",";
+
+    result.clear();
+
 
 
 

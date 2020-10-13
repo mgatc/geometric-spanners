@@ -125,17 +125,15 @@ struct SplitVertexSet {
     }
 };
 
-void add_half_edge( SplitVertexEdgeMap& E, const SplitVertex& a, const SplitVertex& b ) {
+inline void add_half_edge( SplitVertexEdgeMap& E, const SplitVertex& a, const SplitVertex& b ) {
     E[a.key].emplace(b.key);
 }
 
-size_t add_vertex( SplitVertexSet& V, const Vertex_handle& v, const SplitVertex s_1 ) {
-    SplitVertex v_split( v, s_1 );
-    //cout<<v_split<<"\n";
-    return V.insert(v_split);
+inline size_t add_vertex( SplitVertexSet& V, const Vertex_handle& v, const SplitVertex s_1 ) {
+    return V.insert( SplitVertex( v, s_1 ) );
 }
 
-void add_edge( const DelaunayGraph& SG, SplitVertexEdgeMap& E, const SplitVertex& a, const SplitVertex& b ) {
+inline void add_edge( const DelaunayGraph& SG, SplitVertexEdgeMap& E, const SplitVertex& a, const SplitVertex& b ) {
     assert( SG._DT.is_edge( a.v, b.v ) );
 
     add_half_edge( E, b, a );
@@ -178,7 +176,7 @@ struct SplitVertexHasher {
 
 namespace spanning_graph {
 
-void add_first_edge( DelaunayGraph& G, Vertex_handle v, Vertex_circulator C ) {
+inline void add_first_edge( DelaunayGraph& G, Vertex_handle v, Vertex_circulator C ) {
     Vertex_handle v2 = C->handle();
     G.add_edge( v, v2 );
 
@@ -187,7 +185,7 @@ void add_first_edge( DelaunayGraph& G, Vertex_handle v, Vertex_circulator C ) {
     //G.addToEventQueue( { v, v2 }, true );
 }
 
-void add_second_edge( DelaunayGraph& G, Vertex_handle v, Vertex_circulator C ) {
+inline void add_second_edge( DelaunayGraph& G, Vertex_handle v, Vertex_circulator C ) {
     while( G._DT.is_infinite(++C) );
     Vertex_handle v2 = C->handle();
     G.add_edge( v, v2 );
@@ -197,7 +195,7 @@ void add_second_edge( DelaunayGraph& G, Vertex_handle v, Vertex_circulator C ) {
 //        G.addToEventQueue( { v, v2 }, true );
 }
 
-void add_last_edge( DelaunayGraph& G, Vertex_handle v, Vertex_circulator C, const VertexHash& is_removed ) {
+inline void add_last_edge( DelaunayGraph& G, const Vertex_handle& v, Vertex_circulator C, const VertexHash& is_removed ) {
     --C;
     Vertex_circulator done(C);
 
@@ -212,7 +210,7 @@ void add_last_edge( DelaunayGraph& G, Vertex_handle v, Vertex_circulator C, cons
 //        G.addToEventQueue( { v, v2 }, true );
 }
 
-void remove_first_edge( DelaunayGraph& G, Vertex_circulator C ) {
+inline void remove_first_edge( DelaunayGraph& G, Vertex_circulator C ) {
     Vertex_handle v1 = C->handle(),
                   v2 = (++C)->handle();
     G.remove_edge( v1, v2 );
@@ -222,7 +220,7 @@ void remove_first_edge( DelaunayGraph& G, Vertex_circulator C ) {
 //        G.addToEventQueue( { v1, v2 }, false );
 }
 
-void remove_second_edge( DelaunayGraph& G, Vertex_circulator C ) {
+inline void remove_second_edge( DelaunayGraph& G, Vertex_circulator C ) {
     Vertex_handle v1 = (++C)->handle(),
                   v2 = (++C)->handle();
     G.remove_edge( v1, v2 );
@@ -232,7 +230,7 @@ void remove_second_edge( DelaunayGraph& G, Vertex_circulator C ) {
 //        G.addToEventQueue( { v1, v2 }, false );
 }
 
-void remove_last_edge( DelaunayGraph& G, Vertex_circulator C, const VertexHash& is_removed ) {
+inline void remove_last_edge( DelaunayGraph& G, Vertex_circulator C, const VertexHash& is_removed ) {
     --C;
 
     Vertex_circulator done(C);
@@ -316,7 +314,7 @@ void SpanningGraph( DelaunayGraph& G ) {
 
 namespace transform_polygon {
 
-Vertex_handle find_s_1_handle( const DelaunayGraph& SG, const pair< const Vertex_handle, VertexMap< size_t > >& unsplit, const Vertex_handle& v_n ) {
+inline Vertex_handle find_s_1_handle( const DelaunayGraph& SG, const pair< const Vertex_handle, VertexMap< size_t > >& unsplit, const Vertex_handle& v_n ) {
     Vertex_handle v_i = unsplit.first;
     Vertex_circulator N = SG._DT.incident_vertices(v_i); // get circulator around unsplit.first
     while( (++N)->handle() != v_n );
@@ -454,7 +452,7 @@ void foreach_neighbor( const DelaunayGraph& SG, const SplitVertexSet& V, const S
     } while( !N_E.empty() );
 }
 
-SplitVertex get_s_m( const DelaunayGraph& SG, const SplitVertexSet& V, const SplitVertexEdgeMap& E, const SplitVertex& v_split ) {
+inline SplitVertex get_s_m( const DelaunayGraph& SG, const SplitVertexSet& V, const SplitVertexEdgeMap& E, const SplitVertex& v_split ) {
     key_type s_i;
     foreach_neighbor( SG, V, E, v_split, [&]( SplitVertex& v_n ) {
         s_i = v_n.key;
@@ -465,7 +463,7 @@ SplitVertex get_s_m( const DelaunayGraph& SG, const SplitVertexSet& V, const Spl
 /*
  * Adds a split vertex edge, asserting that neither vertices a nor b are marked as complete
  */
-void add_polygon_spanner_edge( const DelaunayGraph& SG, SplitVertexEdgeMap& E,
+inline void add_polygon_spanner_edge( const DelaunayGraph& SG, SplitVertexEdgeMap& E,
                               SplitVertex& a, SplitVertex& b,
                               const VertexStatusMap& status ) {
     assert( !contains( status, a.key ) || status.at(a.key) != complete );
@@ -534,7 +532,7 @@ void add_forward_edges( const DelaunayGraph& SG, SplitVertexSet& V, SplitVertexE
         }
 }
 
-void add_polygon_edges( const DelaunayGraph& SG, SplitVertexEdgeMap& E_P,
+inline void add_polygon_edges( const DelaunayGraph& SG, SplitVertexEdgeMap& E_P,
                         SplitVertex& p, SplitVertex& q, SplitVertex& r,
                         const VertexStatusMap& status ) {
     /*
@@ -549,7 +547,7 @@ void add_polygon_edges( const DelaunayGraph& SG, SplitVertexEdgeMap& E_P,
         add_polygon_spanner_edge( SG, E_P, q, r, status );
 }
 
-void add_polygon_spanner_edges( const DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEdgeMap& E, SplitVertexEdgeMap& E_P,
+inline void add_polygon_spanner_edges( const DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEdgeMap& E, SplitVertexEdgeMap& E_P,
                                 SplitVertex& p, SplitVertex& q, SplitVertex& r,
                                 const VertexStatusMap& status ) {
     assert( !SG._DT.is_infinite(p.v) && !SG._DT.is_infinite(q.v) && !SG._DT.is_infinite(r.v) );

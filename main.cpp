@@ -1,4 +1,5 @@
 #include <chrono>
+#include <fstream> // reading and writing point sets
 #include <list>
 #include <optional>
 #include <utility>
@@ -19,8 +20,9 @@
 //#include "utilities.h"
 
 using namespace gsnunf;
-typedef CGAL::Creator_uniform_2<double,Point> Creator;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef K::Point_2 Point;
+typedef CGAL::Creator_uniform_2<double,Point> Creator;
 
 bool experiment(size_t,size_t,size_t,size_t=1);
 bool singleRun(size_t,double,string,optional<string> = nullopt,bool=false,bool=false);
@@ -31,7 +33,7 @@ void algoTVScratch();
 
 template< class OutputIterator >
 void readPointsFromFile( OutputIterator out, const string outputFileName ) {
-    ifstream in (outputFileName);
+    ifstream in(outputFileName);
     if (in.is_open()) {
         double x,y;
         while ( in >> x >> y ) {
@@ -106,8 +108,6 @@ int main() {
 void scratch() {
     using namespace std;
 
-    GraphPrinter printer(0.01);
-//
     const double width = 100;
     size_t n = 30, i=n;
 //
@@ -179,11 +179,16 @@ void scratch() {
         cout<< ",";
         list< pair< Point, Point > > result;
 
-        // Get t of Delaunay triangulation
-                DelaunayGraph Del( points.begin(), points.end() );
-//                cout<<degree(Del._DT);
+        // Delaunay triangulation
+        lw2004::Delaunay Del( points.begin(), points.end() );
+        // Add IDs
+        size_t id=0;
+        for( auto v=Del.finite_vertices_begin(); v!=Del.finite_vertices_end(); ++v )
+            v->info() = id++;
+
+//                cout<<degree(Del);
 //                cout<<",";
-//                cout << weight( Del._DT );
+//                cout << weight( Del );
 //                cout <<",";
 //               Del.add_all_edges();
 //                t = StretchFactor(Del);
@@ -246,7 +251,37 @@ void scratch() {
 //        resultFileName += "redo";
 
        // singleRun( 30, 30, resultFileName, filename, true, true );
+        GraphPrinter printer(0.007);
+        GraphPrinter::OptionsList options;
 
+        options = {
+            { "color", printer.inactiveEdgeColor },
+            { "line width", to_string(printer.inactiveEdgeWidth) }
+        };
+        printer.drawEdges( Del, options );
+
+        options = { // active edge options
+            { "color", printer.activeEdgeColor },
+            { "line width", to_string(printer.activeEdgeWidth) }
+        };
+        printer.drawEdges( result.begin(), result.end(), options );
+
+
+        options = {
+            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+            { "color", make_optional( printer.backgroundColor ) }, // text color
+            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+        };
+        GraphPrinter::OptionsList borderOptions = {
+            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
+            { "color", printer.activeEdgeColor }, // additional border color
+            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+        };
+        printer.drawVerticesWithInfo( Del, options, borderOptions );
+
+        printer.print( "bsx2009" );
+        cout<<"\n";
 }
 
 bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment ) {

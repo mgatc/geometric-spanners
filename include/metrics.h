@@ -19,6 +19,7 @@
 
 #include "DelaunayGraph.h"
 #include "FloydWarshall.h"
+#include "utilities.h"
 
 namespace gsnunf {
 
@@ -36,7 +37,7 @@ inline DelaunayGraph::FT getDistance( const DelaunayGraph::Vertex_handle a, cons
     return a == b ? 0 : CGAL::sqrt( CGAL::squared_distance( a->point(), b->point() ) );
 }
 
-void createVertexToIndexMaps( const DelaunayGraph& G, DelaunayGraph::template VertexMap<size_t>& handleToIndex, vector<Vertex_handle>& indexToHandle ) {
+void createVertexToIndexMaps( const DelaunayGraph& G, DelaunayGraph::template VertexMap<size_t>& handleToIndex, vector<DelaunayGraph::Vertex_handle>& indexToHandle ) {
     handleToIndex.clear();
     indexToHandle.clear();
     handleToIndex.reserve( G.n() );
@@ -78,7 +79,7 @@ void EuclideanDistanceMatrix( const DelaunayGraph& G, const DelaunayGraph::templ
 }
 
 using StretchFactorIndexEntry = pair<pair<size_t,size_t>, DelaunayGraph::FT>;
-using StretchFactorVertexHandleEntry = pair<pair<Vertex_handle,Vertex_handle>, DelaunayGraph::FT>;
+using StretchFactorVertexHandleEntry = pair<pair<DelaunayGraph::Vertex_handle,DelaunayGraph::Vertex_handle>, DelaunayGraph::FT>;
 
 StretchFactorVertexHandleEntry StretchFactorFloydWarshall( const DelaunayGraph& G ) {
     using namespace metrics;
@@ -89,7 +90,7 @@ StretchFactorVertexHandleEntry StretchFactorFloydWarshall( const DelaunayGraph& 
     // Add all vertices to a vertex map and assign an index
 
     DelaunayGraph::template VertexMap< size_t > handleToIndex;
-    vector<Vertex_handle> indexToHandle;
+    vector<DelaunayGraph::Vertex_handle> indexToHandle;
     createVertexToIndexMaps( G, handleToIndex, indexToHandle );
 
     // Next, conduct Floyd-Warshall to determine all paths' cost
@@ -133,6 +134,7 @@ StretchFactorVertexHandleEntry StretchFactorFloydWarshall( RandomAccessIterator 
     return StretchFactorFloydWarshall(G);
 }
 
+template< typename Point >
 struct PointHasher {
     std::size_t operator()(const Point& p) const noexcept {
         size_t seed = 31;
@@ -142,7 +144,8 @@ struct PointHasher {
     }
 };
 
-inline size_t countIncident( std::unordered_map< Point,size_t,PointHasher >& count, const Point& p ) {
+template< typename Point >
+inline size_t countIncident( std::unordered_map< Point,size_t,PointHasher<Point> >& count, const Point& p ) {
     if( !contains( count, p ) )
         count.emplace( p, 1 );
     else
@@ -153,8 +156,11 @@ inline size_t countIncident( std::unordered_map< Point,size_t,PointHasher >& cou
 
 template< typename RandomAccessIterator >
 size_t degree( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+    typedef typename RandomAccessIterator::value_type Edge;
+    typedef typename Edge::first_type Point;
+
     std::vector<pair<Point,Point>> edges( edgesBegin, edgesEnd );
-    std::unordered_map< Point,size_t,PointHasher > count( edges.size() );
+    std::unordered_map< Point,size_t,PointHasher<Point> > count( edges.size() );
     size_t max = 0;
     // for each edge
     for( auto e : edges ) {
@@ -166,6 +172,9 @@ size_t degree( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) 
 
 template< typename Triangulation >
 size_t degree( const Triangulation& T ) {
+    typedef typename Triangulation::Point
+        Point;
+
     // fill a vector with edges so we can call the range-based degree function
     std::vector<pair<Point,Point>> edges;
     edges.reserve( T.number_of_vertices() );
@@ -187,7 +196,7 @@ template< typename RandomAccessIterator >
 size_t weight( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
     double w = 0;
     for( auto e=edgesBegin; e!=edgesEnd; ++e ) {
-        w += CGAL::sqrt( CGAL::squared_distance( e->first, e->second ) );
+        w += distance( e->first, e->second );
     }
     return w;
 }
@@ -199,19 +208,16 @@ size_t weight( const Triangulation& T ) {
             e->first->vertex( (e->second+1)%3 )->point(),
             e->first->vertex( (e->second+2)%3 )->point()
         );
-        w += CGAL::sqrt( CGAL::squared_distance( p.first, p.second ) );
+        w += distance( p.first, p.second );
     }
     return w;
 }
 
-inline double d( Point p, Point q ) {
-    return CGAL::sqrt( CGAL::squared_distance(p,q) );
-}
-
-struct EuclideanDistance {
+template< typename Point >
+struct EuclideanDistanceToPoint {
     Point goal;
     double operator()( Point p ) {
-        return d(p,goal);
+        return distance(p,goal);
     }
 };
 
@@ -239,10 +245,9 @@ optional<double> AStar( VertexContainer V, VertexMap vMap, AdjacencyList G_prime
         HeapHandle;
 
     size_t n = V.size();
-    size_t inf = numeric_limits<size_t>::max();
-    Point startPoint = V.at(start)->point();
-    Point goalPoint = V.at(goal)->point();
-    EuclideanDistance h = { V.at(goal)->point() }; // initialize heuristic functor
+    auto startPoint = V.at(start)->point();
+    auto goalPoint = V.at(goal)->point();
+    EuclideanDistanceToPoint h = { V.at(goal)->point() }; // initialize heuristic functor
 
     Heap open;
     unordered_map<size_t,HeapHandle> handleToHeap(n);
@@ -251,16 +256,16 @@ optional<double> AStar( VertexContainer V, VertexMap vMap, AdjacencyList G_prime
     //unordered_set<size_t> closed(n);
     vector<size_t> parents(n);
 
-    vector<double> g( n, inf );
+    vector<double> g( n, INF );
     g[start] = 0;
 
-    vector<double> f( n, inf );
+    vector<double> f( n, INF );
     f[start] = h( startPoint );
 
     DistanceIndexPair current = open.top(); // initialize current vertex to start
     size_t u_index = current.second;
-    Point currentPoint = startPoint;
-    Point neighborPoint;
+    auto currentPoint = startPoint;
+    auto neighborPoint = currentPoint;
 //    cout<<"\n    A* start:"<<startPoint;
 //    cout<<",";
 //    cout<<" goal:"<<V.at(goal)->point();
@@ -309,6 +314,7 @@ optional<double> AStar( VertexContainer V, VertexMap vMap, AdjacencyList G_prime
 
 template< typename VertexContainer, typename AdjacencyList >
 void Dijkstra( const size_t i, const VertexContainer& V, const AdjacencyList& G, vector<double>& ShortestPaths ) {
+
     typedef pair<double,size_t>
         DistanceIndexPair;
     typedef boost::heap::fibonacci_heap< DistanceIndexPair,boost::heap::compare<MinHeapCompare<DistanceIndexPair>>>
@@ -317,8 +323,7 @@ void Dijkstra( const size_t i, const VertexContainer& V, const AdjacencyList& G,
         HeapHandle;
 
     size_t n = V.size();
-    size_t inf = numeric_limits<size_t>::max();
-    Point startPoint = V.at(i);
+    auto startPoint = V.at(i);
 
     Heap open;
     unordered_map<size_t,HeapHandle> handleToHeap(n);
@@ -331,8 +336,8 @@ void Dijkstra( const size_t i, const VertexContainer& V, const AdjacencyList& G,
 
     DistanceIndexPair current = open.top(); // initialize current vertex to start
     size_t u_index = current.second;
-    Point currentPoint = startPoint;
-    Point neighborPoint;
+    auto currentPoint = startPoint;
+    auto neighborPoint = currentPoint;
 //    cout<<"\n    A* start:"<<startPoint;
 //    cout<<",";
 //    cout<<" goal:"<<V.at(goal)->point();
@@ -352,7 +357,7 @@ void Dijkstra( const size_t i, const VertexContainer& V, const AdjacencyList& G,
 //            cout<<"\n        n:"<<neighborPoint;
 //            cout<<",";
             double newScore = ShortestPaths.at(u_index)
-                + d( currentPoint, neighborPoint );
+                + distance( currentPoint, neighborPoint );
 //            cout<<"g:"<<newScore;
 //            cout<<",";
             if( newScore < ShortestPaths.at( neighbor ) ) {
@@ -374,8 +379,11 @@ void Dijkstra( const size_t i, const VertexContainer& V, const AdjacencyList& G,
 
 template< typename RandomAccessIterator >
 double StretchFactorDijkstra( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+    typedef typename RandomAccessIterator::value_type Edge;
+    typedef typename Edge::first_type Point;
+
     vector<Point> V; // container for vertices
-    unordered_map< Point, size_t, PointHasher > vMap; // map point to index in V
+    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
     unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
     size_t index = 0;
 
@@ -406,7 +414,6 @@ double StretchFactorDijkstra( RandomAccessIterator edgesBegin, RandomAccessItera
         G[i_p].insert(i_q); // add edge to adjacency list
     }
     size_t n = V.size();
-    const double INF = numeric_limits<double>::max();
     vector<double> T( n, INF );
 
     // calculate euclidean distance between all pairs
@@ -440,8 +447,11 @@ double StretchFactorDijkstra( RandomAccessIterator edgesBegin, RandomAccessItera
 
 template< typename RandomAccessIterator >
 double StretchFactorDijkstraParallel( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+    typedef typename RandomAccessIterator::value_type Edge;
+    typedef typename Edge::first_type Point;
+
     vector<Point> V; // container for vertices
-    unordered_map< Point, size_t, PointHasher > vMap; // map point to index in V
+    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
     unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
     size_t index = 0;
 
@@ -472,7 +482,6 @@ double StretchFactorDijkstraParallel( RandomAccessIterator edgesBegin, RandomAcc
         G[i_p].insert(i_q); // add edge to adjacency list
     }
     size_t n = V.size();
-    const double INF = numeric_limits<double>::max();
     vector<double> T( n, INF );
 
     // calculate euclidean distance between all pairs
@@ -506,8 +515,11 @@ double StretchFactorDijkstraParallel( RandomAccessIterator edgesBegin, RandomAcc
 
 template< typename RandomAccessIterator >
 double StretchFactorDijkstraReduction( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+    typedef typename RandomAccessIterator::value_type Edge;
+    typedef typename Edge::first_type Point;
+
     vector<Point> V; // container for vertices
-    unordered_map< Point, size_t, PointHasher > vMap; // map point to index in V
+    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
     unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
     size_t index = 0;
 
@@ -538,7 +550,6 @@ double StretchFactorDijkstraReduction( RandomAccessIterator edgesBegin, RandomAc
         G[i_p].insert(i_q); // add edge to adjacency list
     }
     size_t n = V.size();
-    const double INF = numeric_limits<double>::max();
     //vector<double> T( n, INF );
     double t_max = 0.0;
 
@@ -550,7 +561,7 @@ double StretchFactorDijkstraReduction( RandomAccessIterator edgesBegin, RandomAc
 
         for( size_t j=0; j<n; ++j ) {
             D.at(j) =
-                i==j ? 0 : d( V.at(i), V.at(j) );
+                i==j ? 0 : distance( V.at(i), V.at(j) );
         }
 
         Dijkstra( i, V, G, ShortestPaths );
@@ -590,8 +601,11 @@ namespace exp_stretch {
 template< typename RandomAccessIterator >
 double StretchFactorExperimental( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
     using namespace exp_stretch;
+    typedef typename RandomAccessIterator::value_type Edge;
+    typedef typename Edge::first_type Point;
+
     vector<Point> V; // container for vertices
-    unordered_map< Point, size_t, PointHasher > vMap; // map point to index in V
+    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
     unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
     size_t index = 0;
 
@@ -738,6 +752,10 @@ template< typename RandomAccessIterator, typename Triangulation >
 double StretchFactor( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd, const Triangulation& superGraph ) {
     using GraphVertex = typename Triangulation::Vertex_handle;
     using GraphCirculator = typename Triangulation::Vertex_circulator;
+
+    typedef typename RandomAccessIterator::value_type Edge;
+    typedef typename Edge::first_type Point;
+
     //using GPoint = typename Triangulation::Point_2;
     Triangulation G(superGraph);
     // create vector of points from given range and map points to indices
@@ -833,7 +851,7 @@ double StretchFactor( RandomAccessIterator edgesBegin, RandomAccessIterator edge
             // BFS ADMIN
             // Add each neighbor in G to level
             //cout<<"     searching neighbors for BFS... ";
-            Vertex_circulator v_n = G.incident_vertices( V.at(v.first) ),
+            GraphCirculator v_n = G.incident_vertices( V.at(v.first) ),
                 done(v_n);
             do if( !G.is_infinite(v_n) ) {
                     size_t i = vMap.at(v_n);

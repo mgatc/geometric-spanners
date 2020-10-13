@@ -416,7 +416,7 @@
 1588865172 source:/home/matt/UDC/udc/src/ExperimentalHex2.cpp
 	"ExperimentalHex2.h"
 
-1602605572 source:/home/matt/GeometricSpanners/main.cpp
+1602616145 source:/home/matt/GeometricSpanners/main.cpp
 	<chrono>
 	<list>
 	<optional>
@@ -474,7 +474,7 @@
 1589915120 /home/matt/GeometricSpanners/include/GeometricSpannerSolutionChecker.h
 	"CgalComponents.h"
 
-1600701111 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
+1602613616 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
 	<cctype>
 	<cstdlib>
 	<iomanip>
@@ -647,7 +647,7 @@
 	"SpanningGraph.h"
 	"DelaunayGraph.h"
 
-1601479502 /home/matt/GeometricSpanners/include/DelaunayGraph.h
+1602613543 /home/matt/GeometricSpanners/include/DelaunayGraph.h
 	<iostream>
 	<queue>
 	<set>
@@ -666,7 +666,7 @@
 
 1595441800 source:/home/matt/GeometricSpanners/src/GeometricSpanners.cpp
 
-1597765109 /home/matt/GeometricSpanners/include/FloydWarshall.h
+1602613469 /home/matt/GeometricSpanners/include/FloydWarshall.h
 	<algorithm>
 	<iostream>
 	<optional>
@@ -700,25 +700,18 @@
 	"PolygonSpanner.h"
 	"GeometricSpannerPrinter.h"
 
-1601479668 /home/matt/GeometricSpanners/include/LW2004.h
+1602617049 /home/matt/GeometricSpanners/include/LW2004.h
+	<algorithm>
 	<cmath>
-	<float.h>
-	<forward_list>
-	<fstream>
-	<limits>
-	<list>
-	<queue>
 	<unordered_set>
 	<vector>
 	<boost/functional/hash.hpp>
 	<boost/heap/fibonacci_heap.hpp>
-	<CGAL/Aff_transformation_2.h>
-	<CGAL/algorithm.h>
-	<CGAL/boost/iterator/transform_iterator.hpp>
 	<CGAL/circulator.h>
 	<CGAL/Delaunay_triangulation_2.h>
 	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
 	<CGAL/Triangulation_vertex_base_with_info_2.h>
+	<CGAL/utils.h>
 	<CGAL/Vector_2.h>
 	"GeometricSpannerPrinter.h"
 	"utilities.h"
@@ -768,7 +761,7 @@
 	<CGAL/Vector_2.h>
 	"GeometricSpannerPrinter.h"
 
-1602602869 /home/matt/GeometricSpanners/include/metrics.h
+1602616171 /home/matt/GeometricSpanners/include/metrics.h
 	<algorithm>
 	<functional>
 	<limits>
@@ -783,36 +776,31 @@
 	<omp.h>
 	"DelaunayGraph.h"
 	"FloydWarshall.h"
+	"utilities.h"
 
-1601479668 /home/matt/GeometricSpanners/include/BSX2009.h
+1602616791 /home/matt/GeometricSpanners/include/BSX2009.h
+	<algorithm>
 	<cmath>
-	<float.h>
-	<forward_list>
-	<fstream>
-	<limits>
-	<list>
-	<queue>
 	<unordered_set>
 	<vector>
 	<boost/functional/hash.hpp>
 	<boost/heap/fibonacci_heap.hpp>
-	<CGAL/Aff_transformation_2.h>
-	<CGAL/algorithm.h>
-	<CGAL/boost/iterator/transform_iterator.hpp>
 	<CGAL/circulator.h>
 	<CGAL/Delaunay_triangulation_2.h>
 	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
 	<CGAL/Triangulation_vertex_base_with_info_2.h>
+	<CGAL/utils.h>
 	"GeometricSpannerPrinter.h"
 	"metrics.h"
 	"utilities.h"
 
 1602510682 /home/matt/GeometricSpanners/include/GraphAlgoTV.h
 
-1602602869 /home/matt/GeometricSpanners/include/utilities.h
+1602614710 /home/matt/GeometricSpanners/include/utilities.h
 	<chrono>
 	<cmath>
 	<iostream>
+	<limits>
 	<string>
 	<CGAL/Kernel/global_functions.h>
 	<CGAL/Vector_2.h>

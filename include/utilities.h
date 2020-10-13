@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cmath>
 #include <iostream>
+#include <limits>
 #include <string>
 
 #include <CGAL/Kernel/global_functions.h>
@@ -17,6 +18,7 @@ using namespace std;
 
 const double PI = M_PI;
 const double EPSILON = 0.000001;
+const double INF = std::numeric_limits<double>::max();
 
 template< class T >
 bool contains( const T& V, const typename T::key_type& v ) {

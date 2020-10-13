@@ -86,8 +86,8 @@ class GraphPrinter {
             drawVertexWithLabel( it->point().x(), it->point().y(), to_string(it->info()), options, borderOptions );
         _document += "\n";
     }
-
-    void drawVertexPair( const pair<Vertex_handle,Vertex_handle>& vertices, const OptionsList& options = {} ) {
+    template< typename T >
+    void drawVertexPair( const pair<typename T::Vertex_handle,typename T::Vertex_handle>& vertices, const OptionsList& options = {} ) {
         drawVertex( vertices.first->point().x(), vertices.first->point().y(), options );
         drawVertex( vertices.second->point().x(), vertices.second->point().y(), options );
     }

@@ -1,26 +1,20 @@
 #ifndef GSNUNF_LW2004_H
 #define GSNUNF_LW2004_H
 
-#include <cmath>
-#include <float.h>
-#include <forward_list>
-#include <fstream>
-#include <limits>
-#include <list>
-#include <queue>
-#include <unordered_set>
-#include <vector>
+#include <algorithm> // min, max
+#include <cmath> // ceil
+#include <unordered_set> // hashed adjacency list
+#include <vector> // vertex containers
 
-#include <boost/functional/hash.hpp>
-#include <boost/heap/fibonacci_heap.hpp>
+#include <boost/functional/hash.hpp> // hashing pairs
+#include <boost/heap/fibonacci_heap.hpp> // ordering
 
-#include <CGAL/Aff_transformation_2.h>
-#include <CGAL/algorithm.h>
-#include <CGAL/boost/iterator/transform_iterator.hpp>
+//#include <CGAL/algorithm.h>
 #include <CGAL/circulator.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/utils.h> // min, max
 #include <CGAL/Vector_2.h>
 
 #include "GeometricSpannerPrinter.h"
@@ -68,7 +62,7 @@ inline size_tPair createEdge( const size_t i, const size_t j ) {
 inline void createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_handle>& handles, size_tPairSet &E, const size_t i, const size_t j, const size_t n, bool printLog = false ) {
     assert( std::max(i,j) < n );
     assert( T.is_edge( handles.at(i), handles.at(j) ) );
-    if( printLog ) cout<<"add:("<<i<<","<<j<<") ";
+    //if( printLog ) cout<<"add:("<<i<<","<<j<<") ";
     E.insert( createEdge( i, j ) );
 }
 
@@ -102,68 +96,13 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
     size_t n = i;
 
-    vector<string> labels(n);
-//    getVertexInfo( T, back_inserter(labels) );
-//
-//    ignore = tv.registerTriangulation( T, labels );
-
-    //cout<<n<<",";
-
-
-    //
-    //
-    // START PRINTER NONSENSE
-    //
-    //
-
-//                GraphPrinter printer(0.007);
-//                GraphPrinter::OptionsList options;
-//
-//                options = {
-//                    { "color", printer.inactiveEdgeColor },
-//                    { "line width", to_string(printer.inactiveEdgeWidth) }
-//                };
-//                printer.drawEdges( T, options );
-//
-//                options = {
-//                    { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
-//                    { "color", make_optional( printer.backgroundColor ) }, // text color
-//                    { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
-//                    { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-//                };
-//                GraphPrinter::OptionsList borderOptions = {
-//                    { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
-//                    { "color", printer.activeEdgeColor }, // additional border color
-//                    { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-//                };
-//                printer.drawVerticesWithInfo( T, options, borderOptions );
-//
-//                options = { // active edge options
-//                    { "color", printer.activeEdgeColor },
-//                    { "line width", to_string(printer.activeEdgeWidth) }
-//                };
-//                printer.print( "lw2004" );
-
-
-
-
-
-    //
-    //
-    // END PRINTER NONSENSE
-    //
-    //
-
-
-
-
-    Delaunay::Vertex_handle v_inf = T.infinite_vertex();
+    Vertex_handle v_inf = T.infinite_vertex();
 
     //cout << "Step 1 is over...\n";
     // TriangulationPrinter tp(T);
     // tp.draw("del");
     //************* Step 2 ****************//
-    vector<Delaunay::Vertex_handle> pointID2VertexHandle(n, v_inf);
+    vector<Vertex_handle> pointID2VertexHandle(n, v_inf);
     for( auto vit = T.finite_vertices_begin(); vit != T.finite_vertices_end(); ++vit ) {
         //assert( !T.is_infinite(vit) );
         pointID2VertexHandle[ vit->info() ] = vit;
@@ -177,7 +116,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
    // size_t maxDegree = 0;
     // Initialize the vector currentNeighbours with appropriate neighbours for every vertex
     for( size_t it = 0; it < n; it++ ) {
-        Delaunay::Vertex_circulator N = T.incident_vertices( pointID2VertexHandle.at(it) ),
+        Vertex_circulator N = T.incident_vertices( pointID2VertexHandle.at(it) ),
             done(N);
         //if (vc != 0) {
         do {
@@ -223,14 +162,13 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     currentNeighbours.clear();
     //cout << "Step 2 is over...\n";
 
+
+
     //************* Step 3 ****************//
     // In this step we assume alpha = pi/2 in order to minimize the degree
     size_tPairSet ePrime; // without set duplicate edges could be inserted (use the example down below)
     vector<bool> isProcessed(n, false);
     Delaunay::Vertex_handle u_handle = v_inf;
-
-    //cout<<piIndexedByPiU.size()<<"\n";
-
 
     // Iterate through vertices by pi ordering
     for( size_t u : piIndexedByPiU ) {
@@ -239,24 +177,10 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         isProcessed[u] = true;
         //if( printLog ) cout<<"\nu:"<<u<<" ";
 
-
-//        { // EDGE PRINTING NONSENSE
-//            vector< pair<Point,Point> > edgeList;
-//            edgeList.reserve( ePrime.size() );
-//            // Send resultant graph to output iterator
-//            for( size_tPair e : ePrime )
-//                edgeList.emplace_back( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.first)->point() );
-//
-//            printer.drawEdges( edgeList.begin(), edgeList.end(), options );
-//            printer.print( "lw2004" );
-//        }
-
-
-
         // Get neighbors of u
-        Delaunay::Vertex_circulator N = T.incident_vertices( u_handle );
+        Vertex_circulator N = T.incident_vertices( u_handle );
         //if( printLog ) cout<<"N_init:"<<(T.is_infinite(N)?size_t(numeric_limits<size_t>::max):size_t(N->info()))<<" ";
-        Delaunay::Vertex_circulator done(N);
+        Vertex_circulator done(N);
         // find a processed neighbor if it exists or we reach the start again
         while( ( T.is_infinite(--N) || !isProcessed.at(N->info()) ) && N!=done );
         done = N; // update N
@@ -267,7 +191,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
         // Find and store sector boundaries, start with N
         size_t processedNeighbors = isProcessed.at( N->info() ) ? 1 : 0;
-        vector<Delaunay::Vertex_handle> sectorBoundaries{ N->handle() };
+        vector<Vertex_handle> sectorBoundaries{ N->handle() };
         while( --N != sectorBoundaries.front() ) {
             if( ( !T.is_infinite(N) && isProcessed.at( N->info() ) ) ) { // check for v_inf first or isProcessed will be out of range
                 sectorBoundaries.push_back( N->handle() );
@@ -292,7 +216,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         // Now, compute the angles of the sectors, the number of cones in each sector,
         // and the actual angles
         vector<double> alphaReal( sectorBoundaries.size() );
-        vector< vector<Delaunay::Vertex_handle> > closest( sectorBoundaries.size() );
+        vector< vector<Vertex_handle> > closest( sectorBoundaries.size() );
 
         for( size_t i=0; i<sectorBoundaries.size(); ++i ) {
             double sectorAngle = get_angle<K>(
@@ -307,7 +231,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
             closest.at(i).resize( numCones, v_inf );
         }
 
-        Delaunay::Vertex_handle lastN = v_inf;
+        Vertex_handle lastN = v_inf;
         if( isProcessed.at( N->info() ) ) --N; // if N is processed, step
         size_t sector = 0;
 
@@ -329,8 +253,8 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
                         cone = 0;
                     // Store value until after all neighbors are processed, then add
                     if( T.is_infinite( closest.at(sector).at(cone) )
-                      || Vector_2( u_handle->point(), N->point() ).squared_length()
-                       < Vector_2( u_handle->point(), closest.at(sector).at(cone)->point() ).squared_length() ) {
+                      || CGAL::squared_distance( u_handle->point(), N->point() )
+                       < CGAL::squared_distance( u_handle->point(), closest.at(sector).at(cone)->point() ) ) {
                             closest.at(sector).at(cone) = N->handle();   // if the saved vertex is infinite or longer than the current one, update
 //                            if( printLog ) cout<<"s_closest["<<sector<<"]["<<cone<<"]:"<<N->info()<<" ";
                     }
@@ -360,12 +284,14 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
                     createNewEdge( T, pointID2VertexHandle, ePrime, u, v->info(), n, false );
                 }
     }
+
     // Edge list is only needed for printing. Remove for production.
-    vector< pair<Point,Point> > edgeList;
-    edgeList.reserve( ePrime.size() );
+//    vector< pair<Point,Point> > edgeList;
+//    edgeList.reserve( ePrime.size() );
+
     // Send resultant graph to output iterator
     for( size_tPair e : ePrime ) {
-        edgeList.emplace_back( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
+        //edgeList.emplace_back( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
 
         *result = make_pair( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
         ++result;

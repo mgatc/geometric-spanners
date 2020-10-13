@@ -20,6 +20,8 @@ namespace gsnunf {
 
 using namespace std;
 
+namespace bgs2005 {
+
 class DelaunayGraph {
   public:
     /* Types */
@@ -256,15 +258,18 @@ class DelaunayGraph {
 
 // Make some key types of DelaunayGraph public in the namespace
 
-template<class V >
-using VertexMap = DelaunayGraph::template VertexMap<V>;
-using VertexSet = DelaunayGraph::VertexSet;
-using VertexHash = DelaunayGraph::VertexHash;
 using Vertex_handle = DelaunayGraph::Vertex_handle;
 using Vertex_circulator = DelaunayGraph::Vertex_circulator;
 using Point = DelaunayGraph::K::Point_2;
 
+} // namespace bgs2005
+
+using DelaunayGraph = bgs2005::DelaunayGraph;
+template<class V >
+using VertexMap = DelaunayGraph::template VertexMap<V>;
+using VertexSet = DelaunayGraph::VertexSet;
+using VertexHash = DelaunayGraph::VertexHash;
 
 } // namespace gsnunf
 
-#endif // GSNUNF_GRAPH_H
+#endif // GSNUNF_DELAUNAYGRAPH_H

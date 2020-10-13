@@ -304,24 +304,24 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                 }
             } else if( l == 1 ) {
                 if( printLog ) cout << "addOne,";
+                kpx2010::Vertex_handle singleSelection = v_inf;
+
                 // consider the first CW and CCW edges (held in beforeSequence and afterSequence)
                 // if one is selected already, add the other
-                if( contains( selected, beforeSequence ) && !contains( selected, afterSequence ) ) {
-                    selected.emplace( afterSequence );
-                    if( printLog ) cout << "compensating:"<< afterSequence->info() <<",";
-                } else if( !contains( selected, beforeSequence ) && contains( selected, afterSequence ) ) {
-                    selected.emplace( beforeSequence );
-                    if( printLog ) cout << "compensating:"<< beforeSequence->info() <<",";
+                if( contains(selected,beforeSequence) ^ contains(selected,afterSequence) ) {
+                    singleSelection = contains(selected,beforeSequence) ? afterSequence : beforeSequence;
                 }
                 // otherwise, add the shorter
-                else if( !contains( selected, beforeSequence ) && !contains( selected, afterSequence ) ) {
-                    if( distance( beforeSequence->point(), m->point() ) < distance( afterSequence->point(), m->point() ) ) {
-                        selected.emplace( beforeSequence );
-                        if( printLog ) cout << "compensating:"<< beforeSequence->info() <<",";
-                    } else {
-                        selected.emplace( afterSequence );
-                        if( printLog ) cout << "compensating:"<< afterSequence->info() <<",";
-                    }
+                else if( !( contains(selected,beforeSequence) || contains(selected,afterSequence) ) ) {
+                    singleSelection =
+                        CGAL::squared_distance( beforeSequence->point(), m->point() )
+                        < CGAL::squared_distance( afterSequence->point(), m->point() )
+                            ? beforeSequence : afterSequence;
+                }
+                // if we found one to select, select it!
+                if( !T.is_infinite(singleSelection) ) {
+                    selected.emplace( singleSelection );
+                    if( printLog ) cout << "compensating:"<< singleSelection->info() <<",";
                 }
             }
         }
@@ -332,12 +332,10 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
             if( !T.is_infinite(v) ) {
                 if( printLog ) cout<<"forward_";
                 inserted = selectEdge( T, G_prime, m, v, n, printLog );
-                //degree += size_t(inserted);
-                //if( printLog ) cout<<"degree:"<<degree<<",";
             }
         }
 
-    } // END OF STEP 3 LOOP
+    }
 
 
 

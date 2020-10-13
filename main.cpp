@@ -51,15 +51,26 @@ string generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
     auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( size );
     auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( size );
 
+
+    auto g1s = CGAL::Random_points_in_square_2<Point,Creator>( size/4 );
+    auto g2s = CGAL::Random_points_in_disc_2<Point,Creator>(   size/4 );
+    auto g3s = CGAL::Random_points_on_square_2<Point,Creator>( size/4 );
+    auto g4s = CGAL::Random_points_on_circle_2<Point,Creator>( size/4 );
+
     vector<Point> points;
     points.reserve(n);
 
-    //std::copy_n( g1, n/3, back_inserter(points) );
-    //std::copy_n( g2, n/3, back_inserter(points) );
-    std::copy_n( g3, n/2, back_inserter(points) );
-    std::copy_n( g4, n/2, back_inserter(points) );
+    std::copy_n( g1, n*2/9, back_inserter(points) );
+    std::copy_n( g2, n/9, back_inserter(points) );
+    std::copy_n( g3, n*2/18, back_inserter(points) );
+    std::copy_n( g4, n/18, back_inserter(points) );
 
-    points.emplace_back(0,0);
+    std::copy_n( g1s, n/9, back_inserter(points) );
+    std::copy_n( g2s, n*2/9, back_inserter(points) );
+    std::copy_n( g3s, n/18, back_inserter(points) );
+    std::copy_n( g4s, n*2/18, back_inserter(points) );
+
+    //points.emplace_back(0,0);
 
     // copy points to output iterator
     for( Point p : points )
@@ -84,107 +95,27 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    //experiment( 5, 1000, 10000, 1000 );
-    scratch();
+    experiment( 5, 10000, 100000, 10000 );
+    //scratch();
     //stretchScratch();
     //algoTVScratch();
 
     return 0;
 }
 
-void stretchScratch() {
-    // 1. Create a graph. In this case it will be the DT of the point set
-    list<Point> points;
-    points = {
-        { -1, 0.1 },
-        { -0.9, 3 },
-        { -2, 6 },
-        { -7, 3.1 },
-        { -6, -0.1 },
-        { -9, -0.2 },
-        { -7.7, -1 },
-        { -6.1, -1.5 },
-        { -10, -4 },
-        { -4, -3 },
-        { -1.5, -6 },
-        { 1, -9 },
-        { 4, -4 },
-        { 4.1, 0 },
-        { 3.9, 5.9 },
-        { 5, 3 },
-        { 5, -2 },
-        { 9, 1 }
-    };
-    list< pair< Point, Point > > result;
-
-    DelaunayGraph Del( points.begin(), points.end() );
-    Del.add_all_edges();
-
-    // 2. Create a subgraph of that graph
-    LW2004( points.begin(), points.end(), back_inserter(result), PI/2 );
-
-    // measure stretch factor using Floyd Warshall (StretchFactor function)
-    pair<pair<Vertex_handle,Vertex_handle>,double> t_fw = StretchFactorFloydWarshall( result.begin(), result.end() );
-    // measure stretch factor using experimental method
-    double t_djik = StretchFactorDjikstraParallel( result.begin(), result.end() );
-    // print measurements
-    cout<< points.size();
-    cout<< ",";
-    cout<< t_fw.second;
-    cout<<",";
-    cout<< t_djik;
-    cout<<",";
-    double t_exp = StretchFactorDjikstraReduction( result.begin(), result.end() );
-    cout<< t_exp;
-    cout<<",";
-
-
-
-    GraphPrinter printer(1);
-    GraphPrinter::OptionsList options;
-
-    options = {
-        { "color", printer.inactiveEdgeColor },
-        { "line width", to_string(printer.inactiveEdgeWidth) }
-    };
-    printer.drawEdges( Del._DT, options );
-
-    options = { // active edge options
-        { "color", printer.activeEdgeColor },
-        { "line width", to_string(printer.activeEdgeWidth) }
-    };
-    printer.drawEdges( result.begin(), result.end(), options );
-
-
-    options = {
-        { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
-        { "color", make_optional( printer.backgroundColor ) }, // text color
-        { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
-        { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-    };
-//    GraphPrinter::OptionsList borderOptions = {
-//        { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
-//        { "color", printer.activeEdgeColor }, // additional border color
-//        { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-//    };
-    printer.drawVertices( Del._DT, options );
-
-    printer.print( "stretchscratch" );
-}
-
 void scratch() {
     using namespace std;
 
-    //GraphPrinter printer(0.05);
+    GraphPrinter printer(0.01);
 //
-//    const double width = 100;
-//    size_t n = 30, i=n;
+    const double width = 100;
+    size_t n = 30, i=n;
 //
 //    //for( i=1; i<=17; ++i ) {
-//        auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
-//        auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
-//        auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
-//        auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
+        auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
+        auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
+        auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
+        auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
         list<Point> points;
         // SET POINT SET
 //        points = {
@@ -209,39 +140,40 @@ void scratch() {
 //        };
 
             // POINT SET FROM PAPER, PAGE 253
-    points = {
-        { -1, 0.1 },
-        { -0.9, 3 },
-        { -2, 6 },
-        { -7, 3.1 },
-        { -6, -0.1 },
-        { -9, -0.2 },
-        { -7.7, -1 },
-        { -6.1, -1.5 },
-        { -10, -4 },
-        { -4, -3 },
-        { -1.5, -6 },
-        { 1, -9 },
-        { 4, -4 },
-        { 4.1, 0 },
-        { 3.9, 5.9 },
-        { 5, 3 },
-        { 5, -2 },
-        { 9, 1 }
-    };
+//    points = {
+//        { -1, 0.1 },
+//        { -0.9, 3 },
+//        { -2, 6 },
+//        { -7, 3.1 },
+//        { -6, -0.1 },
+//        { -9, -0.2 },
+//        { -7.7, -1 },
+//        { -6.1, -1.5 },
+//        { -10, -4 },
+//        { -4, -3 },
+//        { -1.5, -6 },
+//        { 1, -9 },
+//        { 4, -4 },
+//        { 4.1, 0 },
+//        { 3.9, 5.9 },
+//        { 5, 3 },
+//        { 5, -2 },
+//        { 9, 1 }
+//    };
 //
 //        n = 60;
 
 //        std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
-//        std::copy_n( g3, n/6, back_inserter(points) );
-        //std::copy_n( g4, n/6, back_inserter(points) );
+//        std::copy_n( g3, n/2, back_inserter(points) );
+//        std::copy_n( g4, n/2, back_inserter(points) );
 
-        //points.emplace_back( 0,0 );
+//        points.emplace_back( 0,0 );
 //        string filename = "11_1658.312395x1658.312395.txt";
 //
 //        readPointsFromFile( back_inserter( points ), filename );
 
+        generateRandomPoints( n, width/2, back_inserter(points) );
 
         cout<< points.size();
         cout<< ",";
@@ -262,15 +194,18 @@ void scratch() {
 //                Timer tim;
             //LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, true );
             //BGS2002( points.begin(), points.end(), back_inserter(result) );
-            KPX2010( points.begin(), points.end(), back_inserter(result), PI/2, true );
+            KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
         }
 //        cout << degree( result.begin(), result.end() );
 //        cout <<",";
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
-            double t = StretchFactorDjikstraReduction( result.begin(), result.end() );
+            double t = StretchFactorDijkstraReduction( result.begin(), result.end() );
             cout<< t;
             cout<<",";
+            size_t deg = degree( result.begin(), result.end() );
+            cout << deg;
+            cout <<",";
 //            cout << " Dumping edge set..."<<result.size()<<" edges.\n\n";
 
 
@@ -291,7 +226,7 @@ void scratch() {
 //        printer.drawEdges( Del._DT );
 //        printer.drawEdges( result.begin(), result.end(), {{"red",""}} );
 //        printer.drawVertices( Del._DT );
-//        printer.print( "lw2004scratch" );
+//        printer.print( "kpx2010scratch" );
         //printer.print("bgs2002");
 
 
@@ -333,7 +268,7 @@ bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment )
 
 bool singleRun( size_t n, double width, string resultFilename, optional<string> filename, bool forcePrint, bool printLog ) {
     double size = width/2; // cgal's generators produce width 2x given value
-
+    size_t k = 18;
     // SET POINT SET
     list<Point> points;
     optional<string> generatedFile = nullopt;
@@ -359,39 +294,20 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
     {
         Timer tim;
-        BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3, printLog );
+        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
     }
     size_t deg = degree( result.begin(), result.end() );
     cout << deg;
     cout <<",";
 
-    // measure stretch factor using parallel Djikstra
-    double t_djik;
-    {
-        Timer tim;
-        t_djik = StretchFactorDjikstraParallel( result.begin(), result.end() );
-    }
-    cout<< t_djik;
-    cout<<",";
-    // measure stretch factor using parallel reduction
-    double t_exp;
-    {
-        Timer tim;
-        t_exp = StretchFactorDjikstraReduction( result.begin(), result.end() );
-    }
-    cout<< t_exp;
-    cout<<",";
-    {
-        Timer tim;
-        t_exp = StretchFactorExperimental( result.begin(), result.end() );
-    }
-    cout<< t_exp;
-    cout<<",";
+    double t;
+    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+    cout << t;
+    cout <<",";
 
-//    if( t > 29.1 || deg > 17 || forcePrint ) {
-//        pair<pair<Vertex_handle,Vertex_handle>,double> t_fw;
-//        t_fw = StretchFactor( result.begin(), result.end() );
-//        cout<<t_fw.second<<",";
+
+
+//    if( t > 2.92 || deg > k || forcePrint ) {
 //
 //        string resultFileName = ( filename ? *filename : *generatedFile );
 //        // strip file extension
@@ -425,7 +341,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //
 //    {
 //        //Timer tim;
-//        t = StretchFactorDjikstraParallel( result.begin(), result.end() );
+//        t = StretchFactorDijkstraParallel( result.begin(), result.end() );
 //    }
 //    cout<< t;
 //    cout<<",";

@@ -308,7 +308,7 @@ optional<double> AStar( VertexContainer V, VertexMap vMap, AdjacencyList G_prime
 
 
 template< typename VertexContainer, typename AdjacencyList >
-void Djikstra( const size_t i, const VertexContainer& V, const AdjacencyList& G, vector<double>& ShortestPaths ) {
+void Dijkstra( const size_t i, const VertexContainer& V, const AdjacencyList& G, vector<double>& ShortestPaths ) {
     typedef pair<double,size_t>
         DistanceIndexPair;
     typedef boost::heap::fibonacci_heap< DistanceIndexPair,boost::heap::compare<MinHeapCompare<DistanceIndexPair>>>
@@ -373,7 +373,7 @@ void Djikstra( const size_t i, const VertexContainer& V, const AdjacencyList& G,
 }
 
 template< typename RandomAccessIterator >
-double StretchFactorDjikstra( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+double StretchFactorDijkstra( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
     vector<Point> V; // container for vertices
     unordered_map< Point, size_t, PointHasher > vMap; // map point to index in V
     unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
@@ -420,7 +420,7 @@ double StretchFactorDjikstra( RandomAccessIterator edgesBegin, RandomAccessItera
                 i==j ? 0 : d( V.at(i), V.at(j) );
         }
 
-        Djikstra( i, V, G, ShortestPaths );
+        Dijkstra( i, V, G, ShortestPaths );
 
         // Divide each shortest path distance by the euclidean distance between the vertices.
         for( size_t j=0; j<n; ++j ) {
@@ -439,7 +439,7 @@ double StretchFactorDjikstra( RandomAccessIterator edgesBegin, RandomAccessItera
 }
 
 template< typename RandomAccessIterator >
-double StretchFactorDjikstraParallel( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+double StretchFactorDijkstraParallel( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
     vector<Point> V; // container for vertices
     unordered_map< Point, size_t, PointHasher > vMap; // map point to index in V
     unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
@@ -486,7 +486,7 @@ double StretchFactorDjikstraParallel( RandomAccessIterator edgesBegin, RandomAcc
                 i==j ? 0 : d( V.at(i), V.at(j) );
         }
 
-        Djikstra( i, V, G, ShortestPaths );
+        Dijkstra( i, V, G, ShortestPaths );
 
     // Divide each shortest path distance by the euclidean distance between the vertices.
         for( size_t j=0; j<n; ++j ) {
@@ -505,7 +505,7 @@ double StretchFactorDjikstraParallel( RandomAccessIterator edgesBegin, RandomAcc
 }
 
 template< typename RandomAccessIterator >
-double StretchFactorDjikstraReduction( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+double StretchFactorDijkstraReduction( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
     vector<Point> V; // container for vertices
     unordered_map< Point, size_t, PointHasher > vMap; // map point to index in V
     unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
@@ -553,7 +553,7 @@ double StretchFactorDjikstraReduction( RandomAccessIterator edgesBegin, RandomAc
                 i==j ? 0 : d( V.at(i), V.at(j) );
         }
 
-        Djikstra( i, V, G, ShortestPaths );
+        Dijkstra( i, V, G, ShortestPaths );
 
         // Divide each shortest path distance by the euclidean distance between the vertices.
         for( size_t j=0; j<n; ++j ) {
@@ -637,7 +637,7 @@ double StretchFactorExperimental( RandomAccessIterator edgesBegin, RandomAccessI
                 i==j ? 0 : d( V.at(i), V.at(j) );
         }
 
-        //Djikstra( i, V, G, ShortestPaths );
+        //Dijkstra( i, V, G, ShortestPaths );
 
         size_t n = V.size();
         size_t inf = numeric_limits<size_t>::max();

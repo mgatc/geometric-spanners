@@ -6,7 +6,10 @@
 #include <iostream>
 #include <string>
 
+#include <CGAL/Kernel/global_functions.h>
 #include <CGAL/Vector_2.h>
+
+
 
 namespace gsnunf {
 
@@ -40,21 +43,24 @@ inline std::pair<T,T> makeNormalizedPair( const T& i, const T& j ) {
     );
 }
 
+template< typename Point >
+inline double distance( Point p, Point q ) {
+    return CGAL::sqrt( CGAL::squared_distance(p,q) );
+}
+
 template< class K >
 double get_angle( const typename K::Point_2& p, const typename K::Point_2& q, const typename K::Point_2& r ) {
     CGAL::Vector_2<K> pq( p, q );
-    CGAL::Vector_2<K> rq( r, p );
+    CGAL::Vector_2<K> rq( r, q );
 
-    double result = atan2( rq.y(), rq.x() ) - atan2( pq.y(), pq.x() );
+    double result = atan2( pq.y(), pq.x() ) - atan2( rq.y(), rq.x() );
 
     // atan() returns a value between -PI and PI. From zero ("up"), CCW rotation is negative and CW is positive.
     // Our zero is also "up," but we only want positive values between 0 and 2*PI:
 
-    result *= -1; // First, invert the result. This will associate CW rotation with positive values.
-    if( result < 0 ) // Then, if the result is less than 0 (or epsilon for floats) add 2*PI.
-        result += 2*PI;
-    result = CGAL::min( result, 2*PI );
-    //cout<<"angle("<<p->info()<<","<<q->info()<<","<<r->info()<<")="<<result<<" ";
+    result = fmod( result+2*PI, 2*PI );
+    //result = CGAL::min( result, 2*PI );
+    //cout<<"angle("<<p<<","<<q<<","<<r<<")="<<result*180/PI<<" ";
     return result;
 }
 

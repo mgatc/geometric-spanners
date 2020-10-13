@@ -79,7 +79,7 @@ string generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
     // copy points to file
     ofstream out;
     string fName;
-    fName = to_string(n) + "_" + to_string(size) + "x" + to_string(size) + ".txt";
+    fName = "data-" + to_string(n) + "_" + to_string(size) + "x" + to_string(size) + ".txt";
     out.open( fName, ios::trunc );
     for( Point p : points )
         out << p << endl;
@@ -95,7 +95,7 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    experiment( 5, 10000, 100000, 10000 );
+    experiment( 5, 1000, 10000, 1000 );
     //scratch();
     //stretchScratch();
     //algoTVScratch();

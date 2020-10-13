@@ -2,30 +2,20 @@
 #ifndef GSNUNF_KPX2010_H
 #define GSNUNF_KPX2010_H
 
-#include <cmath>
-#include <float.h>
-#include <forward_list>
-#include <fstream>
-#include <limits>
-#include <list>
-#include <queue>
-#include <unordered_set>
-#include <unordered_map>
-#include <vector>
+#include <cmath>         // ceil, floor
+#include <unordered_set> // selected
+#include <unordered_map> // G_prime
+#include <vector>        // handles
 
-#include <boost/functional/hash.hpp>
-#include <boost/heap/fibonacci_heap.hpp>
+#include <boost/functional/hash.hpp> // size_t pair hash
 
-#include <CGAL/Aff_transformation_2.h>
-#include <CGAL/algorithm.h>
-#include <CGAL/boost/iterator/transform_iterator.hpp>
+#include <CGAL/algorithm.h> //
 #include <CGAL/circulator.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
-
-#include "GeometricSpannerPrinter.h"
+//#include "GeometricSpannerPrinter.h"
 //#include "GraphAlgoTV.h"
 #include "metrics.h"
 #include "utilities.h"
@@ -37,10 +27,8 @@ using namespace std;
 
 namespace kpx2010 {
 
-using namespace CGAL;
-
 typedef CGAL::Exact_predicates_inexact_constructions_kernel         K;
-typedef CGAL::Triangulation_vertex_base_with_info_2<size_t, K>    Vb;
+typedef CGAL::Triangulation_vertex_base_with_info_2<size_t, K>      Vb;
 typedef CGAL::Triangulation_face_base_2<K>                          Fb;
 typedef CGAL::Triangulation_data_structure_2<Vb, Fb>                Tds;
 typedef CGAL::Delaunay_triangulation_2<K, Tds>                      Delaunay;
@@ -54,20 +42,11 @@ typedef Delaunay::Finite_edges_iterator                             Finite_edges
 
 typedef pair<size_t,size_t>                                         size_tPair;
 typedef boost::hash<size_tPair>                                     size_tPairHash;
-typedef unordered_map<size_tPair,bool,size_tPairHash>                    size_tPairMap;
+typedef unordered_map<size_tPair,bool,size_tPairHash>               size_tPairMap;
 
-struct comparatorForMinHeap {
-    bool operator()(const size_tPair &n1, const size_tPair &n2) const {
-        return (n1.first > n2.first) || ((n1.first == n2.first) && (n1.second > n2.second));
-    }
-};
-
-typedef boost::heap::fibonacci_heap<size_tPair,boost::heap::compare<comparatorForMinHeap>> Heap;
-typedef Heap::handle_type handle;
-
-inline bool selectEdge( const Delaunay& T, size_tPairMap &E, const Vertex_handle i, const Vertex_handle j, const size_t n, bool printLog = false ) {
+bool selectEdge( const Delaunay& T, size_tPairMap &E, const Vertex_handle i, const Vertex_handle j, const size_t n, bool printLog = false ) {
     assert( T.is_edge( i, j ) );
-    if( printLog ) cout<<"add:("<<i->info()<<","<<j->info()<<") ";
+    //if( printLog ) cout<<"add:("<<i->info()<<","<<j->info()<<") ";
 
     auto existing = E.begin();
     bool inserted = false;
@@ -87,7 +66,7 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     k = std::max( k, size_t(14) );
     const double alpha = 2*PI / k;
 
-    if(printLog) cout<<"alpha:"<<alpha<<",";
+    //if(printLog) cout<<"alpha:"<<alpha<<",";
 
     // Construct Delaunay triangulation
     kpx2010::Delaunay T( pointsBegin, pointsEnd );
@@ -104,82 +83,11 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     }
 
     kpx2010::Vertex_handle v_inf = T.infinite_vertex();
-
-
-
-
-
-    //cout<<n<<",";
-
-
-    //
-    //
-    // START PRINTER NONSENSE
-    //
-    //
-
-//                GraphPrinter printer(1);
-//                GraphPrinter::OptionsList options;
-//
-//                options = {
-//                    { "color", printer.inactiveEdgeColor },
-//                    { "line width", to_string(printer.inactiveEdgeWidth) }
-//                };
-//                printer.drawEdges( T, options );
-//
-//                options = {
-//                    { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
-//                    { "color", make_optional( printer.backgroundColor ) }, // text color
-//                    { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
-//                    { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-//                };
-//                GraphPrinter::OptionsList borderOptions = {
-//                    { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
-//                    { "color", printer.activeEdgeColor }, // additional border color
-//                    { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-//                };
-//                printer.drawVerticesWithInfo( T, options, borderOptions );
-//
-//                options = { // active edge options
-//                    { "color", printer.activeEdgeColor },
-//                    { "line width", to_string(printer.activeEdgeWidth) }
-//                };
-//                printer.print( "kpx2010" );
-
-
-
-
-
-    //
-    //
-    // END PRINTER NONSENSE
-    //
-    //
-
-
-
-
-
-
-    size_tPairMap G_prime;
+    size_tPairMap G_prime; // list of potential edges, value must be true for insertion to result
 
     // Iterate through vertices in T
     for( auto m=T.finite_vertices_begin(); m!=T.finite_vertices_end(); ++m ) {
-        if( printLog ) cout<<"\n\nm:"<<m->info()<<" ";
-
-
-//        { // EDGE PRINTING NONSENSE
-//            vector< pair<Point,Point> > edgeList;
-//            edgeList.reserve( G_prime.size() );
-//            // Send resultant graph to output iterator
-//            for( size_tPair e : G_prime )
-//                edgeList.emplace_back( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.first)->point() );
-//
-//            printer.drawEdges( edgeList.begin(), edgeList.end(), options );
-//            printer.print( "lw2004" );
-//        }
-
-
+        //if( printLog ) cout<<"\n\nm:"<<m->info()<<" ";
 
         // Get neighbors of m
         kpx2010::Vertex_circulator N = T.incident_vertices(m);
@@ -187,8 +95,9 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         if( T.is_infinite(N) ) --N;
 
         kpx2010::Vertex_circulator done(N);
-        if(printLog) cout<<"done:"<<done->info()<<",";
+        //if(printLog) cout<<"done:"<<done->info()<<",";
 
+        // closest vertex in each cone
         vector<kpx2010::Vertex_handle> closestInCones( k, v_inf );
         // Now, let's put the neighbors found so far into a hashed set for quick lookup
         unordered_set<kpx2010::Vertex_handle> selected(k);
@@ -202,20 +111,19 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                     N->point()
                 );
                 size_t cone = size_t( theta / alpha );
-                if(printLog) cout<<"N:"<<N->info()<<",theta:"<<theta<<",cone:"<<cone<<",";
-
-
+                //if(printLog) cout<<"N:"<<N->info()<<",theta:"<<theta<<",cone:"<<cone<<",";
 
                 if( T.is_infinite( closestInCones.at(cone) )
                     || distance(m->point(),N->point()) < distance(m->point(),closestInCones.at(cone)->point()) )
                 {   // If we made it through all that, it's the current closestInCone!
                     closestInCones[cone] = N;
-                    if( printLog ) cout<<"s_closest["<<cone<<"]:"<<N->info()<<",";
+                    //if( printLog ) cout<<"s_closest["<<cone<<"]:"<<N->info()<<",";
                 }
             }
         } while( --N != done );
 
         // We've found all the closest neighbors in each cone
+        // Put them in selected
         for( auto v : closestInCones )
             if( !T.is_infinite(v) )
                 selected.emplace(v);
@@ -228,9 +136,8 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         unordered_set<size_t> startOfMaximalSequences(k/2);
 
         for( size_t i=0; i<(k+offset); ++i ) {
-            if(printLog) cout<<"i:"<<i<<",";
-
-            if( T.is_infinite( closestInCones.at(i%k) ) ) { // empty
+            //if(printLog) cout<<"i:"<<i<<",";
+            if( T.is_infinite( closestInCones.at(i%k) ) ) { // empty cone
                 ++l_local;          // increment
                 if( l_local > l ) {  // biggest thus far, clear old starts and update l
                     startOfMaximalSequences.clear();
@@ -240,24 +147,24 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                     startOfMaximalSequences.emplace( startOfSequence );
                 if( i+1 == k+offset ) {  // if we're about to end but on an empty sequence, keep going
                     ++offset;
-                    if(printLog) cout<<"++offset,";
+                    //if(printLog) cout<<"++offset,";
                 }
-                if(printLog) cout<<"l_local:"<<l_local<<",";
-            } else {                    // filled
-                if(printLog) cout<<"filledby:"<<closestInCones.at(i%k)->info()<<",";
+                //if(printLog) cout<<"l_local:"<<l_local<<",";
+            } else {                    // filled cone
+                //if(printLog) cout<<"filledby:"<<closestInCones.at(i%k)->info()<<",";
                 l_local = 0;                 // reset l_local
                 startOfSequence = (i+1) % k; // set the start of sequence to the next i
             }
         }
-        if( printLog ) {
-            cout<<"l:"<<l<<",";
-            cout<<"num_seq:"<<startOfMaximalSequences.size()<<",";
-        }
+//        if( printLog ) {
+//            cout<<"l:"<<l<<",";
+//            cout<<"num_seq:"<<startOfMaximalSequences.size()<<",";
+//        }
         // loop through starts of maximal sequences and add edges for them
         for( auto start : startOfMaximalSequences ) {
             double startAngle = start*alpha;
-            if( printLog ) cout << "startOfMaximalSeq:"<< start<<",";
-            if( printLog ) cout << "startAngle:"<< startAngle<<",";
+//            if( printLog ) cout << "startOfMaximalSeq:"<< start<<",";
+//            if( printLog ) cout << "startAngle:"<< startAngle<<",";
 
             while( --N != done ); // point N to reference point
             // point N to first neighbor past the empty sequence, if it exists
@@ -266,44 +173,41 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                 || get_angle<K>( done->point(), m->point(), N->point() ) < startAngle )
             );
 
-
             kpx2010::Vertex_circulator afterSequence(N),
                                       beforeSequence(N);
             while( T.is_infinite(++beforeSequence) ); // move once CCW, if it's infinite move again
 
-            if( printLog ) cout << "beforeSeq:"<< beforeSequence->info() <<",";
-            if( printLog ) cout << "afterSeq:"<< afterSequence->info() <<",";
+//            if( printLog ) cout << "beforeSeq:"<< beforeSequence->info() <<",";
+//            if( printLog ) cout << "afterSeq:"<< afterSequence->info() <<",";
 
             //return;
             if( l > 1 ) {
                 // select the first ceil(l/2) unselected edges CCW
                 size_t remainingToAdd = size_t(rint(ceil(l/2.0)));
-
-                if( printLog ) cout << "CCWadds:"<< remainingToAdd<<",";
+                //if( printLog ) cout << "CCWadds:"<< remainingToAdd<<",";
 
                 while( remainingToAdd > 0 && ++N != afterSequence ) {
                     if( !T.is_infinite(N) && !contains( selected, N ) ) {
                         selected.emplace(N);
                         --remainingToAdd;
-                        if( printLog ) cout << "compensating:"<< N->info() <<",";
+                        //if( printLog ) cout << "compensating:"<< N->info() <<",";
                     }
                 }
 
                 // select the first floor(l/2) unselected edges CW
                 remainingToAdd = size_t(rint(floor(l/2.0)));
                 N = beforeSequence; // move N to the neighbor before the sequence
-
-                if( printLog ) cout << "CWadds:"<< remainingToAdd<<",";
+                //if( printLog ) cout << "CWadds:"<< remainingToAdd<<",";
 
                 while( remainingToAdd > 0 && --N != beforeSequence ) {
                     if( !T.is_infinite(N) && !contains( selected, N ) ) {
                         selected.emplace(N);
                         --remainingToAdd;
-                        if( printLog ) cout << "compensating:"<< N->info() <<",";
+                        //if( printLog ) cout << "compensating:"<< N->info() <<",";
                     }
                 }
             } else if( l == 1 ) {
-                if( printLog ) cout << "addOne,";
+                //if( printLog ) cout << "addOne,";
                 kpx2010::Vertex_handle singleSelection = v_inf;
 
                 // consider the first CW and CCW edges (held in beforeSequence and afterSequence)
@@ -321,7 +225,7 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                 // if we found one to select, select it!
                 if( !T.is_infinite(singleSelection) ) {
                     selected.emplace( singleSelection );
-                    if( printLog ) cout << "compensating:"<< singleSelection->info() <<",";
+                    //if( printLog ) cout << "compensating:"<< singleSelection->info() <<",";
                 }
             }
         }
@@ -330,24 +234,24 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         // now add edges from each to the current vertex (u)
         for( auto v : selected ) {
             if( !T.is_infinite(v) ) {
-                if( printLog ) cout<<"forward_";
+                //if( printLog ) cout<<"forward_";
                 inserted = selectEdge( T, G_prime, m, v, n, printLog );
             }
         }
 
     }
 
-
+    // Done. Send edges from G_prime with value == true (selected by both endpoints) to output.
 
     // Edge list is only needed for printing. Remove for production.
-    vector< pair<Point,Point> > edgeList;
-    edgeList.reserve( G_prime.size() );
+//    vector< pair<Point,Point> > edgeList;
+//    edgeList.reserve( G_prime.size() );
 
     // Send resultant graph to output iterator
     for( auto e : G_prime ) {
         if( e.second ) { // e.second holds the bool value of whether both vertices of an edge selected the edge
             // Edge list is only needed for printing. Remove for production.
-            edgeList.emplace_back( handles.at(e.first.first)->point(), handles.at(e.first.second)->point() );
+            //edgeList.emplace_back( handles.at(e.first.first)->point(), handles.at(e.first.second)->point() );
 
             *result = make_pair( handles.at(e.first.first)->point(), handles.at(e.first.second)->point() );
             ++result;
@@ -363,43 +267,39 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     //
     //
 
-
-    if( printLog ) {
-        GraphPrinter printer(1);
-        GraphPrinter::OptionsList options;
-
-        options = {
-            { "color", printer.inactiveEdgeColor },
-            { "line width", to_string(printer.inactiveEdgeWidth) }
-        };
-        printer.drawEdges( T, options );
-
-        options = { // active edge options
-            { "color", printer.activeEdgeColor },
-            { "line width", to_string(printer.activeEdgeWidth) }
-        };
-        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
-
-
-        options = {
-            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
-            { "color", make_optional( printer.backgroundColor ) }, // text color
-            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
-            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-        };
-        GraphPrinter::OptionsList borderOptions = {
-            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
-            { "color", printer.activeEdgeColor }, // additional border color
-            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-        };
-        printer.drawVerticesWithInfo( T, options, borderOptions );
-
-        printer.print( "bsx2009" );
-        cout<<"\n";
-    }
-
-
-
+//    if( printLog ) {
+//        GraphPrinter printer(1);
+//        GraphPrinter::OptionsList options;
+//
+//        options = {
+//            { "color", printer.inactiveEdgeColor },
+//            { "line width", to_string(printer.inactiveEdgeWidth) }
+//        };
+//        printer.drawEdges( T, options );
+//
+//        options = { // active edge options
+//            { "color", printer.activeEdgeColor },
+//            { "line width", to_string(printer.activeEdgeWidth) }
+//        };
+//        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
+//
+//
+//        options = {
+//            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+//            { "color", make_optional( printer.backgroundColor ) }, // text color
+//            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+//            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+//        };
+//        GraphPrinter::OptionsList borderOptions = {
+//            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
+//            { "color", printer.activeEdgeColor }, // additional border color
+//            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+//        };
+//        printer.drawVerticesWithInfo( T, options, borderOptions );
+//
+//        printer.print( "bsx2009" );
+//        cout<<"\n";
+//    }
 
     //
     //

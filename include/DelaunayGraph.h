@@ -73,14 +73,14 @@ class DelaunayGraph {
         }
     }
 
-    void add_edge( const Vertex_handle& v1, const Vertex_handle& v2 ) {
+    inline void add_edge( const Vertex_handle& v1, const Vertex_handle& v2 ) {
         add_half_edge( v1, v2 );
         add_half_edge( v2, v1 );
         //cout<<"    add edge ("<<v1->point()<<", "<<v2->point()<<")\n";
         //_algoTV.addToEventQueue( std::make_pair(v1,v2), true );
     }
 
-    void remove_edge( const Vertex_handle& v1, const Vertex_handle& v2 ) {
+    inline void remove_edge( const Vertex_handle& v1, const Vertex_handle& v2 ) {
         remove_half_edge( v1, v2 );
         remove_half_edge( v2, v1 );
         //_algoTV.addToEventQueue( std::make_pair(v1,v2), false );
@@ -114,7 +114,7 @@ class DelaunayGraph {
         return result;
     }
 
-    Vertex_circulator orient_circulator( const Vertex_circulator& C, const Vertex_handle& v ) const {
+    inline Vertex_circulator orient_circulator( const Vertex_circulator& C, const Vertex_handle& v ) const {
         Vertex_circulator out(C),
                           done(C);
         do {
@@ -187,7 +187,7 @@ class DelaunayGraph {
         std::copy( order.begin(), order.end(), ordering );
     }
 
-    size_t incident_chords( const VertexHash& on_outer_face, const Vertex_handle& v_k ) const {
+    inline size_t incident_chords( const VertexHash& on_outer_face, const Vertex_handle& v_k ) const {
         Vertex_circulator N = _DT.incident_vertices(v_k),
                           done(N);
         size_t c = 0;
@@ -201,7 +201,7 @@ class DelaunayGraph {
         return (c - 2);
     }
 
-    int count_valid_neighbors( Vertex_circulator C, const VertexHash& invalid ) const {
+    inline int count_valid_neighbors( Vertex_circulator C, const VertexHash& invalid ) const {
         Vertex_circulator done(C);
         int k = 0; // count N_i path length k
 
@@ -213,7 +213,7 @@ class DelaunayGraph {
         return k;
     }
 
-    void normalize_circulator( Vertex_circulator &C, const VertexHash& invalid ) const {
+    inline void normalize_circulator( Vertex_circulator &C, const VertexHash& invalid ) const {
         Vertex_circulator done = C;
         // Position circulator so that we are guaranteed to be on the first vertex on the path N_i
         // First, loop until the circulator reaches an invalid vertex or completes a full rotation
@@ -223,11 +223,11 @@ class DelaunayGraph {
         while( ( contains( invalid, C ) || _DT.is_infinite(C) ) && ++C != done );// cout<<v_n->point()<<"\n";
     }
 
-    size_t n() const {
+    inline size_t n() const {
         return _DT.number_of_vertices();
     }
 
-    size_t degree() const {
+    inline size_t degree() const {
         size_t max_d = 0;
         for( auto& v : _E )
             max_d = std::max( v.second.size(), max_d );
@@ -236,7 +236,7 @@ class DelaunayGraph {
 
   private:
 
-    void add_half_edge( const Vertex_handle& v1, const Vertex_handle& v2 ) {
+    inline void add_half_edge( const Vertex_handle& v1, const Vertex_handle& v2 ) {
         typename AdjacencyList::iterator v1_incident_vertices = _E.find(v1);
 
         if( v1_incident_vertices == _E.end() ) // v1 not found in g
@@ -245,7 +245,7 @@ class DelaunayGraph {
         v1_incident_vertices->second.insert(v2);
     }
 
-    void remove_half_edge( const Vertex_handle& v1, const Vertex_handle& v2 ) {
+    inline void remove_half_edge( const Vertex_handle& v1, const Vertex_handle& v2 ) {
         typename AdjacencyList::iterator v1_incident_vertices = _E.find(v1);
 
         // if v1 in present in _E, and v2 is present in v1, remove v2 from v1

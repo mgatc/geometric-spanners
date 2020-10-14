@@ -2,9 +2,10 @@
 #define GSNUNF_METRICS_H
 
 #include <algorithm> // swap
+#include <cmath> // isinf(all pairs dijkstra)
 #include <functional>
 #include <limits>
-#include <optional>
+#include <optional> // all pairs dijkstra
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -81,58 +82,58 @@ void EuclideanDistanceMatrix( const DelaunayGraph& G, const DelaunayGraph::templ
 using StretchFactorIndexEntry = pair<pair<size_t,size_t>, DelaunayGraph::FT>;
 using StretchFactorVertexHandleEntry = pair<pair<DelaunayGraph::Vertex_handle,DelaunayGraph::Vertex_handle>, DelaunayGraph::FT>;
 
-StretchFactorVertexHandleEntry StretchFactorFloydWarshall( const DelaunayGraph& G ) {
-    using namespace metrics;
-    vector< vector< optional<DelaunayGraph::FT> > > stretch;
-    size_t N = G.n();
-
-    // First, create a vertex-to-index map
-    // Add all vertices to a vertex map and assign an index
-
-    DelaunayGraph::template VertexMap< size_t > handleToIndex;
-    vector<DelaunayGraph::Vertex_handle> indexToHandle;
-    createVertexToIndexMaps( G, handleToIndex, indexToHandle );
-
-    // Next, conduct Floyd-Warshall to determine all paths' cost
-    FloydWarshall( G, handleToIndex, stretch );
-    // Next, determine Euclidean distance between all vertices
-    vector< vector< optional<DelaunayGraph::FT> > > euclidean;
-    EuclideanDistanceMatrix( G, handleToIndex, euclidean );
-
-    vector< vector< optional<DelaunayGraph::FT> > > quotient( N, vector< optional<DelaunayGraph::FT> >(N) );
-
-    for( size_t i=0; i<N; ++i )
-        for( size_t j=0; j<N; ++j )
-            quotient.at(i).at(j) =
-                stretch.at(i).at(j) ?
-                    make_optional( i==j ? 0 : *stretch.at(i).at(j) / *euclidean.at(i).at(j) )
-                    : nullopt;
-
-    swap( quotient, stretch );
-
-    StretchFactorIndexEntry maxVal = make_pair( make_pair(0, 0), 1.0 );
-    // Find max in stretch
-    for( size_t i=0; i<stretch.size(); ++i ) {
-        for( size_t j=0; j<stretch.at(i).size(); ++j ) {
-            if( stretch.at(i).at(j) > maxVal.second ) {
-                maxVal = make_pair( make_pair( i, j ), *stretch.at(i).at(j) );
-            }
-        }
-    }
-    return make_pair(
-        make_pair(
-            indexToHandle.at( maxVal.first.first  ),
-            indexToHandle.at( maxVal.first.second )
-        ), maxVal.second
-    );
-}
-
-template< typename RandomAccessIterator >
-StretchFactorVertexHandleEntry StretchFactorFloydWarshall( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
-    DelaunayGraph G;
-    G.buildFromEdgeList( edgesBegin, edgesEnd );
-    return StretchFactorFloydWarshall(G);
-}
+//StretchFactorVertexHandleEntry StretchFactorFloydWarshall( const DelaunayGraph& G ) {
+//    using namespace metrics;
+//    vector< vector< optional<DelaunayGraph::FT> > > stretch;
+//    size_t N = G.n();
+//
+//    // First, create a vertex-to-index map
+//    // Add all vertices to a vertex map and assign an index
+//
+//    DelaunayGraph::template VertexMap< size_t > handleToIndex;
+//    vector<DelaunayGraph::Vertex_handle> indexToHandle;
+//    createVertexToIndexMaps( G, handleToIndex, indexToHandle );
+//
+//    // Next, conduct Floyd-Warshall to determine all paths' cost
+//    FloydWarshall( G, handleToIndex, stretch );
+//    // Next, determine Euclidean distance between all vertices
+//    vector< vector< optional<DelaunayGraph::FT> > > euclidean;
+//    EuclideanDistanceMatrix( G, handleToIndex, euclidean );
+//
+//    vector< vector< optional<DelaunayGraph::FT> > > quotient( N, vector< optional<DelaunayGraph::FT> >(N) );
+//
+//    for( size_t i=0; i<N; ++i )
+//        for( size_t j=0; j<N; ++j )
+//            quotient.at(i).at(j) =
+//                stretch.at(i).at(j) ?
+//                    make_optional( i==j ? 0 : *stretch.at(i).at(j) / *euclidean.at(i).at(j) )
+//                    : nullopt;
+//
+//    swap( quotient, stretch );
+//
+//    StretchFactorIndexEntry maxVal = make_pair( make_pair(0, 0), 1.0 );
+//    // Find max in stretch
+//    for( size_t i=0; i<stretch.size(); ++i ) {
+//        for( size_t j=0; j<stretch.at(i).size(); ++j ) {
+//            if( stretch.at(i).at(j) > maxVal.second ) {
+//                maxVal = make_pair( make_pair( i, j ), *stretch.at(i).at(j) );
+//            }
+//        }
+//    }
+//    return make_pair(
+//        make_pair(
+//            indexToHandle.at( maxVal.first.first  ),
+//            indexToHandle.at( maxVal.first.second )
+//        ), maxVal.second
+//    );
+//}
+//
+//template< typename RandomAccessIterator >
+//StretchFactorVertexHandleEntry StretchFactorFloydWarshall( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+//    DelaunayGraph G;
+//    G.buildFromEdgeList( edgesBegin, edgesEnd );
+//    return StretchFactorFloydWarshall(G);
+//}
 
 template< typename Point >
 struct PointHasher {
@@ -310,8 +311,6 @@ optional<double> AStar( VertexContainer V, VertexMap vMap, AdjacencyList G_prime
     return nullopt;
 }
 
-
-
 template< typename VertexContainer, typename AdjacencyList >
 void Dijkstra( const size_t i, const VertexContainer& V, const AdjacencyList& G, vector<double>& ShortestPaths ) {
 
@@ -377,8 +376,11 @@ void Dijkstra( const size_t i, const VertexContainer& V, const AdjacencyList& G,
     } while( !open.empty() );
 }
 
-template< typename RandomAccessIterator >
-double StretchFactorDijkstra( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+// Accepts a range of iterators pointing to the edge list of Points in the graph to measure.
+// The edge list should be in the form pair<Point,Point>( source, target )
+template< typename RandomAccessIterator, typename OutputIterator >
+void AllPairsDijkstra( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd, OutputIterator output ) {
+    // Create types from the template argument
     typedef typename RandomAccessIterator::value_type Edge;
     typedef typename Edge::first_type Point;
 
@@ -414,39 +416,193 @@ double StretchFactorDijkstra( RandomAccessIterator edgesBegin, RandomAccessItera
         G[i_p].insert(i_q); // add edge to adjacency list
     }
     size_t n = V.size();
-    vector<double> T( n, INF );
 
-    // calculate euclidean distance between all pairs
+    // Prepare the heap
+    typedef pair<size_t,size_t> // source,target
+        VertexPair;
+    typedef pair<double,VertexPair> // path length between two vertices
+        Path;
+    typedef boost::heap::fibonacci_heap< Path,boost::heap::compare<MinHeapCompare<Path>>>
+        Heap;
+    typedef Heap::handle_type
+        HeapHandle;
+
+    Heap open;
+
+    // HeapHandles are stored in optional so they can be invalidated when the handle is popped
+    vector<vector<optional<HeapHandle>>> handleToHeap(
+        n, vector<optional<HeapHandle>>( n, nullopt )
+    );
+    // The list of parents to keep track of the paths. May not always need this and should omit if not.
+//    vector<vector<size_t>> parents(
+//        n, vector<size_t>(n)
+//    );
+    // The known shortest paths
+    vector<vector<double>> dist(
+        n, vector<double>(n, INF)
+    );    // We should start by placing an edge into the heap
+    size_t src = 0, //Note: these IDs will not match those in the pdf printer unless the pdf is printed from this function
+           tgt = 0;
+    // Fill dist with 0 for self-loops (i==j) and distance(i,j) for edges, and fill the heap with edges
+    for( auto u : G ) {
+        src = u.first;
+        for( auto tgt : u.second ) {
+            dist[src][tgt] = distance( V.at(src), V.at(tgt) );
+            Path p = make_pair(
+                dist.at(src).at(tgt),
+                make_pair(src,tgt)
+            );
+            handleToHeap[src][tgt] = open.push(p);
+        }
+    }
+    // self-loops
+    for( size_t i=0; i<n; ++i )
+        dist[i][i] = 0;
+
+    Path current = open.top();
+
+    do {
+        current = open.top();
+        open.pop();
+
+        src = current.second.first;
+        tgt = current.second.second;
+        // Set the shortest path for the current pair
+        dist.at(src).at(tgt) = current.first;
+
+//        cout<<"\n\n      current:"<<src<<","<<tgt;
+//        cout<<",";
+
+        // loop through neighbors N of current src to check if there's a shorter path to tgt through src
+//        for( size_t N : G.at(src) ) {
+////            cout<<"N_src:"<<N;
+////            cout<<",";
+//            // If we haven't found the shortest path
+//            if( isinf( dist.at(N).at(tgt) ) ) {
+//                double newScore = dist.at(N).at(src)
+//                    + dist.at(src).at(tgt);
+////                cout<<"g:"<<newScore;
+////                cout<<",";
+//                Path q = make_pair( newScore, make_pair( N, tgt ) );
+//
+//                if( handleToHeap.at(N).at(tgt) != nullopt ) { // if the heap handle exists
+//                    HeapHandle NHandle = *handleToHeap.at(N).at(tgt);
+////                    cout<<"existingPath:"<<(*NHandle).first<<",";
+//                    if( newScore < (*NHandle).first ) {
+////                        cout<<"updating path,";
+////                        parents.at(N).at(tgt) = src;
+//                        open.update(NHandle,q);
+//                        open.update(NHandle);
+//                    }
+//                } else { // heap handle doesn't exist, place it
+////                    cout<<"inserting into heap,";
+////                    parents.at(N).at(tgt) = src;
+//                    handleToHeap.at(N).at(tgt) = make_optional( open.push(q) );
+//                }
+//            }
+//        }
+
+        // loop through neighbors N of current tgt to check if there's a shorter path from src to N_tgt
+        for( size_t N : G.at(tgt) ) {
+//            cout<<"N_tgt:"<<N;
+//            cout<<",";
+            // If we haven't found the shortest path
+            if( isinf( dist.at(src).at(N) ) ) {
+                double newScore = dist.at(src).at(tgt)
+                    + dist.at(tgt).at(N);
+//                cout<<"g:"<<newScore;
+//                cout<<",";
+                Path q = make_pair( newScore, make_pair( src, N ) );
+
+                if( handleToHeap.at(src).at(N) != nullopt ) { // if the heap handle exists
+                    HeapHandle NHandle = *handleToHeap.at(src).at(N);
+                    //cout<<"existingPath:"<<(*NHandle).first<<",";
+                    if( newScore < (*NHandle).first ) {
+                        //cout<<"updating path,";
+//                        parents.at(src).at(N) = tgt;
+                        open.update(NHandle,q);
+                        open.update(NHandle);
+                    }
+                } else { // heap handle doesn't exist, place it
+//                    cout<<"inserting into heap,";
+//                    parents.at(src).at(N) = tgt;
+                    handleToHeap.at(src).at(N) = make_optional( open.push(q) );
+                }
+            }
+        }
+    } while( !open.empty() );
+
+    // output results
+    for( size_t i=0; i<n; ++i ) {
+        *output = dist[i];
+        ++output;
+    }
+}
+
+// Accepts a range of iterators pointing to the edge list of Points in the graph to measure.
+// The edge list should be in the form pair<Point,Point>( source, target )
+template< typename RandomAccessIterator, typename OutputIterator >
+void AllPairsDijkstraIterative( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd, OutputIterator output ) {
+    // Create types from the template argument
+    typedef typename RandomAccessIterator::value_type Edge;
+    typedef typename Edge::first_type Point;
+
+    vector<Point> V; // container for vertices
+    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
+    unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
+    size_t index = 0;
+
+    // Create list of vertices, map to their indices, and adjacency list
+    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
+        // If vMap doesn't contain p, put it in V
+        Point p = eit->first;
+        size_t i_p = index;
+        bool inserted = false;
+        auto vMapIt = vMap.begin();
+        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(p);
+            ++index;
+        }
+        i_p = vMapIt->second;
+
+        // If vMap doesn't contain q, put it in V
+        Point q = eit->second;
+        size_t i_q = index;
+        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(q);
+            ++index;
+        }
+        i_q = vMapIt->second;
+
+        G[i_p].insert(i_q); // add edge to adjacency list
+    }
+    size_t n = V.size();
+
+
+    // The known shortest paths
+    vector<vector<double>> dist(
+        n, vector<double>(n, INF)
+    );
+
     //#pragma omp parallel for
     for( size_t i=0; i<n; ++i ) {
-        vector<double> ShortestPaths( n, INF );
-        vector<double> D( n, INF );     // Euclidean distances
-
-        for( size_t j=0; j<n; ++j ) {
-            D.at(j) =
-                i==j ? 0 : d( V.at(i), V.at(j) );
-        }
-
-        Dijkstra( i, V, G, ShortestPaths );
-
-        // Divide each shortest path distance by the euclidean distance between the vertices.
-        for( size_t j=0; j<n; ++j ) {
-            ShortestPaths.at(j) = ( // avoid /0
-                i==j ? 0 : ShortestPaths.at(j)/D.at(j)
-            );
-        }
-        // Find max t and place in T
-        T.at(i) = *max_element(
-            begin( ShortestPaths ),
-            end(   ShortestPaths )
-        );
+        Dijkstra( i, V, G, dist.at(i) );
     }
-    // Find the big mac daddy t aka big money
-    return *max_element( T.begin(), T.end() );
+
+    // output results
+    for( size_t i=0; i<n; ++i ) {
+        *output = dist[i];
+        ++output;
+    }
 }
 
-template< typename RandomAccessIterator >
-double StretchFactorDijkstraParallel( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+// Accepts a range of iterators pointing to the edge list of Points in the graph to measure.
+// The edge list should be in the form pair<Point,Point>( source, target )
+template< typename RandomAccessIterator, typename OutputIterator >
+void AllPairsDijkstraIterativeParallel( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd, OutputIterator output ) {
+    // Create types from the template argument
     typedef typename RandomAccessIterator::value_type Edge;
     typedef typename Edge::first_type Point;
 
@@ -482,39 +638,99 @@ double StretchFactorDijkstraParallel( RandomAccessIterator edgesBegin, RandomAcc
         G[i_p].insert(i_q); // add edge to adjacency list
     }
     size_t n = V.size();
-    vector<double> T( n, INF );
 
-    // calculate euclidean distance between all pairs
+
+    // The known shortest paths
+    vector<vector<double>> dist(
+        n, vector<double>(n, INF)
+    );
+
     #pragma omp parallel for
     for( size_t i=0; i<n; ++i ) {
-        vector<double> ShortestPaths( n, INF );
-        vector<double> D( n, INF );     // Euclidean distances
-
-        for( size_t j=0; j<n; ++j ) {
-            D.at(j) =
-                i==j ? 0 : d( V.at(i), V.at(j) );
-        }
-
-        Dijkstra( i, V, G, ShortestPaths );
-
-    // Divide each shortest path distance by the euclidean distance between the vertices.
-        for( size_t j=0; j<n; ++j ) {
-            ShortestPaths.at(j) = ( // avoid /0
-                i==j ? 0 : ShortestPaths.at(j)/D.at(j)
-            );
-        }
-        // Find max t and place in T
-        T.at(i) = *max_element(
-            begin( ShortestPaths ),
-            end(   ShortestPaths )
-        );
+        Dijkstra( i, V, G, dist.at(i) );
     }
-    // Find the big mac daddy t aka big money
-    return *max_element( T.begin(), T.end() );
+
+    // output results
+    for( size_t i=0; i<n; ++i ) {
+        *output = dist[i];
+        ++output;
+    }
 }
 
+// Accepts a range of iterators pointing to the edge list of Points in the graph to measure.
+// The edge list should be in the form pair<Point,Point>( source, target )
+template< typename RandomAccessIterator, typename OutputIterator >
+void FloydWarshall( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd, OutputIterator output ) {
+    // Create types from the template argument
+    typedef typename RandomAccessIterator::value_type Edge;
+    typedef typename Edge::first_type Point;
+
+    vector<Point> V; // container for vertices
+    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
+    unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
+    size_t index = 0;
+
+    // Create list of vertices, map to their indices, and adjacency list
+    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
+        // If vMap doesn't contain p, put it in V
+        Point p = eit->first;
+        size_t i_p = index;
+        bool inserted = false;
+        auto vMapIt = vMap.begin();
+        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(p);
+            ++index;
+        }
+        i_p = vMapIt->second;
+
+        // If vMap doesn't contain q, put it in V
+        Point q = eit->second;
+        size_t i_q = index;
+        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(q);
+            ++index;
+        }
+        i_q = vMapIt->second;
+
+        G[i_p].insert(i_q); // add edge to adjacency list
+    }
+    size_t n = V.size();
+
+    // The known shortest paths
+    vector<vector<double>> dist(
+        n, vector<double>(n, INF)
+    );
+    // Fill dist with 0 for self-loops (i==j) and distance(i,j) for edges
+    for( auto u : G )
+        for( auto v : u.second )
+            dist[u.first][v] = distance( V.at(u.first), V.at(v) );
+
+    for( size_t i=0; i<n; ++i )
+        dist[i][i] = 0;
+
+    // Check if going through k yields a shorter path from i to j
+    for( size_t k=0; k<n; ++k ) {
+        for( size_t i=0; i<n; ++i ) {
+            for( size_t j=0; j<n; ++j ) {
+                dist.at(i).at(j) = CGAL::min(
+                    dist.at(i).at(j),
+                    dist.at(i).at(k) + dist.at(k).at(j)
+                );
+            }
+        }
+    }
+    // output results
+    for( size_t i=0; i<n; ++i ) {
+        *output = dist[i];
+        ++output;
+    }
+}
+
+
 template< typename RandomAccessIterator >
-double StretchFactorDijkstraReduction( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+double StretchFactor( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
     typedef typename RandomAccessIterator::value_type Edge;
     typedef typename Edge::first_type Point;
 

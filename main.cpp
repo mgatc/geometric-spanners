@@ -169,13 +169,16 @@ void scratch() {
 //        std::copy_n( g4, n/2, back_inserter(points) );
 
 //        points.emplace_back( 0,0 );
-//        string filename = "11_1658.312395x1658.312395.txt";
-//
-//        readPointsFromFile( back_inserter( points ), filename );
+        string filename = "data-30_50.000000x50.000000.txt";
 
-        generateRandomPoints( n, width/2, back_inserter(points) );
+        readPointsFromFile( back_inserter( points ), filename );
 
-        cout<< points.size();
+        //generateRandomPoints( n, width/2, back_inserter(points) );
+
+
+        n = points.size();
+
+        cout<< n;
         cout<< ",";
         list< pair< Point, Point > > result;
 
@@ -201,16 +204,34 @@ void scratch() {
             //BGS2002( points.begin(), points.end(), back_inserter(result) );
             KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
         }
+        vector<vector<double>> apdShortestPaths;
+        vector<vector<double>> apdiShortestPaths;
+        vector<vector<double>> fwShortestPaths;
+        AllPairsDijkstra( result.begin(), result.end(), back_inserter(apdShortestPaths) );
+        AllPairsDijkstraIterative( result.begin(), result.end(), back_inserter(apdiShortestPaths) );
+        FloydWarshall( result.begin(), result.end(), back_inserter(fwShortestPaths) );
+
+        assert( apdShortestPaths.size() == fwShortestPaths.size() );
+        for( size_t i=0; i<n; ++i ) {
+            for( size_t j=0; j<n; ++j ) {
+                cout<< i <<","<<j<<": apd="<<apdShortestPaths.at(i).at(j)<<", fw="<< fwShortestPaths.at(i).at(j) << "  ";
+//                if( abs( apdShortestPaths.at(i).at(j) - fwShortestPaths.at(i).at(j) ) > EPSILON ) {
+//                    cout<<"THEY DONT MATCH";
+//                }
+            }
+            cout<<"\n\n";
+        }
+
 //        cout << degree( result.begin(), result.end() );
 //        cout <<",";
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
-            double t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-            cout<< t;
-            cout<<",";
-            size_t deg = degree( result.begin(), result.end() );
-            cout << deg;
-            cout <<",";
+//            double t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//            cout<< t;
+//            cout<<",";
+//            size_t deg = degree( result.begin(), result.end() );
+//            cout << deg;
+//            cout <<",";
 //            cout << " Dumping edge set..."<<result.size()<<" edges.\n\n";
 
 
@@ -251,7 +272,7 @@ void scratch() {
 //        resultFileName += "redo";
 
        // singleRun( 30, 30, resultFileName, filename, true, true );
-        GraphPrinter printer(0.007);
+        GraphPrinter printer(0.2);
         GraphPrinter::OptionsList options;
 
         options = {
@@ -313,7 +334,8 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     else
         generatedFile = make_optional( generateRandomPoints( n, size, back_inserter(points) ) );
 
-    cout<< points.size();
+    n = points.size();
+    cout<< n;
     cout<< ",";
     cout<< size;
     cout<< ",";
@@ -328,59 +350,59 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //                cout << ",";
 
 
-
-
-    {
-        Timer tim;
-        BGS2005( points.begin(), points.end(), back_inserter(result) );
-    }
-    size_t deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    double t;
-    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-    cout << t;
-    cout <<",";
-
-    result.clear();
-
-
-
-
-    {
-        Timer tim;
-        LW2004( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-    cout << t;
-    cout <<",";
-
-    result.clear();
-
-
-
-
-
-
-
-    {
-        Timer tim;
-        BSX2009( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-    cout << t;
-    cout <<",";
-
-    result.clear();
+//
+//
+//    {
+//        Timer tim;
+//        BGS2005( points.begin(), points.end(), back_inserter(result) );
+//    }
+//    size_t deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//    double t;
+//    t = StretchFactor( result.begin(), result.end() );
+//    cout << t;
+//    cout <<",";
+//
+//    result.clear();
+//
+//
+//
+//
+//    {
+//        Timer tim;
+//        LW2004( points.begin(), points.end(), back_inserter(result) );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//    t = StretchFactor( result.begin(), result.end() );
+//    cout << t;
+//    cout <<",";
+//
+//    result.clear();
+//
+//
+//
+//
+//
+//
+//
+//    {
+//        Timer tim;
+//        BSX2009( points.begin(), points.end(), back_inserter(result) );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//    t = StretchFactor( result.begin(), result.end() );
+//    cout << t;
+//    cout <<",";
+//
+//    result.clear();
 
 
 
@@ -389,16 +411,54 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
         Timer tim;
         KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
     }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//    t = StretchFactor( result.begin(), result.end() );
+//    cout << t;
+//    cout <<",";
+//
+//    result.clear();
 
-    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-    cout << t;
-    cout <<",";
 
-    result.clear();
 
+    // All pairs shortest path stuff
+        vector<vector<double>> apdShortestPaths;
+        vector<vector<double>> apdiShortestPaths;
+        vector<vector<double>> apdpShortestPaths;
+        vector<vector<double>> fwShortestPaths;
+
+
+        {
+            Timer tim;
+            AllPairsDijkstra( result.begin(), result.end(), back_inserter(apdShortestPaths) );
+        }
+
+        {
+            Timer tim;
+            AllPairsDijkstraIterative( result.begin(), result.end(), back_inserter(apdiShortestPaths) );
+        }
+
+        {
+            Timer tim;
+            AllPairsDijkstraIterativeParallel( result.begin(), result.end(), back_inserter(apdpShortestPaths) );
+        }
+
+//        {
+//            Timer tim;
+//            FloydWarshall( result.begin(), result.end(), back_inserter(fwShortestPaths) );
+//        }
+
+        for( size_t i=0; i<n; ++i ) {
+            for( size_t j=0; j<n; ++j ) {
+                if( abs( apdShortestPaths.at(i).at(j) - apdiShortestPaths.at(i).at(j) ) > EPSILON ) {
+                    cout<<"FAIL";
+                    return false;
+                }
+            }
+        }
+        cout<<"PASS,";
 
 
 

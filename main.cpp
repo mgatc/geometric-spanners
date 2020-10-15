@@ -17,7 +17,7 @@
 #include "BSX2009.h"
 #include "KPX2010.h"
 #include "metrics.h"
-//#include "utilities.h"
+#include "utilities.h"
 
 using namespace gsnunf;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
@@ -30,66 +30,6 @@ void scratch();
 void stretchScratch();
 void stretchFactorAndDegreeExperiment();
 void algoTVScratch();
-
-template< class OutputIterator >
-void readPointsFromFile( OutputIterator out, const string outputFileName ) {
-    ifstream in(outputFileName);
-    if (in.is_open()) {
-        double x,y;
-        while ( in >> x >> y ) {
-            *out = Point(x,y);
-            ++out;
-        }
-        in.close();
-    }
-}
-
-template< class OutputIterator >
-string generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
-    typedef CGAL::Creator_uniform_2<double,Point> Creator;
-
-    auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( size );
-    auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   size );
-    auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( size );
-    auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( size );
-
-
-    auto g1s = CGAL::Random_points_in_square_2<Point,Creator>( size/4 );
-    auto g2s = CGAL::Random_points_in_disc_2<Point,Creator>(   size/4 );
-    auto g3s = CGAL::Random_points_on_square_2<Point,Creator>( size/4 );
-    auto g4s = CGAL::Random_points_on_circle_2<Point,Creator>( size/4 );
-
-    vector<Point> points;
-    points.reserve(n);
-
-    std::copy_n( g1, n*2/9, back_inserter(points) );
-    std::copy_n( g2, n/9, back_inserter(points) );
-    std::copy_n( g3, n*2/18, back_inserter(points) );
-    std::copy_n( g4, n/18, back_inserter(points) );
-
-    std::copy_n( g1s, n/9, back_inserter(points) );
-    std::copy_n( g2s, n*2/9, back_inserter(points) );
-    std::copy_n( g3s, n/18, back_inserter(points) );
-    std::copy_n( g4s, n*2/18, back_inserter(points) );
-
-    //points.emplace_back(0,0);
-
-    // copy points to output iterator
-    for( Point p : points )
-        *(pointsOut++) = p;
-
-    // copy points to file
-    ofstream out;
-    string fName;
-    fName = "data-" + to_string(n) + "_" + to_string(size) + "x" + to_string(size) + ".txt";
-    out.open( fName, ios::trunc );
-    for( Point p : points )
-        out << p << endl;
-
-    out.close();
-
-    return fName;
-}
 
 int main() {
 //    size_t n = 20;
@@ -171,7 +111,7 @@ void scratch() {
 //        points.emplace_back( 0,0 );
         string filename = "data-30_50.000000x50.000000.txt";
 
-        readPointsFromFile( back_inserter( points ), filename );
+        readPointsFromFile<Point>( back_inserter( points ), filename );
 
         //generateRandomPoints( n, width/2, back_inserter(points) );
 
@@ -330,9 +270,9 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     optional<string> generatedFile = nullopt;
 
     if( filename )
-        readPointsFromFile( back_inserter( points ), *filename );
+        readPointsFromFile<Point>( back_inserter( points ), *filename );
     else
-        generatedFile = make_optional( generateRandomPoints( n, size, back_inserter(points) ) );
+        generatedFile = make_optional( generateRandomPoints<Point>( n, size, back_inserter(points) ) );
 
     n = points.size();
     cout<< n;

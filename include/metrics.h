@@ -443,11 +443,22 @@ void AllPairsDijkstra( RandomAccessIterator edgesBegin, RandomAccessIterator edg
     );    // We should start by placing an edge into the heap
     size_t src = 0, //Note: these IDs will not match those in the pdf printer unless the pdf is printed from this function
            tgt = 0;
-    // Fill dist with 0 for self-loops (i==j) and distance(i,j) for edges, and fill the heap with edges
+    // Fill dist with distance(i,j) for edges
     for( auto u : G ) {
         src = u.first;
         for( auto tgt : u.second ) {
             dist[src][tgt] = distance( V.at(src), V.at(tgt) );
+        }
+    }
+    // self-loops = 0
+    for( size_t i=0; i<n; ++i )
+        dist[i][i] = 0;
+
+    // loop over edges
+    for( auto u : G ) {
+        src = u.first;
+        for( auto tgt : u.second ) {
+            //
             Path p = make_pair(
                 dist.at(src).at(tgt),
                 make_pair(src,tgt)
@@ -455,11 +466,9 @@ void AllPairsDijkstra( RandomAccessIterator edgesBegin, RandomAccessIterator edg
             handleToHeap[src][tgt] = open.push(p);
         }
     }
-    // self-loops
-    for( size_t i=0; i<n; ++i )
-        dist[i][i] = 0;
 
     Path current = open.top();
+
 
     do {
         current = open.top();

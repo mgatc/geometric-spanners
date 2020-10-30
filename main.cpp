@@ -97,7 +97,7 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    experiment( 5, 1000, 10000, 1000 );
+    experiment( 5, 10000, 100000, 10000 );
     //scratch();
     //stretchScratch();
     //algoTVScratch();

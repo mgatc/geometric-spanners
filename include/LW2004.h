@@ -180,13 +180,14 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         // Get neighbors of u
         Vertex_circulator N = T.incident_vertices( u_handle );
         //if( printLog ) cout<<"N_init:"<<(T.is_infinite(N)?size_t(numeric_limits<size_t>::max):size_t(N->info()))<<" ";
-        Vertex_circulator done(N);
         // find a processed neighbor if it exists or we reach the start again
+        while( T.is_infinite(--N) );
+        Vertex_circulator done(N); // set done to a vertex that is not infinite
         while( ( T.is_infinite(--N) || !isProcessed.at(N->info()) ) && N!=done );
         done = N; // update N
-        // Rotate N until reaching an infinite vertex (check first) or the original vertex
-        while( !T.is_infinite(--N) && N != done ); //
-        if( T.is_infinite(N) ) --N; // if we stopped on an infinite vertex, move to its successor
+//        // Rotate N until reaching an infinite vertex (check first) or the original vertex
+//        while( !T.is_infinite(--N) && N != done ); //
+//        if( T.is_infinite(N) ) --N; // if we stopped on an infinite vertex, move to its successor
         //if( printLog ) cout<<"N_ready:"<<N->info()<<" ";
 
         // Find and store sector boundaries, start with N
@@ -196,15 +197,16 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
             if( ( !T.is_infinite(N) && isProcessed.at( N->info() ) ) ) { // check for v_inf first or isProcessed will be out of range
                 sectorBoundaries.push_back( N->handle() );
                 ++processedNeighbors;
-            } else if( T.is_infinite(N) ) {
-                ++N; // move to predecessor
-                // Add predecessor if not already added.
-                if( N->handle() != sectorBoundaries.back() )
-                    sectorBoundaries.push_back( N->handle() );
-                // Note, if we've reached this branch, we know that
-                // v_inf's successor is sectorBoundaries.front()
-                --N; // move back to N (infinite vertex) to naturally exit the loop
             }
+//            else if( T.is_infinite(N) ) {
+//                ++N; // move to predecessor
+//                // Add predecessor if not already added.
+//                if( N->handle() != sectorBoundaries.back() )
+//                    sectorBoundaries.push_back( N->handle() );
+//                // Note, if we've reached this branch, we know that
+//                // v_inf's successor is sectorBoundaries.front()
+//                --N; // move back to N (infinite vertex) to naturally exit the loop
+//            }
         }
         assert( processedNeighbors <= 5 );
 
@@ -232,14 +234,17 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         }
 
         Vertex_handle lastN = v_inf;
-        if( isProcessed.at( N->info() ) ) --N; // if N is processed, step
-        size_t sector = 0;
+        //if( isProcessed.at( N->info() ) ) --N; // if N is processed, step
+        size_t sector = -1; // The first sector boundary will increment sector, which should be 0 for the first sector
 
         do { // Loop through neighbors and add appropriate edges
             if( !T.is_infinite(N) ) {
-                if( isProcessed.at( N->info() ) ) {
+                // If N is the next sectorBoundary, increment sector
+                if( N->handle() == sectorBoundaries.at((sector+1)%sectorBoundaries.size()) )
                     ++sector;
-                } else {
+                // It is possible for a sectorBoundary to be not processed,
+                // in the case of no processed neighbors.
+                if( !isProcessed.at( N->info() ) ) {
                     assert( sector < sectorBoundaries.size() );
                     // evaluate possible forward edges
                     double theta = get_angle<K>(

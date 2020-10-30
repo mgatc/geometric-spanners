@@ -416,7 +416,7 @@
 1588865172 source:/home/matt/UDC/udc/src/ExperimentalHex2.cpp
 	"ExperimentalHex2.h"
 
-1602697225 source:/home/matt/GeometricSpanners/main.cpp
+1603303222 source:/home/matt/GeometricSpanners/main.cpp
 	<chrono>
 	<fstream>
 	<list>
@@ -432,6 +432,7 @@
 	"BSX2009.h"
 	"KPX2010.h"
 	"metrics.h"
+	"utilities.h"
 
 1589914637 /home/matt/GeometricSpanners/include/Greedy.h
 	"CgalComponents.h"
@@ -753,7 +754,7 @@
 	<CGAL/Vector_2.h>
 	"GeometricSpannerPrinter.h"
 
-1602701551 /home/matt/GeometricSpanners/include/metrics.h
+1603303596 /home/matt/GeometricSpanners/include/metrics.h
 	<algorithm>
 	<cmath>
 	<functional>
@@ -789,7 +790,7 @@
 
 1602510682 /home/matt/GeometricSpanners/include/GraphAlgoTV.h
 
-1602681068 /home/matt/GeometricSpanners/include/utilities.h
+1602768207 /home/matt/GeometricSpanners/include/utilities.h
 	<chrono>
 	<cmath>
 	<iostream>

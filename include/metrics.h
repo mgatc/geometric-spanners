@@ -736,6 +736,97 @@ void FloydWarshall( RandomAccessIterator edgesBegin, RandomAccessIterator edgesE
         ++output;
     }
 }
+// Accepts a range of iterators pointing to the edge list of Points in the graph to measure.
+// The edge list should be in the form pair<Point,Point>( source, target )
+template< typename RandomAccessIterator, typename OutputIterator >
+void FloydWarshall_BF( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd, OutputIterator output ) {
+    // Create types from the template argument
+    typedef typename RandomAccessIterator::value_type Edge;
+    typedef typename Edge::first_type Point;
+
+    vector<Point> V; // container for vertices
+    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
+    unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
+    size_t index = 0;
+
+    // Create list of vertices, map to their indices, and adjacency list
+    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
+        // If vMap doesn't contain p, put it in V
+        Point p = eit->first;
+        size_t i_p = index;
+        bool inserted = false;
+        auto vMapIt = vMap.begin();
+        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(p);
+            ++index;
+        }
+        i_p = vMapIt->second;
+
+        // If vMap doesn't contain q, put it in V
+        Point q = eit->second;
+        size_t i_q = index;
+        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(q);
+            ++index;
+        }
+        i_q = vMapIt->second;
+
+        G[i_p].insert(i_q); // add edge to adjacency list
+    }
+    size_t n = V.size();
+
+    // compute breadth-first ordering
+    vector<size_t> level(n);
+    level.front() = 0;
+    vector<bool> known( n, false ); // don't use references to this, see https://en.cppreference.com/w/cpp/container/vector_bool
+    known.front() = true;
+    size_t bfOrder = 0;
+
+    for( size_t i=0; i<n; ++i ) {
+        for( auto neighbor : G.at( level.at(i) ) ) {
+            if( !known.at(neighbor) ) {
+                level.at( bfOrder ) = neighbor;
+                known.at( level.at(bfOrder) ) = true;
+                ++bfOrder;
+            }
+        }
+    }
+
+    sort( V.begin(), V.end(), [&]( const Point& lhs, const Point& rhs ) {
+        return level.at(vMap.at(lhs)) < level.at(vMap.at(rhs));
+    });
+
+    // The known shortest paths
+    vector<vector<double>> dist(
+        n, vector<double>(n, INF)
+    );
+    // Fill dist with 0 for self-loops (i==j) and distance(i,j) for edges
+    for( auto u : G )
+        for( auto v : u.second )
+            dist[u.first][v] = distance( V.at(u.first), V.at(v) );
+
+    for( size_t i=0; i<n; ++i )
+        dist[i][i] = 0;
+
+    // Check if going through k yields a shorter path from i to j
+    for( size_t k=0; k<n; ++k ) {
+        for( size_t i=0; i<n; ++i ) {
+            for( size_t j=0; j<n; ++j ) {
+                dist.at(i).at(j) = CGAL::min(
+                    dist.at(i).at(j),
+                    dist.at(i).at(k) + dist.at(k).at(j)
+                );
+            }
+        }
+    }
+    // output results
+    for( size_t i=0; i<n; ++i ) {
+        *output = dist[i];
+        ++output;
+    }
+}
 
 
 template< typename RandomAccessIterator >
@@ -806,6 +897,100 @@ double StretchFactor( RandomAccessIterator edgesBegin, RandomAccessIterator edge
             t_max = t_local;
         }
     }
+    // Find the big mac daddy t aka big money
+    return t_max;
+}
+
+template< typename InputIterator, typename OutputIterator >
+double EuclideanDistances( InputIterator pointStart, InputIterator pointEnd, OutputIterator dist ) {
+    for( auto i=pointStart; i!=pointEnd; ++i ) {
+        vector<double> row;
+        for( auto j=pointStart; j!=pointEnd; ++j ) {
+            row.push_back( distance(*i,*j) );
+        }
+        *dist++ = row;
+    }
+}
+
+template< typename RandomAccessIterator >
+double StretchFactorBFFW( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+    typedef typename RandomAccessIterator::value_type Edge;
+    typedef typename Edge::first_type Point;
+
+    vector<Point> V; // container for vertices
+    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
+    unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
+    size_t index = 0;
+
+    // Create list of vertices, map to their indices, and adjacency list
+    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
+        // If vMap doesn't contain p, put it in V
+        Point p = eit->first;
+        size_t i_p = index;
+        bool inserted = false;
+        auto vMapIt = vMap.begin();
+        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(p);
+            ++index;
+        }
+        i_p = vMapIt->second;
+
+        // If vMap doesn't contain q, put it in V
+        Point q = eit->second;
+        size_t i_q = index;
+        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(q);
+            ++index;
+        }
+        i_q = vMapIt->second;
+
+        G[i_p].insert(i_q); // add edge to adjacency list
+    }
+    size_t n = V.size();
+
+    // compute breadth-first ordering
+    vector<size_t> level(n);
+    level.front() = 0;
+    vector<bool> known( n, false ); // don't use references to this, see https://en.cppreference.com/w/cpp/container/vector_bool
+    known.front() = true;
+    size_t bfOrder = 0;
+
+    for( size_t i=0; i<n; ++i ) {
+        for( auto neighbor : G.at( level.at(i) ) ) {
+            if( !known.at(neighbor) ) {
+                level.at( bfOrder ) = neighbor;
+                known.at( level.at(bfOrder) ) = true;
+                ++bfOrder;
+            }
+        }
+    }
+    sort( V.begin(), V.end(), [&]( const Point& lhs, const Point& rhs ) {
+        return level.at(vMap.at(lhs)) < level.at(vMap.at(rhs));
+    });
+
+    double t_max = 0.0;
+
+    // The known shortest paths
+    vector<vector<double>> ShortestPath;
+
+    FloydWarshall_BF( edgesBegin, edgesEnd, back_inserter( ShortestPath ) );
+
+    // Get Euclidean distance matrix
+    vector<vector<double>> EuclideanDistance;
+
+    EuclideanDistances( V.begin(), V.end(), back_inserter( EuclideanDistance ) );
+
+    for( size_t i=0; i<ShortestPath.size(); ++i ) {
+        for( size_t j=0; j<ShortestPath.size(); ++j ) {
+            t_max = CGAL::max(
+                t_max,
+                ShortestPath.at(i).at(j)/EuclideanDistance.at(i).at(j)
+            );
+        }
+    }
+
     // Find the big mac daddy t aka big money
     return t_max;
 }

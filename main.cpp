@@ -282,6 +282,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
     list< pair< Point, Point > > result;
 
+
+
+    // ALGORITHM TESTING AREA
+
     // Delaunay triangulation
     //CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
 //                cout << degree(DT);
@@ -363,41 +367,77 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-    // All pairs shortest path stuff
-        vector<vector<double>> apdShortestPaths;
-        vector<vector<double>> apdiShortestPaths;
-        vector<vector<double>> apdpShortestPaths;
-        vector<vector<double>> fwShortestPaths;
 
 
-        {
-            Timer tim;
-            AllPairsDijkstra( result.begin(), result.end(), back_inserter(apdShortestPaths) );
-        }
 
-        {
-            Timer tim;
-            AllPairsDijkstraIterative( result.begin(), result.end(), back_inserter(apdiShortestPaths) );
-        }
+    // ALL PAIRS TESTING AREA
 
-        {
-            Timer tim;
-            AllPairsDijkstraIterativeParallel( result.begin(), result.end(), back_inserter(apdpShortestPaths) );
-        }
 
+//        vector<vector<double>> apdShortestPaths;
+//        vector<vector<double>> apdiShortestPaths;
+//        vector<vector<double>> apdpShortestPaths;
+//        vector<vector<double>> fwShortestPaths;
+//        vector<vector<double>> fwbfShortestPaths;
+
+//
+//        {
+//            Timer tim;
+//            AllPairsDijkstra( result.begin(), result.end(), back_inserter(apdShortestPaths) );
+//        }
+//
+//        {
+//            Timer tim;
+//            AllPairsDijkstraIterative( result.begin(), result.end(), back_inserter(apdiShortestPaths) );
+//        }
+
+//        {
+//            Timer tim;
+//            AllPairsDijkstraIterativeParallel( result.begin(), result.end(), back_inserter(apdpShortestPaths) );
+//        }
+//
 //        {
 //            Timer tim;
 //            FloydWarshall( result.begin(), result.end(), back_inserter(fwShortestPaths) );
 //        }
+//
+//        {
+//            Timer tim;
+//            FloydWarshall_BF( result.begin(), result.end(), back_inserter(fwbfShortestPaths) );
+//        }
+//
+//        for( size_t i=0; i<n; ++i ) {
+//            for( size_t j=0; j<n; ++j ) {
+//                if( abs( fwShortestPaths.at(i).at(j) - fwbfShortestPaths.at(i).at(j) ) > EPSILON ) {
+//                    cout<<"FAIL";
+//                    return false;
+//                }
+//            }
+//        }
 
-        for( size_t i=0; i<n; ++i ) {
-            for( size_t j=0; j<n; ++j ) {
-                if( abs( apdShortestPaths.at(i).at(j) - apdiShortestPaths.at(i).at(j) ) > EPSILON ) {
-                    cout<<"FAIL";
-                    return false;
-                }
-            }
-        }
+
+    // STRETCH FACTOR TESTING AREA
+
+    double t_standard = INF;
+    {
+        Timer tim;
+        t_standard = StretchFactor( result.begin(), result.end() );
+    }
+    cout<< t_standard <<",";
+
+    double t_bffw = INF;
+    {
+        Timer tim;
+        t_bffw = StretchFactorBFFW( result.begin(), result.end() );
+    }
+    cout<< t_bffw <<",";
+
+    if( abs( t_standard - t_bffw ) > EPSILON ) {
+        cout<<"FAIL";
+        return false;
+    }
+
+
+
         cout<<"PASS,";
 
 

@@ -1,6 +1,7 @@
 #include <chrono>
 #include <fstream> // reading and writing point sets
 #include <list>
+#include <limits>
 #include <optional>
 #include <utility>
 
@@ -31,14 +32,18 @@ void stretchScratch();
 void stretchFactorAndDegreeExperiment();
 void algoTVScratch();
 
+const size_t SIZE_T_MAX = numeric_limits<size_t>::max();
+
 template< class OutputIterator >
-void readPointsFromFile( OutputIterator out, const string outputFileName ) {
+void readPointsFromFile( OutputIterator out, const string outputFileName, const size_t n=SIZE_T_MAX ) {
     ifstream in(outputFileName);
     if (in.is_open()) {
         double x,y;
-        while ( in >> x >> y ) {
+        size_t i = 0;
+        while ( i<n && in >> x >> y ) {
             *out = Point(x,y);
             ++out;
+            ++i;
         }
         in.close();
     }
@@ -97,8 +102,8 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    experiment( 5, 10000, 100000, 10000 );
-    //scratch();
+    //experiment( 5, 10000, 100000, 10000 );
+    scratch();
     //stretchScratch();
     //algoTVScratch();
 
@@ -169,11 +174,13 @@ void scratch() {
 //        std::copy_n( g4, n/2, back_inserter(points) );
 
 //        points.emplace_back( 0,0 );
-//        string filename = "11_1658.312395x1658.312395.txt";
-//
-//        readPointsFromFile( back_inserter( points ), filename );
+        string filename = "TopUSCities.txt";
 
-        generateRandomPoints( n, width/2, back_inserter(points) );
+        n = 50;
+
+        readPointsFromFile( back_inserter( points ), filename, n );
+
+        //generateRandomPoints( n, width/2, back_inserter(points) );
 
         cout<< points.size();
         cout<< ",";
@@ -198,19 +205,20 @@ void scratch() {
         {
 //                Timer tim;
             //LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, true );
+            BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3, true );
             //BGS2002( points.begin(), points.end(), back_inserter(result) );
-            KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
+            //KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
         }
 //        cout << degree( result.begin(), result.end() );
 //        cout <<",";
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
-            double t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-            cout<< t;
-            cout<<",";
-            size_t deg = degree( result.begin(), result.end() );
-            cout << deg;
-            cout <<",";
+//            double t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//            cout<< t;
+//            cout<<",";
+//            size_t deg = degree( result.begin(), result.end() );
+//            cout << deg;
+//            cout <<",";
 //            cout << " Dumping edge set..."<<result.size()<<" edges.\n\n";
 
 
@@ -251,7 +259,7 @@ void scratch() {
 //        resultFileName += "redo";
 
        // singleRun( 30, 30, resultFileName, filename, true, true );
-        GraphPrinter printer(0.007);
+        GraphPrinter printer(0.7);
         GraphPrinter::OptionsList options;
 
         options = {
@@ -280,7 +288,9 @@ void scratch() {
         };
         printer.drawVerticesWithInfo( Del, options, borderOptions );
 
-        printer.print( "bsx2009" );
+        string outputFilename = "USCities";
+        outputFilename += n;
+        printer.print( outputFilename );
         cout<<"\n";
 }
 

@@ -102,8 +102,8 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    experiment( 5, 10000, 100000, 10000 );
-    //scratch();
+    //experiment( 5, 1000, 10000, 1000 );
+    scratch();
     //stretchScratch();
     //algoTVScratch();
 
@@ -145,26 +145,26 @@ void scratch() {
 //        };
 
             // POINT SET FROM PAPER, PAGE 253
-//    points = {
-//        { -1, 0.1 },
-//        { -0.9, 3 },
-//        { -2, 6 },
-//        { -7, 3.1 },
-//        { -6, -0.1 },
-//        { -9, -0.2 },
-//        { -7.7, -1 },
-//        { -6.1, -1.5 },
-//        { -10, -4 },
-//        { -4, -3 },
-//        { -1.5, -6 },
-//        { 1, -9 },
-//        { 4, -4 },
-//        { 4.1, 0 },
-//        { 3.9, 5.9 },
-//        { 5, 3 },
-//        { 5, -2 },
-//        { 9, 1 }
-//    };
+    points = {
+        { -1, 0.1 },
+        { -0.9, 3 },
+        { -2, 6 },
+        { -7, 3.1 },
+        { -6, -0.1 },
+        { -9, -0.2 },
+        { -7.7, -1 },
+        { -6.1, -1.5 },
+        { -10, -4 },
+        { -4, -3 },
+        { -1.5, -6 },
+        { 1, -9 },
+        { 4, -4 },
+        { 4.1, 0 },
+        { 3.9, 5.9 },
+        { 5, 3 },
+        { 5, -2 },
+        { 9, 1 }
+    };
 //
 //        n = 60;
 
@@ -178,10 +178,10 @@ void scratch() {
 
         n = 50;
 
-        readPointsFromFile( back_inserter( points ), filename, n );
+        //readPointsFromFile( back_inserter( points ), filename, n );
+
 
         //generateRandomPoints( n, width/2, back_inserter(points) );
-
         cout<< points.size();
         cout<< ",";
         list< pair< Point, Point > > result;
@@ -209,6 +209,9 @@ void scratch() {
             //BGS2002( points.begin(), points.end(), back_inserter(result) );
             //KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
         }
+
+       Johnsons( result.begin(), result.end() );
+
 //        cout << degree( result.begin(), result.end() );
 //        cout <<",";
 //        cout << weight( result.begin(), result.end() )/2;
@@ -404,7 +407,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout <<",";
 
     {
-        Timer tim;b
+        Timer tim;
         t = StretchFactorDijkstraReduction( result.begin(), result.end() );
     }
     cout << t;

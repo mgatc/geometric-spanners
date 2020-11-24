@@ -25,10 +25,40 @@ namespace gsnunf {
 
 using namespace std;
 
+template< typename Point >
+struct PointHasher {
+    std::size_t operator()(const Point& p) const noexcept {
+        size_t seed = 31;
+        boost::hash_combine( seed, p.x() );
+        boost::hash_combine( seed, p.y() );
+        return seed;
+    }
+};
+
 template< typename T1, typename T2, typename F >
 void forBoth( const std::pair<T1,T2>& p, F func ) {
     func( p.first, p.second );
     func( p.second, p.first );
+}
+
+template <typename InputIterator>
+void Johnsons( InputIterator edgesBegin, InputIterator edgesEnd ) {
+    typedef typename InputIterator::value_type::first_type Point;
+    unordered_set<Point,size_t,PointHasher<Point>> P; // container of points
+    vector<pair<Point,Point>> edgeList( edgesBegin, edgesEnd ); // edge list
+    for( auto e : edgeList ) {
+        P.insert(e.first);
+        P.insert(e.second);
+    }
+    vector<Point> points( P.begin(), P.end() );
+    unordered_map<size_t, unordered_set<size_t>> E;
+
+
+
+    for( auto p : points ) {
+        cout<<p<<"\n";
+    }
+
 }
 
 namespace metrics {
@@ -36,6 +66,7 @@ namespace metrics {
 inline DelaunayGraph::FT getDistance( const DelaunayGraph::Vertex_handle a, const DelaunayGraph::Vertex_handle b ) {
     return a == b ? 0 : CGAL::sqrt( CGAL::squared_distance( a->point(), b->point() ) );
 }
+
 
 void createVertexToIndexMaps( const DelaunayGraph& G, DelaunayGraph::template VertexMap<size_t>& handleToIndex, vector<DelaunayGraph::Vertex_handle>& indexToHandle ) {
     handleToIndex.clear();
@@ -133,16 +164,6 @@ StretchFactorVertexHandleEntry StretchFactorFloydWarshall( RandomAccessIterator 
     G.buildFromEdgeList( edgesBegin, edgesEnd );
     return StretchFactorFloydWarshall(G);
 }
-
-template< typename Point >
-struct PointHasher {
-    std::size_t operator()(const Point& p) const noexcept {
-        size_t seed = 31;
-        boost::hash_combine( seed, p.x() );
-        boost::hash_combine( seed, p.y() );
-        return seed;
-    }
-};
 
 template< typename Point >
 inline size_t countIncident( std::unordered_map< Point,size_t,PointHasher<Point> >& count, const Point& p ) {

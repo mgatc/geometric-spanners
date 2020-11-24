@@ -102,8 +102,8 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    //experiment( 5, 10000, 100000, 10000 );
-    scratch();
+    experiment( 5, 10000, 100000, 10000 );
+    //scratch();
     //stretchScratch();
     //algoTVScratch();
 
@@ -403,7 +403,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout << deg;
     cout <<",";
 
-    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+    {
+        Timer tim;b
+        t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+    }
     cout << t;
     cout <<",";
 

@@ -44,13 +44,101 @@ void forBoth( const std::pair<T1,T2>& p, F func ) {
 template <typename InputIterator>
 void Johnsons( InputIterator edgesBegin, InputIterator edgesEnd ) {
     typedef typename InputIterator::value_type::first_type Point;
-    unordered_set<Point,size_t,PointHasher<Point>> P; // container of points
+    vector<Point> P; // if you have the index, get the point
     vector<pair<Point,Point>> edgeList( edgesBegin, edgesEnd ); // edge list
-    for( auto e : edgeList ) {
-        P.insert(e.first);
-        P.insert(e.second);
+    unordered_map< Point, size_t > m; // if you have the point, get the index
+
+    for( auto e : edgeList ) { // construct map with points (as keys) and their indices (as values)
+
+        size_t num = m.size();
+        m.emplace(e.first, num);
+        if (m.size() > num) {
+            P.push_back(e.first); // only change the value stored in the node if the set's cardinality increases
+        }
+
+        num = m.size();
+        m.emplace(e.second, num);
+        if (m.size() > num) {
+            P.push_back(e.second); // same logic as before regarding cardinality
+        }
+
     }
-    vector<Point> points( P.begin(), P.end() );
+
+ //   list<int>[P.size()] adjList = {};
+    unordered_map<size_t, unordered_set<int>> adjList;
+
+
+ //   double dist[m.size()][m.size()] = {{INF}}; // initiate all distances to a really big number
+    vector<vector<double>> dist(m.size(), vector<double>(m.size(), INF));
+ //   vector<Point> points( P.begin(), P.end() );
+
+    for ( auto e : edgeList ) { // initialize edge lengths in distance array
+
+    double length = distance(e.first, e.second);
+    size_t i = m.at(e.first);
+    size_t j = m.at(e.second);
+
+    dist[i][j] = length;
+    dist[j][i] = length;
+    // symmetry of edges in an undirected weighted graph accounted for
+
+    adjList.at(i).insert(j);
+    adjList.at(j).insert(i);
+    // construction of the adjacency list
+
+    }
+
+    for (size_t i = 0; i < m.size(); i++) { // self loops have distance of 0
+
+    dist[i][i] = 0;
+
+    }
+
+    for (size_t start = 0; start < m.size(); start++) { // dijkstra's shortest path algorithm
+        // iterate through all possible points
+
+        bool rowFinished = false;
+        bool considered[P.size()] = {false};
+        considered[start] = true;
+
+        while (rowFinished == false) {
+
+        double minDist = INF;
+        int minVertex = 0;
+        rowFinished = true;
+
+        for (int i = 0; i < P.size(); i++) {
+
+            if(considered[i] == false) {
+                rowFinished = false;
+                if ((dist[start][i] < minDist)) {
+                    minDist = dist[start][i];
+                    minVertex = i;
+                }
+            }
+
+        // Now the vertex to examine has been identified
+
+        list<int> neighbors = adjList[minVertex];
+
+        while(!neighbors.isEmpty()) {
+
+            int neighbor = neighbors.front();
+
+            if (dist[start][minVertex] + dist[minVertex][neighbor] < dist[start][neighbor]) {
+                dist[start][neighbor] = dist[start][minVertex] + dist[minVertex][neighbor];
+            }
+
+            neighbors.pop_front();
+        }
+
+        }
+
+        }
+
+
+    }
+
     unordered_map<size_t, unordered_set<size_t>> E;
 
 

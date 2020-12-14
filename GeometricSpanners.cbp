@@ -69,6 +69,7 @@
 		<Unit filename=".gitignore" />
 		<Unit filename="CMakeLists.txt" />
 		<Unit filename="cmake/GeometricSpannersConfig.cmake" />
+		<Unit filename="include/BCC2012.h" />
 		<Unit filename="include/BGS2005.h" />
 		<Unit filename="include/BSX2009.h" />
 		<Unit filename="include/DelaunayGraph.h" />

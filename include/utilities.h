@@ -18,7 +18,9 @@ using namespace std;
 
 const double PI = M_PI;
 const double EPSILON = 0.000001;
-const double INF = std::numeric_limits<double>::max();
+const double INF = std::numeric_limits<double>::infinity();
+const size_t SIZE_T_MAX = std::numeric_limits<size_t>::max();
+
 
 template< class T >
 bool contains( const T& V, const typename T::key_type& v ) {

@@ -416,7 +416,7 @@
 1588865172 source:/home/matt/UDC/udc/src/ExperimentalHex2.cpp
 	"ExperimentalHex2.h"
 
-1606257497 source:/home/matt/GeometricSpanners/main.cpp
+1607721857 source:/home/matt/GeometricSpanners/main.cpp
 	<chrono>
 	<fstream>
 	<list>
@@ -432,6 +432,7 @@
 	"LW2004.h"
 	"BSX2009.h"
 	"KPX2010.h"
+	"BCC2012.h"
 	"metrics.h"
 
 1589914637 /home/matt/GeometricSpanners/include/Greedy.h
@@ -763,7 +764,7 @@
 	<CGAL/Vector_2.h>
 	"GeometricSpannerPrinter.h"
 
-1606258634 /home/matt/GeometricSpanners/include/metrics.h
+1607097689 /home/matt/GeometricSpanners/include/metrics.h
 	<algorithm>
 	<functional>
 	<limits>
@@ -798,7 +799,7 @@
 
 1602510682 /home/matt/GeometricSpanners/include/GraphAlgoTV.h
 
-1604081318 /home/matt/GeometricSpanners/include/utilities.h
+1607787199 /home/matt/GeometricSpanners/include/utilities.h
 	<chrono>
 	<cmath>
 	<iostream>
@@ -824,6 +825,21 @@
 
 1602678309 /home/matt/GeometricSpanners/include/KPX2010.h
 	<cmath>
+	<unordered_set>
+	<unordered_map>
+	<vector>
+	<boost/functional/hash.hpp>
+	<CGAL/algorithm.h>
+	<CGAL/circulator.h>
+	<CGAL/Delaunay_triangulation_2.h>
+	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
+	<CGAL/Triangulation_vertex_base_with_info_2.h>
+	"metrics.h"
+	"utilities.h"
+
+1607787257 /home/matt/GeometricSpanners/include/BCC2012.h
+	<cmath>
+	<limits>
 	<unordered_set>
 	<unordered_map>
 	<vector>

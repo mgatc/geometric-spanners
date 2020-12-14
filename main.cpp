@@ -17,6 +17,7 @@
 #include "LW2004.h"
 #include "BSX2009.h"
 #include "KPX2010.h"
+#include "BCC2012.h"
 #include "metrics.h"
 //#include "utilities.h"
 
@@ -31,8 +32,6 @@ void scratch();
 void stretchScratch();
 void stretchFactorAndDegreeExperiment();
 void algoTVScratch();
-
-const size_t SIZE_T_MAX = numeric_limits<size_t>::max();
 
 template< class OutputIterator >
 void readPointsFromFile( OutputIterator out, const string outputFileName, const size_t n=SIZE_T_MAX ) {
@@ -121,7 +120,7 @@ void scratch() {
         auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
         auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
         auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
-        list<Point> points;
+        vector<Point> points;
         // SET POINT SET
 //        points = {
 //            {
@@ -165,10 +164,66 @@ void scratch() {
         { 5, -2 },
         { 9, 1 }
     };
-//
-//        n = 60;
 
-//        std::copy_n( g1, n/3, back_inserter(points) );
+//    points = {
+//        {
+//            2.73,4.13
+//        },
+//        {
+//            2.87,0
+//        },
+//        {
+//            3.5,-1.4
+//        },
+//        {
+//            -6.3,-0.14
+//        },
+//        {
+//            -4.27,-1.05
+//        },
+//        {
+//            -2.8,-2.1
+//        },
+//        {
+//            -7.2,-2.8
+//        },
+//        {
+//            -5.39,-0.7
+//        },
+//        {
+//            -4.2,-0.07
+//        },
+//        {
+//            -1.4,4.2
+//        },
+//        {
+//            -4.9,2.17
+//        },
+//        {
+//            6.3,0.7
+//        },
+//        {
+//            3.5,2.1
+//        },
+//        {
+//            -0.63,2.1
+//        },
+//        {
+//            -0.7,0.07
+//        },
+//        {
+//            2.8,-2.8
+//        },
+//        {
+//            0.7,-6.3
+//        },
+//        {
+//            -1.05,-4.2
+//        },
+//    };
+        n = 60;
+
+        //std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
 //        std::copy_n( g3, n/2, back_inserter(points) );
 //        std::copy_n( g4, n/2, back_inserter(points) );
@@ -205,17 +260,139 @@ void scratch() {
         {
 //                Timer tim;
             //LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, true );
-            BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3, true );
+            //BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3, true );
             //BGS2002( points.begin(), points.end(), back_inserter(result) );
             //KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
+            BCC2012_7( points.begin(), points.end(), back_inserter(result), true );
         }
 
-       Johnsons( result.begin(), result.end() );
+       //Johnsons( result.begin(), result.end() );
 
 //        cout << degree( result.begin(), result.end() );
 //        cout <<",";
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
+
+        // Add edges to result
+
+//        result = {
+//            {
+//                points[0],points[9]
+//            },
+//            {
+//                points[0],points[12]
+//            },
+//            {
+//                points[0],points[16]
+//            },
+//            {
+//                points[1],points[2]
+//            },
+//            {
+//                points[1],points[12]
+//            },
+//            {
+//                points[1],points[13]
+//            },
+//            {
+//                points[1],points[8]
+//            },
+//            {
+//                points[2],points[11]
+//            },
+//            {
+//                points[2],points[14]
+//            },
+//            {
+//                points[2],points[15]
+//            },
+//            {
+//                points[3],points[7]
+//            },
+//            {
+//                points[3],points[8]
+//            },
+//            {
+//                points[3],points[10]
+//            },
+//            {
+//                points[4],points[5]
+//            },
+//            {
+//                points[4],points[6]
+//            },
+//            {
+//                points[4],points[7]
+//            },
+//            {
+//                points[4],points[8]
+//            },
+//            {
+//                points[5],points[6]
+//            },
+//            {
+//                points[5],points[8]
+//            },
+//            {
+//                points[5],points[13]
+//            },
+//            {
+//                points[5],points[17]
+//            },
+//            {
+//                points[5],points[14]
+//            },
+//            {
+//                points[6],points[7]
+//            },
+//            {
+//                points[6],points[16]
+//            },
+//            {
+//                points[8],points[10]
+//            },
+//            {
+//                points[8],points[12]
+//            },
+//            {
+//                points[8],points[13]
+//            },
+//            {
+//                points[9],points[13]
+//            },
+//            {
+//                points[9],points[10]
+//            },
+//            {
+//                points[11],points[12]
+//            },
+//            {
+//                points[11],points[15]
+//            },
+//            {
+//                points[12],points[13]
+//            },
+//            {
+//                points[13],points[14]
+//            },
+//            {
+//                points[14],points[15]
+//            },
+//            {
+//                points[15],points[16]
+//            },
+//            {
+//                points[16],points[17]
+//            },
+//        };
+//
+//        size_t n_p = result.size();
+//        list<pair<Point,Point>> result2(result);
+//
+//        for( auto it=result.begin();it!=result.end();it++ ) {
+//            result2.emplace_back(it->second, it->first);
+//        }
+
 //            double t = StretchFactorDijkstraReduction( result.begin(), result.end() );
 //            cout<< t;
 //            cout<<",";
@@ -291,9 +468,9 @@ void scratch() {
         };
         printer.drawVerticesWithInfo( Del, options, borderOptions );
 
-        string outputFilename = "USCities";
+        string outputFilename = "rand";
         outputFilename += n;
-        printer.print( outputFilename );
+        //printer.print( outputFilename );
         cout<<"\n";
 }
 
@@ -354,13 +531,18 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     double t;
     t = StretchFactorDijkstraReduction( result.begin(), result.end() );
     cout << t;
-    cout <<",";
+    cout <<"\n";
 
     result.clear();
 
 
 
 
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
     {
         Timer tim;
         LW2004( points.begin(), points.end(), back_inserter(result) );
@@ -371,7 +553,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
     t = StretchFactorDijkstraReduction( result.begin(), result.end() );
     cout << t;
-    cout <<",";
+    cout <<"\n";
 
     result.clear();
 
@@ -381,6 +563,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
     {
         Timer tim;
         BSX2009( points.begin(), points.end(), back_inserter(result) );
@@ -391,13 +577,17 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
     t = StretchFactorDijkstraReduction( result.begin(), result.end() );
     cout << t;
-    cout <<",";
+    cout <<"\n";
 
     result.clear();
 
 
 
 
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
     {
         Timer tim;
         KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
@@ -406,12 +596,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout << deg;
     cout <<",";
 
-    {
-        Timer tim;
-        t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-    }
+
+    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
     cout << t;
-    cout <<",";
+    cout <<"\n";
 
     result.clear();
 

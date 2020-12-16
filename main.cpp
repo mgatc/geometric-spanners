@@ -112,7 +112,7 @@ int main() {
 void scratch() {
     using namespace std;
 
-    const double width = 100;
+    const double width = 5;
     size_t n = 30, i=n;
 //
 //    //for( i=1; i<=17; ++i ) {
@@ -144,26 +144,26 @@ void scratch() {
 //        };
 
             // POINT SET FROM PAPER, PAGE 253
-    points = {
-        { -1, 0.1 },
-        { -0.9, 3 },
-        { -2, 6 },
-        { -7, 3.1 },
-        { -6, -0.1 },
-        { -9, -0.2 },
-        { -7.7, -1 },
-        { -6.1, -1.5 },
-        { -10, -4 },
-        { -4, -3 },
-        { -1.5, -6 },
-        { 1, -9 },
-        { 4, -4 },
-        { 4.1, 0 },
-        { 3.9, 5.9 },
-        { 5, 3 },
-        { 5, -2 },
-        { 9, 1 }
-    };
+//    points = {
+//        { -1, 0.1 },
+//        { -0.9, 3 },
+//        { -2, 6 },
+//        { -7, 3.1 },
+//        { -6, -0.1 },
+//        { -9, -0.2 },
+//        { -7.7, -1 },
+//        { -6.1, -1.5 },
+//        { -10, -4 },
+//        { -4, -3 },
+//        { -1.5, -6 },
+//        { 1, -9 },
+//        { 4, -4 },
+//        { 4.1, 0 },
+//        { 3.9, 5.9 },
+//        { 5, 3 },
+//        { 5, -2 },
+//        { 9, 1 }
+//    };
 
 //    points = {
 //        {
@@ -221,18 +221,16 @@ void scratch() {
 //            -1.05,-4.2
 //        },
 //    };
-        n = 60;
+        n = 50;
 
         //std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
 //        std::copy_n( g3, n/2, back_inserter(points) );
-//        std::copy_n( g4, n/2, back_inserter(points) );
+        std::copy_n( g4, n, back_inserter(points) );
+        points.emplace_back( 0,0 );
 
-//        points.emplace_back( 0,0 );
+
         string filename = "TopUSCities.txt";
-
-        n = 50;
-
         //readPointsFromFile( back_inserter( points ), filename, n );
 
 

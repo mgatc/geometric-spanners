@@ -1,5 +1,5 @@
-#ifndef GSNUNF_BCC2012_H
-#define GSNUNF_BCC2012_H
+#ifndef GSNUNF_BHS2017_H
+#define GSNUNF_BHS2017_H
 
 #include <cmath>         // ceil, floor, isinf
 #include <limits>
@@ -13,6 +13,7 @@
 #include <CGAL/circulator.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Line_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
 //#include "GeometricSpannerPrinter.h"
@@ -25,7 +26,7 @@ namespace gsnunf {
 
 using namespace std;
 
-namespace bcc2012 {
+namespace bhs2017 {
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel         K;
 typedef CGAL::Triangulation_vertex_base_with_info_2<size_t, K>      Vb;
@@ -36,6 +37,7 @@ typedef CGAL::Aff_transformation_2<K>                               Transformati
 typedef Delaunay::Vertex_handle                                     Vertex_handle;
 typedef Delaunay::Vertex_circulator                                 Vertex_circulator;
 typedef CGAL::Vector_2<K>                                           Vector_2;
+typedef CGAL::Line_2<K>                                             Line;
 typedef Delaunay::Point                                             Point;
 typedef Delaunay::Finite_vertices_iterator                          Finite_vertices_iterator;
 typedef Delaunay::Finite_edges_iterator                             Finite_edges_iterator;
@@ -56,26 +58,60 @@ bool selectEdge( const Delaunay& T, size_tPairMap &E, const Vertex_handle i, con
     return inserted;
 }
 
-inline K::FT edgeLength( const vector<Vertex_handle>& H, const pair<size_t,size_t>& e ) {
-    return distance( H[e.first]->point(), H[e.second]->point() );
+inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,size_t>& e, double alpha) {
+
+    double tan30 = tan(PI/6);
+    double cot30 = 1/tan30;
+
+    vector<double> bisectorSlopes = {INF, tan30, -1*tan30, INF, tan30, -1*tan30};
+    vector<double> orthBisectorSlopes{0, -1*cot30, cot30, 0, -1*cot30, cot30};
+
+    Point refPoint(H[e.first]->point().x() - tan30, H[e.first]->point().y() + 1);
+
+    double theta = get_angle<bhs2017::K>(refPoint, H[e.first]->point(), H[e.second]->point());
+
+    //cout << theta << "\n";
+
+    size_t cone = ( theta / alpha );
+
+    //cout << cone << "\n";
+
+    double xCord = H[e.first]->point().x();
+    double yCord = H[e.first]->point().y() + 1;
+
+    if(cone % 3 != 0){
+        xCord = (bisectorSlopes[cone] * H[e.first]->point().x() + 1) / bisectorSlopes[cone];
+    }
+
+    Point bisectorPoint(xCord, yCord);
+
+    Line bisectorLine(H[e.first]->point(), bisectorPoint);
+
+    Point intersectionPoint = bisectorLine.projection(H[e.second]->point());
+
+    double bisectorLen = distance( H[e.first]->point(), intersectionPoint );
+
+    cout << bisectorLen << "\n";
+
+    return distance( H[e.first]->point(), intersectionPoint );
 }
 
-} // namespace bcc2012
+} // namespace BHS2017
 
 template< typename RandomAccessIterator, typename OutputIterator >
-void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false ) {
-    using namespace bcc2012;
+void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false ) {
+    using namespace bhs2017;
 
-    const double alpha = PI / 4;
+    const double alpha = PI / 3;
 
     //if(printLog) cout<<"alpha:"<<alpha<<",";
 
     // Construct Delaunay triangulation
-    bcc2012::Delaunay DT( pointsBegin, pointsEnd );
+    bhs2017::Delaunay DT( pointsBegin, pointsEnd );
     size_t n = DT.number_of_vertices();
     if( n > SIZE_T_MAX - 1 ) return;
 
-    vector<bcc2012::Vertex_handle> handles(n);
+    vector<bhs2017::Vertex_handle> handles(n);
 
     // Add IDs
     size_t i=0;
@@ -93,24 +129,14 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
                         e->first->vertex( (e->second+2)%3 )->info() );
     }
     sort( L.begin(), L.end(), [&]( const auto& lhs, const auto& rhs ) {
-        return edgeLength( handles, lhs ) < edgeLength( handles, rhs );
+        return bisectorLength( handles, lhs, alpha ) < bisectorLength( handles, rhs, alpha );
     });
-    vector<size_t> closest( n, SIZE_T_MAX );
-
-    for( auto e : L ) {
-        // Set closest
-        if( closest[e.first] == SIZE_T_MAX )
-            closest[e.first] = e.second;
-        if( closest[e.second] == SIZE_T_MAX )
-            closest[e.second] = e.first;
-
-    }
-
-    for(size_t i=0;i<n;i++)
-        cout<<i<<": "<<closest[i]<<"\n";
 
 
-
+    /*for(int i = 0; i< L.size(); i++){
+        pair<size_t, size_t> n = L[i];
+        cout << n;
+    }*/
 
 
 
@@ -179,7 +205,7 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         };
         printer.drawVerticesWithInfo( DT, options, borderOptions );
 
-        printer.print( "bcc2012" );
+        printer.print( "BHS2017" );
         cout<<"\n";
 //    }
 
@@ -189,8 +215,8 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
     //
     //
 
-} // function BCC2012_7
+} // function BHS2017
 
 } // namespace gsnunf
 
-#endif // GSNUNF_BCC2012_H
+#endif // GSNUNF_BHS2017_H

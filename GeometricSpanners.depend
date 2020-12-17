@@ -853,7 +853,7 @@
 	"metrics.h"
 	"utilities.h"
 
-1607959069 source:/home/davidwisnosky/Programs/geometric-spanners/main.cpp
+1608224903 source:/home/davidwisnosky/Programs/geometric-spanners/main.cpp
 	<chrono>
 	<fstream>
 	<list>
@@ -870,6 +870,7 @@
 	"BSX2009.h"
 	"KPX2010.h"
 	"BCC2012.h"
+	"BHS2017.h"
 	"metrics.h"
 
 1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/FloydWarshall.h
@@ -1000,7 +1001,8 @@
 	"metrics.h"
 	"utilities.h"
 
-1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/BCC2012.h
+1608222519 /home/davidwisnosky/Programs/geometric-spanners/include/BCC2012.h
+	<bitset>
 	<cmath>
 	<limits>
 	<unordered_set>
@@ -1011,6 +1013,22 @@
 	<CGAL/circulator.h>
 	<CGAL/Delaunay_triangulation_2.h>
 	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
+	<CGAL/Triangulation_vertex_base_with_info_2.h>
+	"metrics.h"
+	"utilities.h"
+
+1608228609 /home/davidwisnosky/Programs/geometric-spanners/include/BHS2017.h
+	<cmath>
+	<limits>
+	<unordered_set>
+	<unordered_map>
+	<vector>
+	<boost/functional/hash.hpp>
+	<CGAL/algorithm.h>
+	<CGAL/circulator.h>
+	<CGAL/Delaunay_triangulation_2.h>
+	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
+	<CGAL/Line_2.h>
 	<CGAL/Triangulation_vertex_base_with_info_2.h>
 	"metrics.h"
 	"utilities.h"

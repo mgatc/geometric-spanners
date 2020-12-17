@@ -61,34 +61,16 @@ inline K::FT edgeLength( const vector<Vertex_handle>& H, const pair<size_t,size_
     return distance( H[e.first]->point(), H[e.second]->point() );
 }
 
-template< typename T >
-inline void fillCone( vector<T>& filled, vector<T>& partial, const size_t p, const size_t cone, bool printLog = false ) {
-    const size_t NUM_CONES = filled.front().size();
-    // This cone may have been partially covered by edges falling on the
-    // boundaries at cone_p and cone_p+1. Because these cones have been
-    // filled, if they are also partial, we need to mark the other partially
-    // filled cone as filled and remove the partial status. This could
-    // happen more than once, so do it in a loop
-    filled.at(p)[cone] = true;
-
-    if(printLog) cout<<"    fillCone["<<p<<"]["<<cone<<"]\n";
-
-    size_t nextCone = (cone+1)%NUM_CONES;
-    while( partial.at(p)[nextCone] ) {
-        if(printLog) cout<<"    partial at "<<nextCone<<",fillCone["<<p<<"]["<<nextCone<<"]\n";
-        filled.at(p)[nextCone] = true;
-        partial.at(p)[nextCone] = false;
-        nextCone = (nextCone+1)%NUM_CONES;
-    }
-    size_t prevCone = cone;
-    while( partial.at(p)[prevCone] ) {
-        if(printLog) cout<<"    partial at "<<prevCone;
-        prevCone = (prevCone-1+NUM_CONES)%NUM_CONES;
-        if(printLog) cout<<",fillCone["<<p<<"]["<<prevCone<<"]\n";
-        filled.at(p)[prevCone] = true;
-        partial.at(p)[prevCone] = false;
-    }
+inline size_t getCone( const vector<Vertex_handle>& handles, const vector<size_t>& closest, const size_t& p, const size_t& q, const double& alpha ) {
+    return size_t( get_angle<bcc2012::K>(
+            handles.at(closest.at(p))->point(),
+            handles.at(p)->point(),
+            handles.at(q)->point() )
+        / alpha
+    );
 }
+
+
 
 } // namespace bcc2012
 
@@ -98,6 +80,7 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
 
     const size_t NUM_CONES = 8;
     const double alpha = 2*PI / NUM_CONES;
+    const double PI_OVER_TWO = PI / 2;
 
     if(printLog) cout<<"\nnumCones:"<<NUM_CONES<<"\n";
     if(printLog) cout<<"alpha:"<<alpha<<"\n";
@@ -129,15 +112,8 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         return edgeLength( handles, lhs ) < edgeLength( handles, rhs );
     });
 
-    /*  Store the ID of the closest vertex in closest[vertex_id] = closest_id.
-
-        Track cones that are filled and cones that are "partially" filled.
-        Partially filled cones are cones whose clockwise-most boundary has an edge,
-        but neither the indicated cone nor cone (cone+1)%8 have been filled.
-    */
     vector<size_t> closest( n, SIZE_T_MAX );
     vector<bitset<NUM_CONES>> filled(n);
-    vector<bitset<NUM_CONES>> partial(n);
     vector<pair<size_t,size_t>> E; // output edge list
     vector<pair<size_t,size_t>> E_star; // edges added from "Wedge"
 
@@ -146,28 +122,26 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
                q = pq.second;
         if(printLog) cout<<"p-q:"<<p<<" - "<<q<<"\n";
 
+        if(printLog) cout<<"  p_filled:"<<filled.at(p)<<"\n";
+        if(printLog) cout<<"  q_filled:"<<filled.at(q)<<"\n";
+
+
         if( filled.at(p).count() == NUM_CONES || filled.at(q).count() == NUM_CONES )
             continue;
-
-        if(printLog) cout<<"  p_filled:"<<filled.at(p)<<"\n";
-        if(printLog) cout<<"  p_partial:"<<partial.at(p)<<"\n";
-        if(printLog) cout<<"  q_filled:"<<filled.at(q)<<"\n";
-        if(printLog) cout<<"  q_partial:"<<partial.at(q)<<"\n";
-
-
 
         // Politely ask p if it wants an edge to q
         if( closest.at(p) == SIZE_T_MAX ) // Set closest
             closest.at(p) = q;
 
-        // Determine angle of pq compared to closest of p
+        size_t cone_p = getCone( handles, closest, p, q, alpha ),
+               cone_pPrev = (cone_p-1+NUM_CONES)%NUM_CONES;
+
         double theta_p = get_angle<bcc2012::K>(
             handles.at(closest.at(p))->point(),
             handles.at(p)->point(),
             handles.at(q)->point()
         );
-        size_t cone_p = size_t( theta_p / alpha ),
-               cone_pPrev = (cone_p-1+NUM_CONES)%NUM_CONES;
+
         bool qOnBoundary = theta_p - cone_p*alpha < EPSILON,
              pGivenConeFilled = filled.at(p)[cone_p],
              pPrevConeFilled = filled.at(p)[cone_pPrev],
@@ -184,14 +158,15 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         if( closest.at(q) == SIZE_T_MAX ) // Set closest
             closest.at(q) = p;
 
-        // Determine angle of pq compared to closest of q
+        size_t cone_q = getCone( handles, closest, q, p, alpha ),
+               cone_qPrev = (cone_q-1+NUM_CONES)%NUM_CONES;
+
         double theta_q = get_angle<bcc2012::K>(
             handles.at(closest.at(q))->point(),
             handles.at(q)->point(),
             handles.at(p)->point()
         );
-        size_t cone_q = size_t( theta_q / alpha ),
-               cone_qPrev = (cone_q-1+NUM_CONES)%NUM_CONES;
+
         bool pOnBoundary = theta_q - cone_q*alpha < EPSILON,
              qGivenConeFilled = filled.at(q)[cone_q],
              qPrevConeFilled = filled.at(q)[cone_qPrev],
@@ -205,54 +180,97 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
 
 
         // Only continue if p and q both consent to add the edge
-        // Add the edge then do some bookkeeping to track filled and partially filled cones
         if( pAbides && qAbides ) {
             E.emplace_back(p,q);
             // Bookkeeping for p
-            if( qOnBoundary ) {
-                // check the fill status of the given cone and the (cone-1+NUM_CONES)%NUM_CONES cone
-                // if both are empty, mark cone as partially filled
-                if( !pGivenConeFilled && !pPrevConeFilled ) {
-                    partial.at(p)[cone_p] = true;
-                    if(printLog) cout<<"  onBoundary: Both cones empty! Partial added"<<cone_p<<"\n";
-                }
-                // if one is empty, mark the empty as filled
-                else if( pGivenConeFilled ^ pPrevConeFilled ) { // one is filled
-                    if(printLog) cout<<"  onBoundary: One cone empty!\n";
-                    // Mark both as filled
-                    fillCone( filled, partial, p, cone_p, printLog );
-                    fillCone( filled, partial, p, cone_pPrev, printLog );
-                }
-            } else {
-                fillCone( filled, partial, p, cone_p, printLog );
-            }
-            // Bookkeeping for q
-            if( pOnBoundary ) {
-                if( !qGivenConeFilled && !qPrevConeFilled ) {
-                    partial.at(q)[cone_q] = true;
-                    if(printLog) cout<<"  onBoundary: Both cones empty! Partial added"<<cone_q<<"\n";
-                }
-                // if one is empty, mark the empty as filled
-                else if( qGivenConeFilled ^ qPrevConeFilled ) { // one is filled
-                    if(printLog) cout<<"  onBoundary: One cone empty!\n";
-                    // Mark both as filled
-                    fillCone( filled, partial, q, cone_q, printLog );
-                    fillCone( filled, partial, q, cone_qPrev, printLog );
-                }
-            } else {
-                fillCone( filled, partial, q, cone_q, printLog );
-            }
-            // Call Wedge
+            if( qOnBoundary )
+                filled.at(p)[cone_pPrev] = true;
+            filled.at(p)[cone_p] = true;
 
+            // Bookkeeping for q
+            if( pOnBoundary )
+                filled.at(q)[cone_qPrev] = true;
+            filled.at(q)[cone_q] = true;
+
+            // Wedge on each cone of pq and qp
+            // There will be at least one for each, but there could
+            // be two cones for one or both pq and qp if the edge
+            // falls on the boundary of a cone
+            vector<vector<size_t>> wedge;
+
+            wedge.push_back({p,q,cone_p});
+            if( qOnBoundary )
+                wedge.push_back({p,q,cone_pPrev});
+
+            wedge.push_back({q,p,cone_q});
+            if( pOnBoundary )
+                wedge.push_back({q,p,cone_qPrev});
+
+            // Wedge on p, q
+            for( auto params : wedge ) {
+                // p is params.at(0)
+                // q is params.at(1)
+                // cone is params.at(2)
+
+                // Process edges from q_j to q_i
+                // Get a circulator around p, pointing at q
+                auto q_m = DT.incident_vertices( handles.at(params.at(0)) );
+                while( ++q_m != handles.at(params.at(1)) );
+                // Get the first and last vertex in cone_p, called q_j and q_k
+                const auto q_i = q_m;
+                // Rotate q_j CCW until we leave the cone
+                while( ++q_m != q_i && getCone(handles,closest,params.at(0),q_m->info(),alpha) == params.at(2) );
+                if( q_m != q_i) --q_m; // Move CW back into the cone
+                const auto q_j = q_m;
+                auto q_mPrev = q_j;
+                // Move CW until q_m is q_i, adding edges if the previous edge isn't q_j
+                while( q_m != q_i ) {
+                    q_mPrev = q_m;
+                    --q_m;
+                    if( q_mPrev != q_j )
+                        E_star.emplace_back( q_mPrev->info(), q_m->info() );
+                }
+                // If previous neighbor isn't q_j and the angle is bigger than pi/2, add the edge
+                if( q_mPrev != q_j
+                && get_angle<bcc2012::K>(handles.at(params.at(0))->point(), handles.at(params.at(1))->point(), q_mPrev->point()) > PI_OVER_TWO ) {
+                    E_star.emplace_back( q_mPrev->info(), q_i->info() );
+                }
+
+
+                // Process edges from q_k to q_i
+                q_m = q_i;
+                while( --q_m != q_i && getCone(handles,closest,params.at(0),q_m->info(),alpha) == params.at(2) );
+                if( q_m != q_i ) ++q_m; // Move CW back into the cone
+                const auto q_k = q_m;
+                q_mPrev = q_k;
+                // Move CW until q_m is q_i, adding edges if the previous edge isn't q_j
+                while( q_m != q_i ) {
+                    q_mPrev = q_m;
+                    ++q_m;
+                    if( q_mPrev != q_k )
+                        E_star.emplace_back( q_mPrev->info(), q_m->info() );
+                }
+                // If previous neighbor isn't q_j and the angle is bigger than pi/2, add the edge
+                if( q_mPrev != q_k
+                && get_angle<bcc2012::K>(handles.at(params.at(0))->point(), handles.at(params.at(1))->point(), q_mPrev->point()) > PI_OVER_TWO ) {
+                    E_star.emplace_back( q_mPrev->info(), q_i->info() );
+                }
+            }
         }
     }
 
-
+    // Combine E and E_star, remove duplicates
+    E.insert( E.end(), E_star.begin(), E_star.end() );
+    sort( E.begin(), E.end() );
+    E.erase( unique(E.begin(), E.end(), []( const auto& l, const auto& r) {
+        return ( l.first == r.first && l.second == r.second )
+            || ( l.first == r.second && l.second == r.first );
+    }), E.end() );
 
 
     // Edge list is only needed for printing. Remove for production.
     vector< pair<Point,Point> > edgeList;
-    edgeList.reserve( E.size() );
+    edgeList.reserve( E.size()+E_star.size() );
 
     // Send resultant graph to output iterator
     for( auto e : E ) {
@@ -265,6 +283,16 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         ++result;
     }
 
+    // Send resultant graph to output iterator
+    for( auto e : E_star ) {
+        // Edge list is only needed for printing. Remove for production.
+        edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
+
+        *result = make_pair( handles.at(e.first)->point(), handles.at(e.second)->point() );
+        ++result;
+        *result = make_pair( handles.at(e.second)->point(), handles.at(e.first)->point() );
+        ++result;
+    }
 
     //
     //

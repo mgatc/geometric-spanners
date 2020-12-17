@@ -1,6 +1,7 @@
 #ifndef GSNUNF_BCC2012_H
 #define GSNUNF_BCC2012_H
 
+#include <bitset>
 #include <cmath>         // ceil, floor, isinf
 #include <limits>
 #include <unordered_set> // selected
@@ -40,25 +41,36 @@ typedef Delaunay::Point                                             Point;
 typedef Delaunay::Finite_vertices_iterator                          Finite_vertices_iterator;
 typedef Delaunay::Finite_edges_iterator                             Finite_edges_iterator;
 
-typedef pair<size_t,size_t>                                         size_tPair;
-typedef boost::hash<size_tPair>                                     size_tPairHash;
-typedef unordered_map<size_tPair,bool,size_tPairHash>               size_tPairMap;
-
-bool selectEdge( const Delaunay& T, size_tPairMap &E, const Vertex_handle i, const Vertex_handle j, const size_t n, bool printLog = false ) {
-    assert( T.is_edge( i, j ) );
-    //if( printLog ) cout<<"add:("<<i->info()<<","<<j->info()<<") ";
-
-    auto existing = E.begin();
-    bool inserted = false;
-    tie(existing,inserted) = E.try_emplace( makeNormalizedPair( i->info(), j->info() ), false );
-    if(!inserted) existing->second = true;
-
-    return inserted;
-}
+//typedef pair<size_t,size_t>                                         size_tPair;
+//typedef boost::hash<size_tPair>                                     size_tPairHash;
+//typedef unordered_map<size_tPair,bool,size_tPairHash>               size_tPairMap;
+//
+//bool selectEdge( const Delaunay& T, size_tPairMap &E, const Vertex_handle i, const Vertex_handle j, const size_t n, bool printLog = false ) {
+//    assert( T.is_edge( i, j ) );
+//    //if( printLog ) cout<<"add:("<<i->info()<<","<<j->info()<<") ";
+//
+//    auto existing = E.begin();
+//    bool inserted = false;
+//    tie(existing,inserted) = E.try_emplace( makeNormalizedPair( i->info(), j->info() ), false );
+//    if(!inserted) existing->second = true;
+//
+//    return inserted;
+//}
 
 inline K::FT edgeLength( const vector<Vertex_handle>& H, const pair<size_t,size_t>& e ) {
     return distance( H[e.first]->point(), H[e.second]->point() );
 }
+
+inline size_t getCone( const vector<Vertex_handle>& handles, const vector<size_t>& closest, const size_t& p, const size_t& q, const double& alpha ) {
+    return size_t( get_angle<bcc2012::K>(
+            handles.at(closest.at(p))->point(),
+            handles.at(p)->point(),
+            handles.at(q)->point() )
+        / alpha
+    );
+}
+
+
 
 } // namespace bcc2012
 
@@ -66,14 +78,18 @@ template< typename RandomAccessIterator, typename OutputIterator >
 void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false ) {
     using namespace bcc2012;
 
-    const double alpha = PI / 4;
+    const size_t NUM_CONES = 8;
+    const double alpha = 2*PI / NUM_CONES;
+    const double PI_OVER_TWO = PI / 2;
 
-    //if(printLog) cout<<"alpha:"<<alpha<<",";
+    if(printLog) cout<<"\nnumCones:"<<NUM_CONES<<"\n";
+    if(printLog) cout<<"alpha:"<<alpha<<"\n";
 
     // Construct Delaunay triangulation
     bcc2012::Delaunay DT( pointsBegin, pointsEnd );
     size_t n = DT.number_of_vertices();
     if( n > SIZE_T_MAX - 1 ) return;
+    if(printLog) cout<<"n:"<<n<<"\n";
 
     vector<bcc2012::Vertex_handle> handles(n);
 
@@ -95,53 +111,188 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
     sort( L.begin(), L.end(), [&]( const auto& lhs, const auto& rhs ) {
         return edgeLength( handles, lhs ) < edgeLength( handles, rhs );
     });
+
     vector<size_t> closest( n, SIZE_T_MAX );
+    vector<bitset<NUM_CONES>> filled(n);
+    vector<pair<size_t,size_t>> E; // output edge list
+    vector<pair<size_t,size_t>> E_star; // edges added from "Wedge"
 
-    for( auto e : L ) {
-        // Set closest
-        if( closest[e.first] == SIZE_T_MAX )
-            closest[e.first] = e.second;
-        if( closest[e.second] == SIZE_T_MAX )
-            closest[e.second] = e.first;
+    for( auto pq : L ) {
+        size_t p = pq.first,
+               q = pq.second;
+        if(printLog) cout<<"p-q:"<<p<<" - "<<q<<"\n";
 
+        if(printLog) cout<<"  p_filled:"<<filled.at(p)<<"\n";
+        if(printLog) cout<<"  q_filled:"<<filled.at(q)<<"\n";
+
+
+        if( filled.at(p).count() == NUM_CONES || filled.at(q).count() == NUM_CONES )
+            continue;
+
+        // Politely ask p if it wants an edge to q
+        if( closest.at(p) == SIZE_T_MAX ) // Set closest
+            closest.at(p) = q;
+
+        size_t cone_p = getCone( handles, closest, p, q, alpha ),
+               cone_pPrev = (cone_p-1+NUM_CONES)%NUM_CONES;
+
+        double theta_p = get_angle<bcc2012::K>(
+            handles.at(closest.at(p))->point(),
+            handles.at(p)->point(),
+            handles.at(q)->point()
+        );
+
+        bool qOnBoundary = theta_p - cone_p*alpha < EPSILON,
+             pGivenConeFilled = filled.at(p)[cone_p],
+             pPrevConeFilled = filled.at(p)[cone_pPrev],
+             pAbides = (!qOnBoundary && !pGivenConeFilled)
+                    || ( qOnBoundary &&(!pGivenConeFilled || !pPrevConeFilled) );
+
+        if(printLog) cout<<"  cone_p:"<<cone_p<<"\n";
+        if(printLog && qOnBoundary) cout<<"  qOnBoundary\n";
+        if(printLog && pAbides ) cout<<"  p abides!\n";
+
+
+
+        // Politely ask q if it wants an edge to p
+        if( closest.at(q) == SIZE_T_MAX ) // Set closest
+            closest.at(q) = p;
+
+        size_t cone_q = getCone( handles, closest, q, p, alpha ),
+               cone_qPrev = (cone_q-1+NUM_CONES)%NUM_CONES;
+
+        double theta_q = get_angle<bcc2012::K>(
+            handles.at(closest.at(q))->point(),
+            handles.at(q)->point(),
+            handles.at(p)->point()
+        );
+
+        bool pOnBoundary = theta_q - cone_q*alpha < EPSILON,
+             qGivenConeFilled = filled.at(q)[cone_q],
+             qPrevConeFilled = filled.at(q)[cone_qPrev],
+             qAbides = (!pOnBoundary && !qGivenConeFilled)
+                    || ( pOnBoundary &&(!qGivenConeFilled || !qPrevConeFilled) );
+
+        if(printLog) cout<<"  cone_q:"<<cone_q<<"\n";
+        if(printLog && pOnBoundary) cout<<"  pOnBoundary\n";
+        if(printLog && qAbides ) cout<<"  q abides!\n";
+
+
+
+        // Only continue if p and q both consent to add the edge
+        if( pAbides && qAbides ) {
+            E.emplace_back(p,q);
+            // Bookkeeping for p
+            if( qOnBoundary )
+                filled.at(p)[cone_pPrev] = true;
+            filled.at(p)[cone_p] = true;
+
+            // Bookkeeping for q
+            if( pOnBoundary )
+                filled.at(q)[cone_qPrev] = true;
+            filled.at(q)[cone_q] = true;
+
+            // Wedge on each cone of pq and qp
+            // There will be at least one for each, but there could
+            // be two cones for one or both pq and qp if the edge
+            // falls on the boundary of a cone
+            vector<vector<size_t>> wedge;
+
+            wedge.push_back({p,q,cone_p});
+            if( qOnBoundary )
+                wedge.push_back({p,q,cone_pPrev});
+
+            wedge.push_back({q,p,cone_q});
+            if( pOnBoundary )
+                wedge.push_back({q,p,cone_qPrev});
+
+            // Wedge on p, q
+            for( auto params : wedge ) {
+                // p is params.at(0)
+                // q is params.at(1)
+                // cone is params.at(2)
+
+                // Process edges from q_j to q_i
+                // Get a circulator around p, pointing at q
+                auto q_m = DT.incident_vertices( handles.at(params.at(0)) );
+                while( ++q_m != handles.at(params.at(1)) );
+                // Get the first and last vertex in cone_p, called q_j and q_k
+                const auto q_i = q_m;
+                // Rotate q_j CCW until we leave the cone
+                while( ++q_m != q_i && getCone(handles,closest,params.at(0),q_m->info(),alpha) == params.at(2) );
+                if( q_m != q_i) --q_m; // Move CW back into the cone
+                const auto q_j = q_m;
+                auto q_mPrev = q_j;
+                // Move CW until q_m is q_i, adding edges if the previous edge isn't q_j
+                while( q_m != q_i ) {
+                    q_mPrev = q_m;
+                    --q_m;
+                    if( q_mPrev != q_j )
+                        E_star.emplace_back( q_mPrev->info(), q_m->info() );
+                }
+                // If previous neighbor isn't q_j and the angle is bigger than pi/2, add the edge
+                if( q_mPrev != q_j
+                && get_angle<bcc2012::K>(handles.at(params.at(0))->point(), handles.at(params.at(1))->point(), q_mPrev->point()) > PI_OVER_TWO ) {
+                    E_star.emplace_back( q_mPrev->info(), q_i->info() );
+                }
+
+
+                // Process edges from q_k to q_i
+                q_m = q_i;
+                while( --q_m != q_i && getCone(handles,closest,params.at(0),q_m->info(),alpha) == params.at(2) );
+                if( q_m != q_i ) ++q_m; // Move CW back into the cone
+                const auto q_k = q_m;
+                q_mPrev = q_k;
+                // Move CW until q_m is q_i, adding edges if the previous edge isn't q_j
+                while( q_m != q_i ) {
+                    q_mPrev = q_m;
+                    ++q_m;
+                    if( q_mPrev != q_k )
+                        E_star.emplace_back( q_mPrev->info(), q_m->info() );
+                }
+                // If previous neighbor isn't q_j and the angle is bigger than pi/2, add the edge
+                if( q_mPrev != q_k
+                && get_angle<bcc2012::K>(handles.at(params.at(0))->point(), handles.at(params.at(1))->point(), q_mPrev->point()) > PI_OVER_TWO ) {
+                    E_star.emplace_back( q_mPrev->info(), q_i->info() );
+                }
+            }
+        }
     }
 
-    for(size_t i=0;i<n;i++)
-        cout<<i<<": "<<closest[i]<<"\n";
+    // Combine E and E_star, remove duplicates
+    E.insert( E.end(), E_star.begin(), E_star.end() );
+    sort( E.begin(), E.end() );
+    E.erase( unique(E.begin(), E.end(), []( const auto& l, const auto& r) {
+        return ( l.first == r.first && l.second == r.second )
+            || ( l.first == r.second && l.second == r.first );
+    }), E.end() );
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // Done. Send edges from G_prime with value == true (selected by both endpoints) to output.
 
     // Edge list is only needed for printing. Remove for production.
-//    vector< pair<Point,Point> > edgeList;
-//    edgeList.reserve( G_prime.size() );
+    vector< pair<Point,Point> > edgeList;
+    edgeList.reserve( E.size()+E_star.size() );
 
     // Send resultant graph to output iterator
-//    for( auto e : G_prime ) {
-//        if( e.second ) { // e.second holds the bool value of whether both vertices of an edge selected the edge
-//            // Edge list is only needed for printing. Remove for production.
-//            //edgeList.emplace_back( handles.at(e.first.first)->point(), handles.at(e.first.second)->point() );
-//
-//            *result = make_pair( handles.at(e.first.first)->point(), handles.at(e.first.second)->point() );
-//            ++result;
-//            *result = make_pair( handles.at(e.first.second)->point(), handles.at(e.first.first)->point() );
-//            ++result;
-//        }
-//    }
+    for( auto e : E ) {
+        // Edge list is only needed for printing. Remove for production.
+        edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
 
+        *result = make_pair( handles.at(e.first)->point(), handles.at(e.second)->point() );
+        ++result;
+        *result = make_pair( handles.at(e.second)->point(), handles.at(e.first)->point() );
+        ++result;
+    }
+
+    // Send resultant graph to output iterator
+    for( auto e : E_star ) {
+        // Edge list is only needed for printing. Remove for production.
+        edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
+
+        *result = make_pair( handles.at(e.first)->point(), handles.at(e.second)->point() );
+        ++result;
+        *result = make_pair( handles.at(e.second)->point(), handles.at(e.first)->point() );
+        ++result;
+    }
 
     //
     //
@@ -159,11 +310,11 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         };
         printer.drawEdges( DT, options );
 
-//        options = { // active edge options
-//            { "color", printer.activeEdgeColor },
-//            { "line width", to_string(printer.activeEdgeWidth) }
-//        };
-//        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
+        options = { // active edge options
+            { "color", printer.activeEdgeColor },
+            { "line width", to_string(printer.activeEdgeWidth) }
+        };
+        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
 
 
         options = {

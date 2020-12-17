@@ -394,7 +394,7 @@
 1587475373 /home/matt/UDC/udc/include/LiuLuSingleMP.h
 	"CgalComponents.h"
 
-1575469541 /usr/lib/gcc/x86_64-linux-gnu/7/include/omp.h
+1585227355 /usr/lib/gcc/x86_64-linux-gnu/7/include/omp.h
 
 1587657356 source:/home/matt/UDC/udc/src/ExperimentalMP.cpp
 	"ExperimentalMP.h"
@@ -838,6 +838,168 @@
 	"utilities.h"
 
 1607787257 /home/matt/GeometricSpanners/include/BCC2012.h
+	<cmath>
+	<limits>
+	<unordered_set>
+	<unordered_map>
+	<vector>
+	<boost/functional/hash.hpp>
+	<CGAL/algorithm.h>
+	<CGAL/circulator.h>
+	<CGAL/Delaunay_triangulation_2.h>
+	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
+	<CGAL/Triangulation_vertex_base_with_info_2.h>
+	"metrics.h"
+	"utilities.h"
+
+1607959069 source:/home/davidwisnosky/Programs/geometric-spanners/main.cpp
+	<chrono>
+	<fstream>
+	<list>
+	<limits>
+	<optional>
+	<utility>
+	<CGAL/point_generators_2.h>
+	<CGAL/Delaunay_triangulation_2.h>
+	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
+	"FloydWarshall.h"
+	"GeometricSpannerPrinter.h"
+	"BGS2005.h"
+	"LW2004.h"
+	"BSX2009.h"
+	"KPX2010.h"
+	"BCC2012.h"
+	"metrics.h"
+
+1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/FloydWarshall.h
+	<algorithm>
+	<iostream>
+	<optional>
+	<utility>
+	<vector>
+	<CGAL/number_utils.h>
+	<CGAL/squared_distance_2.h>
+	<CGAL/utils.h>
+	"DelaunayGraph.h"
+
+1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/DelaunayGraph.h
+	<iostream>
+	<queue>
+	<set>
+	<unordered_map>
+	<unordered_set>
+	<vector>
+	<CGAL/circulator.h>
+	<CGAL/Delaunay_triangulation_2.h>
+	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
+	<CGAL/Vector_2.h>
+	"GraphAlgoTV.h"
+	"utilities.h"
+
+1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/GraphAlgoTV.h
+
+1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/utilities.h
+	<chrono>
+	<cmath>
+	<iostream>
+	<limits>
+	<string>
+	<CGAL/Kernel/global_functions.h>
+	<CGAL/Vector_2.h>
+
+1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/GeometricSpannerPrinter.h
+	<cctype>
+	<cstdlib>
+	<iomanip>
+	<iostream>
+	<list>
+	<optional>
+	<sstream>
+	<string>
+	<tuple>
+	<utility>
+	<boost/algorithm/string.hpp>
+	"DelaunayGraph.h"
+
+1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/BGS2005.h
+	<algorithm>
+	<functional>
+	<iostream>
+	<list>
+	<memory>
+	<queue>
+	<unordered_map>
+	<unordered_set>
+	<utility>
+	<vector>
+	"DelaunayGraph.h"
+	"GeometricSpannerPrinter.h"
+	"metrics.h"
+
+1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/metrics.h
+	<algorithm>
+	<functional>
+	<limits>
+	<optional>
+	<unordered_map>
+	<unordered_set>
+	<vector>
+	<boost/functional/hash.hpp>
+	<boost/heap/fibonacci_heap.hpp>
+	<CGAL/number_utils.h>
+	<CGAL/squared_distance_2.h>
+	<omp.h>
+	"DelaunayGraph.h"
+	"FloydWarshall.h"
+	"utilities.h"
+
+1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/LW2004.h
+	<algorithm>
+	<cmath>
+	<unordered_set>
+	<vector>
+	<boost/functional/hash.hpp>
+	<boost/heap/fibonacci_heap.hpp>
+	<CGAL/circulator.h>
+	<CGAL/Delaunay_triangulation_2.h>
+	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
+	<CGAL/Triangulation_vertex_base_with_info_2.h>
+	<CGAL/utils.h>
+	<CGAL/Vector_2.h>
+	"GeometricSpannerPrinter.h"
+	"utilities.h"
+
+1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/BSX2009.h
+	<algorithm>
+	<cmath>
+	<unordered_set>
+	<vector>
+	<boost/functional/hash.hpp>
+	<boost/heap/fibonacci_heap.hpp>
+	<CGAL/circulator.h>
+	<CGAL/Delaunay_triangulation_2.h>
+	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
+	<CGAL/Triangulation_vertex_base_with_info_2.h>
+	<CGAL/utils.h>
+	"GeometricSpannerPrinter.h"
+	"metrics.h"
+	"utilities.h"
+
+1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/KPX2010.h
+	<cmath>
+	<unordered_set>
+	<unordered_map>
+	<vector>
+	<boost/functional/hash.hpp>
+	<CGAL/algorithm.h>
+	<CGAL/circulator.h>
+	<CGAL/Delaunay_triangulation_2.h>
+	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
+	<CGAL/Triangulation_vertex_base_with_info_2.h>
+	"metrics.h"
+	"utilities.h"
+
+1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/BCC2012.h
 	<cmath>
 	<limits>
 	<unordered_set>

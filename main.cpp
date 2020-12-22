@@ -101,10 +101,8 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    //experiment( 5, 1000, 10000, 1000 );
-    scratch();
-    //stretchScratch();
-    //algoTVScratch();
+    experiment( 10000, 100, 200, 10 );
+    //scratch();
 
     return 0;
 }
@@ -113,7 +111,7 @@ void scratch() {
     using namespace std;
 
     const double width = 5;
-    size_t n = 30, i=n;
+    size_t i=30;
 //
 //    //for( i=1; i<=17; ++i ) {
         auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
@@ -221,17 +219,17 @@ void scratch() {
 //            -1.05,-4.2
 //        },
 //    };
-        n = 50;
+        //n = 50;
 
-        //std::copy_n( g1, n/3, back_inserter(points) );
+//        std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
-//        std::copy_n( g3, n/2, back_inserter(points) );
-        std::copy_n( g4, n, back_inserter(points) );
-        points.emplace_back( 0,0 );
+//        std::copy_n( g3, n/6, back_inserter(points) );
+//        std::copy_n( g4, n/6, back_inserter(points) );
+//        points.emplace_back( 0,0 );
 
 
-        string filename = "TopUSCities.txt";
-        //readPointsFromFile( back_inserter( points ), filename, n );
+        string filename = "data-210_7245.688373x7245.688373.txt";
+        readPointsFromFile( back_inserter( points ), filename );
 
 
         //generateRandomPoints( n, width/2, back_inserter(points) );
@@ -266,8 +264,8 @@ void scratch() {
 
        //Johnsons( result.begin(), result.end() );
 
-//        cout << degree( result.begin(), result.end() );
-//        cout <<",";
+        cout << degree( result.begin(), result.end() );
+        cout <<",";
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
 
@@ -467,7 +465,7 @@ void scratch() {
         printer.drawVerticesWithInfo( Del, options, borderOptions );
 
         string outputFilename = "rand";
-        outputFilename += n;
+        outputFilename += points.size();
         //printer.print( outputFilename );
         cout<<"\n";
 }
@@ -518,112 +516,136 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-    {
-        Timer tim;
-        BGS2005( points.begin(), points.end(), back_inserter(result) );
-    }
-    size_t deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    double t;
-    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-    cout << t;
-    cout <<"\n";
-
-    result.clear();
-
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        LW2004( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-    cout << t;
-    cout <<"\n";
-
-    result.clear();
-
-
-
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        BSX2009( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-    cout << t;
-    cout <<"\n";
-
-    result.clear();
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-
-    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-    cout << t;
-    cout <<"\n";
-
-    result.clear();
-
-
-
-
-//    if( t > 2.92 || deg > k || forcePrint ) {
-//
-//        string resultFileName = ( filename ? *filename : *generatedFile );
-//        // strip file extension
-//        const std::string ext(".txt");
-//        if ( resultFileName != ext &&
-//             resultFileName.size() > ext.size() &&
-//             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
-//        {
-//           // if so then strip them off
-//           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
-//        }
-//        resultFileName += "_result-";
-//        resultFileName += ( filename ? "redo" : "orig" );
-//
-//        if( generatedFile )
-//            singleRun( n, width, resultFileName, *generatedFile, true, true );
-//
-//        return false;
+//    {
+//        Timer tim;
+//        BGS2005( points.begin(), points.end(), back_inserter(result) );
 //    }
+    size_t deg;
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+    double t;
+//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    cout << t;
+//    cout <<"\n";
+//
+//    result.clear();
+//
+//
+//
+//
+//
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    {
+//        Timer tim;
+//        LW2004( points.begin(), points.end(), back_inserter(result) );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    cout << t;
+//    cout <<"\n";
+//
+//    result.clear();
+//
+//
+//
+//
+//
+//
+//
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    {
+//        Timer tim;
+//        BSX2009( points.begin(), points.end(), back_inserter(result) );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    cout << t;
+//    cout <<"\n";
+//
+//    result.clear();
+//
+//
+//
+//
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    {
+//        Timer tim;
+//        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//
+//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    cout << t;
+//    cout <<"\n";
+//
+//    result.clear();
+
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    {
+        Timer tim;
+        BCC2012_7( points.begin(), points.end(), back_inserter(result), printLog );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+
+    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+    cout << t;
+    cout <<"\n";
+
+    result.clear();
+
+
+
+
+
+    if( deg > 7 || forcePrint ) {
+
+        string resultFileName = ( filename ? *filename : *generatedFile );
+        // strip file extension
+        const std::string ext(".txt");
+        if ( resultFileName != ext &&
+             resultFileName.size() > ext.size() &&
+             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
+        {
+           // if so then strip them off
+           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
+        }
+        resultFileName += "_result-";
+        resultFileName += ( filename ? "redo" : "orig" );
+
+        if( generatedFile )
+            singleRun( n, width, resultFileName, *generatedFile, true, true );
+
+        return false;
+    }
 //    result.clear();
 //
 //    {

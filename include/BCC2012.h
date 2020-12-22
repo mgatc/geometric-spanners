@@ -121,6 +121,7 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         size_t p = pq.first,
                q = pq.second;
         if(printLog) cout<<"p-q:"<<p<<" - "<<q<<"\n";
+        if(printLog) cout<<"p-q:"<<handles.at(p)->point()<<" - "<<handles.at(q)->point()<<"\n";
 
         if(printLog) cout<<"  p_filled:"<<filled.at(p)<<"\n";
         if(printLog) cout<<"  q_filled:"<<filled.at(q)<<"\n";
@@ -182,29 +183,32 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         // Only continue if p and q both consent to add the edge
         if( pAbides && qAbides ) {
             E.emplace_back(p,q);
-            // Bookkeeping for p
-            if( qOnBoundary )
-                filled.at(p)[cone_pPrev] = true;
-            filled.at(p)[cone_p] = true;
-
-            // Bookkeeping for q
-            if( pOnBoundary )
-                filled.at(q)[cone_qPrev] = true;
-            filled.at(q)[cone_q] = true;
 
             // Wedge on each cone of pq and qp
             // There will be at least one for each, but there could
             // be two cones for one or both pq and qp if the edge
-            // falls on the boundary of a cone
+            // falls on the boundary of a cone and the cone is not already filled
             vector<vector<size_t>> wedge;
+            // Bookkeeping for p
+            if( qOnBoundary ) {
+                if(!filled.at(p)[cone_pPrev])
+                    wedge.push_back({p,q,cone_pPrev});
+                filled.at(p)[cone_pPrev] = true;
+            }
+            if(!filled.at(p)[cone_p])
+                wedge.push_back({p,q,cone_p});
+            filled.at(p)[cone_p] = true;
 
-            wedge.push_back({p,q,cone_p});
-            if( qOnBoundary )
-                wedge.push_back({p,q,cone_pPrev});
+            // Bookkeeping for q
+            if( pOnBoundary ) {
+                if(!filled.at(q)[cone_qPrev])
+                    wedge.push_back({q,p,cone_qPrev});
+                filled.at(q)[cone_qPrev] = true;
+            }
+            if(!filled.at(q)[cone_q])
+                wedge.push_back({q,p,cone_q});
+            filled.at(q)[cone_q] = true;
 
-            wedge.push_back({q,p,cone_q});
-            if( pOnBoundary )
-                wedge.push_back({q,p,cone_qPrev});
 
             // Wedge on p, q
             for( auto params : wedge ) {
@@ -212,49 +216,48 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
                 // q is params.at(1)
                 // cone is params.at(2)
 
-                // Process edges from q_j to q_i
-                // Get a circulator around p, pointing at q
-                auto q_m = DT.incident_vertices( handles.at(params.at(0)) );
-                while( ++q_m != handles.at(params.at(1)) );
-                // Get the first and last vertex in cone_p, called q_j and q_k
-                const auto q_i = q_m;
-                // Rotate q_j CCW until we leave the cone
-                while( ++q_m != q_i && getCone(handles,closest,params.at(0),q_m->info(),alpha) == params.at(2) );
-                if( q_m != q_i) --q_m; // Move CW back into the cone
-                const auto q_j = q_m;
-                auto q_mPrev = q_j;
-                // Move CW until q_m is q_i, adding edges if the previous edge isn't q_j
-                while( q_m != q_i ) {
-                    q_mPrev = q_m;
-                    --q_m;
-                    if( q_mPrev != q_j )
-                        E_star.emplace_back( q_mPrev->info(), q_m->info() );
-                }
-                // If previous neighbor isn't q_j and the angle is bigger than pi/2, add the edge
-                if( q_mPrev != q_j
-                && get_angle<bcc2012::K>(handles.at(params.at(0))->point(), handles.at(params.at(1))->point(), q_mPrev->point()) > PI_OVER_TWO ) {
-                    E_star.emplace_back( q_mPrev->info(), q_i->info() );
-                }
+                // q_m[i] holds the circulator for q_{m-i}
+                vector<Vertex_circulator> q_m(3);
+                // find q
+                q_m[2] = DT.incident_vertices( handles.at(params.at(0)) );
+                while( ++q_m[2] != handles.at(params.at(1)) ); // point to q
+                const auto q_i = q_m[2];
 
+                // Process edges from q_j to q_i
+                // set and increment q_m and q_{m-1} so the sequence will be correct at the start of the loop
+                for( size_t i=0; i<q_m.size()-1; ++i ) {
+                    q_m[i] = q_i;
+                    ++q_m[i];
+                }
+                // Get the first and last vertex in cone_p, called q_j and q_k
+                // Rotate q_j CCW until we leave the cone
+                while( !DT.is_infinite(++q_m[0])
+                && getCone(handles,closest,params.at(0),q_m[0]->info(),alpha) == params.at(2) ) {
+                    if( q_m[2] != q_i
+                    ||( q_m[2] == q_i && get_angle<K>(handles.at(params.at(0))->point(), q_i->point(), q_m[1]->point()) > PI_OVER_TWO ) ) {
+                        E_star.emplace_back( q_m[1]->info(), q_m[2]->info() );
+                        if(printLog) cout<<"  wedge["<<params.at(0)<<"][cone"<<params.at(2)<<"]: "<<q_m[1]->info()<< " - " <<q_m[2]->info()<<"\n";
+                    }
+                    q_m[2] = q_m[1];
+                    q_m[1] = q_m[0];
+                };
 
                 // Process edges from q_k to q_i
-                q_m = q_i;
-                while( --q_m != q_i && getCone(handles,closest,params.at(0),q_m->info(),alpha) == params.at(2) );
-                if( q_m != q_i ) ++q_m; // Move CW back into the cone
-                const auto q_k = q_m;
-                q_mPrev = q_k;
-                // Move CW until q_m is q_i, adding edges if the previous edge isn't q_j
-                while( q_m != q_i ) {
-                    q_mPrev = q_m;
-                    ++q_m;
-                    if( q_mPrev != q_k )
-                        E_star.emplace_back( q_mPrev->info(), q_m->info() );
+                for( size_t i=0; i<q_m.size()-1; ++i ) {
+                    q_m[i] = q_i;
+                    --q_m[i];
                 }
-                // If previous neighbor isn't q_j and the angle is bigger than pi/2, add the edge
-                if( q_mPrev != q_k
-                && get_angle<bcc2012::K>(handles.at(params.at(0))->point(), handles.at(params.at(1))->point(), q_mPrev->point()) > PI_OVER_TWO ) {
-                    E_star.emplace_back( q_mPrev->info(), q_i->info() );
-                }
+                q_m[2] = q_i;
+                while( !DT.is_infinite(--q_m[0])
+                && getCone(handles,closest,params.at(0),q_m[0]->info(),alpha) == params.at(2) ) {
+                    if( q_m[2] != q_i
+                    ||( q_m[2] == q_i && get_angle<K>(q_m[1]->point(), q_i->point(), handles.at(params.at(0))->point()) > PI_OVER_TWO ) ) {
+                        E_star.emplace_back( q_m[1]->info(), q_m[2]->info() );
+                        if(printLog)cout<<"  wedge["<<params.at(0)<<"][cone"<<params.at(2)<<"]: "<<q_m[1]->info()<< " - " <<q_m[2]->info()<<"\n";
+                    }
+                    q_m[2] = q_m[1];
+                    q_m[1] = q_m[0];
+                };
             }
         }
     }
@@ -283,25 +286,14 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         ++result;
     }
 
-    // Send resultant graph to output iterator
-    for( auto e : E_star ) {
-        // Edge list is only needed for printing. Remove for production.
-        edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
-
-        *result = make_pair( handles.at(e.first)->point(), handles.at(e.second)->point() );
-        ++result;
-        *result = make_pair( handles.at(e.second)->point(), handles.at(e.first)->point() );
-        ++result;
-    }
-
     //
     //
     // START PRINTER NONSENSE
     //
     //
 
-//    if( printLog ) {
-        GraphPrinter printer(1);
+    if( printLog && n <= 200 ) {
+        GraphPrinter printer(0.006);
         GraphPrinter::OptionsList options;
 
         options = {
@@ -330,9 +322,9 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         };
         printer.drawVerticesWithInfo( DT, options, borderOptions );
 
-        printer.print( "bcc2012" );
+        printer.print( "bcc2012a" );
         cout<<"\n";
-//    }
+    }
 
     //
     //

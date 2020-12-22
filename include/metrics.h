@@ -181,14 +181,28 @@ size_t degree( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) 
     typedef typename Edge::first_type Point;
 
     std::vector<pair<Point,Point>> edges( edgesBegin, edgesEnd );
-    std::unordered_map< Point,size_t,PointHasher<Point> > count( edges.size() );
-    size_t max = 0;
+    std::unordered_map<
+        Point,unordered_set<Point,PointHasher<Point>>,PointHasher<Point>
+    > adj;
     // for each edge
     for( auto e : edges ) {
-        max = CGAL::max( max, countIncident( count, e.first  ) );
-        max = CGAL::max( max, countIncident( count, e.second ) );
+        auto first = adj.begin();
+        tie(first,ignore) = adj.emplace( e.first, unordered_set<Point,PointHasher<Point>>() );
+        (*first).second.insert(e.second);
+
+        auto second = adj.begin();
+        tie(second,ignore) = adj.emplace( e.second, unordered_set<Point,PointHasher<Point>>() );
+        (*second).second.insert(e.first);
     }
-    return max/2;
+    auto max_el = (*max_element( adj.begin(), adj.end(), [&] ( const auto& lhs, const auto& rhs ) {
+        return lhs.second.size() < rhs.second.size();
+    }));
+    cout<<"max_el: "<<max_el.first<<"\n";
+    for( auto q : max_el.second) {
+        cout<<q<<",";
+    }
+    cout<<"\n";
+    return max_el.second.size();
 }
 
 template< typename Triangulation >

@@ -145,8 +145,8 @@ inline void wedge( const Delaunay& DT, const vector<Vertex_handle>& handles, con
             ||( q_m[2] == q_i && get_angle<K>(handles.at(a)->point(), q_i->point(), handles.at(c)->point()) > PI_OVER_TWO ) ) {
                 addToE_star.emplace_back( q_m[1]->info(), q_m[2]->info() );
             }
-            q_m[2] = q_m[1];
-            q_m[1] = q_m[0];
+            step[i](q_m[2]);
+            step[i](q_m[1]);
         };
     }
 }

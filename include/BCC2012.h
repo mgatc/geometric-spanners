@@ -70,6 +70,13 @@ inline size_t getCone( const vector<Vertex_handle>& handles, const vector<size_t
     );
 }
 
+inline size_t getPreviousCone( const size_t& cone, const size_t& numCones ) {
+    return (cone-1+numCones)%numCones;
+}
+
+inline bool vertexAgreesOnEdge() {
+
+}
 
 
 } // namespace bcc2012
@@ -112,30 +119,31 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         return edgeLength( handles, lhs ) < edgeLength( handles, rhs );
     });
 
-    vector<size_t> closest( n, SIZE_T_MAX );
-    vector<bitset<NUM_CONES>> filled(n);
+    vector<size_t> closest( n, SIZE_T_MAX ); // id of closest vertex for orienting cones
+    vector<bitset<NUM_CONES>> filled(n); // status of each cone
     vector<pair<size_t,size_t>> E; // output edge list
     vector<pair<size_t,size_t>> E_star; // edges added from "Wedge"
 
     for( auto pq : L ) {
         size_t p = pq.first,
                q = pq.second;
+
         if(printLog) cout<<"p-q:"<<p<<" - "<<q<<"\n";
         if(printLog) cout<<"p-q:"<<handles.at(p)->point()<<" - "<<handles.at(q)->point()<<"\n";
-
         if(printLog) cout<<"  p_filled:"<<filled.at(p)<<"\n";
         if(printLog) cout<<"  q_filled:"<<filled.at(q)<<"\n";
 
-
+        // If either p or q's cone is filled, don't even bother
         if( filled.at(p).count() == NUM_CONES || filled.at(q).count() == NUM_CONES )
             continue;
 
+        //1
         // Politely ask p if it wants an edge to q
-        if( closest.at(p) == SIZE_T_MAX ) // Set closest
+        if( closest.at(p) == SIZE_T_MAX ) // First, make sure the closest vertex is set
             closest.at(p) = q;
 
         size_t cone_p = getCone( handles, closest, p, q, alpha ),
-               cone_pPrev = (cone_p-1+NUM_CONES)%NUM_CONES;
+               cone_pPrev = getPreviousCone( cone_p, NUM_CONES );
 
         double theta_p = get_angle<bcc2012::K>(
             handles.at(closest.at(p))->point(),
@@ -148,13 +156,13 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
              pPrevConeFilled = filled.at(p)[cone_pPrev],
              pAbides = (!qOnBoundary && !pGivenConeFilled)
                     || ( qOnBoundary &&(!pGivenConeFilled || !pPrevConeFilled) );
-
+        //1
         if(printLog) cout<<"  cone_p:"<<cone_p<<"\n";
         if(printLog && qOnBoundary) cout<<"  qOnBoundary\n";
         if(printLog && pAbides ) cout<<"  p abides!\n";
 
 
-
+        //1
         // Politely ask q if it wants an edge to p
         if( closest.at(q) == SIZE_T_MAX ) // Set closest
             closest.at(q) = p;
@@ -173,22 +181,21 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
              qPrevConeFilled = filled.at(q)[cone_qPrev],
              qAbides = (!pOnBoundary && !qGivenConeFilled)
                     || ( pOnBoundary &&(!qGivenConeFilled || !qPrevConeFilled) );
-
+        //1
         if(printLog) cout<<"  cone_q:"<<cone_q<<"\n";
         if(printLog && pOnBoundary) cout<<"  pOnBoundary\n";
         if(printLog && qAbides ) cout<<"  q abides!\n";
 
-
-
         // Only continue if p and q both consent to add the edge
         if( pAbides && qAbides ) {
-            E.emplace_back(p,q);
+            E.emplace_back(p,q); // Place the edge
 
             // Wedge on each cone of pq and qp
             // There will be at least one for each, but there could
             // be two cones for one or both pq and qp if the edge
             // falls on the boundary of a cone and the cone is not already filled
             vector<vector<size_t>> wedge;
+            //2
             // Bookkeeping for p
             if( qOnBoundary ) {
                 if(!filled.at(p)[cone_pPrev])
@@ -198,7 +205,8 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
             if(!filled.at(p)[cone_p])
                 wedge.push_back({p,q,cone_p});
             filled.at(p)[cone_p] = true;
-
+            //2
+            //2
             // Bookkeeping for q
             if( pOnBoundary ) {
                 if(!filled.at(q)[cone_qPrev])
@@ -208,7 +216,7 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
             if(!filled.at(q)[cone_q])
                 wedge.push_back({q,p,cone_q});
             filled.at(q)[cone_q] = true;
-
+            //2
 
             // Wedge on p, q
             for( auto params : wedge ) {
@@ -216,12 +224,13 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
                 // q is params.at(1)
                 // cone is params.at(2)
 
+                //3
                 // q_m[i] holds the circulator for q_{m-i}
                 vector<Vertex_circulator> q_m(3);
                 // find q
                 q_m[2] = DT.incident_vertices( handles.at(params.at(0)) );
                 while( ++q_m[2] != handles.at(params.at(1)) ); // point to q
-                const auto q_i = q_m[2];
+                const auto q_i(q_m[2]);
 
                 // Process edges from q_j to q_i
                 // set and increment q_m and q_{m-1} so the sequence will be correct at the start of the loop
@@ -231,33 +240,49 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
                 }
                 // Get the first and last vertex in cone_p, called q_j and q_k
                 // Rotate q_j CCW until we leave the cone
-                while( !DT.is_infinite(++q_m[0])
+                while( !DT.is_infinite(q_m[0])
+                && getCone(handles,closest,params.at(0),q_m[0]->info(),alpha) == params.at(2)
+                && !DT.is_infinite(++q_m[0])
                 && getCone(handles,closest,params.at(0),q_m[0]->info(),alpha) == params.at(2) ) {
                     if( q_m[2] != q_i
                     ||( q_m[2] == q_i && get_angle<K>(handles.at(params.at(0))->point(), q_i->point(), q_m[1]->point()) > PI_OVER_TWO ) ) {
                         E_star.emplace_back( q_m[1]->info(), q_m[2]->info() );
-                        if(printLog) cout<<"  wedge["<<params.at(0)<<"][cone"<<params.at(2)<<"]: "<<q_m[1]->info()<< " - " <<q_m[2]->info()<<"\n";
+                        if(printLog) cout<<"  wedge["<<params.at(0)<<"][cone"<<params.at(2)
+                            <<"]: "<<q_m[1]->info()<< " - " <<q_m[2]->info()<<" angle:"
+                            <<get_angle<K>(handles.at(params.at(0))->point(), q_i->point(), q_m[1]->point())
+                            <<"\n";
                     }
                     q_m[2] = q_m[1];
                     q_m[1] = q_m[0];
                 };
+                //3
+                if(printLog) cout<<"  q_j:"<<q_m[1]->info()<<"\n";
 
+                //3
                 // Process edges from q_k to q_i
                 for( size_t i=0; i<q_m.size()-1; ++i ) {
                     q_m[i] = q_i;
                     --q_m[i];
                 }
                 q_m[2] = q_i;
-                while( !DT.is_infinite(--q_m[0])
+                while( !DT.is_infinite(q_m[0])
+                && getCone(handles,closest,params.at(0),q_m[0]->info(),alpha) == params.at(2)
+                && !DT.is_infinite(--q_m[0])
                 && getCone(handles,closest,params.at(0),q_m[0]->info(),alpha) == params.at(2) ) {
                     if( q_m[2] != q_i
                     ||( q_m[2] == q_i && get_angle<K>(q_m[1]->point(), q_i->point(), handles.at(params.at(0))->point()) > PI_OVER_TWO ) ) {
                         E_star.emplace_back( q_m[1]->info(), q_m[2]->info() );
-                        if(printLog)cout<<"  wedge["<<params.at(0)<<"][cone"<<params.at(2)<<"]: "<<q_m[1]->info()<< " - " <<q_m[2]->info()<<"\n";
+                        if(printLog)cout<<"  wedge["<<params.at(0)
+                            << "][cone"<<params.at(2)<<"]: "<<q_m[1]->info()<< " - "
+                            << q_m[2]->info()<<" angle:"
+                            << get_angle<K>(q_m[1]->point(), q_i->point(), handles.at(params.at(0))->point())
+                            << "\n";
                     }
                     q_m[2] = q_m[1];
                     q_m[1] = q_m[0];
                 };
+                //3
+                if(printLog) cout<<"  q_k:"<<q_m[1]->info()<<"\n";
             }
         }
     }

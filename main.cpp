@@ -101,7 +101,7 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    experiment( 10000, 100, 200, 10 );
+    experiment( 100000, 100000, 200000, 10000 );
     //scratch();
 
     return 0;
@@ -228,7 +228,7 @@ void scratch() {
 //        points.emplace_back( 0,0 );
 
 
-        string filename = "data-210_7245.688373x7245.688373.txt";
+        string filename = "data-150_6123.724357x6123.724357.txt";
         readPointsFromFile( back_inserter( points ), filename );
 
 
@@ -616,9 +616,9 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout <<",";
 
 
-    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-    cout << t;
-    cout <<"\n";
+//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    cout << t;
+//    cout <<"\n";
 
     result.clear();
 
@@ -646,48 +646,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
         return false;
     }
-//    result.clear();
-//
-//    {
-//        Timer tim;
-//        LW2004( points.begin(), points.end(), back_inserter(result), PI/2, printLog );
-//    }
-//    deg = degree( result.begin(), result.end() );
-//    cout << deg;
-//    cout <<",";
-//
-//    t = 0;
-//
-//    {
-//        //Timer tim;
-//        t = StretchFactorDijkstraParallel( result.begin(), result.end() );
-//    }
-//    cout<< t;
-//    cout<<",";
-//
-//    if( t > 7.79 || deg > 23 || forcePrint ) {
-//        pair<pair<Vertex_handle,Vertex_handle>,double> t_fw;
-//        t_fw = StretchFactor( result.begin(), result.end() );
-//        cout<<t_fw.second<<",";
-//
-//        string resultFileName = ( filename ? *filename : *generatedFile );
-//        // strip file extension
-//        const std::string ext(".txt");
-//        if ( resultFileName != ext &&
-//             resultFileName.size() > ext.size() &&
-//             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
-//        {
-//           // if so then strip them off
-//           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
-//        }
-//        resultFileName += "_result-";
-//        resultFileName += ( filename ? "redo" : "orig" );
-//
-//        if( generatedFile )
-//            singleRun( n, width, resultFileName, *generatedFile, true, false );
-//
-//        return false;
-//    }
+
     result.clear();
 
     cout<<"\n";

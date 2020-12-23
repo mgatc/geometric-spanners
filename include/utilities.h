@@ -20,6 +20,8 @@ const double PI = M_PI;
 const double EPSILON = 0.000001;
 const double INF = std::numeric_limits<double>::infinity();
 const size_t SIZE_T_MAX = std::numeric_limits<size_t>::max();
+const double PI_OVER_TWO = PI / 2;
+
 
 
 template< class T >

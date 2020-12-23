@@ -416,7 +416,7 @@
 1588865172 source:/home/matt/UDC/udc/src/ExperimentalHex2.cpp
 	"ExperimentalHex2.h"
 
-1608667838 source:/home/matt/GeometricSpanners/main.cpp
+1608691620 source:/home/matt/GeometricSpanners/main.cpp
 	<chrono>
 	<fstream>
 	<list>
@@ -799,7 +799,7 @@
 
 1602510682 /home/matt/GeometricSpanners/include/GraphAlgoTV.h
 
-1607787199 /home/matt/GeometricSpanners/include/utilities.h
+1608747362 /home/matt/GeometricSpanners/include/utilities.h
 	<chrono>
 	<cmath>
 	<iostream>
@@ -837,9 +837,10 @@
 	"metrics.h"
 	"utilities.h"
 
-1608672965 /home/matt/GeometricSpanners/include/BCC2012.h
+1608750454 /home/matt/GeometricSpanners/include/BCC2012.h
 	<bitset>
 	<cmath>
+	<functional>
 	<limits>
 	<unordered_set>
 	<unordered_map>

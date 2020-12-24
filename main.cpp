@@ -18,6 +18,7 @@
 #include "BSX2009.h"
 #include "KPX2010.h"
 #include "BCC2012.h"
+#include "BHS2017.h"
 #include "metrics.h"
 //#include "utilities.h"
 
@@ -259,7 +260,9 @@ void scratch() {
             //BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3, true );
             //BGS2002( points.begin(), points.end(), back_inserter(result) );
             //KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
-            BCC2012_7( points.begin(), points.end(), back_inserter(result), true );
+            //BCC2012_7( points.begin(), points.end(), back_inserter(result), true );
+            BHS2017(points.begin(), points.end(), back_inserter(result), true);
+
         }
 
        //Johnsons( result.begin(), result.end() );

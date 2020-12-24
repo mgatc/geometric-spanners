@@ -1,0 +1,121 @@
+\documentclass[margin=3mm]{standalone} 
+\usepackage{tikz}  
+ \usetikzlibrary{backgrounds}
+
+\usetikzlibrary{fit}
+
+\begin{document}
+
+\begin{tikzpicture}[ background rectangle/.style={fill=FEFEF6}, show background rectangle, vertex/.style = {circle, fill, minimum size=#1, inner sep=0pt, outer sep=0pt}, vertex/.default = 6pt, border/.style = {circle, draw, minimum size=#1, inner sep=0pt, outer sep=0pt}, border/.default = 6pt ]
+
+\definecolor{e98570}{RGB}{ 233, 133, 112 }
+\definecolor{95acc3}{RGB}{ 149, 172, 195 }
+\definecolor{174681}{RGB}{ 23, 70, 129 }
+\definecolor{95acc3}{RGB}{ 149, 172, 195 }
+\definecolor{FEFEF6}{RGB}{ 254, 254, 246 }
+\definecolor{111116}{RGB}{ 17, 17, 22 }
+\draw [color=95acc3,line width=1.360000] (5.000000,3.000000) -- (3.900000,5.900000);
+\draw [color=95acc3,line width=1.360000] (3.900000,5.900000) -- (-0.900000,3.000000);
+\draw [color=95acc3,line width=1.360000] (-0.900000,3.000000) -- (5.000000,3.000000);
+\draw [color=95acc3,line width=1.360000] (4.100000,0.000000) -- (5.000000,-2.000000);
+\draw [color=95acc3,line width=1.360000] (5.000000,-2.000000) -- (9.000000,1.000000);
+\draw [color=95acc3,line width=1.360000] (9.000000,1.000000) -- (4.100000,0.000000);
+\draw [color=95acc3,line width=1.360000] (-4.000000,-3.000000) -- (-1.000000,0.100000);
+\draw [color=95acc3,line width=1.360000] (-1.000000,0.100000) -- (-6.000000,-0.100000);
+\draw [color=95acc3,line width=1.360000] (-6.000000,-0.100000) -- (-4.000000,-3.000000);
+\draw [color=95acc3,line width=1.360000] (3.900000,5.900000) -- (-2.000000,6.000000);
+\draw [color=95acc3,line width=1.360000] (-2.000000,6.000000) -- (-0.900000,3.000000);
+\draw [color=95acc3,line width=1.360000] (-10.000000,-4.000000) -- (-9.000000,-0.200000);
+\draw [color=95acc3,line width=1.360000] (-6.100000,-1.500000) -- (-6.000000,-0.100000);
+\draw [color=95acc3,line width=1.360000] (-6.000000,-0.100000) -- (-7.700000,-1.000000);
+\draw [color=95acc3,line width=1.360000] (-7.700000,-1.000000) -- (-6.100000,-1.500000);
+\draw [color=95acc3,line width=1.360000] (4.100000,0.000000) -- (5.000000,3.000000);
+\draw [color=95acc3,line width=1.360000] (-0.900000,3.000000) -- (4.100000,0.000000);
+\draw [color=95acc3,line width=1.360000] (-4.000000,-3.000000) -- (-10.000000,-4.000000);
+\draw [color=95acc3,line width=1.360000] (-10.000000,-4.000000) -- (-1.500000,-6.000000);
+\draw [color=95acc3,line width=1.360000] (-1.500000,-6.000000) -- (-4.000000,-3.000000);
+\draw [color=95acc3,line width=1.360000] (4.100000,0.000000) -- (-1.000000,0.100000);
+\draw [color=95acc3,line width=1.360000] (-1.000000,0.100000) -- (4.000000,-4.000000);
+\draw [color=95acc3,line width=1.360000] (4.000000,-4.000000) -- (4.100000,0.000000);
+\draw [color=95acc3,line width=1.360000] (1.000000,-9.000000) -- (-10.000000,-4.000000);
+\draw [color=95acc3,line width=1.360000] (-6.100000,-1.500000) -- (-10.000000,-4.000000);
+\draw [color=95acc3,line width=1.360000] (-4.000000,-3.000000) -- (-6.100000,-1.500000);
+\draw [color=95acc3,line width=1.360000] (-7.700000,-1.000000) -- (-9.000000,-0.200000);
+\draw [color=95acc3,line width=1.360000] (-10.000000,-4.000000) -- (-7.700000,-1.000000);
+\draw [color=95acc3,line width=1.360000] (-6.000000,-0.100000) -- (-9.000000,-0.200000);
+\draw [color=95acc3,line width=1.360000] (-7.000000,3.100000) -- (-2.000000,6.000000);
+\draw [color=95acc3,line width=1.360000] (-6.000000,-0.100000) -- (-0.900000,3.000000);
+\draw [color=95acc3,line width=1.360000] (-0.900000,3.000000) -- (-7.000000,3.100000);
+\draw [color=95acc3,line width=1.360000] (-7.000000,3.100000) -- (-6.000000,-0.100000);
+\draw [color=95acc3,line width=1.360000] (-9.000000,-0.200000) -- (-7.000000,3.100000);
+\draw [color=95acc3,line width=1.360000] (5.000000,-2.000000) -- (4.000000,-4.000000);
+\draw [color=95acc3,line width=1.360000] (4.000000,-4.000000) -- (9.000000,1.000000);
+\draw [color=95acc3,line width=1.360000] (3.900000,5.900000) -- (9.000000,1.000000);
+\draw [color=95acc3,line width=1.360000] (9.000000,1.000000) -- (5.000000,3.000000);
+\draw [color=95acc3,line width=1.360000] (-0.900000,3.000000) -- (-1.000000,0.100000);
+\draw [color=95acc3,line width=1.360000] (-1.500000,-6.000000) -- (-1.000000,0.100000);
+\draw [color=95acc3,line width=1.360000] (4.000000,-4.000000) -- (1.000000,-9.000000);
+\draw [color=95acc3,line width=1.360000] (1.000000,-9.000000) -- (9.000000,1.000000);
+\draw [color=95acc3,line width=1.360000] (-1.500000,-6.000000) -- (4.000000,-4.000000);
+\draw [color=95acc3,line width=1.360000] (1.000000,-9.000000) -- (-1.500000,-6.000000);
+
+\node (vertex0) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (3.900000,5.900000) {0};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (3.900000,5.900000) {};
+
+\node (vertex1) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (4.100000,0.000000) {1};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (4.100000,0.000000) {};
+
+\node (vertex2) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (5.000000,-2.000000) {2};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (5.000000,-2.000000) {};
+
+\node (vertex3) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (-9.000000,-0.200000) {3};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (-9.000000,-0.200000) {};
+
+\node (vertex4) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (-6.100000,-1.500000) {4};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (-6.100000,-1.500000) {};
+
+\node (vertex5) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (-4.000000,-3.000000) {5};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (-4.000000,-3.000000) {};
+
+\node (vertex6) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (-10.000000,-4.000000) {6};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (-10.000000,-4.000000) {};
+
+\node (vertex7) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (-7.700000,-1.000000) {7};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (-7.700000,-1.000000) {};
+
+\node (vertex8) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (-6.000000,-0.100000) {8};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (-6.000000,-0.100000) {};
+
+\node (vertex9) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (-2.000000,6.000000) {9};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (-2.000000,6.000000) {};
+
+\node (vertex10) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (-7.000000,3.100000) {10};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (-7.000000,3.100000) {};
+
+\node (vertex11) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (9.000000,1.000000) {11};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (9.000000,1.000000) {};
+
+\node (vertex12) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (5.000000,3.000000) {12};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (5.000000,3.000000) {};
+
+\node (vertex13) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (-0.900000,3.000000) {13};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (-0.900000,3.000000) {};
+
+\node (vertex14) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (-1.000000,0.100000) {14};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (-1.000000,0.100000) {};
+
+\node (vertex15) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (4.000000,-4.000000) {15};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (4.000000,-4.000000) {};
+
+\node (vertex16) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (1.000000,-9.000000) {16};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (1.000000,-9.000000) {};
+
+\node (vertex17) [fill,vertex=17.000000,color=FEFEF6,fill=174681,line width=0] at (-1.500000,-6.000000) {17};
+\node () [draw,border=17.000000,color=e98570,line width=1.360000] at (-1.500000,-6.000000) {};
+
+
+
+
+\end{tikzpicture}
+
+\end{document}

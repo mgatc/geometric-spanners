@@ -70,11 +70,7 @@ inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,s
 
     double theta = get_angle<bhs2017::K>(refPoint, H[e.first]->point(), H[e.second]->point());
 
-    //cout << theta << "\n";
-
     size_t cone = ( theta / alpha );
-
-    //cout << cone << "\n";
 
     double xCord = H[e.first]->point().x();
     double yCord = H[e.first]->point().y() + 1;
@@ -91,12 +87,23 @@ inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,s
 
     double bisectorLen = distance( H[e.first]->point(), intersectionPoint );
 
-    cout << bisectorLen << "\n";
-
     return distance( H[e.first]->point(), intersectionPoint );
 }
 
+vector addIncident (vector<pair<size_t, size_t>> L){
+
+
+
+
+
+
+}
+
 } // namespace BHS2017
+
+
+
+
 
 template< typename RandomAccessIterator, typename OutputIterator >
 void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false ) {
@@ -132,50 +139,14 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         return bisectorLength( handles, lhs, alpha ) < bisectorLength( handles, rhs, alpha );
     });
 
-
-    /*for(int i = 0; i< L.size(); i++){
-        pair<size_t, size_t> n = L[i];
-        cout << n;
-    }*/
+    //for(auto i=0; i<L.size(); i++){
+       // cout << L[i].first << " " << L[i].second << "\n";
+    //}
 
 
 
-
-
-
-
-
-
-
-
-
-    // Done. Send edges from G_prime with value == true (selected by both endpoints) to output.
-
-    // Edge list is only needed for printing. Remove for production.
-//    vector< pair<Point,Point> > edgeList;
-//    edgeList.reserve( G_prime.size() );
-
-    // Send resultant graph to output iterator
-//    for( auto e : G_prime ) {
-//        if( e.second ) { // e.second holds the bool value of whether both vertices of an edge selected the edge
-//            // Edge list is only needed for printing. Remove for production.
-//            //edgeList.emplace_back( handles.at(e.first.first)->point(), handles.at(e.first.second)->point() );
-//
-//            *result = make_pair( handles.at(e.first.first)->point(), handles.at(e.first.second)->point() );
-//            ++result;
-//            *result = make_pair( handles.at(e.first.second)->point(), handles.at(e.first.first)->point() );
-//            ++result;
-//        }
-//    }
-
-
-    //
-    //
     // START PRINTER NONSENSE
-    //
-    //
-
-//    if( printLog ) {
+    if( printLog ) {
         GraphPrinter printer(1);
         GraphPrinter::OptionsList options;
 
@@ -207,13 +178,8 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
         printer.print( "BHS2017" );
         cout<<"\n";
-//    }
-
-    //
-    //
+    }
     // END PRINTER NONSENSE
-    //
-    //
 
 } // function BHS2017
 

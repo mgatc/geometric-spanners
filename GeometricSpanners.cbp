@@ -53,15 +53,15 @@
 			<Add option="-O3" />
 			<Add option="-Wextra" />
 			<Add option="-Wall" />
-			<Add option="-fopenmp" />
-			<Add option="-fexceptions" />
-			<Add option="-frounding-math" />
 			<Add option="-std=c++17" />
+			<Add option="-frounding-math" />
+			<Add option="-fexceptions" />
+			<Add option="-fopenmp" />
 			<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include" />
 		</Compiler>
 		<Linker>
 			<Add option="-fopenmp" />
-			<Add library="CGAL" />
+			<Add library="-I/usr/include/CGAL" />
 			<Add library="gmp" />
 			<Add library="mpfr" />
 			<Add library="boost_system" />

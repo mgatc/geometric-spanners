@@ -46,18 +46,6 @@ typedef pair<size_t,size_t>                                         size_tPair;
 typedef boost::hash<size_tPair>                                     size_tPairHash;
 typedef unordered_map<size_tPair,bool,size_tPairHash>               size_tPairMap;
 
-bool selectEdge( const Delaunay& T, size_tPairMap &E, const Vertex_handle i, const Vertex_handle j, const size_t n, bool printLog = false ) {
-    assert( T.is_edge( i, j ) );
-    //if( printLog ) cout<<"add:("<<i->info()<<","<<j->info()<<") ";
-
-    auto existing = E.begin();
-    bool inserted = false;
-    tie(existing,inserted) = E.try_emplace( makeNormalizedPair( i->info(), j->info() ), false );
-    if(!inserted) existing->second = true;
-
-    return inserted;
-}
-
 inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,size_t>& e, double alpha) {
 
     double tan30 = tan(PI/6);

@@ -124,12 +124,13 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
     // Put edges in a vector, then sort on weight
     vector<pair<size_t,size_t>> L;
-    unordered_map<pair<size_t,size_t>,double,pointPairHash> B;
 
     for( auto e=DT.finite_edges_begin(); e!=DT.finite_edges_end(); ++e ) {
         L.emplace_back( e->first->vertex( (e->second+1)%3 )->info(),
                         e->first->vertex( (e->second+2)%3 )->info() );
     }
+
+    unordered_map<pair<size_t,size_t>,double,pointPairHash> B(L.size());
 
     for(auto e : L){
         B.emplace(e, bisectorLength(handles, e, alpha));
@@ -176,13 +177,12 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         cout << e.first.first << " " << e.first.second << " " << "\n";
     }
 
-    cout << "\nPR\n";
-
     for(auto  e : E_A){
 
         size_t p = e.first;
         size_t r = e.second;
 
+        cout << "\nPR\n";
         cout << p << " " << r << "\n";
 
         size_t cone  = getCone(handles, p, r, alpha);
@@ -194,13 +194,27 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
         while(++N_p != handles[r]);
 
+        cout << "\nN_P at R" << N_p->info() << "\n";
+
         cout << "\nP_N\n";
+
+        pointPairHash hashFunc;
 
         while(!DT.is_infinite(++N_p) && getCone(handles, p, N_p->info(), alpha) == cone);
 
         while(!DT.is_infinite(--N_p) && getCone(handles, p, N_p->info(), alpha) == cone){
-            cout << p << " " << N_p->info() << "\n";
+            if(B.find({p,N_p->info()}) == B.end()){
+                size_t hashValVAL = hashFunc(make_pair(N_p->info(), p));
+                size_t hashValIN = hashFunc(make_pair(p, N_p->info()));
+                if(hashValIN == hashValVAL){
+                    cout << "THE SAME\n";
+                }
+                cout << "INVALID " << p << " " << N_p->info() << " hashValIN = "<< hashValIN << " hashValVal = "<< hashValVAL <<  "\n";
+                //cout << "Mapped val: " << B.at(make_pair(p,N_p->info()));
+            }
         }
+
+        cout << "\n";
 
 //        while(!DT.is_infinite(++N_p) && getCone(handles, p, N_p->info(), alpha) == cone && ( B.at(make_pair(p,N_p->info())) > B.at(e) ||
 //          abs( B.at(make_pair(p,N_p->info())) - B.at(e)) < EPSILON ) );

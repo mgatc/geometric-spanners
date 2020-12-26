@@ -58,7 +58,7 @@ bool selectEdge( const Delaunay& T, size_tPairMap &E, const Vertex_handle i, con
     return inserted;
 }
 
-inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,size_t>& e, double alpha) {
+inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,size_t>& e, const double alpha) {
 
     double tan30 = tan(PI/6);
     double cot30 = 1/tan30;
@@ -87,12 +87,23 @@ inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,s
 
     double bisectorLen = distance( H[e.first]->point(), intersectionPoint );
 
-    return distance( H[e.first]->point(), intersectionPoint );
+    return bisectorLen;
 }
 
-vector addIncident (vector<pair<size_t, size_t>> L){
+void addIncident(const vector<Vertex_handle>& H, const vector<pair<size_t, size_t>> L, const double alpha, vector<pair<size_t, size_t>> &E_A){
 
+    double tan30 = tan(PI/6);
 
+    for(auto i = L.begin(); i != L.end(); ++i){
+
+        Point refPoint(H[i->first]->point().x() - tan30, H[i->first]->point().y() + 1);
+
+        double theta = get_angle<bhs2017::K>(refPoint, H[i->first]->point(), H[i->second]->point());
+
+        size_t cone = ( theta / alpha );
+
+        cout << cone << "\n";
+    }
 
 
 
@@ -135,13 +146,14 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         L.emplace_back( e->first->vertex( (e->second+1)%3 )->info(),
                         e->first->vertex( (e->second+2)%3 )->info() );
     }
+
     sort( L.begin(), L.end(), [&]( const auto& lhs, const auto& rhs ) {
         return bisectorLength( handles, lhs, alpha ) < bisectorLength( handles, rhs, alpha );
     });
 
-    //for(auto i=0; i<L.size(); i++){
-       // cout << L[i].first << " " << L[i].second << "\n";
-    //}
+    vector<pair<size_t,size_t> > E_A;
+
+    addIncident(handles, L, alpha, E_A);
 
 
 

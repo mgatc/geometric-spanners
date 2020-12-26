@@ -154,10 +154,6 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         //Check if cone i of p containing q has no edges in E_A with end point q in the same cone neighborhood.
         size_t p_cone = getCone(handles, p, q, alpha);
 
-//        cout << refPoint << " " << theta << " " << p_cone;
-//        cout << "\n";
-//        cout << coneStatus.at(p);
-
         bool p_cone_status = coneStatus.at(p)[p_cone];
         bool q_cone_status = coneStatus.at(q)[(p_cone + 3) % 6];
 
@@ -171,19 +167,10 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     //Add cannonical E_CAN
     vector<pair<size_t, size_t>> E_CAN;
 
-    cout << "B\n";
-
-    for(auto e : B){
-        cout << e.first.first << " " << e.first.second << " " << "\n";
-    }
-
     for(auto  e : E_A){
 
         size_t p = e.first;
         size_t r = e.second;
-
-        cout << "\nPR\n";
-        cout << p << " " << r << "\n";
 
         size_t cone  = getCone(handles, p, r, alpha);
 
@@ -194,53 +181,31 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
         while(++N_p != handles[r]);
 
-        cout << "\nN_P at R" << N_p->info() << "\n";
+        while(!DT.is_infinite(++N_p) && getCone(handles, p, N_p->info(), alpha) == cone && !( B.find({p, N_p->info()}) == B.end() && B.find({N_p->info(), p}) == B.end()) &&
+            ( B.at(make_pair(p,N_p->info())) > B.at(e) || abs( B.at(make_pair(p,N_p->info())) - B.at(e)) < EPSILON ) );
 
-        cout << "\nP_N\n";
+        vector<size_t> canNeighbors;
 
-        pointPairHash hashFunc;
+        while(!DT.is_infinite(--N_p) && getCone(handles, p, N_p->info(), alpha) == cone && !( B.find({p, N_p->info()}) == B.end() && B.find({N_p->info(), p}) == B.end()) &&
+            ( B.at(make_pair(p,N_p->info())) > B.at(e) || abs( B.at(make_pair(p,N_p->info())) - B.at(e)) < EPSILON ) ){
 
-        while(!DT.is_infinite(++N_p) && getCone(handles, p, N_p->info(), alpha) == cone);
-
-        while(!DT.is_infinite(--N_p) && getCone(handles, p, N_p->info(), alpha) == cone){
-            if(B.find({p,N_p->info()}) == B.end()){
-                size_t hashValVAL = hashFunc(make_pair(N_p->info(), p));
-                size_t hashValIN = hashFunc(make_pair(p, N_p->info()));
-                if(hashValIN == hashValVAL){
-                    cout << "THE SAME\n";
-                }
-                cout << "INVALID " << p << " " << N_p->info() << " hashValIN = "<< hashValIN << " hashValVal = "<< hashValVAL <<  "\n";
-                //cout << "Mapped val: " << B.at(make_pair(p,N_p->info()));
-            }
+            canNeighbors.push_back(N_p->info());
         }
 
-        cout << "\n";
+        //Add inner edges if total neigborhood edges is 3 or more. (4.2)
+        for(int i=1; i<int(canNeighbors.size())-2; i++){
+            E_CAN.emplace_back(canNeighbors.at(i),canNeighbors.at(i+1));
+        }
 
-//        while(!DT.is_infinite(++N_p) && getCone(handles, p, N_p->info(), alpha) == cone && ( B.at(make_pair(p,N_p->info())) > B.at(e) ||
-//          abs( B.at(make_pair(p,N_p->info())) - B.at(e)) < EPSILON ) );
-//
-//        vector<size_t> canNeighbors;
-//
-//        while(!DT.is_infinite(--N_p) && getCone(handles, p, N_p->info(), alpha) == cone && ( B.at(make_pair(p,N_p->info())) > B.at(e) ||
-//          abs( B.at(make_pair(p,N_p->info())) - B.at(e)) < EPSILON ) ){
-//
-//            canNeighbors.push_back(N_p->info());
-//        }
-//
-//        //Add inner edges if total neigborhood edges is 3 or more. (4.2)
-//        for(int i=1; i<int(canNeighbors.size())-2; i++){
-//            E_CAN.emplace_back(canNeighbors.at(i),canNeighbors.at(i+1));
-//        }
-//
-//        //If r is an end edge add the edge with endpoint r. (4.3)
-//        int canSize = canNeighbors.size()-1;
-//
-//        if(canNeighbors.at(0) == r && canSize > 0){
-//            E_CAN.emplace_back(r,canNeighbors.at(1));
-//        }
-//        if(canNeighbors.at(canSize)== r && canSize > 0){
-//            E_CAN.emplace_back(canNeighbors.at(canSize), canNeighbors.at(canSize-1));
-//        }
+        //If r is an end edge add the edge with endpoint r. (4.3)
+        int canSize = canNeighbors.size()-1;
+
+        if(canNeighbors.at(0) == r && canSize > 0){
+            E_CAN.emplace_back(r,canNeighbors.at(1));
+        }
+        if(canNeighbors.at(canSize)== r && canSize > 0){
+            E_CAN.emplace_back(canNeighbors.at(canSize), canNeighbors.at(canSize-1));
+        }
 
     }
 

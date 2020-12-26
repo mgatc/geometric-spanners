@@ -46,19 +46,25 @@ typedef pair<size_t,size_t>                                         size_tPair;
 typedef boost::hash<size_tPair>                                     size_tPairHash;
 typedef unordered_map<size_tPair,bool,size_tPairHash>               size_tPairMap;
 
-bool selectEdge( const Delaunay& T, size_tPairMap &E, const Vertex_handle i, const Vertex_handle j, const size_t n, bool printLog = false ) {
-    assert( T.is_edge( i, j ) );
-    //if( printLog ) cout<<"add:("<<i->info()<<","<<j->info()<<") ";
 
-    auto existing = E.begin();
-    bool inserted = false;
-    tie(existing,inserted) = E.try_emplace( makeNormalizedPair( i->info(), j->info() ), false );
-    if(!inserted) existing->second = true;
+//Function to find the cone of p containg vertex q, for this algorithm all vertices have 6 cones (0-5) with an angle of (PI/3).
+inline size_t getCone(const vector<Vertex_handle>& H, const size_t p, const size_t q, const double alpha){
 
-    return inserted;
+    double tan30 = tan(PI/6);
+
+    Point refPoint(H[p]->point().x() - tan30, H[p]->point().y() + 1);
+
+    double theta = get_angle<bhs2017::K>(refPoint, H[p]->point(), H[q]->point());
+
+    size_t cone = ( theta / alpha );
+
+    return cone;
 }
 
-inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,size_t>& e, const double alpha) {
+
+//Step 2. Fins the bisector length of all edges in the delaunay triangulation.
+inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,size_t>& e, double alpha) {
+
 
     double tan30 = tan(PI/6);
     double cot30 = 1/tan30;
@@ -66,11 +72,7 @@ inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,s
     vector<double> bisectorSlopes = {INF, tan30, -1*tan30, INF, tan30, -1*tan30};
     vector<double> orthBisectorSlopes{0, -1*cot30, cot30, 0, -1*cot30, cot30};
 
-    Point refPoint(H[e.first]->point().x() - tan30, H[e.first]->point().y() + 1);
-
-    double theta = get_angle<bhs2017::K>(refPoint, H[e.first]->point(), H[e.second]->point());
-
-    size_t cone = ( theta / alpha );
+    size_t cone = getCone(H, e.first, e.second, alpha);
 
     double xCord = H[e.first]->point().x();
     double yCord = H[e.first]->point().y() + 1;
@@ -90,25 +92,6 @@ inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,s
     return bisectorLen;
 }
 
-void addIncident(const vector<Vertex_handle>& H, const vector<pair<size_t, size_t>> L, const double alpha, vector<pair<size_t, size_t>> &E_A){
-
-    double tan30 = tan(PI/6);
-
-    for(auto i = L.begin(); i != L.end(); ++i){
-
-        Point refPoint(H[i->first]->point().x() - tan30, H[i->first]->point().y() + 1);
-
-        double theta = get_angle<bhs2017::K>(refPoint, H[i->first]->point(), H[i->second]->point());
-
-        size_t cone = ( theta / alpha );
-
-        cout << cone << "\n";
-    }
-
-
-
-
-}
 
 } // namespace BHS2017
 
@@ -140,20 +123,128 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     }
 
     // Put edges in a vector, then sort on weight
-    vector<pair<size_t,size_t> > L;
+    vector<pair<size_t,size_t>> L;
+    unordered_map<pair<size_t,size_t>,double,pointPairHash> B;
 
     for( auto e=DT.finite_edges_begin(); e!=DT.finite_edges_end(); ++e ) {
         L.emplace_back( e->first->vertex( (e->second+1)%3 )->info(),
                         e->first->vertex( (e->second+2)%3 )->info() );
     }
 
+    for(auto e : L){
+        B.emplace(e, bisectorLength(handles, e, alpha));
+    }
+
     sort( L.begin(), L.end(), [&]( const auto& lhs, const auto& rhs ) {
-        return bisectorLength( handles, lhs, alpha ) < bisectorLength( handles, rhs, alpha );
+        return B.at(lhs) < B.at(rhs);
     });
 
+    //Add incident set E_A.
     vector<pair<size_t,size_t> > E_A;
 
-    addIncident(handles, L, alpha, E_A);
+    vector<bitset<6>> coneStatus(n);
+
+    //Loop through all edges ordered in L.
+    for(auto e : L){
+
+        size_t p = e.first;
+        size_t q = e.second;
+
+        //Check if cone i of p containing q has no edges in E_A with end point q in the same cone neighborhood.
+        size_t p_cone = getCone(handles, p, q, alpha);
+
+//        cout << refPoint << " " << theta << " " << p_cone;
+//        cout << "\n";
+//        cout << coneStatus.at(p);
+
+        bool p_cone_status = coneStatus.at(p)[p_cone];
+        bool q_cone_status = coneStatus.at(q)[(p_cone + 3) % 6];
+
+        if(!p_cone_status && !q_cone_status){
+            E_A.push_back(e);
+            coneStatus.at(p)[p_cone] = true;
+            coneStatus.at(q)[(p_cone + 3) % 6] = true;
+        }
+    }
+
+    //Add cannonical E_CAN
+    vector<pair<size_t, size_t>> E_CAN;
+
+    cout << "B\n";
+
+    for(auto e : B){
+        cout << e.first.first << " " << e.first.second << " " << "\n";
+    }
+
+    cout << "\nPR\n";
+
+    for(auto  e : E_A){
+
+        size_t p = e.first;
+        size_t r = e.second;
+
+        cout << p << " " << r << "\n";
+
+        size_t cone  = getCone(handles, p, r, alpha);
+
+        /*Vertex circulator oriented to r to find fist and last end vertex. Once found all neighbors are added
+          starting from first end to last end vertex into a vector.
+        */
+        auto N_p = DT.incident_vertices(handles[p]);
+
+        while(++N_p != handles[r]);
+
+        cout << "\nP_N\n";
+
+        while(!DT.is_infinite(++N_p) && getCone(handles, p, N_p->info(), alpha) == cone);
+
+        while(!DT.is_infinite(--N_p) && getCone(handles, p, N_p->info(), alpha) == cone){
+            cout << p << " " << N_p->info() << "\n";
+        }
+
+//        while(!DT.is_infinite(++N_p) && getCone(handles, p, N_p->info(), alpha) == cone && ( B.at(make_pair(p,N_p->info())) > B.at(e) ||
+//          abs( B.at(make_pair(p,N_p->info())) - B.at(e)) < EPSILON ) );
+//
+//        vector<size_t> canNeighbors;
+//
+//        while(!DT.is_infinite(--N_p) && getCone(handles, p, N_p->info(), alpha) == cone && ( B.at(make_pair(p,N_p->info())) > B.at(e) ||
+//          abs( B.at(make_pair(p,N_p->info())) - B.at(e)) < EPSILON ) ){
+//
+//            canNeighbors.push_back(N_p->info());
+//        }
+//
+//        //Add inner edges if total neigborhood edges is 3 or more. (4.2)
+//        for(int i=1; i<int(canNeighbors.size())-2; i++){
+//            E_CAN.emplace_back(canNeighbors.at(i),canNeighbors.at(i+1));
+//        }
+//
+//        //If r is an end edge add the edge with endpoint r. (4.3)
+//        int canSize = canNeighbors.size()-1;
+//
+//        if(canNeighbors.at(0) == r && canSize > 0){
+//            E_CAN.emplace_back(r,canNeighbors.at(1));
+//        }
+//        if(canNeighbors.at(canSize)== r && canSize > 0){
+//            E_CAN.emplace_back(canNeighbors.at(canSize), canNeighbors.at(canSize-1));
+//        }
+
+    }
+
+    // Edge list is only needed for printing. Remove for production.
+    vector< pair<Point,Point> > edgeList;
+
+    // Send resultant graph to output iterator
+    for( auto e : E_A ) {
+        // Edge list is only needed for printing. Remove for production.
+        edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
+
+        *result = make_pair( handles.at(e.first)->point(), handles.at(e.second)->point() );
+        ++result;
+        *result = make_pair( handles.at(e.second)->point(), handles.at(e.first)->point() );
+        ++result;
+    }
+
+
 
 
 
@@ -168,11 +259,11 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         };
         printer.drawEdges( DT, options );
 
-//        options = { // active edge options
-//            { "color", printer.activeEdgeColor },
-//            { "line width", to_string(printer.activeEdgeWidth) }
-//        };
-//        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
+        options = { // active edge options
+            { "color", printer.activeEdgeColor },
+            { "line width", to_string(printer.activeEdgeWidth) }
+        };
+        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
 
 
         options = {

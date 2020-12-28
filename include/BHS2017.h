@@ -269,7 +269,7 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
             pair<size_t,size_t> canFirst = make_pair(canNeighbors[0], canNeighbors[1]);
             pair<size_t, size_t> canLast = make_pair(canNeighbors[canSize-1], canNeighbors[canSize]);
 
-            //If the edges are in cone 5 with respect to a and z add. (4.4 a)
+            //If the edges are in cone 1 or 5 with respect to a and z add. (4.4 a)
             if(getCone(handles, canFirst.first, canFirst.second, alpha) == 1){
                 E_CAN.push_back(canFirst);
             }
@@ -277,7 +277,7 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                 E_CAN.push_back(canLast);
             }
 
-            //If the edges are in cone 4 and cone for has no edge with an end edge point in E_A add. (4.4 b)
+            //If the edges are in cone 2 or 4 with respect to a and z and cone for has no edge with an end edge point in E_A add. (4.4 b)
             if(getCone(handles, canFirst.first, canFirst.second, alpha) == 2 && !coneStatus.at(canFirst.first)[2]){
                     E_CAN.push_back(canFirst);
                 }
@@ -285,44 +285,86 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                     E_CAN.push_back(canLast);
                 }
 
-            // (4.4 c)
-            if(getCone(handles, canFirst.first, canFirst.second, alpha) == 2 && (coneStatus.at(canFirst.first)[2]) &&  )
+            //Checks if end edges have a end point a or z in E_A and an edge different from the end edge in cone 2 or 4 woth respect to a and z. (4.4 c)
+            if(getCone(handles, canFirst.first, canFirst.second, alpha) == 2 && (coneStatus.at(canFirst.first)[2])){
 
+                size_t c = n+1;
+                auto N_a = DT.incident_vertices(handles[canFirst.first]);
+
+                while(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) != 2);
+
+                while(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) == 2){
+                    if(N_a->info() != canFirst.second){
+                        c = N_a->info();
+                        break;
+                    }
+                }
+
+                if(c != n+1){
+                    E_CAN.emplace_back(make_pair(canFirst.second, c));
+                }
+            }
+
+            if(getCone(handles, canLast.second, canLast.first, alpha) == 4 && (coneStatus.at(canLast.second)[4])){
+
+                size_t w = n+1;
+
+                auto N_z = DT.incident_vertices(handles[canLast.second]);
+
+                while(!DT.is_infinite(--N_z) && getCone(handles, canLast.second, N_z->info(), alpha) != 4);
+
+                while(!DT.is_infinite(--N_z) && getCone(handles, canLast.second, N_z->info(), alpha) == 4){
+                    if(N_z->info() != canLast.first){
+                        w = N_z->info();
+                        break;
+                    }
+                }
+
+
+                if(w != n+1){
+                    E_CAN.emplace_back(make_pair(w, canLast.first));
+                }
+            }
         }
 
     }
 
-    //Union sets E_A and E_CAN for final edge set.
 
-    cout << "E_A\n";
-    for(auto e: E_A){
-        cout << e.first << " " << e.second << "\n";
-    }
+//    cout << "E_A\n";
+//    for(auto e: E_A){
+//        cout << e.first << " " << e.second << "\n";
+//    }
+//
+//    pdfPrint(DT, handles, E_A, "BHS2017_E_A", result);
+//
+//    cout << "\nE_CAN\n";
+//    for(auto e: E_CAN){
+//        cout << e.first << " " << e.second << "\n";
+//    }
 
-    pdfPrint(DT, handles, E_A, "BHS2017_E_A", result);
+//    cout << "\nUnique\n";
 
-    cout << "\nE_CAN\n";
-    for(auto e: E_CAN){
-        cout << e.first << " " << e.second << "\n";
-    }
+    //Union of sets E_A and E_CAN for final edge set.
+    //Edges in E_CAN can exist in E_A so the non-unique edges are removed.
+    vector<pair<size_t,size_t>> E_CANUnique;
 
-    cout << "\nUnique\n";
     for( auto e : E_CAN){
         pair<size_t, size_t> ePrime = make_pair(e.second, e.first);
         if(find(E_A.begin(), E_A.end(), e) == E_A.end() && find(E_A.begin(), E_A.end(), ePrime) == E_A.end()){
-            cout << e.first << " " << e.second << "\n";
+            E_CANUnique.emplace_back(make_pair(e.first,e.second));
+            //cout << e.first << " " << e.second << "\n";
         }
     }
 
+//    pdfPrint(DT, handles, E_CAN, "BHS2017_E_CAN", result);
 
-    pdfPrint(DT, handles, E_CAN, "BHS2017_E_CAN", result);
+    //Combine E_A and unique edges from E_CAN.
+    E_A.insert(E_A.end(), E_CANUnique.begin(), E_CANUnique.end());
 
-    E_A.insert(E_A.end(), E_CAN.begin(), E_CAN.end());
-
-    cout << "\nE\n";
-    for(auto e: E_A){
-        cout << e.first << " " << e.second << "\n";
-    }
+//    cout << "\nE\n";
+//    for(auto e: E_A){
+//        cout << e.first << " " << e.second << "\n";
+//    }
 
     pdfPrint(DT, handles, E_A, "BHS2017", result);
 

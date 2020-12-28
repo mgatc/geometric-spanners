@@ -854,7 +854,7 @@
 	"metrics.h"
 	"utilities.h"
 
-1608224903 source:/home/davidwisnosky/Programs/geometric-spanners/main.cpp
+1609172457 source:/home/davidwisnosky/Programs/geometric-spanners/main.cpp
 	<chrono>
 	<fstream>
 	<list>
@@ -901,7 +901,7 @@
 
 1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/GraphAlgoTV.h
 
-1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/utilities.h
+1609168590 /home/davidwisnosky/Programs/geometric-spanners/include/utilities.h
 	<chrono>
 	<cmath>
 	<iostream>
@@ -939,7 +939,7 @@
 	"GeometricSpannerPrinter.h"
 	"metrics.h"
 
-1607959069 /home/davidwisnosky/Programs/geometric-spanners/include/metrics.h
+1608815805 /home/davidwisnosky/Programs/geometric-spanners/include/metrics.h
 	<algorithm>
 	<functional>
 	<limits>
@@ -1002,9 +1002,10 @@
 	"metrics.h"
 	"utilities.h"
 
-1608222519 /home/davidwisnosky/Programs/geometric-spanners/include/BCC2012.h
+1608815805 /home/davidwisnosky/Programs/geometric-spanners/include/BCC2012.h
 	<bitset>
 	<cmath>
+	<functional>
 	<limits>
 	<unordered_set>
 	<unordered_map>
@@ -1018,7 +1019,7 @@
 	"metrics.h"
 	"utilities.h"
 
-1608814862 /home/davidwisnosky/Programs/geometric-spanners/include/BHS2017.h
+1609177453 /home/davidwisnosky/Programs/geometric-spanners/include/BHS2017.h
 	<cmath>
 	<limits>
 	<unordered_set>

@@ -78,6 +78,24 @@ void getVertexInfo( const TriWithInfo& Triangulation, OutputIterator res ) {
     }
 }
 
+struct pointPairHash{
+    size_t operator()(const pair<size_t, size_t>& edge) const noexcept{
+        size_t seed = 31;
+        boost::hash_combine(seed, CGAL::min(edge.first, edge.second));
+        boost::hash_combine(seed, CGAL::max(edge.first, edge.second));
+        return seed;
+    }
+};
+
+struct edgeEquality{
+    bool operator() (const pair<size_t, size_t> &edgeA, const pair<size_t, size_t> &edgeB) const noexcept{
+        if((edgeA.first == edgeB.first || edgeA.first == edgeB.second) && (edgeA.second == edgeB.second || edgeA.second == edgeB.first)){
+            return true;
+        }
+        return false;
+    }
+};
+
 
 
 } // namespace gsnunf

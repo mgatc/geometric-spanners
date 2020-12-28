@@ -220,20 +220,20 @@ void scratch() {
 //            -1.05,-4.2
 //        },
 //    };
-        int n = 100;
+        int n = 50;
 
 //        std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
 //        std::copy_n( g3, n/6, back_inserter(points) );
-//        std::copy_n( g4, n, back_inserter(points) );
-//        points.emplace_back( 0,0 );
+        std::copy_n( g4, n, back_inserter(points) );
+        points.emplace_back( 0,0 );
 
 
         //string filename = "data-150_6123.724357x6123.724357.txt";
         //readPointsFromFile( back_inserter( points ), filename );
 
 
-        generateRandomPoints( n, width/2, back_inserter(points) );
+        //generateRandomPoints( n, width/2, back_inserter(points) );
         cout<< points.size();
         cout<< "\n";
         list< pair< Point, Point > > result;
@@ -629,7 +629,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-    if( deg > 7 || forcePrint ) {
+    if( deg > 8 || forcePrint ) {
 
         string resultFileName = ( filename ? *filename : *generatedFile );
         // strip file extension

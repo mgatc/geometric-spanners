@@ -220,7 +220,7 @@ void scratch() {
 //            -1.05,-4.2
 //        },
 //    };
-        int n = 50;
+        int n = 10000;
 
 //        std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );

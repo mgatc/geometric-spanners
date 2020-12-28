@@ -45,6 +45,7 @@ typedef Delaunay::Finite_edges_iterator                             Finite_edges
 typedef pair<size_t,size_t>                                         size_tPair;
 typedef boost::hash<size_tPair>                                     size_tPairHash;
 typedef unordered_map<size_tPair,bool,size_tPairHash>               size_tPairMap;
+typedef unordered_map<pair<size_t,size_t>, double, pointPairHash, edgeEquality> edgeBisectorMap;
 
 
 //Function to find the cone of p containg vertex q, for this algorithm all vertices have 6 cones (0-5) with an angle of (PI/3).
@@ -95,9 +96,59 @@ inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,s
 
 } // namespace BHS2017
 
+template< typename OutputIterator >
+void pdfPrint(const bhs2017::Delaunay DT, const vector<bhs2017::Vertex_handle> handles, const vector<pair<size_t, size_t>> E, const string fName, OutputIterator result){
+    using namespace bhs2017;
+    // Edge list is only needed for printing. Remove for production.
+    vector< pair<Point,Point> > edgeList;
+
+    // Send resultant graph to output iterator
+        for( auto e : E ) {
+            // Edge list is only needed for printing. Remove for production.
+            edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
+
+            *result = make_pair( handles.at(e.first)->point(), handles.at(e.second)->point() );
+            ++result;
+            *result = make_pair( handles.at(e.second)->point(), handles.at(e.first)->point() );
+            ++result;
+        }
+
+        // START PRINTER NONSENSE
+        if( true ) {
+            GraphPrinter printer(1);
+            GraphPrinter::OptionsList options;
+
+            options = {
+                { "color", printer.inactiveEdgeColor },
+                { "line width", to_string(printer.inactiveEdgeWidth) }
+            };
+            printer.drawEdges( DT, options );
+
+            options = { // active edge options
+                { "color", printer.activeEdgeColor },
+                { "line width", to_string(printer.activeEdgeWidth) }
+            };
+            printer.drawEdges( edgeList.begin(), edgeList.end(), options );
 
 
+            options = {
+                { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+                { "color", make_optional( printer.backgroundColor ) }, // text color
+                { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+                { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+            };
+            GraphPrinter::OptionsList borderOptions = {
+                { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
+                { "color", printer.activeEdgeColor }, // additional border color
+                { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+            };
+            printer.drawVerticesWithInfo( DT, options, borderOptions );
 
+            printer.print( fName );
+            cout<<"\n";
+        }
+        // END PRINTER NONSENSE
+}
 
 template< typename RandomAccessIterator, typename OutputIterator >
 void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false ) {
@@ -130,7 +181,7 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                         e->first->vertex( (e->second+2)%3 )->info() );
     }
 
-    unordered_map<pair<size_t,size_t>,double,pointPairHash> B(L.size());
+    edgeBisectorMap B(L.size());
 
     for(auto e : L){
         B.emplace(e, bisectorLength(handles, e, alpha));
@@ -181,16 +232,21 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
         while(++N_p != handles[r]);
 
-        while(!DT.is_infinite(++N_p) && getCone(handles, p, N_p->info(), alpha) == cone && !( B.find({p, N_p->info()}) == B.end() && B.find({N_p->info(), p}) == B.end()) &&
+        while(!DT.is_infinite(++N_p) && getCone(handles, p, N_p->info(), alpha) == cone &&
             ( B.at(make_pair(p,N_p->info())) > B.at(e) || abs( B.at(make_pair(p,N_p->info())) - B.at(e)) < EPSILON ) );
 
         vector<size_t> canNeighbors;
 
-        while(!DT.is_infinite(--N_p) && getCone(handles, p, N_p->info(), alpha) == cone && !( B.find({p, N_p->info()}) == B.end() && B.find({N_p->info(), p}) == B.end()) &&
+        while(!DT.is_infinite(--N_p) && getCone(handles, p, N_p->info(), alpha) == cone &&
             ( B.at(make_pair(p,N_p->info())) > B.at(e) || abs( B.at(make_pair(p,N_p->info())) - B.at(e)) < EPSILON ) ){
 
             canNeighbors.push_back(N_p->info());
         }
+
+//        cout << "CAN NEIGHBORS\n";
+//        for( auto e: canNeighbors){
+//            cout << e << "\n";
+//        }
 
         //Add inner edges if total neigborhood edges is 3 or more. (4.2)
         for(int i=1; i<int(canNeighbors.size())-2; i++){
@@ -207,61 +263,68 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
             E_CAN.emplace_back(canNeighbors.at(canSize), canNeighbors.at(canSize-1));
         }
 
+        //First and last edges in the cannonical neighborhood are condidered and added by 3 criteria. (4.4
+        if(canSize > 0){
+
+            pair<size_t,size_t> canFirst = make_pair(canNeighbors[0], canNeighbors[1]);
+            pair<size_t, size_t> canLast = make_pair(canNeighbors[canSize-1], canNeighbors[canSize]);
+
+            //If the edges are in cone 5 with respect to a and z add. (4.4 a)
+            if(getCone(handles, canFirst.first, canFirst.second, alpha) == 1){
+                E_CAN.push_back(canFirst);
+            }
+            if(getCone(handles, canLast.first, canLast.second, alpha) == 5){
+                E_CAN.push_back(canLast);
+            }
+
+            //If the edges are in cone 4 and cone for has no edge with an end edge point in E_A add. (4.4 b)
+            if(getCone(handles, canFirst.first, canFirst.second, alpha) == 2 && !coneStatus.at(canFirst.first)[2]){
+                    E_CAN.push_back(canFirst);
+                }
+            if(getCone(handles, canLast.first, canLast.second, alpha) == 4 && !coneStatus.at(canLast.second)[4]){
+                    E_CAN.push_back(canLast);
+                }
+
+            // (4.4 c)
+            if(getCone(handles, canFirst.first, canFirst.second, alpha) == 2 && (coneStatus.at(canFirst.first)[2]) &&  )
+
+        }
+
     }
 
-    // Edge list is only needed for printing. Remove for production.
-    vector< pair<Point,Point> > edgeList;
+    //Union sets E_A and E_CAN for final edge set.
 
-    // Send resultant graph to output iterator
-    for( auto e : E_A ) {
-        // Edge list is only needed for printing. Remove for production.
-        edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
+    cout << "E_A\n";
+    for(auto e: E_A){
+        cout << e.first << " " << e.second << "\n";
+    }
 
-        *result = make_pair( handles.at(e.first)->point(), handles.at(e.second)->point() );
-        ++result;
-        *result = make_pair( handles.at(e.second)->point(), handles.at(e.first)->point() );
-        ++result;
+    pdfPrint(DT, handles, E_A, "BHS2017_E_A", result);
+
+    cout << "\nE_CAN\n";
+    for(auto e: E_CAN){
+        cout << e.first << " " << e.second << "\n";
+    }
+
+    cout << "\nUnique\n";
+    for( auto e : E_CAN){
+        pair<size_t, size_t> ePrime = make_pair(e.second, e.first);
+        if(find(E_A.begin(), E_A.end(), e) == E_A.end() && find(E_A.begin(), E_A.end(), ePrime) == E_A.end()){
+            cout << e.first << " " << e.second << "\n";
+        }
     }
 
 
+    pdfPrint(DT, handles, E_CAN, "BHS2017_E_CAN", result);
 
+    E_A.insert(E_A.end(), E_CAN.begin(), E_CAN.end());
 
-
-    // START PRINTER NONSENSE
-    if( printLog ) {
-        GraphPrinter printer(1);
-        GraphPrinter::OptionsList options;
-
-        options = {
-            { "color", printer.inactiveEdgeColor },
-            { "line width", to_string(printer.inactiveEdgeWidth) }
-        };
-        printer.drawEdges( DT, options );
-
-        options = { // active edge options
-            { "color", printer.activeEdgeColor },
-            { "line width", to_string(printer.activeEdgeWidth) }
-        };
-        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
-
-
-        options = {
-            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
-            { "color", make_optional( printer.backgroundColor ) }, // text color
-            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
-            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-        };
-        GraphPrinter::OptionsList borderOptions = {
-            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
-            { "color", printer.activeEdgeColor }, // additional border color
-            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-        };
-        printer.drawVerticesWithInfo( DT, options, borderOptions );
-
-        printer.print( "BHS2017" );
-        cout<<"\n";
+    cout << "\nE\n";
+    for(auto e: E_A){
+        cout << e.first << " " << e.second << "\n";
     }
-    // END PRINTER NONSENSE
+
+    pdfPrint(DT, handles, E_A, "BHS2017", result);
 
 } // function BHS2017
 

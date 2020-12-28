@@ -102,8 +102,8 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    experiment( 100000, 100000, 200000, 10000 );
-    //scratch();
+    //experiment( 100000, 100000, 200000, 10000 );
+    scratch();
 
     return 0;
 }
@@ -115,9 +115,9 @@ void scratch() {
     size_t i=30;
 //
 //    //for( i=1; i<=17; ++i ) {
-        auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
-        auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
-        auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
+        //auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
+        //auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
+        //auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
         auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
         vector<Point> points;
         // SET POINT SET
@@ -220,22 +220,22 @@ void scratch() {
 //            -1.05,-4.2
 //        },
 //    };
-        //n = 50;
+        int n = 100;
 
 //        std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
 //        std::copy_n( g3, n/6, back_inserter(points) );
-//        std::copy_n( g4, n/6, back_inserter(points) );
+//        std::copy_n( g4, n, back_inserter(points) );
 //        points.emplace_back( 0,0 );
 
 
-        string filename = "data-150_6123.724357x6123.724357.txt";
-        readPointsFromFile( back_inserter( points ), filename );
+        //string filename = "data-150_6123.724357x6123.724357.txt";
+        //readPointsFromFile( back_inserter( points ), filename );
 
 
-        //generateRandomPoints( n, width/2, back_inserter(points) );
+        generateRandomPoints( n, width/2, back_inserter(points) );
         cout<< points.size();
-        cout<< ",";
+        cout<< "\n";
         list< pair< Point, Point > > result;
 
         // Delaunay triangulation
@@ -267,8 +267,8 @@ void scratch() {
 
        //Johnsons( result.begin(), result.end() );
 
-        cout << degree( result.begin(), result.end() );
-        cout <<",";
+        //cout << degree( result.begin(), result.end() );
+        //cout <<",";
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
 

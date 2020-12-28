@@ -96,60 +96,6 @@ inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,s
 
 } // namespace BHS2017
 
-template< typename OutputIterator >
-void pdfPrint(const bhs2017::Delaunay DT, const vector<bhs2017::Vertex_handle> handles, const vector<pair<size_t, size_t>> E, const string fName, OutputIterator result){
-    using namespace bhs2017;
-    // Edge list is only needed for printing. Remove for production.
-    vector< pair<Point,Point> > edgeList;
-
-    // Send resultant graph to output iterator
-        for( auto e : E ) {
-            // Edge list is only needed for printing. Remove for production.
-            edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
-
-            *result = make_pair( handles.at(e.first)->point(), handles.at(e.second)->point() );
-            ++result;
-            *result = make_pair( handles.at(e.second)->point(), handles.at(e.first)->point() );
-            ++result;
-        }
-
-        // START PRINTER NONSENSE
-        if( true ) {
-            GraphPrinter printer(1);
-            GraphPrinter::OptionsList options;
-
-            options = {
-                { "color", printer.inactiveEdgeColor },
-                { "line width", to_string(printer.inactiveEdgeWidth) }
-            };
-            printer.drawEdges( DT, options );
-
-            options = { // active edge options
-                { "color", printer.activeEdgeColor },
-                { "line width", to_string(printer.activeEdgeWidth) }
-            };
-            printer.drawEdges( edgeList.begin(), edgeList.end(), options );
-
-
-            options = {
-                { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
-                { "color", make_optional( printer.backgroundColor ) }, // text color
-                { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
-                { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-            };
-            GraphPrinter::OptionsList borderOptions = {
-                { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
-                { "color", printer.activeEdgeColor }, // additional border color
-                { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-            };
-            printer.drawVerticesWithInfo( DT, options, borderOptions );
-
-            printer.print( fName );
-            cout<<"\n";
-        }
-        // END PRINTER NONSENSE
-}
-
 template< typename RandomAccessIterator, typename OutputIterator >
 void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false ) {
     using namespace bhs2017;
@@ -329,13 +275,10 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
     }
 
-
 //    cout << "E_A\n";
 //    for(auto e: E_A){
 //        cout << e.first << " " << e.second << "\n";
 //    }
-//
-//    pdfPrint(DT, handles, E_A, "BHS2017_E_A", result);
 //
 //    cout << "\nE_CAN\n";
 //    for(auto e: E_CAN){
@@ -356,8 +299,6 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         }
     }
 
-//    pdfPrint(DT, handles, E_CAN, "BHS2017_E_CAN", result);
-
     //Combine E_A and unique edges from E_CAN.
     E_A.insert(E_A.end(), E_CANUnique.begin(), E_CANUnique.end());
 
@@ -366,7 +307,55 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 //        cout << e.first << " " << e.second << "\n";
 //    }
 
-    pdfPrint(DT, handles, E_A, "BHS2017", result);
+    // Edge list is only needed for printing. Remove for production.
+    vector< pair<Point,Point> > edgeList;
+
+    // Send resultant graph to output iterator
+        for( auto e : E_A ) {
+            // Edge list is only needed for printing. Remove for production.
+            edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
+
+            *result = make_pair( handles.at(e.first)->point(), handles.at(e.second)->point() );
+            ++result;
+            *result = make_pair( handles.at(e.second)->point(), handles.at(e.first)->point() );
+            ++result;
+        }
+
+        // START PRINTER NONSENSE
+        if( printLog ) {
+            GraphPrinter printer(1);
+            GraphPrinter::OptionsList options;
+
+            options = {
+                { "color", printer.inactiveEdgeColor },
+                { "line width", to_string(printer.inactiveEdgeWidth) }
+            };
+            printer.drawEdges( DT, options );
+
+            options = { // active edge options
+                { "color", printer.activeEdgeColor },
+                { "line width", to_string(printer.activeEdgeWidth) }
+            };
+            printer.drawEdges( edgeList.begin(), edgeList.end(), options );
+
+
+            options = {
+                { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+                { "color", make_optional( printer.backgroundColor ) }, // text color
+                { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+                { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+            };
+            GraphPrinter::OptionsList borderOptions = {
+                { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
+                { "color", printer.activeEdgeColor }, // additional border color
+                { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+            };
+            printer.drawVerticesWithInfo( DT, options, borderOptions );
+
+            printer.print( "BHS2017" );
+            cout<<"\n";
+        }
+        // END PRINTER NONSENSE
 
 } // function BHS2017
 

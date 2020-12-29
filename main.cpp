@@ -101,8 +101,8 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    experiment( 100000, 100000, 200000, 10000 );
-    //scratch();
+    //experiment( 100000, 100000, 200000, 10000 );
+    scratch();
 
     return 0;
 }
@@ -219,17 +219,17 @@ void scratch() {
 //            -1.05,-4.2
 //        },
 //    };
-        //n = 50;
+        size_t n = 50;
 
-//        std::copy_n( g1, n/3, back_inserter(points) );
-//        std::copy_n( g2, n/3, back_inserter(points) );
-//        std::copy_n( g3, n/6, back_inserter(points) );
-//        std::copy_n( g4, n/6, back_inserter(points) );
+        std::copy_n( g1, n/3, back_inserter(points) );
+        std::copy_n( g2, n/3, back_inserter(points) );
+        std::copy_n( g3, n/6, back_inserter(points) );
+        std::copy_n( g4, n/6, back_inserter(points) );
 //        points.emplace_back( 0,0 );
 
 
-        string filename = "data-150_6123.724357x6123.724357.txt";
-        readPointsFromFile( back_inserter( points ), filename );
+//        string filename = "data-150_6123.724357x6123.724357.txt";
+//        readPointsFromFile( back_inserter( points ), filename );
 
 
         //generateRandomPoints( n, width/2, back_inserter(points) );
@@ -259,7 +259,7 @@ void scratch() {
             //BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3, true );
             //BGS2002( points.begin(), points.end(), back_inserter(result) );
             //KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
-            BCC2012_7( points.begin(), points.end(), back_inserter(result), true );
+            BCC2012<6>( points.begin(), points.end(), back_inserter(result), true );
         }
 
        //Johnsons( result.begin(), result.end() );
@@ -609,7 +609,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout<< ",";
     {
         Timer tim;
-        BCC2012_7( points.begin(), points.end(), back_inserter(result), printLog );
+        BCC2012<6>( points.begin(), points.end(), back_inserter(result), printLog );
     }
     deg = degree( result.begin(), result.end() );
     cout << deg;

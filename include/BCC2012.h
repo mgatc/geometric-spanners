@@ -59,13 +59,13 @@ inline size_t getPreviousCone( const size_t& cone, const size_t& numCones ) {
     return (cone-1+numCones)%numCones;
 }
 
+template< size_t DEGREE, size_t NUM_CONES = DEGREE+1 >
 inline bool vertexAgreesOnEdge( const vector<Vertex_handle>& handles,
                                 vector<size_t>& closest,
-                                const vector<bitset<8>>& filled,
+                                const vector<bitset<NUM_CONES>>& filled,
                                 const size_t p,
                                 const size_t q,
                                 const double alpha,
-                                const size_t numCones,
                                 size_t& cone,
                                 size_t& conePrev,
                                 bool& qOnBoundary ) {
@@ -74,7 +74,7 @@ inline bool vertexAgreesOnEdge( const vector<Vertex_handle>& handles,
         closest.at(p) = q;
 
     cone = getCone( handles, closest, p, q, alpha );
-    conePrev = getPreviousCone( cone, numCones );
+    conePrev = getPreviousCone( cone, NUM_CONES );
 
     double theta = get_angle<bcc2012::K>(
         handles.at(closest.at(p))->point(),
@@ -91,7 +91,8 @@ inline bool vertexAgreesOnEdge( const vector<Vertex_handle>& handles,
         || ( qOnBoundary &&(!pGivenConeFilled || !pPrevConeFilled) );
 }
 
-inline void updateVertexConeStatus( vector<bitset<8>>& filled, vector<vector<size_t>>& wedge,
+template< size_t DEGREE, size_t NUM_CONES = DEGREE+1 >
+inline void updateVertexConeStatus( vector<bitset<NUM_CONES>>& filled, vector<vector<size_t>>& wedge,
                                     const size_t p, const size_t q,
                                     const bool qOnBoundary, const size_t cone, const size_t conePrev ) {
     if( qOnBoundary ) {
@@ -104,7 +105,67 @@ inline void updateVertexConeStatus( vector<bitset<8>>& filled, vector<vector<siz
     filled.at(p)[cone] = true;
 }
 
+/*
+ *  Degree 6 and 7 wedge algorithms are implemented as templates.
+ *  This is the primary template, but will never be used. Instead,
+ *  the specialized templates are used, defined below.
+ */
+template<size_t DEGREE>
 inline void wedge( const Delaunay& DT, const vector<Vertex_handle>& handles, const vector<size_t>& closest, const vector<size_t>& params,
+                   vector<pair<size_t,size_t>>& addToE_star, const Vertex_circulator& q_i, const double alpha ) {
+    assert(DEGREE==6||DEGREE==7);
+}
+
+template<>
+inline void wedge<7>( const Delaunay& DT, const vector<Vertex_handle>& handles, const vector<size_t>& closest, const vector<size_t>& params,
+                   vector<pair<size_t,size_t>>& addToE_star, const Vertex_circulator& q_i, const double alpha ) {
+    // params
+    // p is params.at(0)
+    // q is params.at(1)
+    // cone is params.at(2)
+
+    // q_m[i] holds the circulator for q_{m-i}
+    vector<Vertex_circulator> q_m(3);
+
+    // Setup function objects for wedge
+    vector<std::function<Vertex_circulator(Vertex_circulator&)>> step;
+    step.push_back( [] ( Vertex_circulator& c ) { return ++c; } );
+    step.push_back( [] ( Vertex_circulator& c ) { return --c; } );
+
+    for( size_t i=0; i<step.size(); i++ ) {
+        fill( q_m.begin(), q_m.end(), q_i );
+
+        // set and increment q_m and q_{m-1} so the sequence will be correct at the start of the loop
+        for( size_t j=0; j<q_m.size()-1; ++j )
+            step[i](q_m[j]);
+
+        size_t a = params.at(0);
+        //     b = q_i
+        size_t c = params.at(0);
+
+        if(i==0)
+            c = q_m[1]->info();
+        else
+            a = q_m[1]->info();
+
+        // Get the first and last vertex in cone_p, called q_j and q_k
+        // Rotate q_j CCW until we leave the cone
+        while( !DT.is_infinite(q_m[0])
+        && getCone(handles,closest,params.at(0),q_m[0]->info(),alpha) == params.at(2)
+        && !DT.is_infinite(step[i](q_m[0]))
+        && getCone(handles,closest,params.at(0),q_m[0]->info(),alpha) == params.at(2) ) {
+            if( q_m[2] != q_i
+            ||( q_m[2] == q_i && get_angle<K>(handles.at(a)->point(), q_i->point(), handles.at(c)->point()) > PI_OVER_TWO ) ) {
+                addToE_star.emplace_back( q_m[1]->info(), q_m[2]->info() );
+            }
+            step[i](q_m[2]);
+            step[i](q_m[1]);
+        };
+    }
+}
+
+template<>
+inline void wedge<6>( const Delaunay& DT, const vector<Vertex_handle>& handles, const vector<size_t>& closest, const vector<size_t>& params,
                    vector<pair<size_t,size_t>>& addToE_star, const Vertex_circulator& q_i, const double alpha ) {
     // params
     // p is params.at(0)
@@ -154,11 +215,12 @@ inline void wedge( const Delaunay& DT, const vector<Vertex_handle>& handles, con
 
 } // namespace bcc2012
 
-template< typename RandomAccessIterator, typename OutputIterator >
-void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false ) {
+template< size_t DEGREE = 7, typename RandomAccessIterator, typename OutputIterator >
+void BCC2012( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false ) {
     using namespace bcc2012;
 
-    const size_t NUM_CONES = 8;
+    assert( DEGREE == 7 || DEGREE == 6 );
+    const size_t NUM_CONES = DEGREE+1;
     const double alpha = 2*PI / NUM_CONES;
 
 //    if(printLog) cout<<"\nnumCones:"<<NUM_CONES<<"\n";
@@ -213,7 +275,7 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         size_t cone_p = 0,
            cone_pPrev = 0;
         bool qOnBoundary = false;
-        bool pAbides = vertexAgreesOnEdge( handles, closest, filled, p, q, alpha, NUM_CONES,
+        bool pAbides = vertexAgreesOnEdge<DEGREE>( handles, closest, filled, p, q, alpha,
                                            cone_p, cone_pPrev, qOnBoundary );
 
 //        if(printLog) cout<<"  cone_p:"<<cone_p<<"\n";
@@ -225,7 +287,7 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         size_t cone_q = 0,
            cone_qPrev = 0;
         bool pOnBoundary = false;
-        bool qAbides = vertexAgreesOnEdge( handles, closest, filled, q, p, alpha, NUM_CONES,
+        bool qAbides = vertexAgreesOnEdge<DEGREE>( handles, closest, filled, q, p, alpha,
                                            cone_q, cone_qPrev, pOnBoundary );
 
 //        if(printLog) cout<<"  cone_q:"<<cone_q<<"\n";
@@ -243,10 +305,10 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
             vector<vector<size_t>> W; // holds the parameters for each call to wedge
 
             // Bookkeeping for p
-            updateVertexConeStatus( filled, W, p, q, qOnBoundary, cone_p, cone_pPrev );
+            updateVertexConeStatus<DEGREE>( filled, W, p, q, qOnBoundary, cone_p, cone_pPrev );
 
             // Bookkeeping for q
-            updateVertexConeStatus( filled, W, q, p, pOnBoundary, cone_q, cone_qPrev );
+            updateVertexConeStatus<DEGREE>( filled, W, q, p, pOnBoundary, cone_q, cone_qPrev );
 
             vector<pair<size_t,size_t>> addToE_star;
 
@@ -257,7 +319,7 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
                 while( ++q_z != handles.at(params.at(1)) ); // point to q
                 const auto q_i(q_z);
 
-                wedge( DT, handles, closest, params, addToE_star, q_i, alpha );
+                wedge<DEGREE>( DT, handles, closest, params, addToE_star, q_i, alpha );
             }
             E_star.insert( E_star.end(), addToE_star.begin(), addToE_star.end() );
         }
@@ -333,7 +395,9 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
     //
     //
 
-} // function BCC2012_7
+} // function BCC2012
+
+
 
 } // namespace gsnunf
 

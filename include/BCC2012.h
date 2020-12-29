@@ -161,14 +161,14 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
     const size_t NUM_CONES = 8;
     const double alpha = 2*PI / NUM_CONES;
 
-    if(printLog) cout<<"\nnumCones:"<<NUM_CONES<<"\n";
-    if(printLog) cout<<"alpha:"<<alpha<<"\n";
+//    if(printLog) cout<<"\nnumCones:"<<NUM_CONES<<"\n";
+//    if(printLog) cout<<"alpha:"<<alpha<<"\n";
 
     // Construct Delaunay triangulation
     bcc2012::Delaunay DT( pointsBegin, pointsEnd );
     size_t n = DT.number_of_vertices();
     if( n > SIZE_T_MAX - 1 ) return;
-    if(printLog) cout<<"n:"<<n<<"\n";
+//    if(printLog) cout<<"n:"<<n<<"\n";
 
     vector<bcc2012::Vertex_handle> handles(n);
 
@@ -200,10 +200,10 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         size_t p = pq.first,
                q = pq.second;
 
-        if(printLog) cout<<"p-q:"<<p<<" - "<<q<<"\n";
-        if(printLog) cout<<"p-q:"<<handles.at(p)->point()<<" - "<<handles.at(q)->point()<<"\n";
-        if(printLog) cout<<"  p_filled:"<<filled.at(p)<<"\n";
-        if(printLog) cout<<"  q_filled:"<<filled.at(q)<<"\n";
+//        if(printLog) cout<<"p-q:"<<p<<" - "<<q<<"\n";
+//        if(printLog) cout<<"p-q:"<<handles.at(p)->point()<<" - "<<handles.at(q)->point()<<"\n";
+//        if(printLog) cout<<"  p_filled:"<<filled.at(p)<<"\n";
+//        if(printLog) cout<<"  q_filled:"<<filled.at(q)<<"\n";
 
         // If either p or q's cone is filled, don't even bother
         if( filled.at(p).count() == NUM_CONES || filled.at(q).count() == NUM_CONES )
@@ -216,9 +216,9 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         bool pAbides = vertexAgreesOnEdge( handles, closest, filled, p, q, alpha, NUM_CONES,
                                            cone_p, cone_pPrev, qOnBoundary );
 
-        if(printLog) cout<<"  cone_p:"<<cone_p<<"\n";
-        if(printLog && qOnBoundary) cout<<"  qOnBoundary\n";
-        if(printLog && pAbides ) cout<<"  p abides!\n";
+//        if(printLog) cout<<"  cone_p:"<<cone_p<<"\n";
+//        if(printLog && qOnBoundary) cout<<"  qOnBoundary\n";
+//        if(printLog && pAbides ) cout<<"  p abides!\n";
 
 
         // Politely ask q if it wants an edge to p
@@ -228,9 +228,9 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
         bool qAbides = vertexAgreesOnEdge( handles, closest, filled, q, p, alpha, NUM_CONES,
                                            cone_q, cone_qPrev, pOnBoundary );
 
-        if(printLog) cout<<"  cone_q:"<<cone_q<<"\n";
-        if(printLog && pOnBoundary) cout<<"  pOnBoundary\n";
-        if(printLog && qAbides ) cout<<"  q abides!\n";
+//        if(printLog) cout<<"  cone_q:"<<cone_q<<"\n";
+//        if(printLog && pOnBoundary) cout<<"  pOnBoundary\n";
+//        if(printLog && qAbides ) cout<<"  q abides!\n";
 
         // Only continue if p and q both consent to add the edge
         if( pAbides && qAbides ) {
@@ -293,39 +293,39 @@ void BCC2012_7( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd
     //
     //
 
-    if( printLog && n <= 200 ) {
-        GraphPrinter printer(0.006);
-        GraphPrinter::OptionsList options;
-
-        options = {
-            { "color", printer.inactiveEdgeColor },
-            { "line width", to_string(printer.inactiveEdgeWidth) }
-        };
-        printer.drawEdges( DT, options );
-
-        options = { // active edge options
-            { "color", printer.activeEdgeColor },
-            { "line width", to_string(printer.activeEdgeWidth) }
-        };
-        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
-
-
-        options = {
-            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
-            { "color", make_optional( printer.backgroundColor ) }, // text color
-            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
-            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-        };
-        GraphPrinter::OptionsList borderOptions = {
-            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
-            { "color", printer.activeEdgeColor }, // additional border color
-            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-        };
-        printer.drawVerticesWithInfo( DT, options, borderOptions );
-
-        printer.print( "bcc2012a" );
-        cout<<"\n";
-    }
+//    if( printLog && n <= 200 ) {
+//        GraphPrinter printer(0.006);
+//        GraphPrinter::OptionsList options;
+//
+//        options = {
+//            { "color", printer.inactiveEdgeColor },
+//            { "line width", to_string(printer.inactiveEdgeWidth) }
+//        };
+//        printer.drawEdges( DT, options );
+//
+//        options = { // active edge options
+//            { "color", printer.activeEdgeColor },
+//            { "line width", to_string(printer.activeEdgeWidth) }
+//        };
+//        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
+//
+//
+//        options = {
+//            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+//            { "color", make_optional( printer.backgroundColor ) }, // text color
+//            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+//            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+//        };
+//        GraphPrinter::OptionsList borderOptions = {
+//            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
+//            { "color", printer.activeEdgeColor }, // additional border color
+//            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+//        };
+//        printer.drawVerticesWithInfo( DT, options, borderOptions );
+//
+//        printer.print( "bcc2012a" );
+//        cout<<"\n";
+//    }
 
     //
     //

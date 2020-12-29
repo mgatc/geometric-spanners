@@ -18,6 +18,7 @@
 #include "BSX2009.h"
 #include "KPX2010.h"
 #include "BCC2012.h"
+#include "BHS2017.h"
 #include "metrics.h"
 //#include "utilities.h"
 
@@ -114,9 +115,9 @@ void scratch() {
     size_t i=30;
 //
 //    //for( i=1; i<=17; ++i ) {
-        auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
-        auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
-        auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
+        //auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
+        //auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
+        //auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
         auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
         vector<Point> points;
         // SET POINT SET
@@ -232,9 +233,10 @@ void scratch() {
 //        readPointsFromFile( back_inserter( points ), filename );
 
 
-        //generateRandomPoints( n, width/2, back_inserter(points) );
+
+        generateRandomPoints( n, width/2, back_inserter(points) );
         cout<< points.size();
-        cout<< ",";
+        cout<< "\n";
         list< pair< Point, Point > > result;
 
         // Delaunay triangulation
@@ -260,12 +262,12 @@ void scratch() {
             //BGS2002( points.begin(), points.end(), back_inserter(result) );
             //KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
             BCC2012<6>( points.begin(), points.end(), back_inserter(result), true );
-        }
+
 
        //Johnsons( result.begin(), result.end() );
 
-        cout << degree( result.begin(), result.end() );
-        cout <<",";
+        //cout << degree( result.begin(), result.end() );
+        //cout <<",";
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
 
@@ -626,7 +628,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-    if( deg > 7 || forcePrint ) {
+    if( deg > 8 || forcePrint ) {
 
         string resultFileName = ( filename ? *filename : *generatedFile );
         // strip file extension

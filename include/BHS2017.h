@@ -93,6 +93,118 @@ inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,s
     return bisectorLen;
 }
 
+//Step 4 add cannonical edges. Consists of 4 sub steps.
+inline void addCannonical(size_t p, size_t r, vector<pair<size_t, size_t>> &E_CAN, const edgeBisectorMap &B, const vector<bitset<6>> &coneStatus,
+    const Delaunay &DT, const vector<Vertex_handle> &handles, const size_t n, const double alpha){
+
+    pair<size_t, size_t> e = make_pair(p,r);
+
+    size_t cone  = getCone(handles, p, r, alpha);
+
+    /*Vertex circulator oriented to r to find fist and last end vertex. Once found all neighbors are added
+      starting from first end to last end vertex into a vector.
+    */
+    auto N_p = DT.incident_vertices(handles[p]);
+
+    while(++N_p != handles[r]);
+
+    while(!DT.is_infinite(++N_p) && getCone(handles, p, N_p->info(), alpha) == cone &&
+        ( B.at(make_pair(p,N_p->info())) > B.at(e) || abs( B.at(make_pair(p,N_p->info())) - B.at(e)) < EPSILON ) );
+
+    vector<size_t> canNeighbors;
+
+    while(!DT.is_infinite(--N_p) && getCone(handles, p, N_p->info(), alpha) == cone &&
+        ( B.at(make_pair(p,N_p->info())) > B.at(e) || abs( B.at(make_pair(p,N_p->info())) - B.at(e)) < EPSILON ) ){
+
+        canNeighbors.push_back(N_p->info());
+    }
+
+//        cout << "CAN NEIGHBORS\n";
+//        for( auto e: canNeighbors){
+//            cout << e << "\n";
+//        }
+
+    //Add inner edges if total neigborhood edges is 3 or more. (4.2)
+    for(int i=1; i<int(canNeighbors.size())-2; i++){
+        E_CAN.emplace_back(canNeighbors.at(i),canNeighbors.at(i+1));
+    }
+
+    //If r is an end edge add the edge with endpoint r. (4.3)
+    int canSize = canNeighbors.size()-1;
+
+    if(canNeighbors.at(0) == r && canSize > 0){
+        E_CAN.emplace_back(r,canNeighbors.at(1));
+    }
+    if(canNeighbors.at(canSize)== r && canSize > 0){
+        E_CAN.emplace_back(canNeighbors.at(canSize), canNeighbors.at(canSize-1));
+    }
+
+    //First and last edges in the cannonical neighborhood are condidered and added by 3 criteria. (4.4
+    if(canSize > 0){
+
+        pair<size_t,size_t> canFirst = make_pair(canNeighbors[0], canNeighbors[1]);
+        pair<size_t, size_t> canLast = make_pair(canNeighbors[canSize-1], canNeighbors[canSize]);
+
+        //If the edges are in cone 1 or 5 with respect to a and z add. (4.4 a)
+        if(getCone(handles, canFirst.first, canFirst.second, alpha) == 1){
+            E_CAN.push_back(canFirst);
+        }
+        if(getCone(handles, canLast.first, canLast.second, alpha) == 5){
+            E_CAN.push_back(canLast);
+        }
+
+        //If the edges are in cone 2 or 4 with respect to a and z and cone for has no edge with an end edge point in E_A add. (4.4 b)
+        if(getCone(handles, canFirst.first, canFirst.second, alpha) == 2 && !coneStatus.at(canFirst.first)[2]){
+                E_CAN.push_back(canFirst);
+            }
+        if(getCone(handles, canLast.first, canLast.second, alpha) == 4 && !coneStatus.at(canLast.second)[4]){
+                E_CAN.push_back(canLast);
+            }
+
+        //Checks if end edges have a end point a or z in E_A and an edge different from the end edge in cone 2 or 4 woth respect to a and z. (4.4 c)
+        if(getCone(handles, canFirst.first, canFirst.second, alpha) == 2 && (coneStatus.at(canFirst.first)[2])){
+
+            size_t c = n+1;
+            auto N_a = DT.incident_vertices(handles[canFirst.first]);
+
+            while(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) != 2);
+
+            while(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) == 2){
+                if(N_a->info() != canFirst.second){
+                    c = N_a->info();
+                    break;
+                }
+            }
+
+            if(c != n+1){
+                E_CAN.emplace_back(make_pair(canFirst.second, c));
+            }
+        }
+
+        if(getCone(handles, canLast.second, canLast.first, alpha) == 4 && (coneStatus.at(canLast.second)[4])){
+
+            size_t w = n+1;
+
+            auto N_z = DT.incident_vertices(handles[canLast.second]);
+
+            while(!DT.is_infinite(--N_z) && getCone(handles, canLast.second, N_z->info(), alpha) != 4);
+
+            while(!DT.is_infinite(--N_z) && getCone(handles, canLast.second, N_z->info(), alpha) == 4){
+                if(N_z->info() != canLast.first){
+                    w = N_z->info();
+                    break;
+                }
+            }
+
+
+            if(w != n+1){
+                E_CAN.emplace_back(make_pair(w, canLast.first));
+            }
+        }
+    }
+
+}
+
 
 } // namespace BHS2017
 
@@ -166,112 +278,8 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
     for(auto  e : E_A){
 
-        size_t p = e.first;
-        size_t r = e.second;
-
-        size_t cone  = getCone(handles, p, r, alpha);
-
-        /*Vertex circulator oriented to r to find fist and last end vertex. Once found all neighbors are added
-          starting from first end to last end vertex into a vector.
-        */
-        auto N_p = DT.incident_vertices(handles[p]);
-
-        while(++N_p != handles[r]);
-
-        while(!DT.is_infinite(++N_p) && getCone(handles, p, N_p->info(), alpha) == cone &&
-            ( B.at(make_pair(p,N_p->info())) > B.at(e) || abs( B.at(make_pair(p,N_p->info())) - B.at(e)) < EPSILON ) );
-
-        vector<size_t> canNeighbors;
-
-        while(!DT.is_infinite(--N_p) && getCone(handles, p, N_p->info(), alpha) == cone &&
-            ( B.at(make_pair(p,N_p->info())) > B.at(e) || abs( B.at(make_pair(p,N_p->info())) - B.at(e)) < EPSILON ) ){
-
-            canNeighbors.push_back(N_p->info());
-        }
-
-//        cout << "CAN NEIGHBORS\n";
-//        for( auto e: canNeighbors){
-//            cout << e << "\n";
-//        }
-
-        //Add inner edges if total neigborhood edges is 3 or more. (4.2)
-        for(int i=1; i<int(canNeighbors.size())-2; i++){
-            E_CAN.emplace_back(canNeighbors.at(i),canNeighbors.at(i+1));
-        }
-
-        //If r is an end edge add the edge with endpoint r. (4.3)
-        int canSize = canNeighbors.size()-1;
-
-        if(canNeighbors.at(0) == r && canSize > 0){
-            E_CAN.emplace_back(r,canNeighbors.at(1));
-        }
-        if(canNeighbors.at(canSize)== r && canSize > 0){
-            E_CAN.emplace_back(canNeighbors.at(canSize), canNeighbors.at(canSize-1));
-        }
-
-        //First and last edges in the cannonical neighborhood are condidered and added by 3 criteria. (4.4
-        if(canSize > 0){
-
-            pair<size_t,size_t> canFirst = make_pair(canNeighbors[0], canNeighbors[1]);
-            pair<size_t, size_t> canLast = make_pair(canNeighbors[canSize-1], canNeighbors[canSize]);
-
-            //If the edges are in cone 1 or 5 with respect to a and z add. (4.4 a)
-            if(getCone(handles, canFirst.first, canFirst.second, alpha) == 1){
-                E_CAN.push_back(canFirst);
-            }
-            if(getCone(handles, canLast.first, canLast.second, alpha) == 5){
-                E_CAN.push_back(canLast);
-            }
-
-            //If the edges are in cone 2 or 4 with respect to a and z and cone for has no edge with an end edge point in E_A add. (4.4 b)
-            if(getCone(handles, canFirst.first, canFirst.second, alpha) == 2 && !coneStatus.at(canFirst.first)[2]){
-                    E_CAN.push_back(canFirst);
-                }
-            if(getCone(handles, canLast.first, canLast.second, alpha) == 4 && !coneStatus.at(canLast.second)[4]){
-                    E_CAN.push_back(canLast);
-                }
-
-            //Checks if end edges have a end point a or z in E_A and an edge different from the end edge in cone 2 or 4 woth respect to a and z. (4.4 c)
-            if(getCone(handles, canFirst.first, canFirst.second, alpha) == 2 && (coneStatus.at(canFirst.first)[2])){
-
-                size_t c = n+1;
-                auto N_a = DT.incident_vertices(handles[canFirst.first]);
-
-                while(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) != 2);
-
-                while(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) == 2){
-                    if(N_a->info() != canFirst.second){
-                        c = N_a->info();
-                        break;
-                    }
-                }
-
-                if(c != n+1){
-                    E_CAN.emplace_back(make_pair(canFirst.second, c));
-                }
-            }
-
-            if(getCone(handles, canLast.second, canLast.first, alpha) == 4 && (coneStatus.at(canLast.second)[4])){
-
-                size_t w = n+1;
-
-                auto N_z = DT.incident_vertices(handles[canLast.second]);
-
-                while(!DT.is_infinite(--N_z) && getCone(handles, canLast.second, N_z->info(), alpha) != 4);
-
-                while(!DT.is_infinite(--N_z) && getCone(handles, canLast.second, N_z->info(), alpha) == 4){
-                    if(N_z->info() != canLast.first){
-                        w = N_z->info();
-                        break;
-                    }
-                }
-
-
-                if(w != n+1){
-                    E_CAN.emplace_back(make_pair(w, canLast.first));
-                }
-            }
-        }
+    addCannonical(e.first, e.second, E_CAN, B, coneStatus, DT, handles, n, alpha);
+    addCannonical(e.second, e.first, E_CAN, B, coneStatus, DT, handles, n, alpha);
 
     }
 

@@ -115,9 +115,9 @@ void scratch() {
     size_t i=30;
 //
 //    //for( i=1; i<=17; ++i ) {
-        //auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
-        //auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
-        //auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
+        auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
+        auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
+        auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
         auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
         vector<Point> points;
         // SET POINT SET
@@ -220,13 +220,13 @@ void scratch() {
 //            -1.05,-4.2
 //        },
 //    };
-        size_t n = 50;
+        size_t n = 40;
 
-        std::copy_n( g1, n/3, back_inserter(points) );
-        std::copy_n( g2, n/3, back_inserter(points) );
-        std::copy_n( g3, n/6, back_inserter(points) );
-        std::copy_n( g4, n/6, back_inserter(points) );
-//        points.emplace_back( 0,0 );
+//        std::copy_n( g1, n/3, back_inserter(points) );
+//        std::copy_n( g2, n/3, back_inserter(points) );
+//        std::copy_n( g3, n/6, back_inserter(points) );
+        std::copy_n( g4, n, back_inserter(points) );
+        points.emplace_back( 0,0 );
 
 
 //        string filename = "data-150_6123.724357x6123.724357.txt";
@@ -234,7 +234,7 @@ void scratch() {
 
 
 
-        generateRandomPoints( n, width/2, back_inserter(points) );
+        //generateRandomPoints( n, width/2, back_inserter(points) );
         cout<< points.size();
         cout<< "\n";
         list< pair< Point, Point > > result;
@@ -256,6 +256,7 @@ void scratch() {
 //                cout<<",";
 
         {
+
 //                Timer tim;
             //LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, true );
             //BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3, true );
@@ -263,6 +264,7 @@ void scratch() {
             //KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
             BCC2012<6>( points.begin(), points.end(), back_inserter(result), true );
 
+        }
 
        //Johnsons( result.begin(), result.end() );
 
@@ -467,8 +469,8 @@ void scratch() {
         printer.drawVerticesWithInfo( Del, options, borderOptions );
 
         string outputFilename = "rand";
-        outputFilename += points.size();
-        //printer.print( outputFilename );
+        outputFilename += to_string(points.size());
+        printer.print( outputFilename );
         cout<<"\n";
 }
 

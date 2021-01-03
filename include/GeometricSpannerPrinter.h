@@ -183,6 +183,7 @@ class GraphPrinter {
         fprintf( fp, "%s", _footer.c_str() );
 
         fclose(fp);
+        //cout<<fName<<endl;
         //cout<< _header<<_document<<_footer;
 
 //        cout << "\nOutput PDF generation started...\n";

@@ -21,6 +21,9 @@ const double EPSILON = 0.000001;
 const double INF = std::numeric_limits<double>::infinity();
 const size_t SIZE_T_MAX = std::numeric_limits<size_t>::max();
 const double PI_OVER_TWO = PI / 2;
+const double SIX_PI_OVER_SEVEN = 6*PI / 7;
+const double FOUR_PI_OVER_SEVEN = 4*PI / 7;
+
 
 
 

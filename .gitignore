@@ -3,7 +3,6 @@
 *.pdf
 *.log
 *.layout
-*.cbp
 *.depend
 bin/
 obj/

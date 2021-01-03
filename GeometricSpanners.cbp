@@ -61,11 +61,13 @@
 		</Compiler>
 		<Linker>
 			<Add option="-fopenmp" />
-			<Add library="-I/usr/include/CGAL" />
 			<Add library="gmp" />
 			<Add library="mpfr" />
 			<Add library="boost_system" />
 			<Add library="boost_thread" />
+			<Add library="CGAL" />
+			<Add directory="/usr/include/CGAL" />
+			<Add directory="/usr/include/" />
 		</Linker>
 		<Unit filename=".gitignore" />
 		<Unit filename="CMakeLists.txt" />
@@ -85,6 +87,8 @@
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<envvars set="openmp" />
+			<code_completion />
+			<debugger />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

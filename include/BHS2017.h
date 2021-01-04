@@ -130,46 +130,46 @@ inline void addCannonical(size_t p, size_t r, vector<pair<size_t, size_t>> &E_CA
     }
 
     //If r is an end edge add the edge with endpoint r. (4.3)
-    int canSize = canNeighbors.size()-1;
+    int canEdges = canNeighbors.size()-1;
 
-    if(canNeighbors.at(0) == r && canSize > 0){
+    if(canNeighbors.front() == r && canEdges > 1){
         E_CAN.emplace_back(r,canNeighbors.at(1));
     }
-    if(canNeighbors.at(canSize)== r && canSize > 0){
-        E_CAN.emplace_back(canNeighbors.at(canSize), canNeighbors.at(canSize-1));
+    if(canNeighbors.back() == r && canEdges > 1){
+        E_CAN.emplace_back(canNeighbors.back(), canNeighbors.at(canEdges-1));
     }
 
     //First and last edges in the cannonical neighborhood are condidered and added by 3 criteria. (4.4
-    if(canSize > 0){
+    if(canEdges > 0){
 
-        pair<size_t,size_t> canFirst = make_pair(canNeighbors[0], canNeighbors[1]);
-        pair<size_t, size_t> canLast = make_pair(canNeighbors[canSize-1], canNeighbors[canSize]);
+        pair<size_t,size_t> canFirst = make_pair(canNeighbors.front(), canNeighbors[1]);
+        pair<size_t, size_t> canLast = make_pair(canNeighbors[canEdges-1], canNeighbors.back());
 
         //If the edges are in cone 1 or 5 with respect to a and z add. (4.4 a)
-        if(getCone(handles, canFirst.first, canFirst.second, alpha) == 1){
+        if(getCone(handles, canFirst.first, canFirst.second, alpha) == (cone + 1) %6){
             E_CAN.push_back(canFirst);
         }
-        if(getCone(handles, canLast.first, canLast.second, alpha) == 5){
+        if(getCone(handles, canLast.first, canLast.second, alpha) == (cone + 5) %6){
             E_CAN.push_back(canLast);
         }
 
         //If the edges are in cone 2 or 4 with respect to a and z and cone for has no edge with an end edge point in E_A add. (4.4 b)
-        if(getCone(handles, canFirst.first, canFirst.second, alpha) == 2 && !coneStatus.at(canFirst.first)[2]){
+        if(getCone(handles, canFirst.first, canFirst.second, alpha) == (cone +2 ) % 6 && !coneStatus.at(canFirst.first)[(cone + 2) %6]){
                 E_CAN.push_back(canFirst);
             }
-        if(getCone(handles, canLast.first, canLast.second, alpha) == 4 && !coneStatus.at(canLast.second)[4]){
+        if(getCone(handles, canLast.first, canLast.second, alpha) == (cone + 4) % 6 && !coneStatus.at(canLast.second)[(cone + 4) %6]){
                 E_CAN.push_back(canLast);
             }
 
         //Checks if end edges have a end point a or z in E_A and an edge different from the end edge in cone 2 or 4 woth respect to a and z. (4.4 c)
-        if(getCone(handles, canFirst.first, canFirst.second, alpha) == 2 && (coneStatus.at(canFirst.first)[2])){
+        if(getCone(handles, canFirst.first, canFirst.second, alpha) == (cone + 2) % 6 && (coneStatus.at(canFirst.first)[(cone + 2) % 6])){
 
             size_t c = n+1;
             auto N_a = DT.incident_vertices(handles[canFirst.first]);
 
-            while(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) != 2);
+            while(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) != (cone + 2) % 6);
 
-            while(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) == 2){
+            while(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) == (cone + 2) % 6){
                 if(N_a->info() != canFirst.second){
                     c = N_a->info();
                     break;
@@ -181,15 +181,15 @@ inline void addCannonical(size_t p, size_t r, vector<pair<size_t, size_t>> &E_CA
             }
         }
 
-        if(getCone(handles, canLast.second, canLast.first, alpha) == 4 && (coneStatus.at(canLast.second)[4])){
+        if(getCone(handles, canLast.second, canLast.first, alpha) == (cone + 4) % 6 && (coneStatus.at(canLast.second)[(cone + 4) % 6])){
 
             size_t w = n+1;
 
             auto N_z = DT.incident_vertices(handles[canLast.second]);
 
-            while(!DT.is_infinite(--N_z) && getCone(handles, canLast.second, N_z->info(), alpha) != 4);
+            while(!DT.is_infinite(--N_z) && getCone(handles, canLast.second, N_z->info(), alpha) != (cone + 4) % 6);
 
-            while(!DT.is_infinite(--N_z) && getCone(handles, canLast.second, N_z->info(), alpha) == 4){
+            while(!DT.is_infinite(--N_z) && getCone(handles, canLast.second, N_z->info(), alpha) == (cone + 4) % 6){
                 if(N_z->info() != canLast.first){
                     w = N_z->info();
                     break;
@@ -296,19 +296,16 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 //    cout << "\nUnique\n";
 
     //Union of sets E_A and E_CAN for final edge set.
-    //Edges in E_CAN can exist in E_A so the non-unique edges are removed.
-    vector<pair<size_t,size_t>> E_CANUnique;
-
-    for( auto e : E_CAN){
-        pair<size_t, size_t> ePrime = make_pair(e.second, e.first);
-        if(find(E_A.begin(), E_A.end(), e) == E_A.end() && find(E_A.begin(), E_A.end(), ePrime) == E_A.end()){
-            E_CANUnique.emplace_back(make_pair(e.first,e.second));
-            //cout << e.first << " " << e.second << "\n";
-        }
-    }
-
-    //Combine E_A and unique edges from E_CAN.
-    E_A.insert(E_A.end(), E_CANUnique.begin(), E_CANUnique.end());
+    // Combine E and E_star, remove duplicates
+    E_A.insert( E_A.end(), E_CAN.begin(), E_CAN.end() );
+    sort( E_A.begin(), E_A.end(), []( const auto& l, const auto& r) {
+        return (min(l.first, l.second) < min(r.first, r.second)
+            || (min(l.first, l.second) == min(r.first, r.second) && max(l.first, l.second) < max(r.first, r.second)));
+    } );
+    E_A.erase( unique(E_A.begin(), E_A.end(), []( const auto& l, const auto& r) {
+        return ( l.first == r.first && l.second == r.second )
+            || ( l.first == r.second && l.second == r.first );
+    }), E_A.end() );
 
 //    cout << "\nE\n";
 //    for(auto e: E_A){

@@ -102,7 +102,7 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    experiment( 100000, 100, 500, 50 );
+    experiment( 100000, 100000, 200000, 1000);
     //scratch();
 
     return 0;

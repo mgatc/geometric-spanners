@@ -139,7 +139,7 @@ inline void addCannonical(size_t p, size_t r, vector<pair<size_t, size_t>> &E_CA
         E_CAN.emplace_back(canNeighbors.back(), canNeighbors.at(canEdges-1));
     }
 
-    //First and last edges in the cannonical neighborhood are condidered and added by 3 criteria. (4.4
+    //First and last edges in the cannonical neighborhood are condidered and added by 3 criteria. (4.4)
     if(canEdges > 0){
 
         pair<size_t,size_t> canFirst = make_pair(canNeighbors.front(), canNeighbors[1]);
@@ -149,7 +149,7 @@ inline void addCannonical(size_t p, size_t r, vector<pair<size_t, size_t>> &E_CA
         if(getCone(handles, canFirst.first, canFirst.second, alpha) == (cone + 1) %6){
             E_CAN.push_back(canFirst);
         }
-        if(getCone(handles, canLast.first, canLast.second, alpha) == (cone + 5) %6){
+        if(getCone(handles, canLast.second, canLast.first, alpha) == (cone + 5) %6){
             E_CAN.push_back(canLast);
         }
 
@@ -157,48 +157,31 @@ inline void addCannonical(size_t p, size_t r, vector<pair<size_t, size_t>> &E_CA
         if(getCone(handles, canFirst.first, canFirst.second, alpha) == (cone +2 ) % 6 && !coneStatus.at(canFirst.first)[(cone + 2) %6]){
                 E_CAN.push_back(canFirst);
             }
-        if(getCone(handles, canLast.first, canLast.second, alpha) == (cone + 4) % 6 && !coneStatus.at(canLast.second)[(cone + 4) %6]){
+        if(getCone(handles, canLast.second, canLast.first, alpha) == (cone + 4) % 6 && !coneStatus.at(canLast.second)[(cone + 4) %6]){
                 E_CAN.push_back(canLast);
             }
 
         //Checks if end edges have a end point a or z in E_A and an edge different from the end edge in cone 2 or 4 woth respect to a and z. (4.4 c)
         if(getCone(handles, canFirst.first, canFirst.second, alpha) == (cone + 2) % 6 && (coneStatus.at(canFirst.first)[(cone + 2) % 6])){
 
-            size_t c = n+1;
             auto N_a = DT.incident_vertices(handles[canFirst.first]);
 
-            while(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) != (cone + 2) % 6);
+            while(--N_a != handles[canFirst.second]);
 
-            while(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) == (cone + 2) % 6){
-                if(N_a->info() != canFirst.second){
-                    c = N_a->info();
-                    break;
-                }
-            }
-
-            if(c != n+1){
-                E_CAN.emplace_back(make_pair(canFirst.second, c));
+            if(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) == (cone + 2) % 6){
+                E_CAN.emplace_back(make_pair(canFirst.second, N_a->info()));
             }
         }
 
         if(getCone(handles, canLast.second, canLast.first, alpha) == (cone + 4) % 6 && (coneStatus.at(canLast.second)[(cone + 4) % 6])){
 
-            size_t w = n+1;
 
             auto N_z = DT.incident_vertices(handles[canLast.second]);
 
-            while(!DT.is_infinite(--N_z) && getCone(handles, canLast.second, N_z->info(), alpha) != (cone + 4) % 6);
+            while(--N_z != handles[canLast.first]);
 
-            while(!DT.is_infinite(--N_z) && getCone(handles, canLast.second, N_z->info(), alpha) == (cone + 4) % 6){
-                if(N_z->info() != canLast.first){
-                    w = N_z->info();
-                    break;
-                }
-            }
-
-
-            if(w != n+1){
-                E_CAN.emplace_back(make_pair(w, canLast.first));
+            if(!DT.is_infinite(++N_z) && getCone(handles, canLast.second, N_z->info(), alpha) == (cone + 4) % 6){
+                E_CAN.emplace_back(make_pair(N_z->info(), canLast.first));
             }
         }
     }

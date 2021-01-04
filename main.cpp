@@ -227,6 +227,7 @@ void scratch() {
 //        std::copy_n( g3, n/6, back_inserter(points) );
         std::copy_n( g4, n, back_inserter(points) );
         points.emplace_back( 0,0 );
+        points.emplace_back(1, 13 );
 
 
 //        string filename = "data-150_6123.724357x6123.724357.txt";

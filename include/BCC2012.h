@@ -216,7 +216,6 @@ inline void wedge<6>( const Delaunay& DT,
             || N_p->info() == q ) ) {
         Q.push_back(N_p->info());
     }
-    // doesn't include q if filling a prevCone
     assert( !Q.empty() );
 
     unordered_set<size_t> Q_prime; // select elements from Q
@@ -225,13 +224,16 @@ inline void wedge<6>( const Delaunay& DT,
            i = 0, // the opposite end of the edge
            k = Q.size()-1; // the last point in the ordered list is q_k
 
-    for( int n=j+1; n<k; ++n ) {
-        if( Q.at(n) != q // q_i
-         && get_angle<K>(handles.at(Q.at(n+1))->point(), handles.at(Q.at(n))->point(), handles.at(Q.at(n-1))->point()) < SIX_PI_OVER_SEVEN )
-            Q_prime.insert(Q[n]);
+    // find the index of q_i in Q
+    for( int n=0; n<Q.size(); ++n )
         if( Q[n] == q )
             i = n;
-    }
+
+    for( int n=j+1; n<k; ++n )
+        if( n != i // q_i
+         && get_angle<K>(handles.at(Q.at(n+1))->point(), handles.at(Q.at(n))->point(), handles.at(Q.at(n-1))->point()) < SIX_PI_OVER_SEVEN )
+            Q_prime.insert(Q[n]);
+
     cout<<"p:"<<p<<" q:"<<q<<"\n";
     cout<<"Q:";
     for( auto v : Q ) cout<<v<<" ";
@@ -257,54 +259,67 @@ inline void wedge<6>( const Delaunay& DT,
             addToE_star.emplace_back( Q.at(n), Q.at(n+1) );
 
 
-
     // Symmetric case, don't forget to do the opposite one too
     if( i != j
      && i-1 != j
      && get_angle<K>(handles.at(p)->point(), handles.at(Q.at(i))->point(), handles.at(Q.at(i-1))->point()) > FOUR_PI_OVER_SEVEN )
         addToE_star.emplace_back( Q.at(i), Q.at(i-1) );
 
-    size_t f = 0; // the first point in Q_prime
-    while( !Q_prime.empty() && f < Q.size() && !contains( Q_prime, Q.at(f) ) )
-        ++f;
+    if( !Q_prime.empty() ) {
+        size_t f = 0; // the first point in Q_prime
+        while( f < Q.size() && !contains( Q_prime, Q.at(f) ) )
+            ++f;
 
-    // if Q_prime is empty, a=0, else a=f+1
-    size_t a = f + int(!Q_prime.empty());
-    while( a < Q.size() && contains(Q_prime, Q.at(a) ) )
-        ++a;
+        size_t a = f + 1; // the first point after f not in Q_prime
+        while( a < Q.size() && contains(Q_prime, Q.at(a) ) )
+            ++a;
 
-    cout<<"f:"<<f<<" a:"<<a<<"\n";
+        cout<<"f:"<<f<<" a:"<<a<<"\n";
 
-    if( f == i+1 ) {
-        // TODO: Need to check for equality in this one too
-        if( a != k && get_angle<K>(handles.at(Q.at(i+1))->point(), handles.at(Q.at(i))->point(), handles.at(p)->point() ) < FOUR_PI_OVER_SEVEN ){
-            addToE_star.emplace_back(Q.at(f), Q.at(a));
-        }
-        if( f+1 != k && get_angle<K>(handles.at(Q.at(i+1))->point(), handles.at(Q.at(i))->point(), handles.at(p)->point() ) > FOUR_PI_OVER_SEVEN ){
-            addToE_star.emplace_back(Q.at(i), Q.at(f+1));
-        }
-    } else {
-        size_t l = 0; // TODO: set to last point in Q_prime
-        size_t b = 0; // TODO: set to max n that is less than l in Q but not Q_prime
-        if( l == k-1 ) {
-            //addToE_star.emplace_back( Q.at(l), Q.at(b) );
+        if( f == i+1 ) {
+            // TODO: Need to check for equality in this one too
+            if( a != k && get_angle<K>(handles.at(Q.at(i+1))->point(), handles.at(Q.at(i))->point(), handles.at(p)->point() ) < FOUR_PI_OVER_SEVEN ){
+                addToE_star.emplace_back(Q.at(f), Q.at(a));
+            }
+            if( f+1 != k && get_angle<K>(handles.at(Q.at(i+1))->point(), handles.at(Q.at(i))->point(), handles.at(p)->point() ) > FOUR_PI_OVER_SEVEN ){
+                addToE_star.emplace_back(Q.at(i), Q.at(f+1));
+            }
         } else {
-            //addToE_star.emplace_back( Q.at(b), Q.at(l+1) );
-            // if Q.at(l) is in Q_prime
-                // addToE_star.emplace_back( Q.at(l), Q.at(l-1) );
+            size_t l = Q.size() - 1; // the last point in Q_prime
+            while( l > 0 && !contains( Q_prime, Q.at(l) ) )
+                --l;
+            if( l > 0 ) {
+                size_t b = l - 1; // set to max n that is less than l in Q but not Q_prime
+                while( b != SIZE_T_MAX && contains(Q_prime, Q.at(b) ) )
+                    --b;
+
+                cout<<"l:"<<l<<" b:"<<b<<endl;
+                if( l == k-1 ) {
+                    addToE_star.emplace_back( Q.at(l), Q.at(b) );
+                } else {
+                    addToE_star.emplace_back( Q.at(b), Q.at(l+1) );
+                    if( contains( Q_prime, Q.at(l-1) ) )
+                        addToE_star.emplace_back( Q.at(l), Q.at(l-1) );
+                }
+            }
+
         }
     }
+    cout<<"add to E_star:";
+    for( auto e : addToE_star ) cout<<e.first<<" "<<e.second<<" - ";
 
-    for( auto e : addToE_star ) cout<<e.first<<" "<<e.second<<"\n";
-
-    cout<<"\n";
+    cout<<"\n\n";
 }
 
 
 } // namespace bcc2012
 
-template< size_t DEGREE = 7, size_t NUM_CONES = DEGREE+1,typename RandomAccessIterator, typename OutputIterator >
-void BCC2012( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false ) {
+template< size_t DEGREE = 7, size_t NUM_CONES = DEGREE+1,
+          typename RandomAccessIterator, typename OutputIterator >
+void BCC2012( RandomAccessIterator pointsBegin,
+              RandomAccessIterator pointsEnd,
+              OutputIterator result,
+              bool printLog = false ) {
     using namespace bcc2012;
 
     assert( DEGREE == 7 || DEGREE == 6 );

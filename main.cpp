@@ -102,8 +102,8 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    experiment( 100000, 100000, 200000, 1000);
-    //scratch();
+    //experiment( 100000, 100000, 200000, 1000);
+    scratch();
 
     return 0;
 }
@@ -229,11 +229,11 @@ void scratch() {
 //        points.emplace_back( 0,0 );
 
 
-        //string filename = "data-150_6123.724357x6123.724357.txt";
-        //readPointsFromFile( back_inserter( points ), filename );
+        string filename = "data-119000_172481.883107x172481.883107.txt";
+        readPointsFromFile( back_inserter( points ), filename );
 
 
-        generateRandomPoints( n, width/2, back_inserter(points) );
+        //generateRandomPoints( n, width/2, back_inserter(points) );
         cout<< points.size();
         cout<< "\n";
         list< pair< Point, Point > > result;
@@ -267,7 +267,7 @@ void scratch() {
 
        //Johnsons( result.begin(), result.end() );
 
-        //cout << degree( result.begin(), result.end() );
+        cout << degree( result.begin(), result.end() );
         //cout <<",";
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";

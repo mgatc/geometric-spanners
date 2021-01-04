@@ -94,8 +94,8 @@ inline K::FT bisectorLength( const vector<Vertex_handle>& H, const pair<size_t,s
 }
 
 //Step 4 add cannonical edges. Consists of 4 sub steps.
-inline void addCannonical(size_t p, size_t r, vector<pair<size_t, size_t>> &E_CAN, const edgeBisectorMap &B, const vector<bitset<6>> &coneStatus,
-    const Delaunay &DT, const vector<Vertex_handle> &handles, const size_t n, const double alpha){
+inline void addCannonical(size_t p, size_t r, vector<pair<size_t, size_t>> &E_CAN, const vector<pair<size_t, size_t>> &E_A, const edgeBisectorMap &B,
+ const vector<bitset<6>> &coneStatus, const Delaunay &DT, const vector<Vertex_handle> &handles, const size_t n, const double alpha){
 
     pair<size_t, size_t> e = make_pair(p,r);
 
@@ -154,7 +154,7 @@ inline void addCannonical(size_t p, size_t r, vector<pair<size_t, size_t>> &E_CA
         }
 
         //If the edges are in cone 2 or 4 with respect to a and z and cone for has no edge with an end edge point in E_A add. (4.4 b)
-        if(getCone(handles, canFirst.first, canFirst.second, alpha) == (cone +2 ) % 6 && !coneStatus.at(canFirst.first)[(cone + 2) %6]){
+        if(getCone(handles, canFirst.first, canFirst.second, alpha) == (cone + 2) % 6 && !coneStatus.at(canFirst.first)[(cone + 2) %6]){
                 E_CAN.push_back(canFirst);
             }
         if(getCone(handles, canLast.second, canLast.first, alpha) == (cone + 4) % 6 && !coneStatus.at(canLast.second)[(cone + 4) %6]){
@@ -162,27 +162,56 @@ inline void addCannonical(size_t p, size_t r, vector<pair<size_t, size_t>> &E_CA
             }
 
         //Checks if end edges have a end point a or z in E_A and an edge different from the end edge in cone 2 or 4 woth respect to a and z. (4.4 c)
-        if(getCone(handles, canFirst.first, canFirst.second, alpha) == (cone + 2) % 6 && (coneStatus.at(canFirst.first)[(cone + 2) % 6])){
+        if(getCone(handles, canFirst.first, canFirst.second, alpha) == (cone + 2) % 6){
 
-            auto N_a = DT.incident_vertices(handles[canFirst.first]);
+        for(auto e : E_A){
+                if(e.first == canFirst.first && getCone(handles, canFirst.first, e.second, alpha) == (cone + 2) % 6){
+                    if(e.second != canFirst.second){
+                        E_CAN.emplace_back(make_pair(canFirst.second, e.second));
+                    }
+                }
 
-            while(--N_a != handles[canFirst.second]);
-
-            if(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) == (cone + 2) % 6){
-                E_CAN.emplace_back(make_pair(canFirst.second, N_a->info()));
+                if(e.second == canFirst.first && getCone(handles, canFirst.first, e.first, alpha) == (cone + 2) % 6){
+                    if(e.first != canFirst.second){
+                        E_CAN.emplace_back(make_pair(canFirst.second, e.first));
+                    }
+                }
             }
+
+//            auto N_a = DT.incident_vertices(handles[canFirst.first]);
+//
+//            while(--N_a != handles[canFirst.second]);
+//
+//            if(!DT.is_infinite(--N_a) && getCone(handles, canFirst.first, N_a->info(), alpha) == (cone + 2) % 6){
+//                E_CAN.emplace_back(make_pair(canFirst.second, N_a->info()));
+//                cout << "Added (B,C)";
+//            }
         }
 
-        if(getCone(handles, canLast.second, canLast.first, alpha) == (cone + 4) % 6 && (coneStatus.at(canLast.second)[(cone + 4) % 6])){
+        if(getCone(handles, canLast.second, canLast.first, alpha) == (cone + 4) % 6){
 
+            for(auto e : E_A){
+                if(e.first == canLast.second && getCone(handles, canLast.second, e.second, alpha) == (cone + 4) % 6){
+                    if(e.second != canLast.first){
+                        E_CAN.emplace_back(make_pair(e.second, canLast.first));
+                    }
+                }
 
-            auto N_z = DT.incident_vertices(handles[canLast.second]);
-
-            while(--N_z != handles[canLast.first]);
-
-            if(!DT.is_infinite(++N_z) && getCone(handles, canLast.second, N_z->info(), alpha) == (cone + 4) % 6){
-                E_CAN.emplace_back(make_pair(N_z->info(), canLast.first));
+                if(e.second == canLast.second && getCone(handles, canLast.second, e.first, alpha) == (cone + 4) % 6){
+                    if(e.first != canLast.first){
+                        E_CAN.emplace_back(make_pair(e.first, canFirst.first));
+                    }
+                }
             }
+
+//            auto N_z = DT.incident_vertices(handles[canLast.second]);
+//
+//            while(--N_z != handles[canLast.first]);
+//
+//            if(!DT.is_infinite(++N_z) && getCone(handles, canLast.second, N_z->info(), alpha) == (cone + 4) % 6){
+//                E_CAN.emplace_back(make_pair(N_z->info(), canLast.first));
+//                cout << "Added (W,Y)";
+//            }
         }
     }
 
@@ -261,8 +290,8 @@ void BHS2017( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
     for(auto  e : E_A){
 
-    addCannonical(e.first, e.second, E_CAN, B, coneStatus, DT, handles, n, alpha);
-    addCannonical(e.second, e.first, E_CAN, B, coneStatus, DT, handles, n, alpha);
+    addCannonical(e.first, e.second, E_CAN, E_A, B, coneStatus, DT, handles, n, alpha);
+    addCannonical(e.second, e.first, E_CAN, E_A, B, coneStatus, DT, handles, n, alpha);
 
     }
 

@@ -175,15 +175,15 @@ namespace gsnunf {
                     canNeighbors.push_back(N_p->info());
                 }
 
+                //Number of edges in the neighborhood.
+                int canEdges = canNeighbors.size() - 1;
+
                 //Add inner edges if total neigborhood edges is 3 or more. (4.2)
                 for(int i = 1; i < int(canNeighbors.size()) - 2; i++){
                     E_CAN.emplace_back(canNeighbors.at(i), canNeighbors.at(i + 1));
                 }
 
                 //If r is an end vertex and there is more than one edge in the neighborhood add the edge with endpoint r. (4.3)
-                //Number of edges in the neighborhood.
-                int canEdges = canNeighbors.size() - 1;
-
                 if(canNeighbors.front() == r && canEdges > 1){
                     E_CAN.emplace_back(r, canNeighbors.at(1));
                 }
@@ -203,6 +203,7 @@ namespace gsnunf {
                     pair<size_t,size_t> canFirst = make_pair(canNeighbors.front(), canNeighbors[1]);
                     pair<size_t,size_t> canLast = make_pair(canNeighbors[canEdges - 1], canNeighbors.back());
 
+                    //Iterator to end of map to check if an edge exists.
                     auto blank = AL_e_a.end();
 
                     //If the edges are in cone 1 or 5 with respect to a and z add. (4.4 a)
@@ -214,10 +215,10 @@ namespace gsnunf {
                     }
 
                     //If the edges are in cone 2 or 4 with respect to a and z and cone for has no edge with an end edge point in E_A add. (4.4 b)
-                    if(getCone(canFirst.first, canFirst.second, alpha, h) == cone2 && AL_e_a.find(make_pair(canFirst.first, cone2)) != blank){
+                    if(getCone(canFirst.first, canFirst.second, alpha, h) == cone2 && AL_e_a.find(make_pair(canFirst.first, cone2)) == blank){
                             E_CAN.push_back(canFirst);
                     }
-                    if(getCone(canLast.second, canLast.first, alpha, h) == cone4 && AL_e_a.find(make_pair(canLast.second, cone4)) != blank){
+                    if(getCone(canLast.second, canLast.first, alpha, h) == cone4 && AL_e_a.find(make_pair(canLast.second, cone4)) == blank){
                             E_CAN.push_back(canLast);
                     }
 

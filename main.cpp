@@ -102,7 +102,7 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bhsTestResult", "Bad_PointSet.txt" );
-    experiment( 100000, 1000, 10000 , 1000);
+    experiment( 100000, 1000, 200000 , 10000);
     //scratch();
 
     return 0;
@@ -626,7 +626,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //
 ////    result.clear();
 
-        cout<< points.size();
+    cout<< points.size();
     cout<< ",";
     cout<< size;
     cout<< ",";

@@ -146,9 +146,8 @@ namespace gsnunf {
                 (4.4 c) Checks if end edges have a end point a or z in E_A and an edge different from one made with vertex b or y in cone 2 or 4 woth respect
                         to a and z if found the edge (b,c) or (w,y) is added.
             */
-            inline void addCanonical(vector<pair<size_t,size_t>> &E_CAN, const size_t p, const size_t r, const size_t n, const double alpha,
-                const Delaunay &dt, const vector<Vertex_handle> &h, const edgeBisectorMap &b, const vector<pair<size_t,size_t>> &e_a,
-                vector<vector<size_t>> AL_e_a){
+            inline void addCanonical(vector<pair<size_t,size_t>> &E_CAN, const size_t p, const size_t r, const double alpha,
+                const Delaunay &dt, const vector<Vertex_handle> &h, const edgeBisectorMap &b, vector<vector<size_t>> AL_e_a){
 
                 //Creates an edge (p,r)
                 pair<size_t,size_t> e = make_pair(p, r);
@@ -228,8 +227,6 @@ namespace gsnunf {
                             E_CAN.emplace_back(make_pair(canFirst.second, c));
                         }
 
-                    edgeEquality edgeCheck;
-
                     size_t w = AL_e_a.at(canLast.second).at(cone4);
 
                     if(getCone(canLast.second, canLast.first, alpha, h) == cone4 && w != SIZE_T_MAX && w != canLast.first){
@@ -306,8 +303,8 @@ namespace gsnunf {
         //Step 4
         for(auto  e : E_A ){
 
-            addCanonical(E_CAN, e.first, e.second, n, alpha, DT, handles, B, E_A, AL_E_A);
-            addCanonical(E_CAN, e.second, e.first, n, alpha, DT, handles, B, E_A, AL_E_A);
+            addCanonical(E_CAN, e.first, e.second, alpha, DT, handles, B, AL_E_A);
+            addCanonical(E_CAN, e.second, e.first, alpha, DT, handles, B, AL_E_A);
 
         }
 

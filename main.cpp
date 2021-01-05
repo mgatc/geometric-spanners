@@ -102,8 +102,8 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    //experiment( 100000, 100000, 200000, 1000);
-    scratch();
+    experiment( 100000, 10000, 100000 , 1000);
+    //scratch();
 
     return 0;
 }
@@ -220,7 +220,7 @@ void scratch() {
 //            -1.05,-4.2
 //        },
 //    };
-        int n = 100;
+        int n = 1000000;
 
 //        std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
@@ -229,11 +229,11 @@ void scratch() {
 //        points.emplace_back( 0,0 );
 
 
-        string filename = "data-119000_172481.883107x172481.883107.txt";
-        readPointsFromFile( back_inserter( points ), filename );
+        //string filename = "data-119000_172481.883107x172481.883107.txt";
+        //readPointsFromFile( back_inserter( points ), filename );
 
 
-        //generateRandomPoints( n, width/2, back_inserter(points) );
+        generateRandomPoints( n, width/2, back_inserter(points) );
         cout<< points.size();
         cout<< "\n";
         list< pair< Point, Point > > result;
@@ -508,122 +508,123 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout<< ",";
 
     list< pair< Point, Point > > result;
-
-    // Delaunay triangulation
-    //CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
-//                cout << degree(DT);
-//                cout << ",";
-//                cout << weight(DT);
-//                cout << ",";
-
-
-
-
-    {
-        Timer tim;
-        BGS2005( points.begin(), points.end(), back_inserter(result) );
-    }
     size_t deg;
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
 
-    double t;
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
-
-    result.clear();
-
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        LW2004( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
+//    // Delaunay triangulation
+//    //CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
+////                cout << degree(DT);
+////                cout << ",";
+////                cout << weight(DT);
+////                cout << ",";
 //
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
 //
-    result.clear();
+//
+//
+//    {
+//        Timer tim;
+//        BGS2005( points.begin(), points.end(), back_inserter(result) );
+//    }
+//
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//    double t;
+////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+////    cout << t;
+//    cout <<"\n";
+//
+//    result.clear();
 //
 //
 //
 //
 //
-//
-//
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        BSX2009( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
-
-    result.clear();
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-//
-//
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
-//
-    result.clear();
-
-
-
-
 //    cout<< points.size();
 //    cout<< ",";
 //    cout<< size;
 //    cout<< ",";
 //    {
 //        Timer tim;
-//        BCC2012_7( points.begin(), points.end(), back_inserter(result), printLog );
+//        LW2004( points.begin(), points.end(), back_inserter(result) );
 //    }
 //    deg = degree( result.begin(), result.end() );
 //    cout << deg;
 //    cout <<",";
-
-
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
+////
+////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+////    cout << t;
 //    cout <<"\n";
-
+////
 //    result.clear();
+////
+////
+////
+////
+////
+////
+////
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    {
+//        Timer tim;
+//        BSX2009( points.begin(), points.end(), back_inserter(result) );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+////    cout << t;
+//    cout <<"\n";
+//
+//    result.clear();
+//
+//
+//
+//
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    {
+//        Timer tim;
+//        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+////
+////
+////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+////    cout << t;
+//    cout <<"\n";
+////
+//    result.clear();
+//
+//
+//
+//
+////    cout<< points.size();
+////    cout<< ",";
+////    cout<< size;
+////    cout<< ",";
+////    {
+////        Timer tim;
+////        BCC2012_7( points.begin(), points.end(), back_inserter(result), printLog );
+////    }
+////    deg = degree( result.begin(), result.end() );
+////    cout << deg;
+////    cout <<",";
+//
+//
+////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+////    cout << t;
+////    cout <<"\n";
+//
+////    result.clear();
 
         cout<< points.size();
     cout<< ",";
@@ -663,8 +664,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
         resultFileName += "_result-";
         resultFileName += ( filename ? "redo" : "orig" );
 
-        if( generatedFile )
-            singleRun( n, width, resultFileName, *generatedFile, true, true );
+//        if( generatedFile )
+//            singleRun( n, width, resultFileName, *generatedFile, true, true );
+
+        cout << "DEGREE ERROR!!! DEGREE:" << deg << "\n";
 
         return false;
     }
@@ -675,4 +678,3 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
     return true;
 }
-

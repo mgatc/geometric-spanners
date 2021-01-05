@@ -34,25 +34,26 @@ namespace gsnunf {
             namespace bhs2017 {
 
             //CGAL objects
-            typedef CGAL::Exact_predicates_inexact_constructions_kernel                     K;
-            typedef CGAL::Triangulation_vertex_base_with_info_2<size_t,K>                   Vb;
-            typedef CGAL::Triangulation_face_base_2<K>                                      Fb;
-            typedef CGAL::Triangulation_data_structure_2<Vb,Fb>                             Tds;
-            typedef CGAL::Delaunay_triangulation_2<K,Tds>                                   Delaunay;
-            typedef CGAL::Aff_transformation_2<K>                                           Transformation;
-            typedef Delaunay::Vertex_handle                                                 Vertex_handle;
-            typedef Delaunay::Vertex_circulator                                             Vertex_circulator;
-            typedef CGAL::Vector_2<K>                                                       Vector_2;
-            typedef CGAL::Line_2<K>                                                         Line;
-            typedef Delaunay::Point                                                         Point;
-            typedef Delaunay::Finite_vertices_iterator                                      Finite_vertices_iterator;
-            typedef Delaunay::Finite_edges_iterator                                         Finite_edges_iterator;
+            typedef CGAL::Exact_predicates_inexact_constructions_kernel                         K;
+            typedef CGAL::Triangulation_vertex_base_with_info_2<size_t,K>                       Vb;
+            typedef CGAL::Triangulation_face_base_2<K>                                          Fb;
+            typedef CGAL::Triangulation_data_structure_2<Vb,Fb>                                 Tds;
+            typedef CGAL::Delaunay_triangulation_2<K,Tds>                                       Delaunay;
+            typedef CGAL::Aff_transformation_2<K>                                               Transformation;
+            typedef Delaunay::Vertex_handle                                                     Vertex_handle;
+            typedef Delaunay::Vertex_circulator                                                 Vertex_circulator;
+            typedef CGAL::Vector_2<K>                                                           Vector_2;
+            typedef CGAL::Line_2<K>                                                             Line;
+            typedef Delaunay::Point                                                             Point;
+            typedef Delaunay::Finite_vertices_iterator                                          Finite_vertices_iterator;
+            typedef Delaunay::Finite_edges_iterator                                             Finite_edges_iterator;
 
             //Project objects
-            typedef pair<size_t,size_t>                                                     size_tPair;
-            typedef boost::hash<size_tPair>                                                 size_tPairHash;
-            typedef unordered_map<size_tPair,bool,size_tPairHash>                           size_tPairMap;
-            typedef unordered_map<pair<size_t,size_t>,double,pointPairHash,edgeEquality>    edgeBisectorMap;
+            typedef pair<size_t,size_t>                                                         size_tPair;
+            typedef boost::hash<size_tPair>                                                     size_tPairHash;
+            typedef unordered_map<size_tPair,bool,size_tPairHash>                               size_tPairMap;
+            typedef unordered_map<pair<size_t,size_t>,double,pointPairHash,edgeEquality>        edgeBisectorMap;
+            typedef unordered_map<pair<size_t,size_t>,size_t,pointConeHash,pointConeEquality>   pointConeMap;
 
 
             //Function to find the cone of p containg vertex q, for this algorithm all vertices have 6 cones (0-5) with an angle of (PI/3).
@@ -105,7 +106,7 @@ namespace gsnunf {
               (3.2) For each edge in L (sorted in non-decreasing order) Let i be the cone of p containing q if E_A has no edges with endpoint p in the
                     neighborhood of p in cone i and E_A has no edges with endpoint q in the neighborhood of q in cone i+3 then add edge (p,q) to E_A.
             */
-            inline void addIncident(vector<pair<size_t,size_t>> &E_A, vector<vector<size_t>> &AL_E_A, const double alpha,
+            inline void addIncident(vector<pair<size_t,size_t>> &E_A, pointConeMap &AL_E_A, const double alpha,
                 const vector<Vertex_handle> &h, const vector<pair<size_t,size_t>> &l){
 
                 //Loops through the entire set L.
@@ -120,8 +121,8 @@ namespace gsnunf {
 
                     /*Evaulates the emptiness of a cone, given a vertex in the set E_A. If a cone is empty then the set E_A does not contain an edge with the
                       given endpoint in the cone calculated above, and the status will be set to false.*/
-                    bool p_cone_status = AL_E_A.at(p).at(p_cone) != SIZE_T_MAX;
-                    bool q_cone_status = AL_E_A.at(q).at((p_cone + 3) % 6) != SIZE_T_MAX;
+                    bool p_cone_status = AL_E_A.find(make_pair(p, p_cone)) != AL_E_A.end();
+                    bool q_cone_status = AL_E_A.find(make_pair(q, (p_cone + 3) % 6)) != AL_E_A.end();
 
                     /*Checks that both cone neighborhood are empty, if these are both empty (false) then the condition for step 3 is met and (p,q)
                       is added to E_A. (3.2)*/
@@ -129,8 +130,8 @@ namespace gsnunf {
                         E_A.push_back(e);
 
                         //Adds (p,q) to an adjacentcy list for future calculation.
-                        AL_E_A.at(p)[p_cone] = q;
-                        AL_E_A.at(q)[(p_cone + 3) % 6] = p;
+                        AL_E_A.emplace(make_pair(p, p_cone), q);
+                        AL_E_A.emplace(make_pair(q, (p_cone + 3) % 6), p);
                     }
                 }
             }
@@ -147,7 +148,7 @@ namespace gsnunf {
                         to a and z if found the edge (b,c) or (w,y) is added.
             */
             inline void addCanonical(vector<pair<size_t,size_t>> &E_CAN, const size_t p, const size_t r, const double alpha,
-                const Delaunay &dt, const vector<Vertex_handle> &h, const edgeBisectorMap &b, vector<vector<size_t>> AL_e_a){
+                const Delaunay &dt, const vector<Vertex_handle> &h, const edgeBisectorMap &b, pointConeMap AL_e_a){
 
                 //Creates an edge (p,r)
                 pair<size_t,size_t> e = make_pair(p, r);
@@ -202,6 +203,8 @@ namespace gsnunf {
                     pair<size_t,size_t> canFirst = make_pair(canNeighbors.front(), canNeighbors[1]);
                     pair<size_t,size_t> canLast = make_pair(canNeighbors[canEdges - 1], canNeighbors.back());
 
+                    auto blank = AL_e_a.end();
+
                     //If the edges are in cone 1 or 5 with respect to a and z add. (4.4 a)
                     if(getCone(canFirst.first, canFirst.second, alpha, h) == cone1){
                         E_CAN.push_back(canFirst);
@@ -211,28 +214,30 @@ namespace gsnunf {
                     }
 
                     //If the edges are in cone 2 or 4 with respect to a and z and cone for has no edge with an end edge point in E_A add. (4.4 b)
-                    if(getCone(canFirst.first, canFirst.second, alpha, h) == cone2 && AL_e_a.at(canFirst.first).at(cone2) == SIZE_T_MAX){
-                            E_CAN.push_back( canFirst );
+                    if(getCone(canFirst.first, canFirst.second, alpha, h) == cone2 && AL_e_a.find(make_pair(canFirst.first, cone2)) != blank){
+                            E_CAN.push_back(canFirst);
                     }
-                    if(getCone(canLast.second, canLast.first, alpha, h) == cone4 && AL_e_a.at(canLast.second).at(cone4) == SIZE_T_MAX){
+                    if(getCone(canLast.second, canLast.first, alpha, h) == cone4 && AL_e_a.find(make_pair(canLast.second, cone4)) != blank){
                             E_CAN.push_back(canLast);
                     }
 
                     /*Checks if end edges have a end point a or z in E_A and an edge different from one made with vertex b or y in cone 2 or 4 woth respect
                       to a and z if found the edge (b,c) or (w,y) is added. (4.4 c)*/
+                    if(getCone(canFirst.first, canFirst.second, alpha, h) == cone2 && AL_e_a.find(make_pair(canFirst.first, cone2)) != blank){
+                        size_t c  = AL_e_a.at(make_pair(canFirst.first, cone2));
 
-                    size_t c = AL_e_a.at(canFirst.first).at(cone2);
-
-                    if(getCone(canFirst.first, canFirst.second, alpha, h) == cone2 && c != SIZE_T_MAX && c != canFirst.second){
+                        if(c != canFirst.second){
                             E_CAN.emplace_back(make_pair(canFirst.second, c));
                         }
-
-                    size_t w = AL_e_a.at(canLast.second).at(cone4);
-
-                    if(getCone(canLast.second, canLast.first, alpha, h) == cone4 && w != SIZE_T_MAX && w != canLast.first){
-                        E_CAN.emplace_back(make_pair(w, canLast.first));
                     }
 
+                    if(getCone(canLast.second, canLast.first, alpha, h) == cone4 && AL_e_a.find(make_pair(canLast.second, cone4)) != blank){
+                        size_t w = AL_e_a.at(make_pair(canLast.second, cone4));
+
+                        if(w != canLast.first){
+                            E_CAN.emplace_back(make_pair(w, canLast.first));
+                        }
+                    }
                 }
             }
         } // namespace BHS2017
@@ -291,7 +296,7 @@ namespace gsnunf {
         /*Creates an adjacency list where the inner lists are of size 6 representing the cones. The value stored in a particular inner index
           is the vertex that creates an edge with the outer vertex in the given cone. (i.e. If AL_E_A[10][4] = 5 in cone 4 of vertex 10 there
           exists an edge (10,5).)*/
-        vector<vector<size_t>> AL_E_A(n, vector<size_t>(6, SIZE_T_MAX));
+        pointConeMap AL_E_A;
 
         //Step 3
         addIncident(E_A, AL_E_A, alpha, handles, L);

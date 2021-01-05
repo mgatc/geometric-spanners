@@ -229,9 +229,9 @@ namespace gsnunf {
 
                     edgeEquality edgeCheck;
 
-                    size_t w = AL_e_a.at(canLast.second).at(cone5);
+                    size_t w = AL_e_a.at(canLast.second).at(cone4);
 
-                    if(getCone(canLast.second, canLast.first, alpha, h) == cone5 && w != SIZE_T_MAX && w != canLast.first){
+                    if(getCone(canLast.second, canLast.first, alpha, h) == cone4 && w != SIZE_T_MAX && w != canLast.first){
                         E_CAN.emplace_back(make_pair(w, canLast.first));
                     }
 

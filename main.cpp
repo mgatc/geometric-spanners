@@ -101,9 +101,10 @@ int main() {
 //    for( size_t i=4; i<=n; ++i )
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
-    //singleRun( 0, 0, "bsxTestResult", "250_7905.694150x7905.694150.txt" );
-    //experiment( 100000, 100000, 200000, 10000 );
-    scratch();
+    //singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812.txt", true, true );
+    singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812 (copy).txt", true, true );
+    //experiment( 100000, 10, 200, 10 );
+    //scratch();
 
     return 0;
 }
@@ -225,13 +226,13 @@ void scratch() {
 //        std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
 //        std::copy_n( g3, n/6, back_inserter(points) );
-        std::copy_n( g4, n, back_inserter(points) );
-        points.emplace_back( 0,0 );
-        points.emplace_back(1, 13 );
+//        std::copy_n( g4, n, back_inserter(points) );
+//        points.emplace_back( 0,0 );
+//        points.emplace_back(1, 13 );
 
 
-//        string filename = "data-150_6123.724357x6123.724357.txt";
-//        readPointsFromFile( back_inserter( points ), filename );
+        string filename = "data-30_2738.612788x2738.612788.txt";
+        readPointsFromFile( back_inserter( points ), filename );
 
 
 
@@ -269,8 +270,8 @@ void scratch() {
 
        //Johnsons( result.begin(), result.end() );
 
-        //cout << degree( result.begin(), result.end() );
-        //cout <<",";
+        cout << degree( result.begin(), result.end() );
+        cout <<",";
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
 
@@ -631,7 +632,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-    if( deg > 8 || forcePrint ) {
+    if( deg > 6 || forcePrint ) {
 
         string resultFileName = ( filename ? *filename : *generatedFile );
         // strip file extension

@@ -102,7 +102,7 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bhsTestResult", "Bad_PointSet.txt" );
-    experiment( 100000, 1000, 200000 , 10000);
+    experiment( 100000, 100000, 200000 , 10000);
     //scratch();
 
     return 0;

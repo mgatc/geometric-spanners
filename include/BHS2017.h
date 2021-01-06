@@ -55,7 +55,6 @@ namespace gsnunf {
             typedef unordered_map<pair<size_t,size_t>,double,pointPairHash,edgeEquality>        edgeBisectorMap;
             typedef unordered_map<pair<size_t,size_t>,size_t,pointConeHash,pointConeEquality>   pointConeMap;
 
-
             //Function to find the cone of p containg vertex q, for this algorithm all vertices have 6 cones (0-5) with an angle of (PI/3).
             inline size_t getCone(const size_t p, const size_t q, const double alpha, const vector<Vertex_handle> &h){
 
@@ -69,7 +68,6 @@ namespace gsnunf {
 
                 return cone;
             }
-
 
             //Finds the bisector length of a given edge.
             inline K::FT bisectorLength(const double alpha, const pair<size_t,size_t> &e, const vector<Vertex_handle> &h) {
@@ -349,7 +347,6 @@ namespace gsnunf {
 
         //Step 3
         addIncident(E_A, AL_E_A, alpha, handles, L);
-
 
         //Add canonical E_CAN
         vector<pair<size_t,size_t>> E_CAN;

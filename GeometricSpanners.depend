@@ -394,7 +394,7 @@
 1587475373 /home/matt/UDC/udc/include/LiuLuSingleMP.h
 	"CgalComponents.h"
 
-1585227355 /usr/lib/gcc/x86_64-linux-gnu/7/include/omp.h
+1575469541 /usr/lib/gcc/x86_64-linux-gnu/7/include/omp.h
 
 1587657356 source:/home/matt/UDC/udc/src/ExperimentalMP.cpp
 	"ExperimentalMP.h"
@@ -416,7 +416,7 @@
 1588865172 source:/home/matt/UDC/udc/src/ExperimentalHex2.cpp
 	"ExperimentalHex2.h"
 
-1608691620 source:/home/matt/GeometricSpanners/main.cpp
+1609955259 source:/home/matt/GeometricSpanners/main.cpp
 	<chrono>
 	<fstream>
 	<list>
@@ -433,6 +433,7 @@
 	"BSX2009.h"
 	"KPX2010.h"
 	"BCC2012.h"
+	"BHS2017.h"
 	"metrics.h"
 
 1589914637 /home/matt/GeometricSpanners/include/Greedy.h
@@ -477,7 +478,7 @@
 1589915120 /home/matt/GeometricSpanners/include/GeometricSpannerSolutionChecker.h
 	"CgalComponents.h"
 
-1602678309 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
+1609947030 /home/matt/GeometricSpanners/include/GeometricSpannerPrinter.h
 	<cctype>
 	<cstdlib>
 	<iomanip>
@@ -764,7 +765,7 @@
 	<CGAL/Vector_2.h>
 	"GeometricSpannerPrinter.h"
 
-1608314723 /home/matt/GeometricSpanners/include/metrics.h
+1609947030 /home/matt/GeometricSpanners/include/metrics.h
 	<algorithm>
 	<functional>
 	<limits>
@@ -799,7 +800,7 @@
 
 1602510682 /home/matt/GeometricSpanners/include/GraphAlgoTV.h
 
-1608747362 /home/matt/GeometricSpanners/include/utilities.h
+1609947037 /home/matt/GeometricSpanners/include/utilities.h
 	<chrono>
 	<cmath>
 	<iostream>
@@ -837,7 +838,7 @@
 	"metrics.h"
 	"utilities.h"
 
-1608756117 /home/matt/GeometricSpanners/include/BCC2012.h
+1609947030 /home/matt/GeometricSpanners/include/BCC2012.h
 	<bitset>
 	<cmath>
 	<functional>
@@ -1020,6 +1021,22 @@
 	"utilities.h"
 
 1609874172 /home/davidwisnosky/Programs/geometric-spanners/include/BHS2017.h
+	<cmath>
+	<limits>
+	<unordered_set>
+	<unordered_map>
+	<vector>
+	<boost/functional/hash.hpp>
+	<CGAL/algorithm.h>
+	<CGAL/circulator.h>
+	<CGAL/Delaunay_triangulation_2.h>
+	<CGAL/Exact_predicates_inexact_constructions_kernel.h>
+	<CGAL/Line_2.h>
+	<CGAL/Triangulation_vertex_base_with_info_2.h>
+	"metrics.h"
+	"utilities.h"
+
+1609955886 /home/matt/GeometricSpanners/include/BHS2017.h
 	<cmath>
 	<limits>
 	<unordered_set>

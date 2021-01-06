@@ -135,6 +135,39 @@ namespace gsnunf {
                     }
                 }
             }
+            inline void canonicalNeighborhood( vector<size_t>& canNeighbors,
+                                               const size_t& p,
+                                               const size_t& r,
+                                               const double alpha,
+                                               const Delaunay &dt,
+                                               const vector<Vertex_handle> &h,
+                                               const edgeBisectorMap &b ) {
+                pair<size_t,size_t> e = make_pair(p, r);
+
+                //Computes the cone of p containg r.
+                size_t cone  = getCone(p, r, alpha, h);
+
+                /*Vertex circulator oriented to r to find fist and last end vertex. Once r is the circulator is oriented to the first vertex in the cone,
+                  that is in the canonical neighborhood. Once found all neighbors are added in clockwise order. For a vertex to be in the canonical
+                  neighborhood it must have a bisector length greater than or equal to that of (p,r)*/
+                auto N_p = dt.incident_vertices(h[p]);
+
+                while(++N_p != h[r]);
+
+                while(!dt.is_infinite(++N_p)
+                      && getCone(p, N_p->info(), alpha, h) == cone
+                      && (b.at(make_pair(p, N_p->info())) > b.at(e)
+                          //|| abs(b.at(make_pair(p, N_p->info())) - b.at(e)) < EPSILON
+                          ));
+
+                while(!dt.is_infinite(--N_p)
+                      && getCone(p, N_p->info(), alpha, h) == cone
+                      && (b.at(make_pair(p, N_p->info())) > b.at(e)
+                         // || abs(b.at(make_pair(p,N_p->info())) - b.at(e)) < EPSILON
+                          )){
+                    canNeighbors.push_back(N_p->info());
+                }
+            }
 
             /*
               Step 4: Add canonical edges consists of 4 sub steps.
@@ -148,7 +181,7 @@ namespace gsnunf {
                         to a and z if found the edge (b,c) or (w,y) is added.
             */
             inline void addCanonical(vector<pair<size_t,size_t>> &E_CAN, const size_t p, const size_t r, const double alpha,
-                const Delaunay &dt, const vector<Vertex_handle> &h, const edgeBisectorMap &b, pointConeMap AL_e_a){
+                const Delaunay &dt, const vector<Vertex_handle> &h, const edgeBisectorMap &b, pointConeMap& AL_e_a){
 
                 //Creates an edge (p,r)
                 pair<size_t,size_t> e = make_pair(p, r);
@@ -159,36 +192,23 @@ namespace gsnunf {
                 //Set of the canonical neighborhood of p in the cone of p containing r. (This cone will be considered as cone 0)
                 vector<size_t> canNeighbors;
 
-                /*Vertex circulator oriented to r to find fist and last end vertex. Once r is the circulator is oriented to the first vertex in the cone,
-                  that is in the canonical neighborhood. Once found all neighbors are added in clockwise order. For a vertex to be in the canonical
-                  neighborhood it must have a bisector length greater than or equal to that of (p,r)*/
-                auto N_p = dt.incident_vertices(h[p]);
-
-                while(++N_p != h[r]);
-
-                while(!dt.is_infinite(++N_p) && getCone(p, N_p->info(), alpha, h) == cone &&
-                    (b.at(make_pair(p, N_p->info())) > b.at(e) || abs(b.at(make_pair(p, N_p->info())) - b.at(e)) < EPSILON));
-
-                while(!dt.is_infinite(--N_p) && getCone(p, N_p->info(), alpha, h) == cone &&
-                    (b.at(make_pair(p, N_p->info())) > b.at(e) || abs(b.at(make_pair(p,N_p->info())) - b.at(e)) < EPSILON)){
-
-                    canNeighbors.push_back(N_p->info());
-                }
-
+                canonicalNeighborhood( canNeighbors, p, r, alpha, dt, h, b );
                 //Number of edges in the neighborhood.
                 int canEdges = canNeighbors.size() - 1;
 
                 //Add inner edges if total neigborhood edges is 3 or more. (4.2)
                 for(int i = 1; i < int(canNeighbors.size()) - 2; i++){
                     E_CAN.emplace_back(canNeighbors.at(i), canNeighbors.at(i + 1));
+                    assert(dt.is_edge( h.at(canNeighbors.at(i)), h.at(canNeighbors.at(i + 1))));
                 }
-
                 //If r is an end vertex and there is more than one edge in the neighborhood add the edge with endpoint r. (4.3)
                 if(canNeighbors.front() == r && canEdges > 1){
                     E_CAN.emplace_back(r, canNeighbors.at(1));
+                    assert(dt.is_edge( h.at(r), h.at(canNeighbors.at(1))));
                 }
                 if(canNeighbors.back() == r && canEdges > 1){
-                    E_CAN.emplace_back(canNeighbors.back(), canNeighbors.at(canEdges - 1));
+                    E_CAN.emplace_back(r, canNeighbors.at(canEdges - 1));
+                    assert(dt.is_edge( h.at(r), h.at(canNeighbors.at(canEdges - 1))));
                 }
 
                 //First and last edges in the canonical neighborhood are condidered and added by 3 criteria. (4.4)
@@ -200,8 +220,8 @@ namespace gsnunf {
                     size_t cone4 = (cone + 4) % 6;
                     size_t cone5 = (cone + 5) % 6;
 
-                    pair<size_t,size_t> canFirst = make_pair(canNeighbors.front(), canNeighbors[1]);
-                    pair<size_t,size_t> canLast = make_pair(canNeighbors[canEdges - 1], canNeighbors.back());
+                    pair<size_t,size_t> canFirst = make_pair(canNeighbors.front(), canNeighbors.at(1));
+                    pair<size_t,size_t> canLast = make_pair(canNeighbors.at(canEdges - 1), canNeighbors.back());
 
                     //Iterator to end of map to check if an edge exists.
                     auto blank = AL_e_a.end();
@@ -209,35 +229,63 @@ namespace gsnunf {
                     //If the edges are in cone 1 or 5 with respect to a and z add. (4.4 a)
                     if(getCone(canFirst.first, canFirst.second, alpha, h) == cone1){
                         E_CAN.push_back(canFirst);
+                        assert(dt.is_edge( h.at(canFirst.first), h.at(canFirst.second)));
                     }
                     if(getCone(canLast.second, canLast.first, alpha, h) == cone5){
                         E_CAN.push_back(canLast);
+                        assert(dt.is_edge( h.at(canLast.first), h.at(canLast.second)));
                     }
+                    // (b,c)
+                    auto u = AL_e_a.find(make_pair(canFirst.first, cone2));
 
+                    auto v = AL_e_a.find(make_pair(canLast.second, cone4));
                     //If the edges are in cone 2 or 4 with respect to a and z and cone for has no edge with an end edge point in E_A add. (4.4 b)
-                    if(getCone(canFirst.first, canFirst.second, alpha, h) == cone2 && AL_e_a.find(make_pair(canFirst.first, cone2)) == blank){
-                            E_CAN.push_back(canFirst);
+                    if(getCone(canFirst.first, canFirst.second, alpha, h) == cone2 && u == blank){
+                        E_CAN.push_back(canFirst);
+                        assert(dt.is_edge( h.at(canFirst.first), h.at(canFirst.second)));
                     }
-                    if(getCone(canLast.second, canLast.first, alpha, h) == cone4 && AL_e_a.find(make_pair(canLast.second, cone4)) == blank){
-                            E_CAN.push_back(canLast);
+                    if(getCone(canLast.second, canLast.first, alpha, h) == cone4 && v == blank){
+                        E_CAN.push_back(canLast);
+                        assert(dt.is_edge( h.at(canLast.first), h.at(canLast.second)));
                     }
 
                     /*Checks if end edges have a end point a or z in E_A and an edge different from one made with vertex b or y in cone 2 or 4 woth respect
                       to a and z if found the edge (b,c) or (w,y) is added. (4.4 c)*/
-                    if(getCone(canFirst.first, canFirst.second, alpha, h) == cone2 && AL_e_a.find(make_pair(canFirst.first, cone2)) != blank){
-                        size_t c  = AL_e_a.at(make_pair(canFirst.first, cone2));
-
-                        if(c != canFirst.second){
-                            E_CAN.emplace_back(make_pair(canFirst.second, c));
+                    if( getCone(canFirst.first, canFirst.second, alpha, h) == cone2
+                     && u != blank
+                     && u->second != canFirst.second ) {
+                        vector<size_t> zCanNeighbors;
+                        canonicalNeighborhood( zCanNeighbors, canFirst.first, u->second, alpha, dt, h, b );
+                        auto y = find( zCanNeighbors.begin(), zCanNeighbors.end(), canFirst.second );
+                        auto w = y + int(y == zCanNeighbors.begin())
+                                   - int(y == zCanNeighbors.end()-1);
+                        if(y==zCanNeighbors.end()) {
+                            cout<<"zCanNeighbors1\n";
+                            for( auto v : zCanNeighbors ) cout<<v<<" ";
+                        cout<<endl;
                         }
+                        //assert( y != zCanNeighbors.end() );
+                        E_CAN.emplace_back(*w, canFirst.second);
+                        assert(dt.is_edge( h.at(*w), h.at(canFirst.second)));
                     }
-
-                    if(getCone(canLast.second, canLast.first, alpha, h) == cone4 && AL_e_a.find(make_pair(canLast.second, cone4)) != blank){
-                        size_t w = AL_e_a.at(make_pair(canLast.second, cone4));
-
-                        if(w != canLast.first){
-                            E_CAN.emplace_back(make_pair(w, canLast.first));
+                    // (y,z)
+                    if( getCone(canLast.second, canLast.first, alpha, h) == cone4
+                     && v != blank
+                     && v->second != canLast.first ) {
+                        vector<size_t> zCanNeighbors;
+                        canonicalNeighborhood( zCanNeighbors, canLast.second, v->second, alpha, dt, h, b );
+                        auto y = find( zCanNeighbors.begin(), zCanNeighbors.end(), canLast.first );
+                        auto w = y + int(y == zCanNeighbors.begin())
+                                   - int(y == zCanNeighbors.end()-1);
+                        cout<<"w:"<<*w<<" y:"<<*y<<endl;
+                        if(w==y || y==zCanNeighbors.end()) {
+                            cout<<"zCanNeighbors2\n";
+                            for( auto v : zCanNeighbors ) cout<<v<<" ";
+                        cout<<endl;
                         }
+                        //assert( y != zCanNeighbors.end() );
+                        E_CAN.emplace_back(*w, *y);
+                        assert(dt.is_edge( h.at(*w), h.at(*y)));
                     }
                 }
             }
@@ -313,6 +361,15 @@ namespace gsnunf {
             addCanonical(E_CAN, e.second, e.first, alpha, DT, handles, B, AL_E_A);
 
         }
+
+        for(auto e:E_A){
+            cout<<e.first<<" "<<e.second<<"\n";
+        }
+        cout<<endl<<endl;
+        for(auto e:E_CAN){
+            cout<<e.first<<" "<<e.second<<"\n";
+        }
+        cout<<endl;
 
         //Union of sets E_A and E_CAN for final edge set removes duplicates.
         E_A.insert(E_A.end(), E_CAN.begin(), E_CAN.end());

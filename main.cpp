@@ -101,8 +101,8 @@ int main() {
 //    for( size_t i=4; i<=n; ++i )
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
-    //singleRun( 0, 0, "bhsTestResult", "Bad_PointSet.txt" );
-    experiment( 100000, 1000, 200000 , 10000);
+    singleRun( 0, 0, "bhsTestResult", "data-100_5000.000000x5000.000000.txt" );
+    //experiment( 100000, 100, 2000, 100 );
     //scratch();
 
     return 0;

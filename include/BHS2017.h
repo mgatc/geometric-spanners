@@ -55,36 +55,46 @@ namespace gsnunf {
             typedef unordered_map<pair<size_t,size_t>,double,pointPairHash,edgeEquality>        edgeBisectorMap;
             typedef unordered_map<pair<size_t,size_t>,size_t,pointConeHash,pointConeEquality>   pointConeMap;
 
-            //Function to find the cone of p containg vertex q, for this algorithm all vertices have 6 cones (0-5) with an angle of (PI/3).
-            inline size_t getCone(const size_t p, const size_t q, const double alpha, const vector<Vertex_handle> &h){
+            const double tan30 = tan(PI / 6);
+            //const double cot30 = 1 / tan30;
 
-                double tan30 = tan(PI / 6);
+            const vector<double> bisectorSlopes{ 0, tan30, -1*tan30, 0, tan30, -1*tan30 };
+            //const vector<double> orthBisectorSlopes{ INF, -1*cot30, cot30, INF, -1*cot30, cot30 };
 
-                Point refPoint(h[p]->point().x() - tan30, h[p] ->point().y() + 1);
+            //Finds the cone of p containing vertex q, for this algorithm all vertices have 6 cones (0-5) with an angle of (PI/3).
+            inline size_t getSingleCone(const size_t p, const size_t q, const vector<Vertex_handle> &h){
+                const double alpha = PI/3;
+                const Point refPoint( h.at(p)->point().x() - tan30, h[p]->point().y() + 1 );
+                //Point refPoint(h[p]->point().x(), h[p] ->point().y() + 1);
 
-                double theta = get_angle<bhs2017::K>(refPoint, h[p]->point(), h[q]->point());
+                double theta = get_angle<bhs2017::K>(refPoint, h[p]->point(), h.at(q)->point());
 
                 size_t cone = (theta / alpha);
 
                 return cone;
             }
 
+            // Compute max of getCone(p,q) and (getCone(q,p)+3)%6
+            inline size_t getCone( const size_t p, const size_t q, const vector<Vertex_handle> &h ) {
+                return max(
+                    getSingleCone(p,q,h),
+                    (getSingleCone(q,p,h)+3)%6
+                );
+            }
+
             //Finds the bisector length of a given edge.
             inline K::FT bisectorLength(const double alpha, const pair<size_t,size_t> &e, const vector<Vertex_handle> &h) {
 
-                double tan30 = tan(PI / 6);
-                double cot30 = 1 / tan30;
+                size_t cone = getCone(e.first, e.second, h);
 
-                vector<double> bisectorSlopes = {INF, tan30, -1*tan30, INF, tan30, -1*tan30};
-                vector<double> orthBisectorSlopes{0, -1*cot30, cot30, 0, -1*cot30, cot30};
-
-                size_t cone = getCone(e.first, e.second, alpha, h);
-
-                double xCord = h[e.first]->point().x();
+                double xCord = h.at(e.first)->point().x();
                 double yCord = h[e.first]->point().y() + 1;
 
+                assert(cone<6);
+                assert(e.first<h.size());
+
                 if(cone % 3 != 0){
-                    xCord = (bisectorSlopes[cone] * h[e.first]->point().x() + 1) / bisectorSlopes[cone];
+                    xCord = (1/bisectorSlopes.at(cone)) + h[e.first]->point().x();
                 }
 
                 Point bisectorPoint(xCord, yCord);
@@ -111,40 +121,43 @@ namespace gsnunf {
                 for(auto e : l ){
 
                     //Separates the edge (p,q) into the vertices p and q.
-                    size_t p = e.first;
-                    size_t q = e.second;
+                    const size_t& p = e.first;
+                    const size_t& q = e.second;
 
                     //Computes the cone of p containing q.
-                    size_t p_cone = getCone(p, q, alpha, h);
+                    size_t p_cone = getCone(p, q, h),
+                           q_cone = getCone(q, p, h);
+                    if (q_cone != (p_cone + 3) % 6) cout<<"\np_cone:"<<p_cone<<" q_cone:"<<q_cone<<" (p_cone+3)%6:"<<((p_cone+3)%6)<<endl;
+                    assert( q_cone == (p_cone + 3) % 6 );
 
-                    /*Evaulates the emptiness of a cone, given a vertex in the set E_A. If a cone is empty then the set E_A does not contain an edge with the
-                      given endpoint in the cone calculated above, and the status will be set to false.*/
-                    bool p_cone_status = AL_E_A.find(make_pair(p, p_cone)) != AL_E_A.end();
-                    bool q_cone_status = AL_E_A.find(make_pair(q, (p_cone + 3) % 6)) != AL_E_A.end();
+                    /*Evaluates the emptiness of a cone, given a vertex in the set E_A.
+                      If a cone is empty then the set E_A does not contain an edge with the
+                      given endpoint in the cone calculated above, and the status will be
+                      set to true.*/
+                    bool p_cone_empty = AL_E_A.find(make_pair(p, p_cone)) == AL_E_A.end();
+                    bool q_cone_empty = AL_E_A.find(make_pair(q, q_cone)) == AL_E_A.end();
 
-                    /*Checks that both cone neighborhood are empty, if these are both empty (false) then the condition for step 3 is met and (p,q)
-                      is added to E_A. (3.2)*/
-                    if( !p_cone_status && !q_cone_status ){
+                    /*Checks that both cone neighborhood are empty, if these are both empty
+                    then the condition for step 3 is met and (p,q) is added to E_A. (3.2)*/
+                    if( p_cone_empty && q_cone_empty ){
                         E_A.push_back(e);
 
-                        //Adds (p,q) to an adjacentcy list for future calculation.
+                        //Adds (p,q) to an adjacency list for future calculation.
                         AL_E_A.emplace(make_pair(p, p_cone), q);
-                        AL_E_A.emplace(make_pair(q, (p_cone + 3) % 6), p);
+                        AL_E_A.emplace(make_pair(q, q_cone), p);
                     }
                 }
             }
             inline void canonicalNeighborhood( vector<size_t>& canNeighbors,
                                                const size_t& p,
                                                const size_t& r,
-                                               const double alpha,
+                                               const size_t cone,
                                                const Delaunay &dt,
                                                const vector<Vertex_handle> &h,
-                                               const edgeBisectorMap &b ) {
+                                               const edgeBisectorMap &b,
+                                               bool printLog = false ) {
+
                 pair<size_t,size_t> e = make_pair(p, r);
-
-                //Computes the cone of p containg r.
-                size_t cone  = getCone(p, r, alpha, h);
-
                 /*Vertex circulator oriented to r to find fist and last end vertex. Once r is the circulator is oriented to the first vertex in the cone,
                   that is in the canonical neighborhood. Once found all neighbors are added in clockwise order. For a vertex to be in the canonical
                   neighborhood it must have a bisector length greater than or equal to that of (p,r)*/
@@ -153,18 +166,42 @@ namespace gsnunf {
                 while(++N_p != h[r]);
 
                 while(!dt.is_infinite(++N_p)
-                      && getCone(p, N_p->info(), alpha, h) == cone
+                      && getCone(p, N_p->info(), h) == cone
                       && (b.at(make_pair(p, N_p->info())) > b.at(e)
-                          //|| abs(b.at(make_pair(p, N_p->info())) - b.at(e)) < EPSILON
+                          || abs(b.at(make_pair(p, N_p->info())) - b.at(e)) < EPSILON
                           ));
 
+
                 while(!dt.is_infinite(--N_p)
-                      && getCone(p, N_p->info(), alpha, h) == cone
+                      && getCone(p, N_p->info(), h) == cone
                       && (b.at(make_pair(p, N_p->info())) > b.at(e)
-                         // || abs(b.at(make_pair(p,N_p->info())) - b.at(e)) < EPSILON
-                          )){
+                          || abs(b.at(make_pair(p,N_p->info())) - b.at(e)) < EPSILON
+                          //|| N_p->info() == r
+                         )){
                     canNeighbors.push_back(N_p->info());
                 }
+
+                // print neighborhood of p
+                // traverse the neighbors until we reach infinite or the cone isn't 0
+//                while(!dt.is_infinite(--N_p) || getCone(p, N_p->info(), h) == 0);
+//
+//                auto done = N_p;
+//                size_t c = 6; // 6 is out of range for cones
+//                while( !dt.is_infinite(--N_p) || N_p != done ) {
+//                    // if this is a new cone, print cone label
+//                    if( getCone( p, N_p->info(), h ) != c ) {
+//                        // print canonical neighbors of previous cone
+//
+//                        c = getCone( p, N_p->info(), h );
+//                        cout<<";  C"<<c<<": ";
+//                    }
+//                    cout<<N_p->info()<<",";
+//                }
+//                vector<size_t> canNeighborsPrint;
+//                canonicalNeighborhood( canNeighborsPrint, p, N_p->info(), cone, dt, h, b );
+
+
+
             }
 
             /*
@@ -184,13 +221,14 @@ namespace gsnunf {
                 //Creates an edge (p,r)
                 pair<size_t,size_t> e = make_pair(p, r);
 
-                //Computes the cone of p containg r.
-                size_t cone  = getCone(p, r, alpha, h);
+                //Computes the cone of p containing r.
+                size_t p_cone  = getCone(p, r, h);
 
                 //Set of the canonical neighborhood of p in the cone of p containing r. (This cone will be considered as cone 0)
                 vector<size_t> canNeighbors;
 
-                canonicalNeighborhood( canNeighbors, p, r, alpha, dt, h, b );
+                canonicalNeighborhood( canNeighbors, p, r, p_cone, dt, h, b );
+                assert(canNeighbors.size()>0);
                 //Number of edges in the neighborhood.
                 int canEdges = canNeighbors.size() - 1;
 
@@ -209,87 +247,96 @@ namespace gsnunf {
                     assert(dt.is_edge( h.at(r), h.at(canNeighbors.at(canEdges - 1))));
                 }
 
-                //First and last edges in the canonical neighborhood are condidered and added by 3 criteria. (4.4)
+                //First and last edges in the canonical neighborhood are considered and added by 3 criteria. (4.4)
                 //Must be at least 1 edge.
                 if(canEdges > 0){
+                    vector<int> cone(6);
+                    for( size_t i=0; i<6; ++i ) {
+                        cone[i] = (p_cone+i)%6;
+                    }
 
-                    size_t cone1 = (cone + 1) % 6;
-                    size_t cone2 = (cone + 2) % 6;
-                    size_t cone4 = (cone + 4) % 6;
-                    size_t cone5 = (cone + 5) % 6;
-
-                    pair<size_t,size_t> canFirst = make_pair(canNeighbors.front(), canNeighbors.at(1));
-                    pair<size_t,size_t> canLast = make_pair(canNeighbors.at(canEdges - 1), canNeighbors.back());
+                    const pair<size_t,size_t> canFirst = make_pair(canNeighbors.front(), canNeighbors.at(1));
+                    const pair<size_t,size_t> canLast = make_pair(canNeighbors.at(canEdges - 1), canNeighbors.back());
 
                     //Iterator to end of map to check if an edge exists.
-                    auto blank = AL_e_a.end();
+                    const auto blank = AL_e_a.end();
 
                     //If the edges are in cone 1 or 5 with respect to a and z add. (4.4 a)
-                    if(getCone(canFirst.first, canFirst.second, alpha, h) == cone1){
+                    if(getCone(canFirst.first, canFirst.second, h) == cone[1]){
                         E_CAN.push_back(canFirst);
                         assert(dt.is_edge( h.at(canFirst.first), h.at(canFirst.second)));
                     }
-                    if(getCone(canLast.second, canLast.first, alpha, h) == cone5){
+                    if(getCone(canLast.second, canLast.first, h) == cone[5]){
                         E_CAN.push_back(canLast);
                         assert(dt.is_edge( h.at(canLast.first), h.at(canLast.second)));
                     }
-                    // (b,c)
-                    auto u = AL_e_a.find(make_pair(canFirst.first, cone2));
-
-                    auto v = AL_e_a.find(make_pair(canLast.second, cone4));
+                    const auto u = AL_e_a.find(make_pair(canFirst.first, cone[2]));
+                    const auto v = AL_e_a.find(make_pair(canLast.second, cone[4]));
                     //If the edges are in cone 2 or 4 with respect to a and z and cone for has no edge with an end edge point in E_A add. (4.4 b)
-                    if(getCone(canFirst.first, canFirst.second, alpha, h) == cone2 && u == blank){
+                    if( u == blank && getCone(canFirst.first, canFirst.second, h) == cone[2] ){
                         E_CAN.push_back(canFirst);
                         assert(dt.is_edge( h.at(canFirst.first), h.at(canFirst.second)));
                     }
-                    if(getCone(canLast.second, canLast.first, alpha, h) == cone4 && v == blank){
+                    if( v == blank && getCone(canLast.second, canLast.first, h) == cone[4] ){
                         E_CAN.push_back(canLast);
                         assert(dt.is_edge( h.at(canLast.first), h.at(canLast.second)));
                     }
 
-                    /*Checks if end edges have a end point a or z in E_A and an edge different from one made with vertex b or y in cone 2 or 4 woth respect
+                    /*Checks if end edges have an end point a or z in E_A and an edge different from one made with vertex b or y in cone 2 or 4 woth respect
                       to a and z if found the edge (b,c) or (w,y) is added. (4.4 c)*/
-                    if( getCone(canFirst.first, canFirst.second, alpha, h) == cone2
+                    // (a,b)
+                    if( getCone(canFirst.first, canFirst.second, h) == cone[2]
                      && u != blank
                      && u->second != canFirst.second ) {
                         vector<size_t> zCanNeighbors;
-                        canonicalNeighborhood( zCanNeighbors, canFirst.first, u->second, alpha, dt, h, b );
+                        canonicalNeighborhood( zCanNeighbors, canFirst.first, u->second, cone[2], dt, h, b );
+//                        auto maybe_p = find( zCanNeighbors.begin(), zCanNeighbors.end(), p );
+//                        if( maybe_p != zCanNeighbors.end() )
+//                            zCanNeighbors.erase(maybe_p);
                         auto y = find( zCanNeighbors.begin(), zCanNeighbors.end(), canFirst.second );
-                        auto w = y + int(y == zCanNeighbors.begin())
-                                   - int(y == zCanNeighbors.end()-1);
-                        if(y==zCanNeighbors.end()) {
-                            cout<<"zCanNeighbors1\n";
-                            for( auto v : zCanNeighbors ) cout<<v<<" ";
-                        cout<<endl;
-                        }
-                        //assert( y != zCanNeighbors.end() );
-                        E_CAN.emplace_back(*w, canFirst.second);
-                        assert(dt.is_edge( h.at(*w), h.at(canFirst.second)));
+                        auto w = y;
+                        w += int(y == zCanNeighbors.begin());
+                        w -= int(y == zCanNeighbors.end()-1);
+//                        if(y==zCanNeighbors.end() || y==zCanNeighbors.end()||y==w) {
+//                            cout<<"\np:"<<p<<" w:"<<(*w)<<" y:"<<canFirst.second<<" z:"<<canFirst.first;
+//                            cout<<"\nzCanNeighbors1:";
+//                            for( auto v : zCanNeighbors ) cout<<v<<" ";
+//                            cout<<endl;
+//                        }
+                        assert( y != zCanNeighbors.end() );
+                        assert( y != w );
+                        assert(dt.is_edge( h.at(*w), h.at(*y)));
+                        E_CAN.emplace_back(*w, *y);
                     }
                     // (y,z)
-                    if( getCone(canLast.second, canLast.first, alpha, h) == cone4
+                    if( getCone(canLast.second, canLast.first, h) == cone[4]
                      && v != blank
                      && v->second != canLast.first ) {
                         vector<size_t> zCanNeighbors;
-                        canonicalNeighborhood( zCanNeighbors, canLast.second, v->second, alpha, dt, h, b );
+                        canonicalNeighborhood( zCanNeighbors, canLast.second, v->second, cone[4], dt, h, b );
+//                        auto maybe_p = find( zCanNeighbors.begin(), zCanNeighbors.end(), p );
+//                        if( maybe_p != zCanNeighbors.end() )
+//                            zCanNeighbors.erase(maybe_p);
                         auto y = find( zCanNeighbors.begin(), zCanNeighbors.end(), canLast.first );
-                        auto w = y + int(y == zCanNeighbors.begin())
-                                   - int(y == zCanNeighbors.end()-1);
-                        cout<<"w:"<<*w<<" y:"<<*y<<endl;
-                        if(w==y || y==zCanNeighbors.end()) {
-                            cout<<"zCanNeighbors2\n";
-                            for( auto v : zCanNeighbors ) cout<<v<<" ";
-                        cout<<endl;
-                        }
-                        //assert( y != zCanNeighbors.end() );
-                        E_CAN.emplace_back(*w, *y);
+                        auto w = y;
+                        w += int(y == zCanNeighbors.begin());
+                        w -= int(y == zCanNeighbors.end()-1);
+//                        if(y==zCanNeighbors.end() || y==zCanNeighbors.end()||y==w) {
+//                            cout<<"\np:"<<p<<" w:"<<(*w)<<" y:"<<canLast.first<<" z:"<<canLast.second;
+//                            cout<<"\nzCanNeighbors2:";
+//                            for( auto v : zCanNeighbors ) cout<<v<<" ";
+//                            cout<<endl;
+//                        }
+                        assert( y != zCanNeighbors.end() );
+                        assert( y != w );
                         assert(dt.is_edge( h.at(*w), h.at(*y)));
+                        E_CAN.emplace_back(*w, *y);
                     }
                 }
             }
         } // namespace BHS2017
 
-    //Main aglorithm.
+    //Main algorithm.
     template<typename RandomAccessIterator, typename OutputIterator>
     void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false) {
 

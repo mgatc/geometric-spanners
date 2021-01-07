@@ -102,8 +102,8 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
 
-    singleRun( 0, 0, "bhsTestResult", "data-100_5000.000000x5000.000000.txt" );
-    //experiment( 100000, 100, 2000, 100 );
+    //singleRun( 0, 0, "bhsTestResult", "data-100_5000.000000x5000.000000.txt" );
+    experiment( 100000, 50, 200, 50 );
     //scratch();
 
     return 0;
@@ -521,89 +521,89 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //
 //
 //
-    {
-        Timer tim;
-        BGS2005( points.begin(), points.end(), back_inserter(result) );
-    }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    double t;
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
-
-    result.clear();
-
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        LW2004( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
+//    {
+//        Timer tim;
+//        BGS2005( points.begin(), points.end(), back_inserter(result) );
+//    }
 //
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
 //
-    result.clear();
+//    double t;
+////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+////    cout << t;
+//    cout <<"\n";
+//
+//    result.clear();
 //
 //
 //
 //
 //
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    {
+//        Timer tim;
+//        LW2004( points.begin(), points.end(), back_inserter(result) );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+////
+////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+////    cout << t;
+//    cout <<"\n";
+////
+//    result.clear();
+////
+////
+////
+////
+////
+////
+////
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    {
+//        Timer tim;
+//        BSX2009( points.begin(), points.end(), back_inserter(result) );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+////    cout << t;
+//    cout <<"\n";
+//
+//    result.clear();
 //
 //
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        BSX2009( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
-
-    result.clear();
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
 //
 //
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
-//
-    result.clear();
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    {
+//        Timer tim;
+//        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+////
+////
+////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+////    cout << t;
+//    cout <<"\n";
+////
+//    result.clear();
 //
 //
 //
@@ -665,10 +665,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
         resultFileName += "_result-";
         resultFileName += ( filename ? "redo" : "orig" );
 
-//        if( generatedFile )
-//            singleRun( n, width, resultFileName, *generatedFile, true, true );
+        cout << "DEGREE ERROR!!! DEGREE:" << deg << "\n"<<endl;
+        if( generatedFile )
+            singleRun( n, width, resultFileName, *generatedFile, true, true );
 
-        cout << "DEGREE ERROR!!! DEGREE:" << deg << "\n";
 
         return false;
     }

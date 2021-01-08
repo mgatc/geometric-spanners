@@ -103,8 +103,8 @@ int main() {
 //            break;
 
     //singleRun( 0, 0, "bhsTestResult", "data-100_5000.000000x5000.000000.txt" );
-    experiment( 100000, 50, 200, 50 );
-    //scratch();
+    //experiment( 100000, 50, 200, 50 );
+    scratch();
 
     return 0;
 }
@@ -221,7 +221,7 @@ void scratch() {
 //            -1.05,-4.2
 //        },
 //    };
-        int n = 1000000;
+        int n = 101;
 
 //        std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
@@ -230,11 +230,11 @@ void scratch() {
 //        points.emplace_back( 0,0 );
 
 
-        //string filename = "data-119000_172481.883107x172481.883107.txt";
-        //readPointsFromFile( back_inserter( points ), filename );
+        string filename = "data-100_5000.000000x5000.000000.txt";
+        readPointsFromFile( back_inserter( points ), filename );
 
 
-        generateRandomPoints( n, width/2, back_inserter(points) );
+        //generateRandomPoints( n, width/2, back_inserter(points) );
         cout<< points.size();
         cout<< "\n";
         list< pair< Point, Point > > result;
@@ -262,7 +262,7 @@ void scratch() {
             //BGS2002( points.begin(), points.end(), back_inserter(result) );
             //KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
             //BCC2012_7( points.begin(), points.end(), back_inserter(result), true );
-            BHS2017(points.begin(), points.end(), back_inserter(result), false);
+            BHS2017(points.begin(), points.end(), back_inserter(result), true );
 
         }
 
@@ -668,7 +668,6 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
         cout << "DEGREE ERROR!!! DEGREE:" << deg << "\n"<<endl;
         if( generatedFile )
             singleRun( n, width, resultFileName, *generatedFile, true, true );
-
 
         return false;
     }

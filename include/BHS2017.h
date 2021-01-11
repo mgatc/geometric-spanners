@@ -390,22 +390,36 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     //Put edges in a vector.
     vector<pair<size_t,size_t>> L;
 
+    //Creates a map of edges as keys to its respective bisector length as the value. (Edges are not directional 1-2 is equivilent to 2-1)
+    edgeBisectorMap B(L.size());
+
+
+
+
+    {
+        Timer t;
+
     for(auto e = DT.finite_edges_begin(); e != DT.finite_edges_end(); ++e) {
         L.emplace_back(e->first->vertex((e->second + 1) % 3)->info(),
                         e->first->vertex((e->second + 2) % 3)->info());
     }
 
-    //Creates a map of edges as keys to its respective bisector length as the value. (Edges are not directional 1-2 is equivilent to 2-1)
-    edgeBisectorMap B(L.size());
-
     for( auto e : L ) {
         B.emplace( e, bisectorLength(alpha, e, handles) );
     }
 
+    }
+
+    {
+        Timer t;
     //Step 2: Edges in the set L are sorted by their bisector length in non-decreasing order.
     sort( L.begin(), L.end(), [&](const auto& lhs, const auto& rhs) {
         return B.at(lhs) < B.at(rhs);
     });
+    }
+
+
+
 
     //Creates a set which will contain all edges returned by addIncident.
     vector<pair<size_t,size_t>> E_A;
@@ -416,15 +430,22 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     pointConeMap AL_E_A;
 
     //Step 3
-    addIncident( E_A, AL_E_A, alpha, handles, L );
+    {
+        Timer t;
+        addIncident( E_A, AL_E_A, alpha, handles, L );
+    }
 
     //Add canonical E_CAN
     vector<pair<size_t,size_t>> E_CAN;
 
     //Step 4
+    {
+
+        Timer t;
     for( auto e : E_A ){
         addCanonical( E_CAN, e.first, e.second, alpha, DT, handles, B, AL_E_A, printLog );
         addCanonical( E_CAN, e.second, e.first, alpha, DT, handles, B, AL_E_A, printLog );
+    }
     }
 
     //        for(auto e:E_A){
@@ -436,6 +457,8 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     //        }
     //        cout<<endl;
 
+    {
+        Timer t;
     //Union of sets E_A and E_CAN for final edge set removes duplicates.
     E_A.insert( E_A.end(), E_CAN.begin(), E_CAN.end() );
     sort( E_A.begin(), E_A.end(), [](const auto& l, const auto& r) {
@@ -446,6 +469,7 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         return (l.first == r.first && l.second == r.second)
             || (l.first == r.second && l.second == r.first);
     }), E_A.end());
+    }
 
     // Edge list is only needed for printing. Remove for production.
     vector<pair<Point,Point>> edgeList;

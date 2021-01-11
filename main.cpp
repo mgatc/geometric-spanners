@@ -103,7 +103,7 @@ int main() {
 //            break;
 
     //singleRun( 0, 0, "bhsTestResult", "data-100_5000.000000x5000.000000.txt" );
-    experiment( 100000, 100000, 1000000, 50000 );
+    experiment( 100000, 1000, 10000, 500 );
     //scratch();
 
     return 0;
@@ -268,7 +268,10 @@ void scratch() {
 
        //Johnsons( result.begin(), result.end() );
 
-        cout << degree( result.begin(), result.end() );
+//        cout << degree( result.begin(), result.end() );
+//        double t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//        cout<< t;
+//        cout<<",";
         //cout <<",";
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
@@ -640,8 +643,8 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout <<",";
 
 
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
+    double t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+    cout << t;
     cout <<"\n";
 
     result.clear();

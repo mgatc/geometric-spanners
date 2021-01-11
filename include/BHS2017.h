@@ -118,13 +118,13 @@ namespace gsnunf {
                              pointConeMap &AL_E_A,
                              const double alpha,
                              const vector<Vertex_handle> &h,
-                             const vector<pair<size_t,size_t>> &l ) {
+                             const vector<pair<pair<size_t,size_t>,double>> &l ) {
         //Loops through the entire set L.
         for( auto e : l ) {
 
             //Separates the edge (p,q) into the vertices p and q.
-            const size_t& p = e.first;
-            const size_t& q = e.second;
+            const size_t& p = e.first.first;
+            const size_t& q = e.first.second;
 
             //Computes the cone of p containing q.
             size_t p_cone = getCone(p, q, h),
@@ -143,7 +143,7 @@ namespace gsnunf {
             /*Checks that both cone neighborhood are empty, if these are both empty
             then the condition for step 3 is met and (p,q) is added to E_A. (3.2)*/
             if( p_cone_empty && q_cone_empty ){
-                E_A.push_back(e);
+                E_A.push_back(e.first);
 
                 //Adds (p,q) to an adjacency list for future calculation.
                 AL_E_A.emplace(make_pair(p, p_cone), q);
@@ -388,7 +388,7 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     }
 
     //Put edges in a vector.
-    vector<pair<size_t,size_t>> L;
+    vector<pair<pair<size_t,size_t>,double>> L;
 
     //Creates a map of edges as keys to its respective bisector length as the value. (Edges are not directional 1-2 is equivilent to 2-1)
     edgeBisectorMap B(L.size());
@@ -400,12 +400,13 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         Timer t;
 
     for(auto e = DT.finite_edges_begin(); e != DT.finite_edges_end(); ++e) {
-        L.emplace_back(e->first->vertex((e->second + 1) % 3)->info(),
-                        e->first->vertex((e->second + 2) % 3)->info());
+        L.emplace_back(make_pair(make_pair(e->first->vertex((e->second + 1) % 3)->info(),
+        e->first->vertex((e->second + 2) % 3)->info()),bisectorLength(alpha,make_pair(
+        e->first->vertex((e->second + 1) % 3)->info(),e->first->vertex((e->second + 2) % 3)->info()),handles)));
     }
 
     for( auto e : L ) {
-        B.emplace( e, bisectorLength(alpha, e, handles) );
+        B.emplace( e.first, e.second);
     }
 
     }
@@ -413,8 +414,8 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     {
         Timer t;
     //Step 2: Edges in the set L are sorted by their bisector length in non-decreasing order.
-    sort( L.begin(), L.end(), [&](const auto& lhs, const auto& rhs) {
-        return B.at(lhs) < B.at(rhs);
+    sort( L.begin(), L.end(), [&](const auto &lhs, const auto &rhs) {
+        return lhs.second < rhs.second;
     });
     }
 

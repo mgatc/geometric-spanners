@@ -103,8 +103,8 @@ int main() {
 //            break;
 
     //singleRun( 0, 0, "bhsTestResult", "data-100_5000.000000x5000.000000.txt" );
-    //experiment( 100000, 50, 200, 50 );
-    scratch();
+    experiment( 100000, 100000, 1000000, 50000 );
+    //scratch();
 
     return 0;
 }

@@ -228,12 +228,14 @@ namespace gsnunf {
                               pointConeMap& AL_e_a,
                               bool printLog=false ) {
         if(printLog) cout<<"\n";
-        if(printLog) cout<<"p:"<<p<<" r:"<<r<<"\n";
+        if(printLog) cout<<"p:"<<p<<" r:"<<r<<" ";
         //Creates an edge (p,r)
         pair<size_t,size_t> e = make_pair(p, r);
 
         //Computes the cone of p containing r.
         size_t p_cone  = getCone(p, r, h);
+
+        if(printLog) cout<<"p_cone:"<<p_cone<<"\n";
 
         //Set of the canonical neighborhood of p in the cone of p containing r. (This cone will be considered as cone 0)
         vector<size_t> canNeighbors;
@@ -251,7 +253,7 @@ namespace gsnunf {
         if(printLog) cout<<endl;
 
         //Must be at least 1 edge.
-        if(canEdges > 0){
+        if(canEdges > 1){
             //Add inner edges if total neighborhood edges is 3 or more. (4.2)
             if(printLog) cout<<"4.2:";
             for(int i = 1; i < canEdges-1; i++){
@@ -291,7 +293,7 @@ namespace gsnunf {
                 const int z_cone = 1 + int(i==1)*4;
                 if( getCone(e.second, e.first, h) == cone[z_cone] ) {
                     E_CAN.push_back(e);
-                    if(printLog) cout<<e.first<<"-"<<e.second<<"["<<i<<"],";
+                    if(printLog) cout<<e.first<<"-"<<e.second<<"["<<i<<"]\\"<<cone[z_cone]<<"/,";
 
                     assert( dt.is_edge( h.at(e.second), h.at(e.first) ) );
                 }
@@ -312,7 +314,7 @@ namespace gsnunf {
                 const int z_cone = 2 + int(i==1)*2;
                 if( endpointZ[i] == blank && getCone(e.second, e.first, h) == cone[z_cone] ){
                     E_CAN.push_back(e);
-                    if(printLog) cout<<e.first<<"-"<<e.second<<"["<<i<<"],";
+                    if(printLog) cout<<e.first<<"-"<<e.second<<"["<<i<<"]\\"<<cone[z_cone]<<"/,";
 
                     assert( dt.is_edge( h.at(e.first), h.at(e.second) ) );
                 }
@@ -349,7 +351,7 @@ namespace gsnunf {
                     assert( y != w );
                     assert(dt.is_edge( h.at(*w), h.at(*y)));
                     E_CAN.emplace_back(*w, *y);
-                    if(printLog) cout<<*w<<"-"<<*y<<"["<<i<<"],";
+                    if(printLog) cout<<*w<<"-"<<*y<<"["<<i<<"]\\"<<cone[z_cone]<<"/,";
                 }
             }
             if(printLog) cout<<endl;

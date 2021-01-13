@@ -659,7 +659,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout<< ",";
     {
         Timer tim;
-        BCC2012<6>( points.begin(), points.end(), back_inserter(result), printLog );
+        BHS2018( points.begin(), points.end(), back_inserter(result), printLog );
     }
     deg = degree( result.begin(), result.end() );
     cout << deg;
@@ -676,28 +676,28 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-    if( deg > 6 || forcePrint ) {
-
-        string resultFileName = ( filename ? *filename : *generatedFile );
-        // strip file extension
-        const std::string ext(".txt");
-        if ( resultFileName != ext &&
-             resultFileName.size() > ext.size() &&
-             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
-        {
-           // if so then strip them off
-           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
-        }
-        resultFileName += "_result-";
-        resultFileName += ( filename ? "redo" : "orig" );
-
-        if( generatedFile )
-            singleRun( n, width, resultFileName, *generatedFile, true, true );
-
-        return false;
-    }
-
-    result.clear();
+//    if( deg > 6 || forcePrint ) {
+//
+//        string resultFileName = ( filename ? *filename : *generatedFile );
+//        // strip file extension
+//        const std::string ext(".txt");
+//        if ( resultFileName != ext &&
+//             resultFileName.size() > ext.size() &&
+//             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
+//        {
+//           // if so then strip them off
+//           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
+//        }
+//        resultFileName += "_result-";
+//        resultFileName += ( filename ? "redo" : "orig" );
+//
+//        if( generatedFile )
+//            singleRun( n, width, resultFileName, *generatedFile, true, true );
+//
+//        return false;
+//    }
+//
+//    result.clear();
 
     cout<<"\n";
 

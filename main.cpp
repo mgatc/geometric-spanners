@@ -102,8 +102,8 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
     //singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812.txt", true, true );
-    singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812 (copy).txt", true, true );
-    //experiment( 100000, 10, 200, 10 );
+    //singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812 (copy).txt", true, true );
+    experiment( 100000, 100000, 2000000, 100000 );
     //scratch();
 
     return 0;
@@ -522,89 +522,111 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-//    {
-//        Timer tim;
-//        BGS2005( points.begin(), points.end(), back_inserter(result) );
-//    }
+    {
+        Timer tim;
+        BGS2005( points.begin(), points.end(), back_inserter(result) );
+    }
     size_t deg;
-//    deg = degree( result.begin(), result.end() );
-//    cout << deg;
-//    cout <<",";
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
 //
     double t;
 //    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
 //    cout << t;
-//    cout <<"\n";
+    cout <<"\n";
 //
-//    result.clear();
-//
-//
-//
-//
-//
-//    cout<< points.size();
-//    cout<< ",";
-//    cout<< size;
-//    cout<< ",";
-//    {
-//        Timer tim;
-//        LW2004( points.begin(), points.end(), back_inserter(result) );
-//    }
-//    deg = degree( result.begin(), result.end() );
-//    cout << deg;
-//    cout <<",";
+    result.clear();
+
+
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    {
+        Timer tim;
+        LW2004( points.begin(), points.end(), back_inserter(result) );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    cout << t;
+    cout <<"\n";
+
+    result.clear();
+
+
+
+
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    {
+        Timer tim;
+        BSX2009( points.begin(), points.end(), back_inserter(result) );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
 //
 //    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
 //    cout << t;
-//    cout <<"\n";
-//
-//    result.clear();
-//
-//
-//
-//
-//
-//
-//
-//    cout<< points.size();
-//    cout<< ",";
-//    cout<< size;
-//    cout<< ",";
-//    {
-//        Timer tim;
-//        BSX2009( points.begin(), points.end(), back_inserter(result) );
-//    }
-//    deg = degree( result.begin(), result.end() );
-//    cout << deg;
-//    cout <<",";
-//
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-//    cout <<"\n";
-//
-//    result.clear();
-//
-//
-//
-//
-//    cout<< points.size();
-//    cout<< ",";
-//    cout<< size;
-//    cout<< ",";
-//    {
-//        Timer tim;
-//        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
-//    }
-//    deg = degree( result.begin(), result.end() );
-//    cout << deg;
-//    cout <<",";
+    cout <<"\n";
+
+    result.clear();
+
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    {
+        Timer tim;
+        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
 //
 //
 //    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
 //    cout << t;
-//    cout <<"\n";
-//
-//    result.clear();
+    cout <<"\n";
+
+    result.clear();
+
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    {
+        Timer tim;
+        BCC2012<7>( points.begin(), points.end(), back_inserter(result), printLog );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+
+//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    cout << t;
+    cout <<"\n";
+
+    result.clear();
 
 
 
@@ -624,7 +646,29 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 //    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
 //    cout << t;
-//    cout <<"\n";
+    cout <<"\n";
+
+    result.clear();
+
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    {
+        Timer tim;
+        BCC2012<6>( points.begin(), points.end(), back_inserter(result), printLog );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+
+//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    cout << t;
+    cout <<"\n";
 
     result.clear();
 

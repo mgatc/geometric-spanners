@@ -288,7 +288,7 @@ inline void wedge<6>( const Delaunay& DT,
     size_t f = i, // will hold the index in Q of the first point in Q_prime
            a = i;
 
-    // Line 5: Symmetric case, don't forget to do the opposite one too
+    // Line 5:
     switch( Q_primePos ) {
     case between_i_k:
         // Line 6-7
@@ -316,7 +316,7 @@ inline void wedge<6>( const Delaunay& DT,
             if(printLog)cout<<get_angle<K>( handles.at(Q.at(i+1))->point(),
                                          handles.at(Q.at(i))->point(),
                                          handles.at(p)->point() )<<"\n";
-            if( f+1 != k && get_angle<K>( handles.at(Q.at(i+1))->point(),
+            if( i != j && i !=k && f+1 != k && get_angle<K>( handles.at(Q.at(i+1))->point(),
                                            handles.at(Q.at(i))->point(),
                                            handles.at(p)->point() ) > FOUR_PI_OVER_SEVEN ) {
                 addToE_star.emplace_back(Q.at(i), Q.at(f+1));
@@ -344,7 +344,9 @@ inline void wedge<6>( const Delaunay& DT,
         if( i != k
          && i+1 != k
          && get_angle<K>(handles.at(Q.at(i+1))->point(), handles.at(Q.at(i))->point(), handles.at(p)->point()) > FOUR_PI_OVER_SEVEN )
+        {
             addToE_star.emplace_back( Q.at(i), Q.at(i+1) );
+        }
 
         if(printLog)if(i!=k&&i+1!=k)cout<<get_angle<K>(handles.at(Q.at(i+1))->point(), handles.at(Q.at(i))->point(), handles.at(p)->point())<<"\n";
 
@@ -365,7 +367,7 @@ inline void wedge<6>( const Delaunay& DT,
                                          handles.at(Q.at(i-1))->point() ) < FOUR_PI_OVER_SEVEN ) {
                 addToE_star.emplace_back(Q.at(f), Q.at(a));
             }
-            if( f-1 != j && get_angle<K>( handles.at(p)->point(),
+            if( i != j && i !=k && f-1 != j && get_angle<K>( handles.at(p)->point(),
                                            handles.at(Q.at(i))->point(),
                                            handles.at(Q.at(i-1))->point() ) > FOUR_PI_OVER_SEVEN ) {
                 addToE_star.emplace_back(Q.at(i), Q.at(f-1));

@@ -101,9 +101,11 @@ int main() {
 //    for( size_t i=4; i<=n; ++i )
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
+
     //singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812.txt", true, true );
     //singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812 (copy).txt", true, true );
     experiment( 100000, 100000, 2000000, 100000 );
+
     //scratch();
 
     return 0;
@@ -234,8 +236,6 @@ void scratch() {
         string filename = "data-30_2738.612788x2738.612788.txt";
         readPointsFromFile( back_inserter( points ), filename );
 
-
-
         //generateRandomPoints( n, width/2, back_inserter(points) );
         cout<< points.size();
         cout<< "\n";
@@ -272,6 +272,7 @@ void scratch() {
 
         cout << degree( result.begin(), result.end() );
         cout <<",";
+
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
 
@@ -474,6 +475,7 @@ void scratch() {
         outputFilename += to_string(points.size());
         printer.print( outputFilename );
         cout<<"\n";
+
 }
 
 bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment ) {
@@ -511,16 +513,26 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout<< ",";
 
     list< pair< Point, Point > > result;
+    size_t deg;
 
-    // Delaunay triangulation
-    //CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
-//                cout << degree(DT);
-//                cout << ",";
-//                cout << weight(DT);
-//                cout << ",";
+//    // Delaunay triangulation
+//    //CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
+////                cout << degree(DT);
+////                cout << ",";
+////                cout << weight(DT);
+////                cout << ",";
+//
+//
+//
+//
+    {
+        Timer tim;
+        BGS2005( points.begin(), points.end(), back_inserter(result) );
+    }
 
-
-
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
 
     {
         Timer tim;
@@ -535,7 +547,25 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
 //    cout << t;
     cout <<"\n";
-//
+
+    result.clear();
+
+
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    {
+        Timer tim;
+        LW2004( points.begin(), points.end(), back_inserter(result) );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
     result.clear();
 
 
@@ -563,9 +593,6 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-
-
-
     cout<< points.size();
     cout<< ",";
     cout<< size;
@@ -577,7 +604,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     deg = degree( result.begin(), result.end() );
     cout << deg;
     cout <<",";
-//
+
 //    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
 //    cout << t;
     cout <<"\n";
@@ -609,6 +636,8 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
+//    result.clear();
+
     cout<< points.size();
     cout<< ",";
     cout<< size;
@@ -622,7 +651,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout <<",";
 
 
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    double t = StretchFactorDijkstraReduction( result.begin(), result.end() );
 //    cout << t;
     cout <<"\n";
 
@@ -652,14 +681,13 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-
     cout<< points.size();
     cout<< ",";
     cout<< size;
     cout<< ",";
     {
         Timer tim;
-        BHS2018( points.begin(), points.end(), back_inserter(result), printLog );
+        BHS2017( points.begin(), points.end(), back_inserter(result), printLog );
     }
     deg = degree( result.begin(), result.end() );
     cout << deg;
@@ -703,4 +731,3 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
     return true;
 }
-

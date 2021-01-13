@@ -534,15 +534,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout << deg;
     cout <<",";
 
-    {
-        Timer tim;
-        BGS2005( points.begin(), points.end(), back_inserter(result) );
-    }
-    size_t deg;
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-//
+
     double t;
 //    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
 //    cout << t;
@@ -550,23 +542,6 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
     result.clear();
 
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        LW2004( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    result.clear();
 
 
 

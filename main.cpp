@@ -653,25 +653,6 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        BCC2012<6>( points.begin(), points.end(), back_inserter(result), printLog );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
-
-    result.clear();
-
 
 
 

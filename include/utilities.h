@@ -93,14 +93,24 @@ struct pointPairHash{
 
 struct edgeEquality{
     bool operator() (const pair<size_t, size_t> &edgeA, const pair<size_t, size_t> &edgeB) const noexcept{
-        if((edgeA.first == edgeB.first || edgeA.first == edgeB.second) && (edgeA.second == edgeB.second || edgeA.second == edgeB.first)){
-            return true;
-        }
-        return false;
+        return (edgeA.first == edgeB.first && edgeA.second == edgeB.second) || (edgeA.first == edgeB.second && edgeA.second == edgeB.first);
     }
 };
 
+struct pointConeHash{
+    size_t operator()(const pair<size_t,size_t> &PC) const noexcept{
+        size_t seed = 31;
+        boost::hash_combine(seed, PC.first);
+        boost::hash_combine(seed, PC.second);
+        return seed;
+    }
+};
 
+struct pointConeEquality{
+    bool operator()(const pair<size_t,size_t> &PCA, const pair<size_t,size_t> &PCB) const noexcept{
+        return PCA.first == PCB.first && PCA.second == PCB.second;
+    }
+};
 
 } // namespace gsnunf
 

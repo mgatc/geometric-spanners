@@ -1,18 +1,19 @@
 #include <chrono>
-#include <fstream> // reading and writing point sets
+#include <fstream> //Reading and writing point sets.
 #include <list>
 #include <limits>
 #include <optional>
 #include <utility>
 
-#include <CGAL/point_generators_2.h>                            // Random point generation, testing
+//Random point generation, testing.
+#include <CGAL/point_generators_2.h>
 
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
 #include "FloydWarshall.h"
 #include "GeometricSpannerPrinter.h"
-//#include "GraphAlgoTV.h"
+#include "GraphAlgoTV.h"
 #include "BGS2005.h"
 #include "LW2004.h"
 #include "BSX2009.h"
@@ -103,7 +104,7 @@ int main() {
 //            break;
 
     //singleRun( 0, 0, "bhsTestResult", "data-100_5000.000000x5000.000000.txt" );
-    experiment( 100, 10000, 1000000, 10000 );
+    experiment( 100000, 100000, 1000000, 10000 );
     //scratch();
 
     return 0;
@@ -481,9 +482,12 @@ bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment )
     const double width = 1000;
 
     size_t invalid = 0;
+    size_t trialNum = 1;
 
     for( size_t trial=0; trial<trials; ++trial ) {
         for( size_t n=n_start; n<=n_end; n+=increment ) {
+            cout << "Trial:" << trialNum << "\n";
+            trialNum++;
             if( !singleRun( n, width*sqrt(n), "output", nullopt, false, false ) ) {
                 ++invalid;
                 return false;
@@ -506,107 +510,107 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     else
         generatedFile = make_optional( generateRandomPoints( n, size, back_inserter(points) ) );
 
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
 
     list< pair< Point, Point > > result;
     size_t deg;
 
-//    // Delaunay triangulation
-//    //CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
-////                cout << degree(DT);
-////                cout << ",";
-////                cout << weight(DT);
-////                cout << ",";
+////    // Delaunay triangulation
+////    //CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
+//////                cout << degree(DT);
+//////                cout << ",";
+//////                cout << weight(DT);
+//////                cout << ",";
+////
+////
+////
+////
+//    {
+//        Timer tim;
+//        BGS2005( points.begin(), points.end(), back_inserter(result) );
+//    }
 //
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
 //
+//    double t;
+////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+////    cout << t;
+//    cout <<"\n";
 //
-//
-    {
-        Timer tim;
-        BGS2005( points.begin(), points.end(), back_inserter(result) );
-    }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    double t;
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
-
-    result.clear();
-
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        LW2004( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-//
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
-//
-    result.clear();
+//    result.clear();
 //
 //
 //
 //
 //
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    {
+//        Timer tim;
+//        LW2004( points.begin(), points.end(), back_inserter(result) );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+////
+////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+////    cout << t;
+//    cout <<"\n";
+////
+//    result.clear();
+////
+////
+////
+////
+////
+////
+////
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    {
+//        Timer tim;
+//        BSX2009( points.begin(), points.end(), back_inserter(result) );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+////    cout << t;
+//    cout <<"\n";
+//
+//    result.clear();
 //
 //
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        BSX2009( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
-
-    result.clear();
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
 //
 //
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
-//
-    result.clear();
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    {
+//        Timer tim;
+//        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+////
+////
+////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+////    cout << t;
+//    cout <<"\n";
+////
+//    result.clear();
 
 
 
@@ -648,8 +652,6 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout <<"\n";
 
     result.clear();
-
-
 
 
 

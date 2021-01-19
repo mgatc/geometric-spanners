@@ -103,15 +103,12 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
 
-<<<<<<< HEAD
     //singleRun( 0, 0, "bhsTestResult", "data-100_5000.000000x5000.000000.txt" );
     experiment( 100000, 100000, 1000000, 10000 );
-=======
     //singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812.txt", true, true );
     //singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812 (copy).txt", true, true );
     experiment( 100000, 100000, 2000000, 100000 );
 
->>>>>>> e44eb03bd22a93ae9c103039942c4a1909f89eb1
     //scratch();
 
     return 0;
@@ -543,7 +540,6 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout << deg;
 //    cout <<",";
 //
-<<<<<<< HEAD
 //    double t;
 ////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
 ////    cout << t;
@@ -620,7 +616,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    result.clear();
 
 
-=======
+
     {
         Timer tim;
         BGS2005( points.begin(), points.end(), back_inserter(result) );
@@ -701,7 +697,6 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
 //    cout << t;
     cout <<"\n";
->>>>>>> e44eb03bd22a93ae9c103039942c4a1909f89eb1
 
     result.clear();
 
@@ -731,9 +726,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-<<<<<<< HEAD
     if( deg > 8 || forcePrint ) {
-=======
 
     cout<< points.size();
     cout<< ",";
@@ -753,7 +746,6 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout <<"\n";
 
     result.clear();
->>>>>>> e44eb03bd22a93ae9c103039942c4a1909f89eb1
 
 
 
@@ -807,4 +799,5 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout<<"\n";
 
     return true;
+}
 }

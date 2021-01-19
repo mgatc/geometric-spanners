@@ -42,15 +42,18 @@ typedef Delaunay::Point                                             Point;
 typedef Delaunay::Finite_vertices_iterator                          Finite_vertices_iterator;
 typedef Delaunay::Finite_edges_iterator                             Finite_edges_iterator;
 
+
+enum Q_primePosition  { between_j_i=0, between_i_k=1, not_set=2 };
+
 inline K::FT edgeLength( const vector<Vertex_handle>& H, const pair<size_t,size_t>& e ) {
     return distance( H[e.first]->point(), H[e.second]->point() );
 }
 
 inline size_t getCone( const vector<Vertex_handle>& handles,
                        const vector<size_t>& closest,
-                       const size_t& p,
-                       const size_t& q,
-                       const double& alpha ) {
+                       const size_t p,
+                       const size_t q,
+                       const double alpha ) {
     return size_t( get_angle<bcc2012::K>(
             handles.at(closest.at(p))->point(),
             handles.at(p)->point(),
@@ -59,7 +62,7 @@ inline size_t getCone( const vector<Vertex_handle>& handles,
     );
 }
 
-inline size_t getPreviousCone( const size_t& cone, const size_t& numCones ) {
+inline size_t getPreviousCone( const size_t cone, const size_t numCones ) {
     return (cone-1+numCones)%numCones;
 }
 
@@ -215,7 +218,8 @@ inline void wedge<6>( const Delaunay& DT,
     while( ++N_p != handles[q] ); // point to q aka q_i
 
     while( !DT.is_infinite(++N_p) // move CCW until we leave the cone
-        && getCone(handles, closest, p, N_p->info(), ALPHA) == cone );
+        && ( getCone(handles, closest, p, N_p->info(), ALPHA) == cone
+            || N_p->info() == q ) );
 
     vector<size_t> Q; // the ordered neighbors in the current cone
 
@@ -238,7 +242,6 @@ inline void wedge<6>( const Delaunay& DT,
         if( Q[n] == q )
             i = n;
 
-    enum Q_primePosition  { between_j_i=0, between_i_k=1, not_set=2 };
 
     Q_primePosition Q_primePos = not_set;
 
@@ -525,7 +528,7 @@ void BCC2012( RandomAccessIterator pointsBegin,
 
     // Edge list is only needed for printing. Remove for production.
     vector< pair<Point,Point> > edgeList;
-    edgeList.reserve( E.size()+E_star.size() );
+    edgeList.reserve( E.size() );
 
     // Send resultant graph to output iterator
     for( auto e : E ) {

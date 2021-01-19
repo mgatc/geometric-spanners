@@ -679,6 +679,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
+
 //    if( deg > 6 || forcePrint ) {
 //
 //        string resultFileName = ( filename ? *filename : *generatedFile );

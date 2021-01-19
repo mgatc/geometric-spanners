@@ -197,11 +197,13 @@ size_t degree( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) 
     auto max_el = (*max_element( adj.begin(), adj.end(), [&] ( const auto& lhs, const auto& rhs ) {
         return lhs.second.size() < rhs.second.size();
     }));
-    //cout<<"max_el: "<<max_el.first<<"\n";
+
+//    cout<<"max_el: "<<max_el.first<<"\n";
 //    for( auto q : max_el.second) {
 //        cout<<q<<",";
 //    }
-    //cout<<"\n";
+//    cout<<"\n";
+
     return max_el.second.size();
 }
 

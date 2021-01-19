@@ -103,8 +103,15 @@ int main() {
 //        if( !experiment( 1, i, i*1000, i*100 ) )
 //            break;
 
+<<<<<<< HEAD
     //singleRun( 0, 0, "bhsTestResult", "data-100_5000.000000x5000.000000.txt" );
     experiment( 100000, 100000, 1000000, 10000 );
+=======
+    //singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812.txt", true, true );
+    //singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812 (copy).txt", true, true );
+    experiment( 100000, 100000, 2000000, 100000 );
+
+>>>>>>> e44eb03bd22a93ae9c103039942c4a1909f89eb1
     //scratch();
 
     return 0;
@@ -117,9 +124,9 @@ void scratch() {
     size_t i=30;
 //
 //    //for( i=1; i<=17; ++i ) {
-        //auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
-        //auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
-        //auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
+        auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
+        auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
+        auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
         auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
         vector<Point> points;
         // SET POINT SET
@@ -222,18 +229,18 @@ void scratch() {
 //            -1.05,-4.2
 //        },
 //    };
-        int n = 101;
+        size_t n = 40;
 
 //        std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
 //        std::copy_n( g3, n/6, back_inserter(points) );
 //        std::copy_n( g4, n, back_inserter(points) );
 //        points.emplace_back( 0,0 );
+//        points.emplace_back(1, 13 );
 
 
-        string filename = "data-100_5000.000000x5000.000000.txt";
+        string filename = "data-30_2738.612788x2738.612788.txt";
         readPointsFromFile( back_inserter( points ), filename );
-
 
         //generateRandomPoints( n, width/2, back_inserter(points) );
         cout<< points.size();
@@ -257,23 +264,21 @@ void scratch() {
 //                cout<<",";
 
         {
+
 //                Timer tim;
             //LW2004_3( points.begin(), points.end(), back_inserter(result), PI/2, true );
             //BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3, true );
             //BGS2002( points.begin(), points.end(), back_inserter(result) );
             //KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
-            //BCC2012_7( points.begin(), points.end(), back_inserter(result), true );
-            BHS2017(points.begin(), points.end(), back_inserter(result), true );
+            BCC2012<6>( points.begin(), points.end(), back_inserter(result), true );
 
         }
 
        //Johnsons( result.begin(), result.end() );
 
-//        cout << degree( result.begin(), result.end() );
-//        double t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//        cout<< t;
-//        cout<<",";
-        //cout <<",";
+        cout << degree( result.begin(), result.end() );
+        cout <<",";
+
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
 
@@ -442,40 +447,41 @@ void scratch() {
 //        resultFileName += "_result-";
 //        resultFileName += "redo";
 
-//       // singleRun( 30, 30, resultFileName, filename, true, true );
-//        GraphPrinter printer(0.7);
-//        GraphPrinter::OptionsList options;
-//
-//        options = {
-//            { "color", printer.inactiveEdgeColor },
-//            { "line width", to_string(printer.inactiveEdgeWidth) }
-//        };
-//        printer.drawEdges( Del, options );
-//
-//        options = { // active edge options
-//            { "color", printer.activeEdgeColor },
-//            { "line width", to_string(printer.activeEdgeWidth) }
-//        };
-//        printer.drawEdges( result.begin(), result.end(), options );
-//
-//
-//        options = {
-//            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
-//            { "color", make_optional( printer.backgroundColor ) }, // text color
-//            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
-//            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-//        };
-//        GraphPrinter::OptionsList borderOptions = {
-//            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
-//            { "color", printer.activeEdgeColor }, // additional border color
-//            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-//        };
-//        printer.drawVerticesWithInfo( Del, options, borderOptions );
-//
-//        string outputFilename = "rand";
-//        outputFilename += points.size();
-//        //printer.print( outputFilename );
-//        cout<<"\n";
+       // singleRun( 30, 30, resultFileName, filename, true, true );
+        GraphPrinter printer(0.7);
+        GraphPrinter::OptionsList options;
+
+        options = {
+            { "color", printer.inactiveEdgeColor },
+            { "line width", to_string(printer.inactiveEdgeWidth) }
+        };
+        printer.drawEdges( Del, options );
+
+        options = { // active edge options
+            { "color", printer.activeEdgeColor },
+            { "line width", to_string(printer.activeEdgeWidth) }
+        };
+        printer.drawEdges( result.begin(), result.end(), options );
+
+
+        options = {
+            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+            { "color", make_optional( printer.backgroundColor ) }, // text color
+            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+        };
+        GraphPrinter::OptionsList borderOptions = {
+            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
+            { "color", printer.activeEdgeColor }, // additional border color
+            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+        };
+        printer.drawVerticesWithInfo( Del, options, borderOptions );
+
+        string outputFilename = "rand";
+        outputFilename += to_string(points.size());
+        printer.print( outputFilename );
+        cout<<"\n";
+
 }
 
 bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment ) {
@@ -537,6 +543,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout << deg;
 //    cout <<",";
 //
+<<<<<<< HEAD
 //    double t;
 ////    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
 ////    cout << t;
@@ -613,24 +620,93 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    result.clear();
 
 
+=======
+    {
+        Timer tim;
+        BGS2005( points.begin(), points.end(), back_inserter(result) );
+    }
+
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
 
 
-//    cout<< points.size();
-//    cout<< ",";
-//    cout<< size;
-//    cout<< ",";
-//    {
-//        Timer tim;
-//        BCC2012_7( points.begin(), points.end(), back_inserter(result), printLog );
-//    }
-//    deg = degree( result.begin(), result.end() );
-//    cout << deg;
-//    cout <<",";
+    double t;
+//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    cout << t;
+    cout <<"\n";
 
+    result.clear();
+
+
+
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    {
+        Timer tim;
+        LW2004( points.begin(), points.end(), back_inserter(result) );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
 
 //    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
 //    cout << t;
-//    cout <<"\n";
+    cout <<"\n";
+
+    result.clear();
+
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    {
+        Timer tim;
+        BSX2009( points.begin(), points.end(), back_inserter(result) );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    cout << t;
+    cout <<"\n";
+
+    result.clear();
+
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    {
+        Timer tim;
+        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+//
+//
+//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    cout << t;
+    cout <<"\n";
+>>>>>>> e44eb03bd22a93ae9c103039942c4a1909f89eb1
+
+    result.clear();
+
+
+
 
 //    result.clear();
 
@@ -640,7 +716,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout<< ",";
     {
         Timer tim;
-        BHS2017( points.begin(), points.end(), back_inserter(result), printLog );
+        BCC2012<7>( points.begin(), points.end(), back_inserter(result), printLog );
     }
     deg = degree( result.begin(), result.end() );
     cout << deg;
@@ -655,29 +731,78 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
+<<<<<<< HEAD
     if( deg > 8 || forcePrint ) {
+=======
 
-        string resultFileName = ( filename ? *filename : *generatedFile );
-        // strip file extension
-        const std::string ext(".txt");
-        if ( resultFileName != ext &&
-             resultFileName.size() > ext.size() &&
-             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
-        {
-           // if so then strip them off
-           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
-        }
-        resultFileName += "_result-";
-        resultFileName += ( filename ? "redo" : "orig" );
-
-        cout << "DEGREE ERROR!!! DEGREE:" << deg << "\n"<<endl;
-        if( generatedFile )
-            singleRun( n, width, resultFileName, *generatedFile, true, true );
-
-        return false;
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    {
+        Timer tim;
+        BCC2012<6>( points.begin(), points.end(), back_inserter(result), printLog );
     }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+
+//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    cout << t;
+    cout <<"\n";
 
     result.clear();
+>>>>>>> e44eb03bd22a93ae9c103039942c4a1909f89eb1
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    {
+        Timer tim;
+        BHS2017( points.begin(), points.end(), back_inserter(result), printLog );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+
+//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    cout << t;
+    cout <<"\n";
+
+    result.clear();
+
+
+
+
+
+
+//    if( deg > 6 || forcePrint ) {
+//
+//        string resultFileName = ( filename ? *filename : *generatedFile );
+//        // strip file extension
+//        const std::string ext(".txt");
+//        if ( resultFileName != ext &&
+//             resultFileName.size() > ext.size() &&
+//             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
+//        {
+//           // if so then strip them off
+//           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
+//        }
+//        resultFileName += "_result-";
+//        resultFileName += ( filename ? "redo" : "orig" );
+//
+//        if( generatedFile )
+//            singleRun( n, width, resultFileName, *generatedFile, true, true );
+//
+//        return false;
+//    }
+//
+//    result.clear();
 
     cout<<"\n";
 

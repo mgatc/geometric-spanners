@@ -218,7 +218,8 @@ inline void wedge<6>( const Delaunay& DT,
     while( ++N_p != handles[q] ); // point to q aka q_i
 
     while( !DT.is_infinite(++N_p) // move CCW until we leave the cone
-        && getCone(handles, closest, p, N_p->info(), ALPHA) == cone );
+        && ( getCone(handles, closest, p, N_p->info(), ALPHA) == cone
+            || N_p->info() == q ) );
 
     vector<size_t> Q; // the ordered neighbors in the current cone
 

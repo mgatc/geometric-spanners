@@ -30,18 +30,13 @@ namespace delaunay {
 
     using namespace CGAL;
 
-    typedef CGAL::Exact_predicates_inexact_constructions_kernel         Gt;
+    typedef CGAL::Exact_predicates_inexact_constructions_kernel         Epick;
 
     template< class Geom_traits >
-    class TriangularDistanceDelaunayTriangulationTraits_2 : public Geom_traits {
+    class StandardDelaunayTriangulationTraits_2 : public Geom_traits {
       public:
         typedef typename Geom_traits::Point_2       Point_2;
         typedef typename Geom_traits::FT            FT;
-//        typedef typename Geom_traits::Segment_2     Segment_2;
-//        typedef typename Geom_traits::Triangle_2    Triangle_2;
-//        typedef typename Geom_traits::Orientation_2 Orientation_2;
-//        typedef typename Geom_traits::Compare_x_2   Compare_x_2;
-//        typedef typename Geom_traits::Compare_y_2   Compare_y_2;
 
         struct Side_of_oriented_circle_2 {
             Oriented_side operator()( const Point_2& p,
@@ -78,9 +73,9 @@ namespace delaunay {
         Side_of_oriented_circle_2 side_of_oriented_circle_2_object() const {
             return Side_of_oriented_circle_2();
         }
-
     };
-    typedef TriangularDistanceDelaunayTriangulationTraits_2<Gt>         K;
+
+    typedef StandardDelaunayTriangulationTraits_2<Epick>                K;
     typedef CGAL::Triangulation_vertex_base_with_info_2<size_t, K>      Vb;
     typedef CGAL::Triangulation_face_base_2<K>                          Fb;
     typedef CGAL::Triangulation_data_structure_2<Vb, Fb>                Tds;

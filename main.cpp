@@ -234,10 +234,10 @@ void scratch() {
 //        points.emplace_back(1, 13 );
 
 
-//        string filename = "data-30_2738.612788x2738.612788.txt";
-//        readPointsFromFile( back_inserter( points ), filename );
+        string filename = "data-30_50.000000x50.000000.txt";
+        readPointsFromFile( back_inserter( points ), filename );
 
-        generateRandomPoints( n, width/2, back_inserter(points) );
+        //generateRandomPoints( n, width/2, back_inserter(points) );
         cout<< points.size();
         cout<< "\n";
         list< pair< Point, Point > > result;

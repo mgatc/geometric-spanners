@@ -21,6 +21,7 @@
 #include "BCC2012.h"
 #include "BHS2017.h"
 #include "metrics.h"
+#include "delaunay.h"
 //#include "utilities.h"
 
 using namespace gsnunf;
@@ -273,8 +274,8 @@ void scratch() {
        //Johnsons( result.begin(), result.end() );
 
 
-        cout << degree( result.begin(), result.end() );
-        cout <<",";
+//        cout << degree( result.begin(), result.end() );
+//        cout <<",";
 
 //        cout << degree( result.begin(), result.end() );
 //        double t = StretchFactorDijkstraReduction( result.begin(), result.end() );

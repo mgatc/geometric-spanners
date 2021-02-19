@@ -105,8 +105,8 @@ int main() {
 
     //singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812.txt", true, true );
     //singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812 (copy).txt", true, true );
-    experiment( 100000, 100000, 2000000, 100000 );
-    //scratch();
+    //experiment( 100000, 100000, 2000000, 100000 );
+    scratch();
 
     return 0;
 }
@@ -233,10 +233,10 @@ void scratch() {
 //        points.emplace_back(1, 13 );
 
 
-        string filename = "data-30_2738.612788x2738.612788.txt";
-        readPointsFromFile( back_inserter( points ), filename );
+//        string filename = "data-30_2738.612788x2738.612788.txt";
+//        readPointsFromFile( back_inserter( points ), filename );
 
-        //generateRandomPoints( n, width/2, back_inserter(points) );
+        generateRandomPoints( n, width/2, back_inserter(points) );
         cout<< points.size();
         cout<< "\n";
         list< pair< Point, Point > > result;
@@ -260,14 +260,14 @@ void scratch() {
         {
 
 //                Timer tim;
-            LW2004( points.begin(), points.end(), back_inserter(result) );
-            BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3, true );
-            BGS2005( points.begin(), points.end(), back_inserter(result) );
-            KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
-            BCC2012<6>( points.begin(), points.end(), back_inserter(result), true );
-            BCC2012<7>( points.begin(), points.end(), back_inserter(result), true );
-            BHS2017(points.begin(), points.end(), back_inserter(result), true );
-
+//            LW2004( points.begin(), points.end(), back_inserter(result) );
+//            BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3, true );
+//            BGS2005( points.begin(), points.end(), back_inserter(result) );
+//            KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
+//            BCC2012<6>( points.begin(), points.end(), back_inserter(result), true );
+//            BCC2012<7>( points.begin(), points.end(), back_inserter(result), true );
+//            BHS2017(points.begin(), points.end(), back_inserter(result), true );
+            delaunay_testing( points.begin(), points.end(), back_inserter(result) );
         }
 
        //Johnsons( result.begin(), result.end() );

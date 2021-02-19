@@ -43,6 +43,13 @@ namespace delaunay {
                                       const Point_2& q,
                                       const Point_2& r,
                                       const Point_2& s ) {
+
+                /* IF USING THIS CLASS AS A MODEL TO IMPLEMENT
+                 * AN EXOTIC DELAUNAY CONDITION, IMPLEMENT YOUR
+                 * PREDICATE HERE AND RETURN THE APPROPRIATE
+                 * Oriented_side
+                 */
+
                 FT px = p.x();
                 FT py = p.y();
                 FT qx = q.x();
@@ -51,10 +58,10 @@ namespace delaunay {
                 FT ry = r.y();
                 FT tx = s.x();
                 FT ty = s.y();
-                  //  sign_of_determinant(px, py, px*px + py*py, 1,
-                //                         qx, qy, qx*qx + qy*qy, 1,
-                //                         rx, ry, rx*rx + ry*ry, 1,
-                //                         tx, ty, tx*tx + ty*ty, 1);
+                //  sign_of_determinant(px, py, px*px + py*py, 1,
+                //                      qx, qy, qx*qx + qy*qy, 1,
+                //                      rx, ry, rx*rx + ry*ry, 1,
+                //                      tx, ty, tx*tx + ty*ty, 1);
                 // We first translate so that p is the new origin.
                 FT qpx = qx-px;
                 FT qpy = qy-py;

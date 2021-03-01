@@ -101,46 +101,71 @@ namespace delaunay {
                  * Oriented_side
                  */
 
-                FT px = p.x();
-                FT py = p.y();
-                FT qx = q.x();
-                FT qy = q.y();
-                FT rx = r.x();
-                FT ry = r.y();
-                FT sx = s.x();
-                FT sy = s.y();
+//                FT px = p.x();
+//                FT py = p.y();
+//                FT qx = q.x();
+//                FT qy = q.y();
+//                FT rx = r.x();
+//                FT ry = r.y();
+//                FT sx = s.x();
+//                FT sy = s.y();
 
-                vector points{ p, q, r };
+                vector<pair<Point_2, Point_2>> triEdges = {{p,q}, {p,r}, {q,r}};
+                const vector<double> orthBisectorSlopes{ 0, -1*COT30, COT30, 0, -1*COT30, COT30 };
 
-                sort( points.begin(), points.end(), [] ( const auto& lhs, const auto& rhs ) {
-                    return lhs.y() < rhs.y() || ( lhs.y()==rhs.y() && lhs.x() < rhs.x() );
-                });
+                //Finds the cone of p containing vertex q, for this algorithm all vertices have 6 cones (0-5) with an angle of (PI/3).
+                const double alpha = PI/3; // 60 Degree for equalateral triangle.
+                Point_2 focus, opPoint, refPoint;
+                double theta;
+                size_t cone, coneS;
 
-                FT y_min = points.front().y();
-                FT x_min = points.front().x();
-                FT x_max = x_min;
+                for(auto e: triEdges){
+                    // a w.r.t. b
+                    focus = e.first;
+                    opPoint = e.second;
+                    refPoint = Point( e.first.x() - TAN30, e.first.y() + 1 );
+                    theta = get_angle<Geom_traits>(refPoint, e.first, e.second);
+                    cone = (theta / alpha);
 
-                for( auto v_i : points ) {
-                    FT h_i = v_i.y() - y_min;
-                    FT p_i = h_i * TAN30;
-                    x_min = CGAL::min( x_min, (v_i.x()-p_i) );
-                    x_max = CGAL::max( x_max, (v_i.x()+p_i) );
+                    if(cone % 2){
+                        // b W.r.t a
+                        focus = e.second;
+                        opPoint = e.first;
+                        refPoint = Point( e.second.x() - TAN30, e.second.y() + 1 );
+                        theta = get_angle<Geom_traits>(refPoint, e.second, e.first);
+                        cone = (theta / alpha);
+
+                    }
+
+                    //Find where s is
+                    theta = get_angle<Geom_traits>(refPoint, focus, s);
+                    coneS = (theta / alpha);
+
+                    if(cone == coneS){
+
+                        double bisectorLenOP = bisectorLength({focus, opPoint}, orthBisectorSlopes[cone]);
+                        double bisectorLenS = bisectorLength({focus, s}, orthBisectorSlopes[cone]);
+
+                        if( bisectorLenS < bisectorLenOP){
+                            return ON_POSITIVE_SIDE;
+                        }
+
+
+                    }
+
+
                 }
 
-                Point_2 a( x_min, y_min );
-                Point_2 b( x_max, y_min );
-                Point_2 c( (x_min+x_max)/2, (x_max-x_min)*COS30 );
+                return ON_NEGATIVE_SIDE;
 
-                // find the circumtriangle of pqr
-                CGAL::Triangle_2<Epick> circum(a,b,c);
-
-                return circum.oriented_side(s);
             }
         };
         Side_of_oriented_circle_2 side_of_oriented_circle_2_object() const {
             return Side_of_oriented_circle_2();
         }
     };
+
+
 
     //typedef TriangularDistanceDelaunayTriangulationTraits_2<Epick>                K;
     typedef Epick                                                       K;
@@ -154,8 +179,27 @@ namespace delaunay {
     typedef CGAL::Vector_2<K>                                           Vector_2;
     typedef Delaunay::Finite_vertices_iterator                          Finite_vertices_iterator;
     typedef Delaunay::Finite_edges_iterator                             Finite_edges_iterator;
+    typedef CGAL::Line_2<K>                                             Line;
+    typedef Delaunay::Point                                             Point;
 
+    //Finds the bisector length of a given edge.
+    inline K::FT bisectorLength(const pair<Point,Point> &e, double slope) {
 
+        double xCord = e.first.x();
+        double yCord = e.first.y() + 1;
+
+        xCord = xCord - slope;
+
+        Point bisectorPoint(xCord, yCord);
+
+        Line bisectorLine(e.first, bisectorPoint);
+
+        Point intersectionPoint = bisectorLine.projection(e.second);
+
+        double bisectorLen = gsnunf::distance(e.first, intersectionPoint);
+
+        return bisectorLen;
+    }
 }
 
 // alpha is set to pi/2

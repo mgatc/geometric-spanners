@@ -26,6 +26,7 @@ const double SIX_PI_OVER_SEVEN = 6*PI / 7;
 const double FOUR_PI_OVER_SEVEN = 4*PI / 7;
 const double TAN30 = tan(PI / 6);
 const double COS30 = cos(PI / 6);
+const double COT30 = 1/TAN30;
 
 
 
@@ -113,6 +114,9 @@ struct pointConeEquality{
         return PCA.first == PCB.first && PCA.second == PCB.second;
     }
 };
+
+
+
 
 } // namespace gsnunf
 

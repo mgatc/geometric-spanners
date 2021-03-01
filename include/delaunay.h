@@ -88,6 +88,9 @@ namespace delaunay {
       public:
         typedef typename Geom_traits::Point_2       Point_2;
         typedef typename Geom_traits::FT            FT;
+        typedef typename Geom_traits::Line_2        Line_2;
+
+
 
         struct Side_of_oriented_circle_2 {
             Oriented_side operator()( const Point_2& p,
@@ -123,7 +126,7 @@ namespace delaunay {
                     // a w.r.t. b
                     focus = e.first;
                     opPoint = e.second;
-                    refPoint = Point( e.first.x() - TAN30, e.first.y() + 1 );
+                    refPoint = Point_2( e.first.x() - TAN30, e.first.y() + 1 );
                     theta = get_angle<Geom_traits>(refPoint, e.first, e.second);
                     cone = (theta / alpha);
 
@@ -131,7 +134,7 @@ namespace delaunay {
                         // b W.r.t a
                         focus = e.second;
                         opPoint = e.first;
-                        refPoint = Point( e.second.x() - TAN30, e.second.y() + 1 );
+                        refPoint = Point_2( e.second.x() - TAN30, e.second.y() + 1 );
                         theta = get_angle<Geom_traits>(refPoint, e.second, e.first);
                         cone = (theta / alpha);
 
@@ -159,6 +162,25 @@ namespace delaunay {
                 return ON_NEGATIVE_SIDE;
 
             }
+
+            //Finds the bisector length of a given edge.
+            inline typename Geom_traits::FT bisectorLength(const pair<Point_2,Point_2> &e, double slope) {
+
+                typename Geom_traits::FT xCord = e.first.x();
+                typename Geom_traits::FT yCord = e.first.y() + 1;
+
+                xCord = xCord - slope;
+
+                Point_2 bisectorPoint(xCord, yCord);
+
+                Line_2 bisectorLine(e.first, bisectorPoint);
+
+                Point_2 intersectionPoint = bisectorLine.projection(e.second);
+
+                typename Geom_traits::FT bisectorLen = gsnunf::distance(e.first, intersectionPoint);
+
+                return bisectorLen;
+            }
         };
         Side_of_oriented_circle_2 side_of_oriented_circle_2_object() const {
             return Side_of_oriented_circle_2();
@@ -167,8 +189,8 @@ namespace delaunay {
 
 
 
-    //typedef TriangularDistanceDelaunayTriangulationTraits_2<Epick>                K;
-    typedef Epick                                                       K;
+    typedef TriangularDistanceDelaunayTriangulationTraits_2<Epick>                K;
+    //typedef Epick                                                       K;
     typedef CGAL::Triangulation_vertex_base_with_info_2<size_t, K>      Vb;
     typedef CGAL::Triangulation_face_base_2<K>                          Fb;
     typedef CGAL::Triangulation_data_structure_2<Vb, Fb>                Tds;
@@ -179,27 +201,9 @@ namespace delaunay {
     typedef CGAL::Vector_2<K>                                           Vector_2;
     typedef Delaunay::Finite_vertices_iterator                          Finite_vertices_iterator;
     typedef Delaunay::Finite_edges_iterator                             Finite_edges_iterator;
-    typedef CGAL::Line_2<K>                                             Line;
-    typedef Delaunay::Point                                             Point;
+    typedef K::Line_2                                            Line;
+    typedef K::Point_2                                           Point;
 
-    //Finds the bisector length of a given edge.
-    inline K::FT bisectorLength(const pair<Point,Point> &e, double slope) {
-
-        double xCord = e.first.x();
-        double yCord = e.first.y() + 1;
-
-        xCord = xCord - slope;
-
-        Point bisectorPoint(xCord, yCord);
-
-        Line bisectorLine(e.first, bisectorPoint);
-
-        Point intersectionPoint = bisectorLine.projection(e.second);
-
-        double bisectorLen = gsnunf::distance(e.first, intersectionPoint);
-
-        return bisectorLen;
-    }
 }
 
 // alpha is set to pi/2

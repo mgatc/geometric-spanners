@@ -14,10 +14,10 @@
 				<Compiler>
 					<Add option="-Wextra" />
 					<Add option="-Wall" />
+					<Add option="-g" />
 					<Add option="-std=c++17" />
 					<Add option="-frounding-math" />
 					<Add option="-fexceptions" />
-					<Add option="-g" />
 					<Add directory="include" />
 				</Compiler>
 				<Linker>
@@ -25,7 +25,8 @@
 					<Add library="boost_thread" />
 					<Add library="boost_system" />
 					<Add library="mpfr" />
-					<Add library="-I/usr/include/CGAL" />
+					<Add library="CGAL" />
+					<Add directory="/usr/include/CGAL/" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -82,11 +83,14 @@
 		<Unit filename="include/GraphAlgoTV.h" />
 		<Unit filename="include/KPX2010.h" />
 		<Unit filename="include/LW2004.h" />
+		<Unit filename="include/delaunay.h" />
 		<Unit filename="include/metrics.h" />
 		<Unit filename="include/utilities.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<envvars set="openmp" />
+			<code_completion />
+			<debugger />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

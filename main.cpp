@@ -224,20 +224,24 @@ void scratch() {
 //            -1.05,-4.2
 //        },
 //    };
-        size_t n = 40;
+        size_t n = 10;
 
 //        std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
 //        std::copy_n( g3, n/6, back_inserter(points) );
 //        std::copy_n( g4, n, back_inserter(points) );
 //        points.emplace_back( 0,0 );
-//        points.emplace_back(1, 13 );
+//        points.emplace_back( 0,1 );
+//        points.emplace_back( 1,0 );
+//        points.emplace_back( 1,1 );
+//        points.emplace_back( 2,1 );
 
 
-//        string filename = "data-30_50.000000x50.000000.txt";
-//        readPointsFromFile( back_inserter( points ), filename );
 
-        generateRandomPoints( n, width/2, back_inserter(points) );
+        string filename = "data-10_2.500000x2.500000.txt";
+        readPointsFromFile( back_inserter( points ), filename );
+
+//        generateRandomPoints( n, width/2, back_inserter(points) );
         cout<< points.size();
         cout<< "\n";
         list< pair< Point, Point > > result;

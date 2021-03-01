@@ -14,6 +14,7 @@
 #include <CGAL/Delaunay_triangulation_2.h>
 //#include <CGAL/DelaunayTriangulationTraits_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Triangle_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/utils.h> // min, max
 #include <CGAL/Vector_2.h>
@@ -82,7 +83,67 @@ namespace delaunay {
         }
     };
 
-    typedef StandardDelaunayTriangulationTraits_2<Epick>                K;
+    template< class Geom_traits >
+    class TriangularDistanceDelaunayTriangulationTraits_2 : public Geom_traits {
+      public:
+        typedef typename Geom_traits::Point_2       Point_2;
+        typedef typename Geom_traits::FT            FT;
+
+        struct Side_of_oriented_circle_2 {
+            Oriented_side operator()( const Point_2& p,
+                                      const Point_2& q,
+                                      const Point_2& r,
+                                      const Point_2& s ) {
+
+                /* IF USING THIS CLASS AS A MODEL TO IMPLEMENT
+                 * AN EXOTIC DELAUNAY CONDITION, IMPLEMENT YOUR
+                 * PREDICATE HERE AND RETURN THE APPROPRIATE
+                 * Oriented_side
+                 */
+
+                FT px = p.x();
+                FT py = p.y();
+                FT qx = q.x();
+                FT qy = q.y();
+                FT rx = r.x();
+                FT ry = r.y();
+                FT sx = s.x();
+                FT sy = s.y();
+
+                vector points{ p, q, r };
+
+                sort( points.begin(), points.end(), [] ( const auto& lhs, const auto& rhs ) {
+                    return lhs.y() < rhs.y() || ( lhs.y()==rhs.y() && lhs.x() < rhs.x() );
+                });
+
+                FT y_min = points.front().y();
+                FT x_min = points.front().x();
+                FT x_max = x_min;
+
+                for( auto v_i : points ) {
+                    FT h_i = v_i.y() - y_min;
+                    FT p_i = h_i * TAN30;
+                    x_min = CGAL::min( x_min, (v_i.x()-p_i) );
+                    x_max = CGAL::max( x_max, (v_i.x()+p_i) );
+                }
+
+                Point_2 a( x_min, y_min );
+                Point_2 b( x_max, y_min );
+                Point_2 c( (x_min+x_max)/2, (x_max-x_min)*COS30 );
+
+                // find the circumtriangle of pqr
+                CGAL::Triangle_2<Epick> circum(a,b,c);
+
+                return circum.oriented_side(s);
+            }
+        };
+        Side_of_oriented_circle_2 side_of_oriented_circle_2_object() const {
+            return Side_of_oriented_circle_2();
+        }
+    };
+
+    //typedef TriangularDistanceDelaunayTriangulationTraits_2<Epick>                K;
+    typedef Epick                                                       K;
     typedef CGAL::Triangulation_vertex_base_with_info_2<size_t, K>      Vb;
     typedef CGAL::Triangulation_face_base_2<K>                          Fb;
     typedef CGAL::Triangulation_data_structure_2<Vb, Fb>                Tds;
@@ -146,7 +207,7 @@ void delaunay_testing( RandomAccessIterator pointsBegin, RandomAccessIterator po
 //        };
 //        printer.drawVerticesWithInfo( T, options, borderOptions );
 
-        printer.print( "delaunay" );
+        printer.print( "delaunay2" );
         cout<<"\n";
 
 

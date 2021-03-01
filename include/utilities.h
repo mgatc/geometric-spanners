@@ -24,6 +24,8 @@ const double PI = M_PI;
 const double PI_OVER_TWO = PI / 2;
 const double SIX_PI_OVER_SEVEN = 6*PI / 7;
 const double FOUR_PI_OVER_SEVEN = 4*PI / 7;
+const double TAN30 = tan(PI / 6);
+const double COS30 = cos(PI / 6);
 
 
 

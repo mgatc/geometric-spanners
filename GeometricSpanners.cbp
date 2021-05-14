@@ -72,6 +72,7 @@
 		</Linker>
 		<Unit filename=".gitignore" />
 		<Unit filename="CMakeLists.txt" />
+		<Unit filename="KPT2017.h" />
 		<Unit filename="cmake/GeometricSpannersConfig.cmake" />
 		<Unit filename="include/BCC2012.h" />
 		<Unit filename="include/BGS2005.h" />
@@ -83,6 +84,7 @@
 		<Unit filename="include/GraphAlgoTV.h" />
 		<Unit filename="include/KPX2010.h" />
 		<Unit filename="include/LW2004.h" />
+		<Unit filename="include/TDDelaunay.h" />
 		<Unit filename="include/delaunay.h" />
 		<Unit filename="include/metrics.h" />
 		<Unit filename="include/utilities.h" />

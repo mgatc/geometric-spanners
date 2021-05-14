@@ -36,6 +36,12 @@ bool contains( const T& V, const typename T::key_type& v ) {
     return V.find(v) != V.end();
 }
 
+template< typename first_t, typename second_t >
+std::pair<second_t,first_t> reverse_pair(const std::pair<first_t,second_t>& in)
+{
+    return std::make_pair( in.second, in.first );
+}
+
 /* If V contains v, remove v.
  * If V does not contain v, add it.
  * Return new value.

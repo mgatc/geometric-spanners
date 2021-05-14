@@ -4,6 +4,7 @@
 #include <algorithm> // swap
 #include <functional>
 #include <limits>
+#include <numeric>
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
@@ -12,7 +13,10 @@
 #include <boost/functional/hash.hpp>
 #include <boost/heap/fibonacci_heap.hpp>
 
+#include <CGAL/convex_hull_2.h>
+#include <CGAL/Convex_hull_traits_adapter_2.h>
 #include <CGAL/number_utils.h>
+#include <CGAL/property_map.h>
 #include <CGAL/squared_distance_2.h> //for 2D functions
 
 #include <omp.h>
@@ -344,13 +348,14 @@ optional<double> AStar( VertexContainer V, VertexMap vMap, AdjacencyList G_prime
 
 
 template< typename VertexContainer, typename AdjacencyList >
-void Dijkstra( const size_t i, const VertexContainer& V, const AdjacencyList& G, vector<double>& ShortestPaths ) {
+void Dijkstra( const size_t i, const VertexContainer& V, const AdjacencyList& G, vector<double>& ShortestPaths, vector<size_t>& Parents ) {
 
     typedef pair<double,size_t>
         DistanceIndexPair;
-    typedef boost::heap::fibonacci_heap< DistanceIndexPair,boost::heap::compare<MinHeapCompare<DistanceIndexPair>>>
+    //typedef boost::heap::fibonacci_heap< DistanceIndexPair,boost::heap::compare<MinHeapCompare<DistanceIndexPair>>>
+    typedef std::map<double,size_t>
         Heap;
-    typedef Heap::handle_type
+    typedef Heap::iterator
         HeapHandle;
 
     size_t n = V.size();
@@ -358,53 +363,51 @@ void Dijkstra( const size_t i, const VertexContainer& V, const AdjacencyList& G,
 
     Heap open;
     unordered_map<size_t,HeapHandle> handleToHeap(n);
-    handleToHeap[i] = open.emplace( 0, i );
+    handleToHeap[i] = open.emplace( 0, i ).first;
 
     //unordered_set<size_t> closed(n);
-    vector<size_t> parents(n);
+
 
     ShortestPaths[i] = 0;
 
-    DistanceIndexPair current = open.top(); // initialize current vertex to start
-    size_t u_index = current.second;
+    auto current = open.begin(); // initialize current vertex to start
+    size_t u_index = current->second;
     auto currentPoint = startPoint;
     auto neighborPoint = currentPoint;
+    double newScore = 0;
 //    cout<<"\n    A* start:"<<startPoint;
 //    cout<<",";
 //    cout<<" goal:"<<V.at(goal)->point();
 //    cout<<",";
 
     do {
-        current = open.top();
-        open.pop();
+        current = open.begin();
 
-        u_index = current.second;
-        currentPoint = V.at(u_index);
+        u_index = current->second;
+        currentPoint = V[u_index];
 //        cout<<"\n      current:"<<currentPoint;
 //        cout<<",";
         // loop through neighbors of current
         for( size_t neighbor : G.at(u_index) ) {
-            neighborPoint = V.at(neighbor);
+            neighborPoint = V[neighbor];
 //            cout<<"\n        n:"<<neighborPoint;
 //            cout<<",";
-            double newScore = ShortestPaths.at(u_index)
+            newScore = ShortestPaths[u_index]
                 + distance( currentPoint, neighborPoint );
 //            cout<<"g:"<<newScore;
 //            cout<<",";
-            if( newScore < ShortestPaths.at( neighbor ) ) {
-                parents[neighbor] = u_index;
+            if( newScore < ShortestPaths[neighbor] ) {
+                Parents[neighbor] = u_index;
                 ShortestPaths[neighbor] = newScore;
-                DistanceIndexPair q = make_pair( ShortestPaths.at(neighbor), neighbor );
-
+                //DistanceIndexPair q = make_pair( ShortestPaths.at(neighbor), neighbor );
                 if( contains( handleToHeap, neighbor ) ) {
-                    HeapHandle neighborHandle = handleToHeap.at(neighbor);
-                    open.update(neighborHandle,q);
-                    open.update(neighborHandle);
-                } else {
-                    handleToHeap[neighbor] = open.push(q);
+                    open.erase(handleToHeap[neighbor]);
                 }
+                handleToHeap[neighbor] = open.emplace(ShortestPaths[neighbor], neighbor).first;
             }
         }
+        //closed.insert(current.second);
+        open.erase(current);
     } while( !open.empty() );
 }
 
@@ -526,7 +529,7 @@ double StretchFactorDijkstraParallel( RandomAccessIterator edgesBegin, RandomAcc
                 i==j ? 0 : d( V.at(i), V.at(j) );
         }
 
-        Dijkstra( i, V, G, ShortestPaths );
+        Dijkstra( i, V, G, D, ShortestPaths );
 
     // Divide each shortest path distance by the euclidean distance between the vertices.
         for( size_t j=0; j<n; ++j ) {
@@ -543,9 +546,9 @@ double StretchFactorDijkstraParallel( RandomAccessIterator edgesBegin, RandomAcc
     // Find the big mac daddy t aka big money
     return *max_element( T.begin(), T.end() );
 }
-
 template< typename RandomAccessIterator >
-double StretchFactorDijkstraReduction( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+double StretchFactorDijkstraReduction( RandomAccessIterator edgesBegin,
+                    RandomAccessIterator edgesEnd ) {
     typedef typename RandomAccessIterator::value_type Edge;
     typedef typename Edge::first_type Point;
 
@@ -587,15 +590,16 @@ double StretchFactorDijkstraReduction( RandomAccessIterator edgesBegin, RandomAc
     // calculate euclidean distance between all pairs
     #pragma omp parallel for reduction( max: t_max )
     for( size_t i=0; i<n; ++i ) {
-        vector<double> ShortestPaths( n, INF );
-        vector<double> D( n, INF );     // Euclidean distances
-
+        // Euclidean distances
+        vector<double> D( n, INF );
         for( size_t j=0; j<n; ++j ) {
             D.at(j) =
                 i==j ? 0 : distance( V.at(i), V.at(j) );
         }
-
-        Dijkstra( i, V, G, ShortestPaths );
+        // Shortest paths
+        vector<double> ShortestPaths( n, INF );
+        vector<size_t> Parents(n);
+        Dijkstra( i, V, G, ShortestPaths, Parents );
 
         // Divide each shortest path distance by the euclidean distance between the vertices.
         for( size_t j=0; j<n; ++j ) {
@@ -604,18 +608,205 @@ double StretchFactorDijkstraReduction( RandomAccessIterator edgesBegin, RandomAc
             );
         }
         // Find max_t
-        double t_local = *max_element(
+        auto t_local = max_element(
             begin( ShortestPaths ),
             end(   ShortestPaths )
         );
-        if( t_local > t_max ) {
-            t_max = t_local;
+        if( *t_local > t_max ) {
+            t_max = *t_local;
+        }
+    }
+    // Find the big mac daddy t aka big money
+    return t_max;
+}
+template< typename K, typename RandomAccessIterator>
+double StretchFactorDijkstraConvexHull( RandomAccessIterator edgesBegin,
+                    RandomAccessIterator edgesEnd ) {
+    typedef typename RandomAccessIterator::value_type Edge;
+    typedef typename K::Point_2 Point;
+
+    vector<Point> V; // container for vertices
+    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
+    unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
+    size_t index = 0;
+
+    // Create list of vertices, map to their indices, and adjacency list
+    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
+        // If vMap doesn't contain p, put it in V
+        Point p = eit->first;
+        size_t i_p = index;
+        bool inserted = false;
+        auto vMapIt = vMap.begin();
+        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(p);
+            ++index;
+        }
+        i_p = vMapIt->second;
+
+        // If vMap doesn't contain q, put it in V
+        Point q = eit->second;
+        size_t i_q = index;
+        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(q);
+            ++index;
+        }
+        i_q = vMapIt->second;
+
+        G[i_p].insert(i_q); // add edge to adjacency list
+    }
+    size_t n = V.size();
+
+    // Convex hull with indices
+    typedef CGAL::Convex_hull_traits_adapter_2<K,
+        typename CGAL::Pointer_property_map<Point>::type >
+            Convex_hull_traits;
+
+    std::vector<std::size_t> indices(n), ConvexHull;
+    std::iota(indices.begin(), indices.end(),0);
+
+    // Find the convex hull of the point set
+    CGAL::convex_hull_2( indices.begin(), indices.end(), back_inserter(ConvexHull),
+                         Convex_hull_traits(CGAL::make_property_map(V)) );
+
+    //vector<double> T( n, INF );
+    double t_max = 0.0;
+    size_t i = 0;
+
+    // Loop over the vertices of the convex hull
+    //#pragma omp parallel for reduction( max: t_max )
+    for( auto it=ConvexHull.begin(); it<ConvexHull.end(); ++it ) {
+        i = *it;
+        //cout<<endl<<endl<<i<<endl;
+        // Euclidean distances
+        vector<double> D( n, INF );
+        for( size_t j=0; j<n; ++j ) {
+            D.at(j) =
+                i==j ? 0 : distance( V.at(i), V.at(j) );
+        }
+//        cout<<"  D"<<endl;
+//        for( auto d : D ) {
+//            cout<<"  "<<d<<endl;
+//        }
+
+        // Shortest paths
+        vector<double> ShortestPaths( n, INF );
+        vector<size_t> Parents(n);
+        Dijkstra( i, V, G, ShortestPaths, Parents );
+
+        // Divide each shortest path distance by the euclidean distance between the vertices.
+        for( size_t j=0; j<n; ++j ) {
+            ShortestPaths.at(j) = ( // avoid /0
+                i==j ? 0 : ShortestPaths.at(j)/D.at(j)
+            );
+        }
+//        cout<<"  ShortestPaths"<<endl;
+//        for( auto d : ShortestPaths ) {
+//            cout<<"  "<<d<<endl;
+//        }
+        // Find max_t
+        auto t_local = max_element(
+            begin( ShortestPaths ),
+            end(   ShortestPaths )
+        );
+        if( *t_local > t_max ) {
+            t_max = *t_local;
         }
     }
     // Find the big mac daddy t aka big money
     return t_max;
 }
 
+template< typename RandomAccessIterator, typename OutputIterator >
+double SFWorstPath( RandomAccessIterator edgesBegin,
+                    RandomAccessIterator edgesEnd,
+                    std::optional<OutputIterator> out = std::nullopt ) {
+    typedef typename RandomAccessIterator::value_type Edge;
+    typedef typename Edge::first_type Point;
+
+    vector<Point> V; // container for vertices
+    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
+    unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
+    size_t index = 0;
+
+    // Create list of vertices, map to their indices, and adjacency list
+    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
+        // If vMap doesn't contain p, put it in V
+        Point p = eit->first;
+        size_t i_p = index;
+        bool inserted = false;
+        auto vMapIt = vMap.begin();
+        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(p);
+            ++index;
+        }
+        i_p = vMapIt->second;
+
+        // If vMap doesn't contain q, put it in V
+        Point q = eit->second;
+        size_t i_q = index;
+        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
+        if( inserted ) {
+            V.push_back(q);
+            ++index;
+        }
+        i_q = vMapIt->second;
+
+        G[i_p].insert(i_q); // add edge to adjacency list
+    }
+    size_t n = V.size();
+    //vector<double> T( n, INF );
+    double t_max = 0.0;
+    vector<size_t> MaxParents;
+    size_t i_max = 0, j_max=1;
+
+    // calculate euclidean distance between all pairs
+    //#pragma omp parallel for reduction( max: t_max )
+    for( size_t i=0; i<n; ++i ) {
+        // Euclidean distances
+        vector<double> D( n, INF );
+        for( size_t j=0; j<n; ++j ) {
+            D.at(j) =
+                i==j ? 0 : distance( V.at(i), V.at(j) );
+        }
+        // Shortest paths
+        vector<double> ShortestPaths( n, INF );
+        vector<size_t> Parents(n);
+        Dijkstra( i, V, G, ShortestPaths, Parents );
+
+        // Divide each shortest path distance by the euclidean distance between the vertices.
+        for( size_t j=0; j<n; ++j ) {
+            ShortestPaths.at(j) = ( // avoid /0
+                i==j ? 0 : ShortestPaths.at(j)/D.at(j)
+            );
+        }
+        // Find max_t
+        auto t_local = max_element(
+            begin( ShortestPaths ),
+            end(   ShortestPaths )
+        );
+        if( *t_local > t_max ) {
+            t_max = *t_local;
+            // remove the following for parallel reduction function
+            if(out){
+                std::swap(Parents,MaxParents);
+                i_max = i;
+                j_max = t_local - ShortestPaths.begin();
+            }
+        }
+    }
+    if(out) {
+        size_t walk = j_max;
+        do {
+            *(*out)++ = make_pair( V.at(walk), V.at(MaxParents.at(walk)) );
+            walk = MaxParents.at(walk);
+        } while( walk != i_max );
+    }
+    // Find the big mac daddy t aka big money
+    return t_max;
+}
 
 namespace exp_stretch {
     // Create types for heaps

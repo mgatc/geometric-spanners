@@ -113,46 +113,52 @@ namespace delaunay {
 //                FT sx = s.x();
 //                FT sy = s.y();
 
-                vector<pair<Point_2, Point_2>> triEdges = {{p,q}, {p,r}, {q,r}};
+                // The outer pair contains a triangle edge and the opposing vertex
+                vector<pair<pair<Point_2, Point_2>,Point_2>> triEdges = {{{p,q},r}, {{p,r},q}, {{q,r},p}};
                 const vector<double> orthBisectorSlopes{ 0, -1*COT30, COT30, 0, -1*COT30, COT30 };
 
                 //Finds the cone of p containing vertex q, for this algorithm all vertices have 6 cones (0-5) with an angle of (PI/3).
-                const double alpha = PI/3; // 60 Degree for equalateral triangle.
+                const double alpha = PI/3; // 60 Degree for equilateral triangle.
                 Point_2 focus, opPoint, refPoint;
                 double theta;
                 size_t cone, coneS;
 
                 for(auto e: triEdges){
                     // a w.r.t. b
-                    focus = e.first;
-                    opPoint = e.second;
-                    refPoint = Point_2( e.first.x() - TAN30, e.first.y() + 1 );
-                    theta = get_angle<Geom_traits>(refPoint, e.first, e.second);
+                    focus = e.first.first;
+                    opPoint = e.first.second;
+                    refPoint = Point_2( e.first.first.x() - TAN30, e.first.first.y() + 1 );
+                    theta = get_angle<Geom_traits>(refPoint, e.first.first, e.first.second);
                     cone = (theta / alpha);
 
                     if(cone % 2){
                         // b W.r.t a
-                        focus = e.second;
-                        opPoint = e.first;
-                        refPoint = Point_2( e.second.x() - TAN30, e.second.y() + 1 );
-                        theta = get_angle<Geom_traits>(refPoint, e.second, e.first);
+                        focus = e.first.second;
+                        opPoint = e.first.first;
+                        refPoint = Point_2( e.first.second.x() - TAN30, e.first.second.y() + 1 );
+                        theta = get_angle<Geom_traits>(refPoint, e.first.second, e.first.first);
                         cone = (theta / alpha);
 
                     }
 
-                    //Find where s is
-                    theta = get_angle<Geom_traits>(refPoint, focus, s);
-                    coneS = (theta / alpha);
+                    // Check that neither s nor the opposing vertex are violating
+                    vector<Point_2> queryVertices { e.second, s };
+                    for( auto v : queryVertices ) {
+                        //Find where s is
+                        theta = get_angle<Geom_traits>(refPoint, focus, v);
+                        coneS = (theta / alpha);
 
-                    if(cone == coneS){
+                        if(cone == coneS){
 
-                        double bisectorLenOP = bisectorLength({focus, opPoint}, orthBisectorSlopes[cone]);
-                        double bisectorLenS = bisectorLength({focus, s}, orthBisectorSlopes[cone]);
+                            double bisectorLenOP = bisectorLength({focus, opPoint}, orthBisectorSlopes[cone]);
+                            double bisectorLenS = bisectorLength({focus, v}, orthBisectorSlopes[cone]);
 
-                        if( bisectorLenS < bisectorLenOP){
-                            return ON_POSITIVE_SIDE;
+                            if( bisectorLenS < bisectorLenOP){
+                                return ON_POSITIVE_SIDE;
+                            }
+
+
                         }
-
 
                     }
 
@@ -233,7 +239,7 @@ void delaunay_testing( RandomAccessIterator pointsBegin, RandomAccessIterator po
             { "color", printer.inactiveEdgeColor },
             { "line width", to_string(printer.inactiveEdgeWidth) }
         };
-        printer.drawEdges( T, options );
+        //printer.drawEdges( T, options );
 
 //        options = { // active edge options
 //            { "color", printer.activeEdgeColor },

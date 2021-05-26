@@ -1750,327 +1750,329 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     // store the vertex handles
     vector<Vertex_handle> handles(n);
 
-//    for (auto v = sdg.finite_vertices_begin(); v != sdg.finite_vertices_end(); v++) {
-//        cout<<v->storage_site().info()<<endl;
-//        handles[v->storage_site().info()] = v;
-//    }
+    auto i=0;
+
+    for (auto v = sdg.finite_vertices_begin(); v != sdg.finite_vertices_end(); v++) {
+        assert(i==v->storage_site().info());
+        handles[i++] = v;
+    }
 
     //construct YaoEdges
-//    vector<yaoCones> yaoEdges(n,yaoCones);
-//    vector<fanCones> pointFans(n);
-//    vector<numYaoEdges> yaoEdgeCount(n);
-//
-//    addYaoEdges(yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
-//
-//    cout << "yao edge terminals directed from u" << endl;
-//
-//    for (auto u : handles) {
-//
-//        size_t u_id = u->storage_site().info();
-//
-//        cout << u_id << "] ";
-//
-//        for (size_t cone = 0; cone < 4; cone++) {
-//
-//            if (yaoEdges[u_id][cone].second == 0) {
-//                cout << "x ";
-//            }
-//            else {
-//              //  size_t neighbor_id = yaoEdges[u_id][cone].first
-//                cout << (yaoEdges[u_id][cone].first)->storage_site().info() << " ";
-//            }
-//
-//            if (cone == 3) {
-//                cout << endl;
-//            }
-//
-//        }
-//
-//    }
-//
-//    cout << endl << endl;
-//
-//    cout << "number of edges in cones" << endl;
-//
-//    for (auto u : handles) {
-//
-//        size_t u_id = u->storage_site().info();
-//
-//        cout << u_id << "] ";
-//
-//        for (size_t cone = 0; cone < 4; cone++) {
-//
-//              // num edges in that cone
-//            cout << yaoEdges[u_id][cone].second << " ";
-//
-//
-//            if (cone == 3) {
-//                cout << endl;
-//            }
-//
-//        }
-//
-//    }
-//
-//    cout << endl << endl;
-//
-//    cout << "number of YAO EDGES in cones" << endl;
-//
-//    for (auto u : handles) {
-//
-//        size_t u_id = u->storage_site().info();
-//
-//        cout << u_id << "] ";
-//
-//        for (size_t cone = 0; cone < 4; cone++) {
-//
-//              // num edges in that cone
-//            cout << yaoEdgeCount[u_id][cone] << " ";
-//
-//
-//            if (cone == 3) {
-//                cout << endl;
-//            }
-//
-//        }
-//
-//    }
-//
-//    cout << endl << endl;
-//
-//    cout << "fans of the cones" << endl;
-//
-//    for (auto u : handles) {
-//
-//        size_t u_id = u->storage_site().info();
-//
-//        cout << u_id << "] ";
-//
-//        for (size_t cone = 0; cone < 4; cone++) {
-//
-//            if (yaoEdges[u_id][cone].second == 0) {
-//                cout << "< x, x > ";
-//            }
-//            else {
-//                cout << "< " << pointFans[u_id][cone].first->storage_site().info() << ", " << pointFans[u_id][cone].second->storage_site().info() << " > ";
-//            }
-//
-//            if (cone == 3) {
-//                cout << endl;
-//            }
-//
-//        }
-//
-//    }
-//
-//    // identify the anchors
-//    vector<anchorCones> anchorEdges(n);
-//
-//    determineAnchors(anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
-//
-//
-//    cout << endl << "anchors" << endl;
-//
-//    for (auto u : handles) {
-//
-//        size_t u_id = u->storage_site().info();
-//
-//        cout << u_id << "] ";
-//
-//        for (size_t cone = 0; cone < 4; cone++) {
-//
-//            if (anchorEdges[u_id][cone].first == nullptr)
-//            {
-//                cout << "x ";
-//            }
-//            else
-//            {
-//                cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-//            }
-//              // num edges in that cone
-//
-//            if (cone == 3) {
-//                cout << endl;
-//            }
-//
-//        }
-//
-//    }
-//
-//    cout << endl << endl << "strong anchors" << endl;
-//
-//    for (auto u : handles) {
-//
-//        size_t u_id = u->storage_site().info();
-//
-//        cout << u_id << "] ";
-//
-//        for (size_t cone = 0; cone < 4; cone++) {
-//
-//            if (anchorEdges[u_id][cone].second == Strong || anchorEdges[u_id][cone].second == StrongSelected)
-//            {
-//                cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-//            }
-//            else
-//            {
-//                cout << "x ";
-//            }
-//              // num edges in that cone
-//
-//            if (cone == 3) {
-//                cout << endl;
-//            }
-//
-//        }
-//
-//    }
-//
-//    cout << endl << endl << "selected anchors" << endl;
-//
-//    for (auto u : handles) {
-//
-//        size_t u_id = u->storage_site().info();
-//
-//        cout << u_id << "] ";
-//
-//        for (size_t cone = 0; cone < 4; cone++) {
-//
-//            if (anchorEdges[u_id][cone].second == StrongSelected || anchorEdges[u_id][cone].second == WeakSelected)
-//            {
-//                cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-//            }
-//            else
-//            {
-//                cout << "x ";
-//            }
-//              // num edges in that cone
-//
-//            if (cone == 3) {
-//                cout << endl;
-//            }
-//
-//        }
-//
-//    }
-//
-//    cout << endl << endl << "start of odd chain" << endl;
-//
-//    for (auto u : handles) {
-//
-//        size_t u_id = u->storage_site().info();
-//
-//        cout << u_id << "] ";
-//
-//        for (size_t cone = 0; cone < 4; cone++) {
-//
-//            if (anchorEdges[u_id][cone].second == StartOddChain)
-//            {
-//                cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-//            }
-//            else
-//            {
-//                cout << "x ";
-//            }
-//              // num edges in that cone
-//
-//            if (cone == 3) {
-//                cout << endl;
-//            }
-//
-//        }
-//
-//    }
-//
-//    cout << endl << endl;
-//
-//   // construct H8 --> degree 8 spanner
-//    vector<spannerCones> H8(n);
-//
-//    degreeEightSpanner(H8, anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
-//
-//    cout << "degree 8 spanner edges" << endl;
-//
-//    for (auto u : handles) {
-//
-//        cout << u->storage_site().info() << "] ";
-//
-//        for (size_t cone = 0; cone < 4; cone++) {
-//
-//            if (H8[u->storage_site().info()][cone].size() == 0) {
-//             //   cout << "(cone " << cone << " has no edge)";
-//            }
-//            else {
-//                for (auto edge : H8[u->storage_site().info()][cone]) {
-//                    cout << "(" << (edge.first)->storage_site().info() << "," << (edge.second)->storage_site().info() <<") ";
-//                }
-//            }
-//        }
-//
-//        cout << endl;
-//
-//    }
-//
-//    cout << endl << endl;
-//
-//    cout << "degree 8 spanner charges" << endl;
-//
-//    for (auto u : handles) {
-//
-//        cout << u->storage_site().info() << "] ";
-//
-//        for (size_t cone = 0; cone < 4; cone++) {
-//
-//            cout << H8[u->storage_site().info()][cone].size() << " ";
-//
-//        }
-//
-//        cout << endl;
-//
-//    }
-//
-//    cout << endl << endl;
-//
-//
-//    // AS of here step 2 is complete. it likely has logical errors that will need to be assessed, but it builds so that's good :-)
-//
-//  processSpanner(H8, anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
-//
-//  cout << "degree 4 spanner edges" << endl;
-//
-//  vector<pair<Point_2,Point_2>> edgeList;
-//
-//  for (auto u : handles) {
-//
-//        cout << u->storage_site().info() << "] ";
-//
-//        for (size_t cone = 0; cone < 4; cone++) {
-//
-//            if (H8[u->storage_site().info()][cone].size() == 0) {
-//             //   cout << "(cone " << cone << " has no edge)";
-//            }
-//            else {
-//                for (auto edge : H8[u->storage_site().info()][cone]) {
-//                    cout << "(" << (edge.first)->storage_site().info() << "," << (edge.second)->storage_site().info() <<") ";
-////                    edgeList.emplace_back( P.at((edge.first)->storage_site().info()),
-////                                           P.at((edge.second)->storage_site().info()) );
-//                }
-//            }
-//        }
-//
-//        cout << endl;
-//
-//    }
+    vector<yaoCones> yaoEdges(n, yaoCones(4));
+    vector<fanCones> pointFans(n);
+    vector<numYaoEdges> yaoEdgeCount(n);
+
+    addYaoEdges(yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
+
+    cout << "yao edge terminals directed from u" << endl;
+
+    for (auto u : handles) {
+
+        size_t u_id = u->storage_site().info();
+
+        cout << u_id << "] ";
+
+        for (size_t cone = 0; cone < 4; cone++) {
+
+            if (yaoEdges[u_id][cone].second == 0) {
+                cout << "x ";
+            }
+            else {
+              //  size_t neighbor_id = yaoEdges[u_id][cone].first
+                cout << (yaoEdges[u_id][cone].first)->storage_site().info() << " ";
+            }
+
+            if (cone == 3) {
+                cout << endl;
+            }
+
+        }
+
+    }
+
+    cout << endl << endl;
+
+    cout << "number of edges in cones" << endl;
+
+    for (auto u : handles) {
+
+        size_t u_id = u->storage_site().info();
+
+        cout << u_id << "] ";
+
+        for (size_t cone = 0; cone < 4; cone++) {
+
+              // num edges in that cone
+            cout << yaoEdges[u_id][cone].second << " ";
+
+
+            if (cone == 3) {
+                cout << endl;
+            }
+
+        }
+
+    }
+
+    cout << endl << endl;
+
+    cout << "number of YAO EDGES in cones" << endl;
+
+    for (auto u : handles) {
+
+        size_t u_id = u->storage_site().info();
+
+        cout << u_id << "] ";
+
+        for (size_t cone = 0; cone < 4; cone++) {
+
+              // num edges in that cone
+            cout << yaoEdgeCount[u_id][cone] << " ";
+
+
+            if (cone == 3) {
+                cout << endl;
+            }
+
+        }
+
+    }
+
+    cout << endl << endl;
+
+    cout << "fans of the cones" << endl;
+
+    for (auto u : handles) {
+
+        size_t u_id = u->storage_site().info();
+
+        cout << u_id << "] ";
+
+        for (size_t cone = 0; cone < 4; cone++) {
+
+            if (yaoEdges[u_id][cone].second == 0) {
+                cout << "< x, x > ";
+            }
+            else {
+                cout << "< " << pointFans[u_id][cone].first->storage_site().info() << ", " << pointFans[u_id][cone].second->storage_site().info() << " > ";
+            }
+
+            if (cone == 3) {
+                cout << endl;
+            }
+
+        }
+
+    }
+
+    // identify the anchors
+    vector<anchorCones> anchorEdges(n);
+
+    determineAnchors(anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
+
+
+    cout << endl << "anchors" << endl;
+
+    for (auto u : handles) {
+
+        size_t u_id = u->storage_site().info();
+
+        cout << u_id << "] ";
+
+        for (size_t cone = 0; cone < 4; cone++) {
+
+            if (anchorEdges[u_id][cone].first == nullptr)
+            {
+                cout << "x ";
+            }
+            else
+            {
+                cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
+            }
+              // num edges in that cone
+
+            if (cone == 3) {
+                cout << endl;
+            }
+
+        }
+
+    }
+
+    cout << endl << endl << "strong anchors" << endl;
+
+    for (auto u : handles) {
+
+        size_t u_id = u->storage_site().info();
+
+        cout << u_id << "] ";
+
+        for (size_t cone = 0; cone < 4; cone++) {
+
+            if (anchorEdges[u_id][cone].second == Strong || anchorEdges[u_id][cone].second == StrongSelected)
+            {
+                cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
+            }
+            else
+            {
+                cout << "x ";
+            }
+              // num edges in that cone
+
+            if (cone == 3) {
+                cout << endl;
+            }
+
+        }
+
+    }
+
+    cout << endl << endl << "selected anchors" << endl;
+
+    for (auto u : handles) {
+
+        size_t u_id = u->storage_site().info();
+
+        cout << u_id << "] ";
+
+        for (size_t cone = 0; cone < 4; cone++) {
+
+            if (anchorEdges[u_id][cone].second == StrongSelected || anchorEdges[u_id][cone].second == WeakSelected)
+            {
+                cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
+            }
+            else
+            {
+                cout << "x ";
+            }
+              // num edges in that cone
+
+            if (cone == 3) {
+                cout << endl;
+            }
+
+        }
+
+    }
+
+    cout << endl << endl << "start of odd chain" << endl;
+
+    for (auto u : handles) {
+
+        size_t u_id = u->storage_site().info();
+
+        cout << u_id << "] ";
+
+        for (size_t cone = 0; cone < 4; cone++) {
+
+            if (anchorEdges[u_id][cone].second == StartOddChain)
+            {
+                cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
+            }
+            else
+            {
+                cout << "x ";
+            }
+              // num edges in that cone
+
+            if (cone == 3) {
+                cout << endl;
+            }
+
+        }
+
+    }
+
+    cout << endl << endl;
+
+   // construct H8 --> degree 8 spanner
+    vector<spannerCones> H8(n);
+
+    degreeEightSpanner(H8, anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
+
+    cout << "degree 8 spanner edges" << endl;
+
+    for (auto u : handles) {
+
+        cout << u->storage_site().info() << "] ";
+
+        for (size_t cone = 0; cone < 4; cone++) {
+
+            if (H8[u->storage_site().info()][cone].size() == 0) {
+             //   cout << "(cone " << cone << " has no edge)";
+            }
+            else {
+                for (auto edge : H8[u->storage_site().info()][cone]) {
+                    cout << "(" << (edge.first)->storage_site().info() << "," << (edge.second)->storage_site().info() <<") ";
+                }
+            }
+        }
+
+        cout << endl;
+
+    }
+
+    cout << endl << endl;
+
+    cout << "degree 8 spanner charges" << endl;
+
+    for (auto u : handles) {
+
+        cout << u->storage_site().info() << "] ";
+
+        for (size_t cone = 0; cone < 4; cone++) {
+
+            cout << H8[u->storage_site().info()][cone].size() << " ";
+
+        }
+
+        cout << endl;
+
+    }
+
+    cout << endl << endl;
+
+
+    // AS of here step 2 is complete. it likely has logical errors that will need to be assessed, but it builds so that's good :-)
+
+  processSpanner(H8, anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
+
+  cout << "degree 4 spanner edges" << endl;
+
+  vector<pair<Point_2,Point_2>> edgeList;
+
+  for (auto u : handles) {
+
+        cout << u->storage_site().info() << "] ";
+
+        for (size_t cone = 0; cone < 4; cone++) {
+
+            if (H8[u->storage_site().info()][cone].size() == 0) {
+             //   cout << "(cone " << cone << " has no edge)";
+            }
+            else {
+                for (auto edge : H8[u->storage_site().info()][cone]) {
+                    cout << "(" << (edge.first)->storage_site().info() << "," << (edge.second)->storage_site().info() <<") ";
+                    edgeList.emplace_back( P.at((edge.first)->storage_site().info()),
+                                           P.at((edge.second)->storage_site().info()) );
+                }
+            }
+        }
+
+        cout << endl;
+
+    }
 
     // Send resultant graph to output iterator
-//    for(auto e : edgeList) {
-//        // Edge list is only needed for printing. Remove for production.
-//        //edgeList.emplace_back(handles.at(e.first)->point(), handles.at(e.second)->point());
-//
-//        *result = e;
-//        ++result;
-//        *result = make_pair(e.second,e.first);
-//        ++result;
-//    }
+    for(auto e : edgeList) {
+        // Edge list is only needed for printing. Remove for production.
+        //edgeList.emplace_back(handles.at(e.first)->point(), handles.at(e.second)->point());
+
+        *result = e;
+        ++result;
+        *result = make_pair(e.second,e.first);
+        ++result;
+    }
 
     // START PRINTER NONSENSE
     if(printLog) {
@@ -2087,7 +2089,7 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
             {"color", printer.activeEdgeColor},
             {"line width", to_string(printer.activeEdgeWidth)}
         };
-        //printer.drawEdges(edgeList.begin(), edgeList.end(), options);
+        printer.drawEdges(edgeList.begin(), edgeList.end(), options);
 
 
         options = {

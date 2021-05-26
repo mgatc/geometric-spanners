@@ -30,273 +30,85 @@
 
 namespace gsnunf {
 
-    using namespace std;
+using namespace std;
 
-    namespace kpt2017 {
+namespace kpt2017 {
 
-    typedef CGAL::Exact_predicates_inexact_constructions_kernel Epick;
-    typedef Epick                     K;
-    typedef K::Point_2                Point_2;
-    typedef K::FT                     FT;
+typedef CGAL::Exact_predicates_inexact_constructions_kernel Epick;
+typedef Epick                     K;
+typedef K::Point_2                Point_2;
+typedef K::FT                     FT;
 
-    typedef HalfThetaTriangulation<K> TD_Delaunay_2;
-    typedef TD_Delaunay_2::Vertex_descriptor Vertex_descriptor;
+typedef HalfThetaTriangulation<K> TD_Delaunay_2;
+typedef TD_Delaunay_2::Vertex_descriptor Vertex_descriptor;
 
 
-    enum Color {
-        BLUE, WHITE, RED = WHITE, GREEN = WHITE
-    };
+enum Color {
+    BLUE, WHITE, RED = WHITE, GREEN = WHITE
+};
 
-    //Cone angles.
-    const double tan30 = TAN30;
-    const FT cot30 = 1 / tan30;
+//Cone angles.
+const double tan30 = TAN30;
+const FT cot30 = 1 / tan30;
 
-    const FT alpha = PI/3;
+const FT alpha = PI/3;
 
-    //Slopes of the cone boundary lines.
-    const vector<double> bisectorSlopes{ INF, tan30, -1*tan30, INF, tan30, -1*tan30 };
-    const vector<double> orthBisectorSlopes{ 0, -1*cot30, cot30, 0, -1*cot30, cot30 };
+//Slopes of the cone boundary lines.
+const vector<double> bisectorSlopes{ INF, tan30, -1*tan30, INF, tan30, -1*tan30 };
+const vector<double> orthBisectorSlopes{ 0, -1*cot30, cot30, 0, -1*cot30, cot30 };
 
-    //Finds the cone of p containing vertex q, for this algorithm all vertices have 6 cones (0-5) with an angle of (PI/3).
-    inline size_t getSingleCone(const size_t p, const size_t q, const vector<Point_2> &h){
-        const Point_2 refPoint( h.at(p).x() - tan30, h[p].y() + 1 );
-        //Point refPoint(h[p]->point().x(), h[p] ->point().y() + 1);
+//Finds the cone of p containing vertex q, for this algorithm all vertices have 6 cones (0-5) with an angle of (PI/3).
+inline size_t getSingleCone(const size_t p, const size_t q, const vector<Point_2> &h)
+{
+    const Point_2 refPoint( h.at(p).x() - tan30, h[p].y() + 1 );
+    //Point refPoint(h[p]->point().x(), h[p] ->point().y() + 1);
 
-        double theta = get_angle<K>(refPoint, h[p], h.at(q));
+    double theta = get_angle<K>(refPoint, h[p], h.at(q));
 
-        size_t cone = (theta / alpha);
+    size_t cone = (theta / alpha);
 
-        return cone;
-    }
+    return cone;
+}
 
-    //Compute max of getCone(p,q) and (getCone(q,p)+3)%6, is used to make sure cones are calculated correctly.
-    inline size_t getCone( const size_t p, const size_t q, const vector<Point_2> &h ) {
-        if( h[p] < h[q] ) {
-            return getSingleCone(p,q,h);
-        } else {
-            return (getSingleCone(q,p,h)+3)%6;
-        }
-    }
+//Compute max of getCone(p,q) and (getCone(q,p)+3)%6, is used to make sure cones are calculated correctly.
+inline size_t getCone( const size_t p, const size_t q, const vector<Point_2> &h )
+{
+    return p < q ?
+        getSingleCone(p,q,h)
+        : ( getSingleCone(q,p,h)+3 ) % 6;
+}
 
-    //Finds the bisector length of a given edge.
-    inline K::FT bisectorLength( const pair<size_t,size_t> &e, const vector<Point_2> &h ) {
+//Compute max of getCone(p,q) and (getCone(q,p)+3)%6, is used to make sure cones are calculated correctly.
+inline Color getColor( const size_t p, const size_t q, const vector<Point_2> &h )
+{
+    cout<<"Getting color of "<<p<<"-"<<q<<endl;
+    return getCone(p,q,h) % 3 == 1 ? BLUE : WHITE;
+}
 
-        size_t cone = getCone(e.first, e.second, h);
+//Finds the bisector length of a given edge.
+inline K::FT bisectorLength( const pair<size_t,size_t> &e, const vector<Point_2> &h )
+{
+    size_t cone = getCone(e.first, e.second, h);
 
-        double xCord = h.at(e.first).x();
-        double yCord = h[e.first].y() + 1;
+    double xCord = h.at(e.first).x();
+    double yCord = h[e.first].y() + 1;
 
-        assert(cone<6);
-        assert(e.first<h.size());
+    assert(cone<6);
+    assert(e.first<h.size());
 
-        xCord = h[e.first].x() - orthBisectorSlopes.at(cone);
+    xCord = h[e.first].x() - orthBisectorSlopes.at(cone);
 
-        Point_2 bisectorPoint(xCord, yCord);
+    Point_2 bisectorPoint(xCord, yCord);
 
-        K::Line_2 bisectorLine(h[e.first], bisectorPoint);
+    K::Line_2 bisectorLine(h[e.first], bisectorPoint);
 
-        Point_2 intersectionPoint = bisectorLine.projection(h[e.second]);
+    Point_2 intersectionPoint = bisectorLine.projection(h[e.second]);
 
-        double bisectorLen = distance(h[e.first], intersectionPoint);
+    double bisectorLen = distance(h[e.first], intersectionPoint);
 
-        return bisectorLen;
-    }
-    struct bisectorLengthComp {
-        bool operator()( const auto &lhs, const auto &rhs ) {
-            return lhs < rhs;
-        }
-    };
-//
-//    /*
-//      Step 3: Add incident edges consists of 2 sub steps.
-//      (3.1) Starts with the empty set E_A.
-//      (3.2) For each edge in L (sorted in non-decreasing order) Let i be the cone of p containing q if E_A has no edges with endpoint p in the
-//            neighborhood of p in cone i and E_A has no edges with endpoint q in the neighborhood of q in cone i+3 then add edge (p,q) to E_A.
-//    */
-//    inline void addIncident( vector<pair<size_t,size_t>> &E_A,
-//                             pointConeMap &AL_E_A,
-//                             const double alpha,
-//                             const vector<Vertex_handle> &h,
-//                             const vector<pair<pair<size_t,size_t>,double>> &l ) {
-//        //Loops through the entire set L.
-//        for( auto e : l ) {
-//
-//            //Separates the edge (p,q) into the vertices p and q.
-//            const size_t& p = e.first.first;
-//            const size_t& q = e.first.second;
-//
-//            //Computes the cone of p containing q.
-//            size_t p_cone = getCone(p, q, h),
-//                   q_cone = getCone(q, p, h);
-//
-//            /*Evaluates the emptiness of a cone, given a vertex in the set E_A.
-//              If a cone is empty then the set E_A does not contain an edge with the
-//              given endpoint in the cone calculated above, and the status will be
-//              set to true.*/
-//            bool p_cone_empty = AL_E_A.find(make_pair(p, p_cone)) == AL_E_A.end();
-//            bool q_cone_empty = AL_E_A.find(make_pair(q, q_cone)) == AL_E_A.end();
-//
-//            /*Checks that both cone neighborhood are empty, if these are both empty
-//            then the condition for step 3 is met and (p,q) is added to E_A. (3.2)*/
-//            if( p_cone_empty && q_cone_empty ){
-//                E_A.push_back(e.first);
-//
-//                //Adds (p,q) to an adjacency list for future calculation.
-//                AL_E_A.emplace(make_pair(p, p_cone), q);
-//                AL_E_A.emplace(make_pair(q, q_cone), p);
-//            }
-//        }
-//    }
-//
-//    inline void canonicalNeighborhood( vector<size_t>& canNeighbors,
-//                                       const size_t& p,
-//                                       const size_t& r,
-//                                       const size_t cone,
-//                                       const Delaunay &dt,
-//                                       const vector<Vertex_handle> &h,
-//                                       const edgeBisectorMap &b,
-//                                       bool printLog = false ) {
-//
-//        pair<size_t,size_t> e = make_pair(p, r);
-//
-//        /*Vertex circulator oriented to r to find fist and last end vertex. Once r is the circulator is oriented to the first vertex in the cone,
-//          that is in the canonical neighborhood. Once found all neighbors are added in clockwise order. For a vertex to be in the canonical
-//          neighborhood it must have a bisector length greater than or equal to that of (p,r)
-//        */
-//        auto N_p = dt.incident_vertices(h[p]);
-//
-//        while(++N_p != h[r]);
-//
-//        while(!dt.is_infinite(++N_p) && getCone(p, N_p->info(), h) == cone && (b.at(make_pair(p, N_p->info())) > b.at(e)
-//                || abs(b.at(make_pair(p, N_p->info())) - b.at(e)) < EPSILON));
-//
-//
-//        while(!dt.is_infinite(--N_p) && getCone(p, N_p->info(), h) == cone && (b.at(make_pair(p, N_p->info())) > b.at(e)
-//                  || abs(b.at(make_pair(p,N_p->info())) - b.at(e)) < EPSILON)){
-//            canNeighbors.push_back(N_p->info());
-//        }
-//    }
-//
-//    /*
-//      Step 4: Add canonical edges consists of 4 sub steps.
-//      (4.1) Let r be an element of the canonical neighborhood of p in the cone 0 of p.
-//      (4.2) Add inner edges if total neigborhood edges is 3 or more.
-//      (4.3) If r is an end vertex and there is more than one edge in the neighborhood add the edge with endpoint r.
-//      (4.4) Consider the first and last edge in the canoncial neighborhood. 3 criteria to add.
-//        (4.4 a) If the edges are in cone 1 or 5 with respect to a and z add.
-//        (4.4 b) If the edges are in cone 2 or 4 with respect to a and z and cone for has no edge with an end edge point in E_A add.
-//        (4.4 c) Checks if end edges have a end point a or z in E_A and an edge different from one made with vertex b or y in cone 2 or 4 woth respect
-//                to a and z if found the edge (b,c) or (w,y) is added.
-//    */
-//    inline void addCanonical( vector<pair<size_t,size_t>> &E_CAN,
-//                              const size_t p,
-//                              const size_t r,
-//                              const double alpha,
-//                              const Delaunay &dt,
-//                              const vector<Vertex_handle> &h,
-//                              const edgeBisectorMap &b,
-//                              pointConeMap& AL_e_a,
-//                              bool printLog=false ) {
-//
-//        //Creates an edge (p,r)
-//        pair<size_t,size_t> e = make_pair(p, r);
-//
-//        //Computes the cone of p containing r.
-//        size_t p_cone  = getCone(p, r, h);
-//
-//        //Set of the canonical neighborhood of p in the cone of p containing r. (This cone will be considered as cone 0)
-//        vector<size_t> canNeighbors;
-//
-//        canonicalNeighborhood( canNeighbors, p, r, p_cone, dt, h, b );
-//        assert(canNeighbors.size()>0);
-//
-//        //Number of edges in the neighborhood.
-//        int canEdges = canNeighbors.size() - 1;
-//
-//        //Must be at least 1 edge.
-//        if(canEdges > 1){
-//            //Add inner edges if total neighborhood edges is 3 or more. (4.2)
-//            for(int i = 1; i < canEdges-1; i++){
-//                E_CAN.emplace_back(canNeighbors.at(i), canNeighbors.at(i + 1));
-//                assert(dt.is_edge( h.at(canNeighbors.at(i)), h.at(canNeighbors.at(i + 1))));
-//            }
-//
-//            //End edges in the canonical neighborhood.
-//            const vector<pair<size_t,size_t>> canExtrema {
-//                make_pair( canNeighbors.at(1), canNeighbors.front() ),
-//                make_pair( canNeighbors.at(canEdges - 1), canNeighbors.back() )
-//            };
-//
-//            //If r is an end vertex and there is more than one edge in the neighborhood add the edge with endpoint r. (4.3
-//            for( auto e : canExtrema ) {
-//                if( e.second == r && canEdges > 1) {
-//                    E_CAN.push_back(e);
-//                    assert(dt.is_edge( h.at(e.first), h.at(e.second)));
-//                }
-//            }
-//
-//            //First and last edges in the canonical neighborhood are considered and added by 3 criteria. (4.4)
-//            vector<int> cone(6);
-//            for( size_t i=0; i<6; ++i ) {
-//                cone[i] = (p_cone+i)%6;
-//            }
-//
-//            //If the edges are in cone 1 or 5 with respect to a and z add. (4.4 a)
-//            for( auto i=0; i<canExtrema.size(); ++i ) {
-//                const auto e = canExtrema[i];
-//                const int z_cone = 1 + int(i==1)*4;
-//                if( getCone(e.second, e.first, h) == cone[z_cone] ) {
-//                    E_CAN.push_back(e);
-//                    if(printLog) cout<<e.first<<"-"<<e.second<<"["<<i<<"]\\"<<cone[z_cone]<<"/,";
-//
-//                    assert( dt.is_edge( h.at(e.second), h.at(e.first) ) );
-//                }
-//            }
-//
-//            const vector<pointConeMap::iterator> endpointZ {
-//                AL_e_a.find( make_pair(canExtrema[0].second, cone[2]) ),
-//                AL_e_a.find( make_pair(canExtrema[1].second, cone[4]) )
-//            };
-//            const auto blank = AL_e_a.end(); //Iterator to end of map to check if an edge exists.
-//
-//            //If the edges are in cone 2 or 4 with respect to a and z and cone for has no edge with an end edge point in E_A add. (4.4 b)
-//            for( auto i=0; i<canExtrema.size(); ++i ) {
-//                const auto e = canExtrema[i];
-//                const int z_cone = 2 + int(i==1)*2;
-//                if( endpointZ[i] == blank && getCone(e.second, e.first, h) == cone[z_cone] ){
-//                    E_CAN.push_back(e);
-//
-//                    assert( dt.is_edge( h.at(e.first), h.at(e.second) ) );
-//                }
-//            }
-//
-//            /*Checks if end edges have an end point a or z in E_A and an edge different from one made with vertex b or y in cone 2 or 4 woth respect
-//              to a and z if found the edge (b,c) or (w,y) is added. (4.4 c)*/
-//            // (a,b)
-//            for( auto i=0; i<canExtrema.size(); ++i ) {
-//                const auto e = canExtrema[i];
-//                const int z_cone = 2 + int(i==1)*2;
-//                if( getCone(e.second, e.first, h) == cone[z_cone]
-//                 && endpointZ[i] != blank
-//                 && endpointZ[i]->second != e.first ) {
-//                    vector<size_t> zCanNeighbors;
-//                    canonicalNeighborhood(
-//                        zCanNeighbors, e.second, endpointZ[i]->second,
-//                        cone[z_cone], dt, h, b
-//                    );
-//                    auto y = find( zCanNeighbors.begin(), zCanNeighbors.end(), e.first );
-//                    auto w = y;
-//                    w += int(y == zCanNeighbors.begin());
-//                    w -= int(y == zCanNeighbors.end()-1);
-//
-//                    assert( y != zCanNeighbors.end() );
-//                    assert( y != w );
-//                    assert(dt.is_edge( h.at(*w), h.at(*y)));
-//                    E_CAN.emplace_back(*w, *y);
-//                }
-//            }
-//        }
-//    }
+    return bisectorLen;
+}
+
 template< class AnchorListMap, class Triangulation, class PointContainer >
 void findAnchors( AnchorListMap &anchors, Triangulation &D, const PointContainer &P )
 {
@@ -313,6 +125,7 @@ void findAnchors( AnchorListMap &anchors, Triangulation &D, const PointContainer
         auto w = *vit;
         cout<<w<<") "<<D.point(w)<<endl;
 
+        // negative cones
         Vertex_descriptor local_anchors[3];
         K::FT local_minimum_bisectors[3] = {INF,INF,INF};
 
@@ -321,27 +134,50 @@ void findAnchors( AnchorListMap &anchors, Triangulation &D, const PointContainer
              eit!=D.negative_cone_edges_end(w); ++eit )
         {
             auto e = *eit;
-            auto u = D.target(e),
-                 v = D.source(e);
-            size_t cone = getCone( u, v, P ),
+            auto v = D.source(e);
+            size_t cone = getCone( w, v, P ),
                    flattened_cone = cone/2;
-            auto e_bisector_length = bisectorLength(make_pair(u,v),P);
-            if( e_bisector_length < local_minimum_bisectors[flattened_cone]) {
+            auto e_bisector_length = bisectorLength(make_pair(w,v),P);
+            if( e_bisector_length < local_minimum_bisectors[flattened_cone] )
+            {
                 local_anchors[flattened_cone] = v;
                 local_minimum_bisectors[flattened_cone] = e_bisector_length;
             }
-            cout<<"  "<<D.source(e)<<" is in cone "<<cone<<endl;
+            cout<<"  -"<<D.source(e)<<" is in cone "<<cone<<endl;
         }
 
-        // set the anchor for each cone
-        for( size_t i=0; i<3; ++i ) {
-            if( local_minimum_bisectors[i] < INF ) {
-                Color c = static_cast<Color>(int(i!=0));
+        // set the anchor for each negative cone
+        for( size_t i=0; i<3; ++i )
+        {
+            if( local_minimum_bisectors[i] < INF )
+            {
+                // i is equal to floor( cone of edge (v,w) / 2 ), so blue cone (1) is at i==0
+                Color c = getColor( local_anchors[i], w, P );//same but less clear -> static_cast<Color>(int(i!=0));
                 anchors[c].emplace_back( local_anchors[i], w );
                 cout<<"  added "<< (c==BLUE?"blue":"white")<<" anchor "<<local_anchors[i]<<"-"<< w<<endl;
             }
         }
+
     }
+}
+template< class Set>
+inline bool vertexIsEmpty(const Vertex_descriptor vertex, const bool isHigherVertex, const Set &AdjacentWhiteConeIsEmpty)
+{
+    bool vertexIsKnown = contains( AdjacentWhiteConeIsEmpty, vertex );
+    return // vertex with higher y value needs its negative (second) cones checked
+           (!vertexIsKnown)
+        || ( isHigherVertex && AdjacentWhiteConeIsEmpty.at(vertex).negative)
+        || (!isHigherVertex && AdjacentWhiteConeIsEmpty.at(vertex).positive);
+}
+template< class Set>
+inline void fillVertex(const Vertex_descriptor vertex, const bool isHigherVertex, Set &AdjacentWhiteConeIsEmpty)
+{
+    typedef typename Set::mapped_type PositiveAndNegativeWhiteConesForVertex;
+    AdjacentWhiteConeIsEmpty.try_emplace(vertex, PositiveAndNegativeWhiteConesForVertex() );
+    AdjacentWhiteConeIsEmpty[vertex].negative = !isHigherVertex
+                                                && AdjacentWhiteConeIsEmpty[vertex].negative;
+    AdjacentWhiteConeIsEmpty[vertex].positive =  isHigherVertex
+                                                && AdjacentWhiteConeIsEmpty[vertex].positive;
 }
 
 template< class AnchorList, class PointContainer, class EdgeList >
@@ -360,54 +196,39 @@ void addWhiteAnchors(AnchorList &whiteAnchors, const PointContainer &P, EdgeList
         bool positive = true;
         bool negative = true;
     };
-    unordered_map<Vertex_descriptor, PositiveAndNegativeWhiteConesForVertex> AdjacentWhiteConeIsEmpty;
+
+    typedef unordered_map<Vertex_descriptor,
+                          PositiveAndNegativeWhiteConesForVertex> PolarVertexStatusMap;
+    PolarVertexStatusMap AdjacentWhiteConeIsEmpty;
 
     for( auto whiteAnchor : whiteAnchors )
     {
         cout<<"WhiteAnchor:"<<whiteAnchor.first<<"-"<<whiteAnchor.second<<"\n";
 
-        Vertex_descriptor higherVertex = whiteAnchor.first,
-                          lowerVertex = whiteAnchor.second;
+        Vertex_descriptor source = whiteAnchor.first,
+                          target = whiteAnchor.second;
+        bool sourceIsHigher = P[target].y() < P[source].y();
 
-        if( P[higherVertex].y() < P[lowerVertex].y() )
-        {
-            swap(higherVertex,lowerVertex);
-        }
-
-        bool higherVertexIsKnown = contains( AdjacentWhiteConeIsEmpty, higherVertex );
-        bool higherVertexAgrees = // vertex with higher y value needs its negative (second) cones checked
-        {
-            !higherVertexIsKnown
-            || AdjacentWhiteConeIsEmpty[higherVertex].negative
-        };
-        bool lowerVertexIsKnown = contains( AdjacentWhiteConeIsEmpty, lowerVertex );
-        bool lowerVertexAgrees = // other vertex needs its positive (first) cones checked
-        {
-            !lowerVertexIsKnown
-            || AdjacentWhiteConeIsEmpty[lowerVertex].positive
-        };
-
-        if( higherVertexAgrees && lowerVertexAgrees )
+        if( vertexIsEmpty(source, sourceIsHigher,AdjacentWhiteConeIsEmpty)
+         && vertexIsEmpty(target,!sourceIsHigher,AdjacentWhiteConeIsEmpty) )
         {
             cout<<"Both agree\n";
             A.insert(whiteAnchor);
 
-            AdjacentWhiteConeIsEmpty.try_emplace(higherVertex, PositiveAndNegativeWhiteConesForVertex() );
-            AdjacentWhiteConeIsEmpty[higherVertex].negative = false;
-
-            AdjacentWhiteConeIsEmpty.try_emplace(lowerVertex, PositiveAndNegativeWhiteConesForVertex() );
-            AdjacentWhiteConeIsEmpty[lowerVertex].positive = false;
+            fillVertex(source,  sourceIsHigher, AdjacentWhiteConeIsEmpty);
+            fillVertex(target, !sourceIsHigher, AdjacentWhiteConeIsEmpty);
         }
     }
 }
-template< class Triangulation, class EdgeList, class PointContainer, class AnchorList >
-void addCanonicalEdgesInBlueCones( const Triangulation &D, const EdgeList &A, const PointContainer &P, const AnchorList &blueAnchors, EdgeList &S )
+
+template< class Triangulation, class EdgeList, class PointContainer, class AnchorList, class AdjacencyList >
+void addBlueCanonicalEdges( const Triangulation &D, const EdgeList &A, const PointContainer &P, const AnchorList &blueAnchors, AdjacencyList &S )
 {
     for( auto blueAnchor : blueAnchors )
     {
-        //auto source = blueAnchor.first;
         typedef typename Triangulation::Edge_descriptor Edge_descriptor;
         vector<Edge_descriptor> fan;
+        //auto source = blueAnchor.first;
         auto target = blueAnchor.second;
         D.fan_of_cone(target,1,fan);
 
@@ -417,18 +238,200 @@ void addCanonicalEdgesInBlueCones( const Triangulation &D, const EdgeList &A, co
         for( ++eit; eit!=fan.end(); ++eit )
         {
             auto thisVertex = D.source(*eit);
-            auto canonicalEdge = make_pair( thisVertex, previousVertex );
-            if( !contains(A, canonicalEdge)
-             && !contains(A, reverse_pair(canonicalEdge)) )
+
+            pair<Vertex_descriptor,Vertex_descriptor> canonicalEdge;
+            bool edgeExists;
+            boost::tie( canonicalEdge, edgeExists )
+                = D.eitherEdge( thisVertex, previousVertex );
+
+            if(edgeExists && !contains(A, canonicalEdge) )
             {
                 cout<<"Canonical edge "<<canonicalEdge.first<<"-"<<canonicalEdge.second<<"\n";
-                S.insert(canonicalEdge);
+                S.try_emplace( canonicalEdge.second, typename AdjacencyList::mapped_type() );
+                S[canonicalEdge.second].insert(canonicalEdge.first);
             }
             previousVertex = thisVertex;
         }
     }
 }
 
+template< class Triangulation, class EdgeList, class PointContainer, class AnchorList, class AdjacencyList >
+void addWhiteCanonicalEdges( const Triangulation &D, const EdgeList &A, const PointContainer &P, const AnchorList &whiteAnchors, AdjacencyList &S )
+{
+    for( auto whiteAnchor : whiteAnchors )
+    {
+        typedef typename Triangulation::Edge_descriptor Edge_descriptor;
+
+        auto source = whiteAnchor.first;
+        auto target = whiteAnchor.second;
+        size_t cone = D.getCone(target,source);
+        vector<Edge_descriptor> fan;
+        D.fan_of_cone(target,cone,fan);
+
+        auto boundaryVertex = D.source(fan.back()),
+             previousVertex = D.source(fan.front());
+        int direction = 1;
+
+        if( (cone+1) % 3 == 0 )
+        { //white side of anchor is CW
+            direction = -1;
+            swap(previousVertex,boundaryVertex);
+        }
+
+        auto eit = fan.begin();
+        while( D.source(*eit) != source )
+            ++eit;
+
+        previousVertex = D.source(*eit);
+
+        for( eit+=direction; previousVertex!=boundaryVertex; eit+=direction )
+        {
+            auto thisVertex = D.source(*eit);
+            cout<<"Considering white canonical edge "<<previousVertex<<"-"<<thisVertex<<endl;
+
+            pair<Vertex_descriptor,Vertex_descriptor> canonicalEdge;
+            bool edgeExists;
+            boost::tie( canonicalEdge, edgeExists )
+                = D.eitherEdge( thisVertex, previousVertex );
+
+            // For white cones, add can. edge if its anchor is not in A
+            if(edgeExists && !contains(A, canonicalEdge) )
+            {
+                cout<<"Canonical edge "<<canonicalEdge.first<<"-"<<canonicalEdge.second<<"\n";
+                S.try_emplace( canonicalEdge.second, typename AdjacencyList::mapped_type() );
+                S[canonicalEdge.second].insert(canonicalEdge.first);
+            }
+            previousVertex = thisVertex;
+        }
+    }
+}
+
+template<class AdjacencyList >
+void createShortcut( const Vertex_descriptor &p, const Vertex_descriptor &q, const Vertex_descriptor &r, AdjacencyList &adj) {
+
+    adj[q].erase(p);
+    adj[q].erase(r);
+
+    adj.try_emplace(r,typename AdjacencyList::mapped_type());
+    adj[r].insert(p);
+}
+
+template<class Triangulation, class AdjacencyList>
+void addBlueShortcuts( const Triangulation &D, AdjacencyList &S_not_A )
+{
+    for( auto v : S_not_A )
+    {
+        // check if there are two edges that share a target
+        cout<<"  |"<<v.first<<"|="<<v.second.size()<<"\n";
+        if( v.second.size() > 1 )
+        {
+            auto p = *v.second.begin(),
+                 q = v.first,
+                 r = *(--v.second.end());
+
+            cout<< "    Blue shortcut edge "<<*v.second.begin()
+                <<"-"<<v.first<<"-"<<*(--v.second.end())<< " --> "
+                <<*v.second.begin()<<"-"<<*(--v.second.end())<<"\n";
+
+            assert( D.edgeExists( make_pair(p,q)) && D.edgeExists( make_pair(r,q)) );
+            createShortcut( p, q, r, S_not_A );
+        }
+    }
+}
+
+
+
+template< class Triangulation, class EdgeList, class PointContainer, class AnchorList, class AdjacencyList >
+void addWhiteShortcuts( const Triangulation &D, const EdgeList &A, const PointContainer &P, const AnchorList &whiteAnchors, AdjacencyList &S )
+{
+    for( auto whiteAnchor : whiteAnchors )
+    {
+        typedef typename Triangulation::Edge_descriptor Edge_descriptor;
+
+        auto source = whiteAnchor.first;
+        auto target = whiteAnchor.second;
+        cout<<"Looking for shortcuts of white anchor "<<source<<"-"<<target<<endl;
+        size_t cone = D.getCone(target,source);
+        vector<Edge_descriptor> fan;
+        D.fan_of_cone(target,cone,fan);
+
+        auto boundaryVertex = D.source(fan.back()),
+             previousVertex = D.source(fan.front());
+        int direction = 1;
+
+        if( (cone+1) % 3 == 0 ) { //white side of anchor is CW
+            direction = -1;
+            swap(previousVertex,boundaryVertex);
+        }
+        //cout<<"direction="<<direction<<endl;
+
+        if( source != boundaryVertex )
+        {
+            auto i = fan.begin(); // use i here to be consistent with paper
+            while( D.source(*i) != source )
+                ++i;
+
+            previousVertex = D.source(*i);
+
+            //cout<<"index in fan="<<(i-fan.begin())<<endl;
+
+            i+=direction;
+
+            for( auto i_vertex = D.source(*i);
+                 i_vertex != boundaryVertex;
+                 i_vertex = D.source(*i) )
+            {
+                //cout<<"i_vertex="<<i_vertex<<endl;
+
+                if( getColor(previousVertex,i_vertex,P) == WHITE )
+                {
+                    //cout<<"color is white"<<endl;
+                    i+=direction;
+                    previousVertex = i_vertex;
+                }
+                else if( i_vertex != boundaryVertex )
+                {
+                    //cout<<"color is blue"<<endl;
+                    auto j = i;
+                    j+=direction;
+
+                    auto j_vertex = D.source(*j),
+                         j_prev = i_vertex,
+                         max_j = j;
+
+                    auto j_angle = get_angle<K>(P[target], P[i_vertex], P[j_vertex]),
+                         maxAngle = j_angle;
+
+                    for( j=j; j_prev!=boundaryVertex; j+=direction )
+                    {    // j is in a white cone AND all vertices from i+1 to boundaryVertex are on the same side of i,j
+                        j_vertex = D.source(*j);
+                        j_angle = get_angle<K>(P[target], P[i_vertex], P[j_vertex]);
+
+                        if( getColor(j_prev,j_vertex,P) == WHITE
+                         && maxAngle < j_angle )
+                        {
+                            maxAngle = j_angle;
+                            max_j = j;
+                        }
+                        j_prev = j_vertex;
+                    }
+                    i = max_j;
+                    j_vertex = D.source(*max_j);
+                    j_prev = D.source(*(max_j-=direction));
+
+                    cout<<"White shortcut edge "<<j_vertex<<"-"<<i_vertex<<"\n";
+                    S.try_emplace( i_vertex, typename AdjacencyList::mapped_type() );
+                    S[i_vertex].insert(D.source(*max_j));
+                    if(S.find(j_prev) != S.end())
+                    {
+                        S[j_prev].erase(j_vertex);
+                    }
+                    previousVertex = j_prev;
+                }
+            }
+        }
+    }
+}
 
 } // namespace KPT2017
 
@@ -439,28 +442,82 @@ void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 {
     using namespace kpt2017;
 
-    //Angle of the cones. Results in 6 cones for a given vertex.
-
     vector<Point_2> P( pointsBegin, pointsEnd );
 
     TD_Delaunay_2 D( P.begin(), P.end() );
+    size_t n = D.number_of_vertices();
 
     map<Color,vector<pair<size_t,size_t>>> Anchors;
     findAnchors( Anchors, D, P );
 
+    auto AnchorComp = [&P]( const pair<size_t,size_t> &lhs, const pair<size_t,size_t> &rhs )
+    {
+        return   lhs.second  < rhs.second
+            || ( lhs.second == rhs.second
+                && getCone(lhs.second, lhs.first,P) < getCone(rhs.second,rhs.first,P) );
+    };
     // Step 1. add all blue anchors to A
-    typedef set<pair<size_t,size_t>> EdgeList;
-    EdgeList A( Anchors[BLUE].begin(),
-                Anchors[BLUE].end() );
+    set<pair<size_t,size_t>,decltype(AnchorComp)> A(
+        Anchors[BLUE].begin(),
+        Anchors[BLUE].end(),
+        AnchorComp );
 
     // Step 2.
     addWhiteAnchors( Anchors[WHITE], P, A );
 
-    // Step 3.
-    EdgeList S(A);
-    // Add to S every canonical edge in negative blue cones (cone 1) if the edge isn't in A
-    addCanonicalEdgesInBlueCones(D,A,P,Anchors[BLUE],S);
+    // A should be degree 4 or less
+    vector<size_t> degree(n,0);
 
+    for( auto a : A ) {
+        ++degree[a.first];
+        ++degree[a.second];
+    }
+    assert( *max_element(degree.begin(), degree.end()) <= 4 );
+
+    // Step 3.
+    typedef map<size_t, set<size_t>> AdjacencyList;
+    AdjacencyList S_not_A;
+    // Add to S every canonical edge in negative blue cones (cone 1) if the edge isn't in A
+    addBlueCanonicalEdges(D,A,P,Anchors[BLUE],S_not_A);
+
+    //Step 4.
+    addBlueShortcuts(D,S_not_A);
+
+    // should be degree 4 or less
+    for( auto s : S_not_A ) {
+        for( auto a : s.second ) {
+            ++degree[a];
+            ++degree[s.first];
+        }
+    }
+    assert( *max_element(degree.begin(), degree.end()) <= 4 );
+
+    //Step 5.
+    addWhiteCanonicalEdges(D,A,P,Anchors[WHITE],S_not_A);
+
+    //Step 6.
+    addWhiteShortcuts(D,A,P,Anchors[WHITE],S_not_A);
+
+    // Since we didn't set S to A in step 3, we need to combine them now
+    set<pair<size_t,size_t>> S( A.begin(), A.end() );
+
+    cout<<"Adding S_not_A to S...\n";
+    for( auto v : S_not_A )
+    {
+        if( v.second.size() > 0)
+        {
+            cout<<*v.second.begin()<<"-"<< v.first<<endl;
+            S.emplace( *v.second.begin(), v.first );
+        }
+    }
+
+    // should be degree 4 or less
+    fill( degree.begin(), degree.end(), 0 );
+    for( auto s : S ) {
+        ++degree[s.first];
+        ++degree[s.second];
+    }
+    assert( *max_element(degree.begin(), degree.end()) <= 4 );
 
     // Edge list is only needed for printing. Remove for production.
     vector<pair<Point_2,Point_2>> edgeList;
@@ -478,7 +535,7 @@ void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
     // START PRINTER NONSENSE
     if(printLog) {
-        GraphPrinter printer(5);
+        GraphPrinter printer(9);
         GraphPrinter::OptionsList options;
 
         options = {
@@ -492,7 +549,6 @@ void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
             {"line width", to_string(printer.activeEdgeWidth)}
         };
         printer.drawEdges(edgeList.begin(), edgeList.end(), options);
-
 
         options = {
             {"vertex", make_optional(to_string(printer.vertexRadius))}, // vertex width

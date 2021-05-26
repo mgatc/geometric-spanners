@@ -276,7 +276,7 @@ void scratch() {
 //            -1.05,-4.2
 //        },
 //    };
-        size_t n = 10;
+        size_t n = 1000;
 
 //        std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
@@ -290,12 +290,12 @@ void scratch() {
 
 
 
-        string filename = "data-10_2.500000x2.500000.txt";
-        readPointsFromFile( back_inserter( points ), filename );
+//        string filename = "data-500_2.500000x2.500000.txt";
+//        readPointsFromFile( back_inserter( points ), filename );
 
         //generatePointsNovel(back_inserter(points));
 
-        //generateRandomPoints( n, width/2, back_inserter(points) );
+        generateRandomPoints( n, width/2, back_inserter(points) );
         cout<< points.size();
         cout<< "\n";
         list< pair< Point, Point > > result;
@@ -360,7 +360,7 @@ void scratch() {
 //            { "color", printer.inactiveEdgeColor },
 //            { "line width", to_string(printer.inactiveEdgeWidth) }
 //        };
-//        //printer.drawEdges( Del, options );
+//        printer.drawEdges( Del, options );
 //
 //        options = { // active edge options
 //            { "color", printer.activeEdgeColor },

@@ -30,7 +30,7 @@ class GraphPrinter {
     unordered_set<string> _colors;
 
     string activeEdgeColor =     "000000";
-    string inactiveEdgeColor =   "f7b267";
+    string inactiveEdgeColor =   "bbbbbb";
     string worstPathEdgeColor =  "ff0000";
     string activeVertexColor =   "0000ff";
     string inactiveVertexColor = "f7b267";

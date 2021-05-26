@@ -66,21 +66,23 @@ string generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
     auto g3s = CGAL::Random_points_on_square_2<Point,Creator>( size/4 );
     auto g4s = CGAL::Random_points_on_circle_2<Point,Creator>( size/4 );
 
-    vector<Point> points;
-    points.reserve(n);
+    set<Point> points;
 
-    std::copy_n( g1, n*2/9, back_inserter(points) );
-    std::copy_n( g2, n/9, back_inserter(points) );
-    std::copy_n( g3, n*2/18, back_inserter(points) );
-    std::copy_n( g4, n/18, back_inserter(points) );
+//    std::copy_n( g1, n*2/9, inserter(points) );
+//    std::copy_n( g2, n/9, inserter(points) );
+//    std::copy_n( g3, n*2/18, inserter(points) );
+//    std::copy_n( g4, n/18, inserter(points) );
+//
+//    std::copy_n( g1s, n/9, inserter(points) );
+//    std::copy_n( g2s, n*2/9, inserter(points) );
+//    std::copy_n( g3s, n/18, inserter(points) );
+//    std::copy_n( g4s, n*2/18, inserter(points) );
 
-    std::copy_n( g1s, n/9, back_inserter(points) );
-    std::copy_n( g2s, n*2/9, back_inserter(points) );
-    std::copy_n( g3s, n/18, back_inserter(points) );
-    std::copy_n( g4s, n*2/18, back_inserter(points) );
 
-    while(points.size() < n) {
-        std::copy_n( g1s, n-points.size(), back_inserter(points) );
+    size_t remaining;
+
+    while((remaining = n - points.size()) > 0) {
+        std::copy_n( g1, remaining, inserter(points) );
     }
 
     //points.emplace_back(0,0);

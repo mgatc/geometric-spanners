@@ -11,9 +11,9 @@
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
-#include "FloydWarshall.h"
+//#include "FloydWarshall.h"
 #include "GeometricSpannerPrinter.h"
-#include "GraphAlgoTV.h"
+//#include "GraphAlgoTV.h"
 //#include "BGS2005.h"
 //#include "LW2004.h"
 //#include "BSX2009.h"

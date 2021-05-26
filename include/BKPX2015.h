@@ -8,16 +8,16 @@
 #include <list>
 #include <cassert>
 #include <string>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <limits>
 #include <cmath>         // ceil, floor
 #include <unordered_set> // selected
 #include <unordered_map> // G_prime
 #include <vector>        // handles
 #include <boost/functional/hash.hpp> // size_t pair hash : used in Yao_inf_4
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/algorithm.h> //
 #include <CGAL/circulator.h>
-#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+//#include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
 // typedefs for the traits and the algorithm
 #include <CGAL/Segment_Delaunay_graph_Linf_filtered_traits_2.h>
@@ -1744,18 +1744,19 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     cout << endl;
 
     //N is the number of vertices in the delaunay triangulation.
-    size_t n = sdg.number_of_vertices();
+    const size_t n = sdg.number_of_vertices();
     if(n > SIZE_T_MAX - 1) return;
 
-//    // store the vertex handles
-//    vector<Vertex_handle> handles(n);
-//
+    // store the vertex handles
+    vector<Vertex_handle> handles(n);
+
 //    for (auto v = sdg.finite_vertices_begin(); v != sdg.finite_vertices_end(); v++) {
+//        cout<<v->storage_site().info()<<endl;
 //        handles[v->storage_site().info()] = v;
 //    }
-//
-//    //construct YaoEdges
-//    vector<yaoCones> yaoEdges(n);
+
+    //construct YaoEdges
+//    vector<yaoCones> yaoEdges(n,yaoCones);
 //    vector<fanCones> pointFans(n);
 //    vector<numYaoEdges> yaoEdgeCount(n);
 //
@@ -2036,6 +2037,8 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 //
 //  cout << "degree 4 spanner edges" << endl;
 //
+//  vector<pair<Point_2,Point_2>> edgeList;
+//
 //  for (auto u : handles) {
 //
 //        cout << u->storage_site().info() << "] ";
@@ -2048,6 +2051,8 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 //            else {
 //                for (auto edge : H8[u->storage_site().info()][cone]) {
 //                    cout << "(" << (edge.first)->storage_site().info() << "," << (edge.second)->storage_site().info() <<") ";
+////                    edgeList.emplace_back( P.at((edge.first)->storage_site().info()),
+////                                           P.at((edge.second)->storage_site().info()) );
 //                }
 //            }
 //        }
@@ -2056,9 +2061,20 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 //
 //    }
 
+    // Send resultant graph to output iterator
+//    for(auto e : edgeList) {
+//        // Edge list is only needed for printing. Remove for production.
+//        //edgeList.emplace_back(handles.at(e.first)->point(), handles.at(e.second)->point());
+//
+//        *result = e;
+//        ++result;
+//        *result = make_pair(e.second,e.first);
+//        ++result;
+//    }
+
     // START PRINTER NONSENSE
     if(printLog) {
-        GraphPrinter printer(1); // argument number is scaling factor --> manipulate based on size of point set
+        GraphPrinter printer(10); // argument number is scaling factor --> manipulate based on size of point set
         GraphPrinter::OptionsList options;
 
         options = {
@@ -2071,7 +2087,7 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
             {"color", printer.activeEdgeColor},
             {"line width", to_string(printer.activeEdgeWidth)}
         };
-    //    printer.drawEdges(edgeList.begin(), edgeList.end(), options);
+        //printer.drawEdges(edgeList.begin(), edgeList.end(), options);
 
 
         options = {

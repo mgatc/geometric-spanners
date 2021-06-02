@@ -56,7 +56,7 @@ namespace gsnunf {
     typedef unordered_map<pair<size_t,size_t>,size_t,pointConeHash,pointConeEquality>   pointConeMap;
 
     //Cone angles.
-    const double tan30 = tan(PI / 6);
+    const double tan30 = TAN30;
     const double cot30 = 1 / tan30;
 
     //Slopes of the cone boundry lines.
@@ -342,18 +342,16 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         //Timer t;
 
     for(auto e = DT.finite_edges_begin(); e != DT.finite_edges_end(); ++e) {
-        L.emplace_back(make_pair(make_pair(e->first->vertex((e->second + 1) % 3)->info(),
-        e->first->vertex((e->second + 2) % 3)->info()),bisectorLength(alpha,make_pair(
-        e->first->vertex((e->second + 1) % 3)->info(),e->first->vertex((e->second + 2) % 3)->info()),handles)));
-    }
-
-    for( auto e : L ) {
+        auto edge = make_pair(
+            e->first->vertex((e->second + 1) % 3)->info(),
+            e->first->vertex((e->second + 2) % 3)->info()
+        );
+        L.emplace_back(
+            edge,
+            bisectorLength( alpha, edge, handles )
+        );
         B.emplace( e.first, e.second);
     }
-
-    }
-
-    {
         //Timer t;
     //Step 2: Edges in the set L are sorted by their bisector length in non-decreasing order.
     sort( L.begin(), L.end(), [&](const auto &lhs, const auto &rhs) {

@@ -3,6 +3,7 @@
 #include <list>
 #include <limits>
 #include <optional>
+#include <set>
 #include <utility>
 
 //Random point generation, testing.
@@ -10,18 +11,21 @@
 
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
-#include "FloydWarshall.h"
-#include "GeometricSpannerPrinter.h"
-#include "GraphAlgoTV.h"
-#include "BGS2005.h"
-#include "LW2004.h"
-#include "BSX2009.h"
+//#include "FloydWarshall.h"
+//#include "GeometricSpannerPrinter.h"
+////#include "GraphAlgoTV.h"
+//#include "BGS2005.h"
+//#include "LW2004.h"
+//#include "BSX2009.h"
 #include "KPX2010.h"
 #include "BCC2012.h"
-#include "BHS2017.h"
+//#include "BHS2017.h"
+#include "KPT2017.h"
 #include "metrics.h"
-//#include "utilities.h"
+//#include "delaunay.h"
+#include "utilities.h"
 
 using namespace gsnunf;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
@@ -65,18 +69,22 @@ string generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
     auto g3s = CGAL::Random_points_on_square_2<Point,Creator>( size/4 );
     auto g4s = CGAL::Random_points_on_circle_2<Point,Creator>( size/4 );
 
-    vector<Point> points;
-    points.reserve(n);
+    std::set<Point> points;
 
-    std::copy_n( g1, n*2/9, back_inserter(points) );
-    std::copy_n( g2, n/9, back_inserter(points) );
-    std::copy_n( g3, n*2/18, back_inserter(points) );
-    std::copy_n( g4, n/18, back_inserter(points) );
+    std::copy_n( g2, n/9, inserter(points) );
+    std::copy_n( g3, n/9, inserter(points) );
+    std::copy_n( g4, n/18, inserter(points) );
 
-    std::copy_n( g1s, n/9, back_inserter(points) );
-    std::copy_n( g2s, n*2/9, back_inserter(points) );
-    std::copy_n( g3s, n/18, back_inserter(points) );
-    std::copy_n( g4s, n*2/18, back_inserter(points) );
+    std::copy_n( g1s, n/9, inserter(points) );
+    std::copy_n( g2s, n*2/9, inserter(points) );
+    std::copy_n( g3s, n/9, inserter(points) );
+    std::copy_n( g4s, n/18, inserter(points) );
+
+    int remaining;
+    while( (remaining = int(n)-int(points.size())) > 0) {
+        std::copy_n( g1, remaining, inserter(points) );
+    }
+
 
     //points.emplace_back(0,0);
 
@@ -97,16 +105,78 @@ string generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
     return fName;
 }
 
-int main() {
-//    size_t n = 20;
-//    for( size_t i=4; i<=n; ++i )
-//        if( !experiment( 1, i, i*1000, i*100 ) )
-//            break;
+template< class OutputIterator >
+string generatePointsNovel( OutputIterator pointsOut, size_t rows = 10, size_t cols = 10 ) {
 
-    //singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812.txt", true, true );
-    //singleRun( 0, 0, "bsxTestResult", "data-200_7071.067812x7071.067812 (copy).txt", true, true );
-    experiment( 100000, 100000, 2000000, 100000 );
+    vector<Point> points;
+
+    const double skew = 0.01;
+    for( size_t i=0; i<rows; ++i ) {
+        bool rowIsOdd = i%2;
+        for( size_t j=rowIsOdd; j<cols; j+=1+(rowIsOdd) ) {
+            bool colIsOdd = j%2;
+            double y = i;
+            y += (rowIsOdd || colIsOdd) ?
+                0 : (skew * ( (i+j)%4 == 0 ? -1 : 1 ) );
+//            if( rowIsEven && j%2 == 0 ) {
+//                if( (i+j)%4 == 0 ) {
+//                    y -= skew;
+//                } else {
+//                    y += skew;
+//                }
+//            }
+            Point p(j,y);
+            //cout<<p<<"\n";
+            points.push_back(p);
+        }
+    }
+
+    // copy points to output iterator
+    for( Point p : points )
+        *(pointsOut++) = p;
+
+    // copy points to file
+    ofstream out;
+    string fName;
+    fName = "data-NOVEL-" + to_string(points.size()) + "_" + to_string(rows) + "x" + to_string(cols) + ".txt";
+    out.open( fName, ios::trunc );
+    for( Point p : points )
+        out << p << endl;
+
+    out.close();
+
+    return fName;
+}
+
+int main( int argc, char *argv[] ) {
+
+    const size_t runs      =   100;
+    const size_t n_begin   =  5000;
+    const size_t n_end     = 10000;
+    const size_t increment =  1000;
+
+    vector<size_t> experimentParameters = {
+        runs, n_begin, n_end, increment
+    };
+
+    for( size_t arg=1;
+         arg < min(size_t(argc),experimentParameters.size()+1);
+         ++arg )
+    {
+        try {
+            experimentParameters[arg-1] = stoul(argv[arg]);
+            cout<<"Parameter "<<(arg-1)<<" = "<<experimentParameters[arg-1]<<"\n";
+        }
+        catch(invalid_argument ia)
+        {
+            cout<<"Invalid experiment parameter '"<<arg<<"', using default value = "<<experimentParameters[arg-1]<<"\n";
+        }
+    }
+
+    experiment( experimentParameters[0],experimentParameters[1],experimentParameters[2],experimentParameters[3] );
     //scratch();
+
+    //singleRun( 0, 0, "kptTestResult", "data-75_4330.127019x4330.127019.txt", true, true );
 
     return 0;
 }
@@ -118,10 +188,6 @@ void scratch() {
     size_t i=30;
 //
 //    //for( i=1; i<=17; ++i ) {
-        auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( width*sqrt(i)/2 );
-        auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   width*sqrt(i)/2 );
-        auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( width*sqrt(i)/2 );
-        auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( width*sqrt(i)/2 );
         vector<Point> points;
         // SET POINT SET
 //        points = {
@@ -223,30 +289,37 @@ void scratch() {
 //            -1.05,-4.2
 //        },
 //    };
-        size_t n = 40;
+        size_t n = 1000;
 
 //        std::copy_n( g1, n/3, back_inserter(points) );
 //        std::copy_n( g2, n/3, back_inserter(points) );
 //        std::copy_n( g3, n/6, back_inserter(points) );
 //        std::copy_n( g4, n, back_inserter(points) );
 //        points.emplace_back( 0,0 );
-//        points.emplace_back(1, 13 );
+//        points.emplace_back( 0,1 );
+//        points.emplace_back( 1,0 );
+//        points.emplace_back( 1,1 );
+//        points.emplace_back( 2,1 );
 
 
-        string filename = "data-30_2738.612788x2738.612788.txt";
+
+        string filename = "data-89_4716.990566x4716.990566.txt";
         readPointsFromFile( back_inserter( points ), filename );
 
-        //generateRandomPoints( n, width/2, back_inserter(points) );
+        //generatePointsNovel(back_inserter(points));
+
+//        generateRandomPoints( n, width/2, back_inserter(points) );
         cout<< points.size();
         cout<< "\n";
-        list< pair< Point, Point > > result;
+//        list< pair< Point, Point > > result;
+        list< pair< size_t,size_t > > result;
 
         // Delaunay triangulation
-        lw2004::Delaunay Del( points.begin(), points.end() );
-        // Add IDs
-        size_t id=0;
-        for( auto v=Del.finite_vertices_begin(); v!=Del.finite_vertices_end(); ++v )
-            v->info() = id++;
+//        lw2004::Delaunay Del( points.begin(), points.end() );
+//        // Add IDs
+//        size_t id=0;
+//        for( auto v=Del.finite_vertices_begin(); v!=Del.finite_vertices_end(); ++v )
+//            v->info() = id++;
 
 //                cout<<degree(Del);
 //                cout<<",";
@@ -257,201 +330,40 @@ void scratch() {
 //                cout<< t.second;
 //                cout<<",";
 
-        {
+//        {
 
 //                Timer tim;
-            LW2004( points.begin(), points.end(), back_inserter(result) );
-            BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3, true );
-            BGS2005( points.begin(), points.end(), back_inserter(result) );
-            KPX2010( points.begin(), points.end(), back_inserter(result), 18, true );
-            BCC2012<6>( points.begin(), points.end(), back_inserter(result), true );
-            BCC2012<7>( points.begin(), points.end(), back_inserter(result), true );
-            BHS2017(points.begin(), points.end(), back_inserter(result), true );
+            //LW2004( points.begin(), points.end(), back_inserter(result) );
+            //BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3 );
+            //BGS2005( points.begin(), points.end(), back_inserter(result) );
+            //KPX2010( points.begin(), points.end(), back_inserter(result), 18 );
+            //BCC2012<6>( points.begin(), points.end(), back_inserter(result) );
+            //BCC2012<7>( points.begin(), points.end(), back_inserter(result) );
+            //BHS2017(points.begin(), points.end(), back_inserter(result) );
+            KPT2017(points.begin(), points.end(), back_inserter(result), true );
+            //delaunay_testing( points.begin(), points.end(), back_inserter(result) );
+        //}
 
-        }
+//        for( auto edge : result ) {
+//            cout<<edge.first<<"("<<points.at(edge.first)<<") -- "
+//                <<edge.second<<"("<<points.at(edge.second)<<")\n";
+//        }
 
-       //Johnsons( result.begin(), result.end() );
+//        list< pair< Point, Point > > WorstPath;
+//        SFWorstPath( result.begin(), result.end(),
+//                     make_optional(inserter(WorstPath,WorstPath.begin())) );
 
 
         cout << degree( result.begin(), result.end() );
-        cout <<",";
+        cout<<",";
+        double t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        cout<< t;
+        cout<<",";
 
-//        cout << degree( result.begin(), result.end() );
-//        double t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//        cout<< t;
-//        cout<<",";
-        //cout <<",";
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
 
-        // Add edges to result
-
-//        result = {
-//            {
-//                points[0],points[9]
-//            },
-//            {
-//                points[0],points[12]
-//            },
-//            {
-//                points[0],points[16]
-//            },
-//            {
-//                points[1],points[2]
-//            },
-//            {
-//                points[1],points[12]
-//            },
-//            {
-//                points[1],points[13]
-//            },
-//            {
-//                points[1],points[8]
-//            },
-//            {
-//                points[2],points[11]
-//            },
-//            {
-//                points[2],points[14]
-//            },
-//            {
-//                points[2],points[15]
-//            },
-//            {
-//                points[3],points[7]
-//            },
-//            {
-//                points[3],points[8]
-//            },
-//            {
-//                points[3],points[10]
-//            },
-//            {
-//                points[4],points[5]
-//            },
-//            {
-//                points[4],points[6]
-//            },
-//            {
-//                points[4],points[7]
-//            },
-//            {
-//                points[4],points[8]
-//            },
-//            {
-//                points[5],points[6]
-//            },
-//            {
-//                points[5],points[8]
-//            },
-//            {
-//                points[5],points[13]
-//            },
-//            {
-//                points[5],points[17]
-//            },
-//            {
-//                points[5],points[14]
-//            },
-//            {
-//                points[6],points[7]
-//            },
-//            {
-//                points[6],points[16]
-//            },
-//            {
-//                points[8],points[10]
-//            },
-//            {
-//                points[8],points[12]
-//            },
-//            {
-//                points[8],points[13]
-//            },
-//            {
-//                points[9],points[13]
-//            },
-//            {
-//                points[9],points[10]
-//            },
-//            {
-//                points[11],points[12]
-//            },
-//            {
-//                points[11],points[15]
-//            },
-//            {
-//                points[12],points[13]
-//            },
-//            {
-//                points[13],points[14]
-//            },
-//            {
-//                points[14],points[15]
-//            },
-//            {
-//                points[15],points[16]
-//            },
-//            {
-//                points[16],points[17]
-//            },
-//        };
-//
-//        size_t n_p = result.size();
-//        list<pair<Point,Point>> result2(result);
-//
-//        for( auto it=result.begin();it!=result.end();it++ ) {
-//            result2.emplace_back(it->second, it->first);
-//        }
-
-//            double t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//            cout<< t;
-//            cout<<",";
-//            size_t deg = degree( result.begin(), result.end() );
-//            cout << deg;
-//            cout <<",";
-//            cout << " Dumping edge set..."<<result.size()<<" edges.\n\n";
-
-
-//            for( auto e : result ) cout <<"("<< e.first << ", " << e.second<<")" << "\n";
-//        result.clear();
-
-//            {
-//                Timer tim;
-//                BGS2002( points.begin(), points.end(), back_inserter(result) );
-//            }
-//            t = StretchFactor( result.begin(), result.end() );
-//            cout<< t.second;
-//            cout<<",";
-//            result.clear();
-
-//        cout<<"\n";
-
-//        printer.drawEdges( Del._DT );
-//        printer.drawEdges( result.begin(), result.end(), {{"red",""}} );
-//        printer.drawVertices( Del._DT );
-//        printer.print( "kpx2010scratch" );
-        //printer.print("bgs2002");
-
-
-//        cout<<"\n";
-
-//        string resultFileName = filename;
-//        // strip file extension
-//        const std::string ext(".txt");
-//        if ( resultFileName != ext &&
-//             resultFileName.size() > ext.size() &&
-//             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
-//        {
-//           // if so then strip them off
-//           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
-//        }
-//        resultFileName += "_result-";
-//        resultFileName += "redo";
-
-
-//       // singleRun( 30, 30, resultFileName, filename, true, true );
-//        GraphPrinter printer(0.7);
+//        GraphPrinter printer(9);
 //        GraphPrinter::OptionsList options;
 //
 //        options = {
@@ -462,27 +374,33 @@ void scratch() {
 //
 //        options = { // active edge options
 //            { "color", printer.activeEdgeColor },
-//            { "line width", to_string(printer.activeEdgeWidth) }
+//            { "line width", to_string(printer.inactiveEdgeWidth) }
 //        };
 //        printer.drawEdges( result.begin(), result.end(), options );
 //
+//        options = { // worst path edge options
+//            { "color", printer.worstPathEdgeColor },
+//            { "line width", to_string(printer.activeEdgeWidth) }
+//        };
+//        printer.drawEdges( WorstPath.begin(), WorstPath.end(), options );
+//
 //
 //        options = {
-//            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+//            { "vertex", make_optional( to_string(printer.vertexRadius/3) ) }, // vertex width
 //            { "color", make_optional( printer.backgroundColor ) }, // text color
-//            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+//            { "fill", make_optional( printer.activeEdgeColor ) }, // vertex color
 //            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
 //        };
 //        GraphPrinter::OptionsList borderOptions = {
-//            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
-//            { "color", printer.activeEdgeColor }, // additional border color
+//            { "border", make_optional( to_string(printer.vertexRadius/2) ) }, // choose shape of vertex
+//            { "color", printer.activeVertexColor }, // additional border color
 //            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
 //        };
-//        printer.drawVerticesWithInfo( Del, options, borderOptions );
+//        printer.drawVertices( Del, options );
 //
-//        string outputFilename = "rand";
-//        outputFilename += points.size();
-//        //printer.print( outputFilename );
+//        string outputFilename = "lw";
+//        outputFilename += to_string(points.size());
+//        printer.print( outputFilename );
 //        cout<<"\n";
 }
 
@@ -522,7 +440,8 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout<< size;
 //    cout<< ",";
 
-    list< pair< Point, Point > > result;
+//    list< pair< Point, Point > > result;
+    list< pair< size_t, size_t > > result;
     size_t deg;
 
     // Delaunay triangulation
@@ -533,72 +452,74 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //                cout << ",";
 
 
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-
-    {
-        Timer tim;
-        BGS2005( points.begin(), points.end(), back_inserter(result) );
-    }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
 //
+//    {
+//        Timer tim;
+//        BGS2005( points.begin(), points.end(), back_inserter(result) );
+//    }
+//
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+////
     double t;
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
+//    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );////    cout << t;
+//    cout <<"\n";
+////
+//    result.clear();
+
+
+
+
+
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    {
+//        Timer tim;
+//        LW2004( points.begin(), points.end(), back_inserter(result) );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
 //
-    result.clear();
-
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        LW2004( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
+//    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
 //    cout << t;
-    cout <<"\n";
-
-    result.clear();
-
-
-
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    {
-        Timer tim;
-        BSX2009( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
+//    cout <<"\n";
 //
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
-    cout <<"\n";
+//    result.clear();
 
-    result.clear();
+
+
+
+
+
+
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    {
+//        Timer tim;
+//        BSX2009( points.begin(), points.end(), back_inserter(result) );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+////
+//    {
+//        Timer tim;
+//        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+//    }
+//    cout << t;
+//    cout <<"\n";
+//
+//    result.clear();
 
 
 
@@ -614,10 +535,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     deg = degree( result.begin(), result.end() );
     cout << deg;
     cout <<",";
-//
-//
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
+
+
+    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+    cout << t;
     cout <<"\n";
 
     result.clear();
@@ -638,11 +559,13 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout <<",";
 
 
-//    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-//    cout << t;
+    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+    cout << t;
     cout <<"\n";
 
     result.clear();
+
+
 
     cout<< points.size();
     cout<< ",";
@@ -657,11 +580,36 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout << deg;
     cout <<",";
 
-    //    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-    //    cout << t;
+    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+    cout << t;
     cout <<"\n";
 
     result.clear();
+
+
+
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    {
+//        Timer tim;
+//        BHS2017( points.begin(), points.end(), back_inserter(result), printLog );
+//    }
+//
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+//        cout << t;
+//    cout <<"\n";
+//
+//    result.clear();
+
+
+
+
 
     cout<< points.size();
     cout<< ",";
@@ -669,15 +617,15 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout<< ",";
     {
         Timer tim;
-        BHS2017( points.begin(), points.end(), back_inserter(result), printLog );
+        KPT2017( points.begin(), points.end(), back_inserter(result), printLog );
     }
 
     deg = degree( result.begin(), result.end() );
     cout << deg;
     cout <<",";
 
-    //    t = StretchFactorDijkstraReduction( result.begin(), result.end() );
-    //    cout << t;
+    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        cout << t;
     cout <<"\n";
 
     result.clear();
@@ -686,7 +634,8 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-    if( deg > 8 || forcePrint ) {
+
+    if( deg > 4 || t > 20 || forcePrint ) {
 
         string resultFileName = ( filename ? *filename : *generatedFile );
         // strip file extension

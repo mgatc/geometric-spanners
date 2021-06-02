@@ -17,7 +17,7 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
-//#include "GeometricSpannerPrinter.h"
+#include "GeometricSpannerPrinter.h"
 //#include "GraphAlgoTV.h"
 #include "metrics.h"
 #include "utilities.h"
@@ -84,11 +84,11 @@ inline bool vertexAgreesOnEdge( const vector<Vertex_handle>& handles,
     cone = getCone( handles, closest, p, q, ALPHA );
     conePrev = getPreviousCone( cone, NUM_CONES );
 
-    double theta = get_angle<bcc2012::K>(
-        handles.at(closest.at(p))->point(),
-        handles.at(p)->point(),
-        handles.at(q)->point()
-    );
+//    double theta = get_angle<bcc2012::K>(
+//        handles.at(closest.at(p))->point(),
+//        handles.at(p)->point(),
+//        handles.at(q)->point()
+//    );
 
     bool pGivenConeFilled = filled.at(p)[cone],
          pPrevConeFilled = filled.at(p)[conePrev];
@@ -137,8 +137,7 @@ inline void wedge( const Delaunay& DT,
                    const vector<size_t>& closest,
                    const vector<size_t>& params,
                    vector<pair<size_t,size_t>>& addToE_star,
-                   const Vertex_circulator& q_i,
-                   const bool printLog ) {
+                   const Vertex_circulator& q_i ) {
     assert(DEGREE==6||DEGREE==7);
 }
 
@@ -148,13 +147,12 @@ inline void wedge<7>( const Delaunay& DT,
                       const vector<size_t>& closest,
                       const vector<size_t>& params,
                       vector<pair<size_t,size_t>>& addToE_star,
-                      const Vertex_circulator& q_i,
-                      const bool printLog ) {
+                      const Vertex_circulator& q_i ) {
 
     const double ALPHA = 2*PI/8;
 
     const size_t& p = params.at(0);
-    const size_t& q = params.at(1);
+//    const size_t& q = params.at(1);
     const size_t& cone = params.at(2);
 
     // q_m[i] holds the circulator for q_{m-i}
@@ -203,8 +201,7 @@ inline void wedge<6>( const Delaunay& DT,
                       const vector<size_t>& closest,
                       const vector<size_t>& params,
                       vector<pair<size_t,size_t>>& addToE_star,
-                      const Vertex_circulator& q_i,
-                      const bool printLog ) {
+                      const Vertex_circulator& q_i ) {
 
     const double ALPHA = 2*PI/7;
 
@@ -238,14 +235,14 @@ inline void wedge<6>( const Delaunay& DT,
            k = Q.size()-1; // the last point in the ordered list is q_k
 
     // find the index of q_i in Q
-    for( int n=0; n<Q.size(); ++n )
+    for( size_t n=0; n<Q.size(); ++n )
         if( Q[n] == q )
             i = n;
 
 
     Q_primePosition Q_primePos = not_set;
 
-    for( int n=j+1; n<k; ++n ) {
+    for( size_t n=j+1; n<k; ++n ) {
         if( n != i // q_i
         && get_angle<K>( handles.at(Q.at(n+1))->point(),
                          handles.at(Q.at(n))->point(),
@@ -253,24 +250,24 @@ inline void wedge<6>( const Delaunay& DT,
             Q_prime.insert(Q[n]);
             Q_primePos = static_cast<Q_primePosition>(n>i); // if we have passed i, n>i will be true == 1 == between_i_k
         }
-        if(printLog)cout<<get_angle<K>( handles.at(Q.at(n+1))->point(),
-                             handles.at(Q.at(n))->point(),
-                             handles.at(Q.at(n-1))->point() )<<" <>? "<<SIX_PI_OVER_SEVEN<<"\n";
+//        if(printLog)cout<<get_angle<K>( handles.at(Q.at(n+1))->point(),
+//                             handles.at(Q.at(n))->point(),
+//                             handles.at(Q.at(n-1))->point() )<<" <>? "<<SIX_PI_OVER_SEVEN<<"\n";
     }
-    if(printLog) {
-        cout<<"p:"<<p<<" q:"<<q<<"\n";
-        cout<<"Q:";
-        for( auto v : Q ) cout<<v<<" ";
-
-        cout<<"\n";
-        cout<<"Q':";
-        for( auto v : Q_prime ) cout<<v<<" ";
-
-        cout<<"\n";
-
-        cout<<"j:"<<j<<" i:"<<i<<" k:"<<k<<endl;
-        cout<<"j+1:"<<int(j+1)<<" i-2:"<<int(i-2)<<" k:"<<k<<endl;
-    }
+//    if(printLog) {
+//        cout<<"p:"<<p<<" q:"<<q<<"\n";
+//        cout<<"Q:";
+//        for( auto v : Q ) cout<<v<<" ";
+//
+//        cout<<"\n";
+//        cout<<"Q':";
+//        for( auto v : Q_prime ) cout<<v<<" ";
+//
+//        cout<<"\n";
+//
+//        cout<<"j:"<<j<<" i:"<<i<<" k:"<<k<<endl;
+//        cout<<"j+1:"<<int(j+1)<<" i-2:"<<int(i-2)<<" k:"<<k<<endl;
+//    }
 
     // TODO:I don't trust the types here... i and k are size_t. Converting to int isn't good...
     // Line 4: Add select edges
@@ -278,15 +275,15 @@ inline void wedge<6>( const Delaunay& DT,
         if( !contains( Q_prime, Q.at(n)) && !contains( Q_prime, Q.at(n+1)) )
             addToE_star.emplace_back( Q.at(n), Q.at(n+1) );
 
-    if(printLog)cout<<"add to E_star:";
-    if(printLog)for( auto e : addToE_star ) cout<<e.first<<" "<<e.second<<" - ";
+//    if(printLog)cout<<"add to E_star:";
+//    if(printLog)for( auto e : addToE_star ) cout<<e.first<<" "<<e.second<<" - ";
 
     for( int n=i+1; n<int(k)-2; ++n )
         if( !contains( Q_prime, Q.at(n)) && !contains( Q_prime, Q.at(n+1)) )
             addToE_star.emplace_back( Q.at(n), Q.at(n+1) );
 
-    if(printLog)cout<<"add to E_star:";
-    if(printLog)for( auto e : addToE_star ) cout<<e.first<<" "<<e.second<<" - ";
+//    if(printLog)cout<<"add to E_star:";
+//    if(printLog)for( auto e : addToE_star ) cout<<e.first<<" "<<e.second<<" - ";
 
     size_t f = i, // will hold the index in Q of the first point in Q_prime
            a = i;
@@ -300,14 +297,14 @@ inline void wedge<6>( const Delaunay& DT,
          && get_angle<K>(handles.at(p)->point(), handles.at(Q.at(i))->point(), handles.at(Q.at(i-1))->point()) > FOUR_PI_OVER_SEVEN )
             addToE_star.emplace_back( Q.at(i), Q.at(i-1) );
 
-        if(printLog&&i!=j&&i-1!=j)cout<<get_angle<K>(handles.at(p)->point(), handles.at(Q.at(i))->point(), handles.at(Q.at(i-1))->point())<<"\n";
+        //if(printLog&&i!=j&&i-1!=j)cout<<get_angle<K>(handles.at(p)->point(), handles.at(Q.at(i))->point(), handles.at(Q.at(i-1))->point())<<"\n";
 
         while( ++f < Q.size() && !contains( Q_prime, Q.at(f) ) );
 
         a = f - int(f==Q.size())*Q.size(); // the first point after f not in Q_prime, avoid vector overflow
         while( ++a < Q.size() && contains(Q_prime, Q.at(a) ) );
 
-        if(printLog)cout<<"f:"<<f<<" a:"<<a<<"\n";
+        //if(printLog)cout<<"f:"<<f<<" a:"<<a<<"\n";
 
         if( f == i+1 ) {
             // TODO: Need to check for equality in this one too
@@ -316,9 +313,9 @@ inline void wedge<6>( const Delaunay& DT,
                                          handles.at(p)->point() ) < FOUR_PI_OVER_SEVEN ) {
                 addToE_star.emplace_back(Q.at(f), Q.at(a));
             }
-            if(printLog)cout<<get_angle<K>( handles.at(Q.at(i+1))->point(),
-                                         handles.at(Q.at(i))->point(),
-                                         handles.at(p)->point() )<<"\n";
+//            if(printLog)cout<<get_angle<K>( handles.at(Q.at(i+1))->point(),
+//                                         handles.at(Q.at(i))->point(),
+//                                         handles.at(p)->point() )<<"\n";
             if( i != j && i !=k && f+1 != k && get_angle<K>( handles.at(Q.at(i+1))->point(),
                                            handles.at(Q.at(i))->point(),
                                            handles.at(p)->point() ) > FOUR_PI_OVER_SEVEN ) {
@@ -331,7 +328,7 @@ inline void wedge<6>( const Delaunay& DT,
                 size_t b = l; // set to max n that is less than l in Q but not Q_prime
                 while( --b > 0 && contains( Q_prime, Q.at(b) ) );
 
-                if(printLog)cout<<"l:"<<l<<" b:"<<b<<endl;
+//                if(printLog)cout<<"l:"<<l<<" b:"<<b<<endl;
                 if( l == k-1 ) {
                     addToE_star.emplace_back( Q.at(l), Q.at(b) );
                 } else {
@@ -351,19 +348,19 @@ inline void wedge<6>( const Delaunay& DT,
             addToE_star.emplace_back( Q.at(i), Q.at(i+1) );
         }
 
-        if(printLog)if(i!=k&&i+1!=k)cout<<get_angle<K>(handles.at(Q.at(i+1))->point(), handles.at(Q.at(i))->point(), handles.at(p)->point())<<"\n";
+//        if(printLog)if(i!=k&&i+1!=k)cout<<get_angle<K>(handles.at(Q.at(i+1))->point(), handles.at(Q.at(i))->point(), handles.at(p)->point())<<"\n";
 
         while( --f > 0 && !contains( Q_prime, Q.at(f) ) );
 
         a = f + int(f==0)*Q.size(); // the first point after f not in Q_prime, protect against unsigned underflow
         while( --a > 0 && contains(Q_prime, Q.at(a) ) );
 
-        if(printLog)cout<<"f:"<<f<<" a:"<<a<<"\n";
+//        if(printLog)cout<<"f:"<<f<<" a:"<<a<<"\n";
 
         if( f == i-1 ) {
-            if(printLog)cout<<get_angle<K>( handles.at(p)->point(),
-                                         handles.at(Q.at(i))->point(),
-                                         handles.at(Q.at(i-1))->point() )<<"\n";
+//            if(printLog)cout<<get_angle<K>( handles.at(p)->point(),
+//                                         handles.at(Q.at(i))->point(),
+//                                         handles.at(Q.at(i-1))->point() )<<"\n";
             // TODO: Need to check for equality in this one too
             if( a != j && get_angle<K>( handles.at(p)->point(),
                                          handles.at(Q.at(i))->point(),
@@ -395,10 +392,10 @@ inline void wedge<6>( const Delaunay& DT,
         break;
     }
 
-    if(printLog)cout<<"add to E_star:";
-    if(printLog)for( auto e : addToE_star ) cout<<e.first<<" "<<e.second<<" - ";
-
-    if(printLog)cout<<"\n\n";
+//    if(printLog)cout<<"add to E_star:";
+//    if(printLog)for( auto e : addToE_star ) cout<<e.first<<" "<<e.second<<" - ";
+//
+//    if(printLog)cout<<"\n\n";
 }
 
 
@@ -413,26 +410,28 @@ void BCC2012( RandomAccessIterator pointsBegin,
     using namespace bcc2012;
 
     assert( DEGREE == 7 || DEGREE == 6 );
-    const double ALPHA = 2*PI/NUM_CONES;
 
 //    if(printLog) cout<<"\nnumCones:"<<NUM_CONES<<"\n";
 //    if(printLog) cout<<"ALPHA:"<<ALPHA<<"\n";
 
     // Construct Delaunay triangulation
-    bcc2012::Delaunay DT( pointsBegin, pointsEnd );
-    size_t n = DT.number_of_vertices();
-    if( n > SIZE_T_MAX - 1 ) return;
-//    if(printLog) cout<<"n:"<<n<<"\n";
-
-    vector<bcc2012::Vertex_handle> handles(n);
+    vector<Point> P(pointsBegin,pointsEnd);
+    bcc2012::Delaunay DT;
 
     // Add IDs
+    size_t n = P.size();
+    if( n > SIZE_T_MAX - 1 ) return;
+    vector<bcc2012::Vertex_handle> handles(n);
     size_t i=0;
-    for( auto v=DT.finite_vertices_begin(); v!=DT.finite_vertices_end(); ++v ) {
-        v->info() = i;
-        handles[i] = v;
-        ++i;
+
+    ///TODO: points need to be spatially sorted before insertion, but info much match input order
+    for( size_t i=0; i<n; ++i )
+    {
+        handles[i] = DT.insert( P[i] );
+        handles[i]->info() = i;
     }
+//    if(printLog) cout<<"n:"<<n<<"\n";
+
 
     // Put edges in a vector, then sort on weight
     vector<pair<size_t,size_t> > L;
@@ -511,7 +510,7 @@ void BCC2012( RandomAccessIterator pointsBegin,
                 while( ++q_z != handles.at(params.at(1)) ); // point to q
                 const auto q_i(q_z);
 
-                wedge<DEGREE>( DT, handles, closest, params, addToE_star, q_i, printLog );
+                wedge<DEGREE>( DT, handles, closest, params, addToE_star, q_i );
             }
             E_star.insert( E_star.end(), addToE_star.begin(), addToE_star.end() );
         }
@@ -535,10 +534,10 @@ void BCC2012( RandomAccessIterator pointsBegin,
         // Edge list is only needed for printing. Remove for production.
         edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
 
-        *result = make_pair( handles.at(e.first)->point(), handles.at(e.second)->point() );
+        *result = e;
         ++result;
-        *result = make_pair( handles.at(e.second)->point(), handles.at(e.first)->point() );
-        ++result;
+//        *result = reverse_pair(e);
+//        ++result;
     }
 
     //

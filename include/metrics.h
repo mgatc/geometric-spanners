@@ -185,24 +185,22 @@ size_t degree( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) 
     typedef typename Edge::first_type Point;
 
     std::vector<pair<Point,Point>> edges( edgesBegin, edgesEnd );
-    std::unordered_map<
-        Point,unordered_set<Point,PointHasher<Point>>,PointHasher<Point>
-    > adj;
+    std::unordered_map<Point,unordered_set<Point>> adj;
     // for each edge
     for( auto e : edges ) {
         auto first = adj.begin();
-        tie(first,ignore) = adj.emplace( e.first, unordered_set<Point,PointHasher<Point>>() );
+        tie(first,ignore) = adj.emplace( e.first, unordered_set<Point>() );
         (*first).second.insert(e.second);
 
         auto second = adj.begin();
-        tie(second,ignore) = adj.emplace( e.second, unordered_set<Point,PointHasher<Point>>() );
+        tie(second,ignore) = adj.emplace( e.second, unordered_set<Point>() );
         (*second).second.insert(e.first);
     }
-    auto max_el = (*max_element( adj.begin(), adj.end(), [&] ( const auto& lhs, const auto& rhs ) {
+    auto max_el = max_element( adj.begin(), adj.end(), [&] ( const auto& lhs, const auto& rhs ) {
         return lhs.second.size() < rhs.second.size();
-    }));
+    });
 
-    return max_el.second.size();
+    return max_el->second.size();
 }
 
 template< typename Triangulation >
@@ -350,8 +348,8 @@ optional<double> AStar( VertexContainer V, VertexMap vMap, AdjacencyList G_prime
 template< typename VertexContainer, typename AdjacencyList >
 void Dijkstra( const size_t i, const VertexContainer& V, const AdjacencyList& G, vector<double>& ShortestPaths, vector<size_t>& Parents ) {
 
-    typedef pair<double,size_t>
-        DistanceIndexPair;
+//    typedef pair<double,size_t>
+//        DistanceIndexPair;
     //typedef boost::heap::fibonacci_heap< DistanceIndexPair,boost::heap::compare<MinHeapCompare<DistanceIndexPair>>>
     typedef std::map<double,size_t>
         Heap;
@@ -411,179 +409,164 @@ void Dijkstra( const size_t i, const VertexContainer& V, const AdjacencyList& G,
     } while( !open.empty() );
 }
 
-template< typename RandomAccessIterator >
-double StretchFactorDijkstra( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
-    typedef typename RandomAccessIterator::value_type Edge;
-    typedef typename Edge::first_type Point;
+//template< typename RandomAccessIterator >
+//double StretchFactorDijkstra( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+//    typedef typename RandomAccessIterator::value_type Edge;
+//    typedef typename Edge::first_type Point;
+//
+//    vector<Point> V; // container for vertices
+//    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
+//    unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
+//    size_t index = 0;
+//
+//    // Create list of vertices, map to their indices, and adjacency list
+//    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
+//        // If vMap doesn't contain p, put it in V
+//        Point p = eit->first;
+//        size_t i_p = index;
+//        bool inserted = false;
+//        auto vMapIt = vMap.begin();
+//        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
+//        if( inserted ) {
+//            V.push_back(p);
+//            ++index;
+//        }
+//        i_p = vMapIt->second;
+//
+//        // If vMap doesn't contain q, put it in V
+//        Point q = eit->second;
+//        size_t i_q = index;
+//        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
+//        if( inserted ) {
+//            V.push_back(q);
+//            ++index;
+//        }
+//        i_q = vMapIt->second;
+//
+//        G[i_p].insert(i_q); // add edge to adjacency list
+//    }
+//    size_t n = V.size();
+//    vector<double> T( n, INF );
+//
+//    // calculate euclidean distance between all pairs
+//    //#pragma omp parallel for
+//    for( size_t i=0; i<n; ++i ) {
+//        vector<double> ShortestPaths( n, INF );
+//        vector<double> D( n, INF );     // Euclidean distances
+//
+//        for( size_t j=0; j<n; ++j ) {
+//            D.at(j) =
+//                i==j ? 0 : d( V.at(i), V.at(j) );
+//        }
+//
+//        Dijkstra( i, V, G, ShortestPaths );
+//
+//        // Divide each shortest path distance by the euclidean distance between the vertices.
+//        for( size_t j=0; j<n; ++j ) {
+//            ShortestPaths.at(j) = ( // avoid /0
+//                i==j ? 0 : ShortestPaths.at(j)/D.at(j)
+//            );
+//        }
+//        // Find max t and place in T
+//        T.at(i) = *max_element(
+//            begin( ShortestPaths ),
+//            end(   ShortestPaths )
+//        );
+//    }
+//    // Find the big mac daddy t aka big money
+//    return *max_element( T.begin(), T.end() );
+//}
+//
+//template< typename RandomAccessIterator >
+//double StretchFactorDijkstraParallel( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+//    typedef typename RandomAccessIterator::value_type Edge;
+//    typedef typename Edge::first_type Point;
+//
+//    vector<Point> V; // container for vertices
+//    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
+//    unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
+//    size_t index = 0;
+//
+//    // Create list of vertices, map to their indices, and adjacency list
+//    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
+//        // If vMap doesn't contain p, put it in V
+//        Point p = eit->first;
+//        size_t i_p = index;
+//        bool inserted = false;
+//        auto vMapIt = vMap.begin();
+//        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
+//        if( inserted ) {
+//            V.push_back(p);
+//            ++index;
+//        }
+//        i_p = vMapIt->second;
+//
+//        // If vMap doesn't contain q, put it in V
+//        Point q = eit->second;
+//        size_t i_q = index;
+//        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
+//        if( inserted ) {
+//            V.push_back(q);
+//            ++index;
+//        }
+//        i_q = vMapIt->second;
+//
+//        G[i_p].insert(i_q); // add edge to adjacency list
+//    }
+//    size_t n = V.size();
+//    vector<double> T( n, INF );
+//
+//    // calculate euclidean distance between all pairs
+//    #pragma omp parallel for
+//    for( size_t i=0; i<n; ++i ) {
+//        vector<double> ShortestPaths( n, INF );
+//        vector<double> D( n, INF );     // Euclidean distances
+//
+//        for( size_t j=0; j<n; ++j ) {
+//            D.at(j) =
+//                i==j ? 0 : d( V.at(i), V.at(j) );
+//        }
+//
+//        Dijkstra( i, V, G, D, ShortestPaths );
+//
+//    // Divide each shortest path distance by the euclidean distance between the vertices.
+//        for( size_t j=0; j<n; ++j ) {
+//            ShortestPaths.at(j) = ( // avoid /0
+//                i==j ? 0 : ShortestPaths.at(j)/D.at(j)
+//            );
+//        }
+//        // Find max t and place in T
+//        T.at(i) = *max_element(
+//            begin( ShortestPaths ),
+//            end(   ShortestPaths )
+//        );
+//    }
+//    // Find the big mac daddy t aka big money
+//    return *max_element( T.begin(), T.end() );
+//}
+template< typename VertexIterator, typename EdgeIterator >
+double StretchFactorDijkstraReduction( VertexIterator pointsBegin,
+                                       VertexIterator pointsEnd,
+                                       EdgeIterator edgesBegin,
+                                       EdgeIterator edgesEnd )
+{
+    typedef typename VertexIterator::value_type Point;
 
-    vector<Point> V; // container for vertices
-    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
-    unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
-    size_t index = 0;
+    const vector<Point> V(pointsBegin, pointsEnd); // container for vertices
+    const size_t n = V.size();
+//    unordered_map< size_t, size_t > vMap; // map point to index in V
+    vector< unordered_set<size_t> > G( n, unordered_set<size_t>() ); // adjacency list
+    //size_t index = 0;
 
     // Create list of vertices, map to their indices, and adjacency list
-    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
-        // If vMap doesn't contain p, put it in V
-        Point p = eit->first;
-        size_t i_p = index;
-        bool inserted = false;
-        auto vMapIt = vMap.begin();
-        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
-        if( inserted ) {
-            V.push_back(p);
-            ++index;
-        }
-        i_p = vMapIt->second;
+    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit )
+    {
+        auto p = eit->first,
+             q = eit->second;
 
-        // If vMap doesn't contain q, put it in V
-        Point q = eit->second;
-        size_t i_q = index;
-        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
-        if( inserted ) {
-            V.push_back(q);
-            ++index;
-        }
-        i_q = vMapIt->second;
-
-        G[i_p].insert(i_q); // add edge to adjacency list
+        G[p].insert(q);
+        G[q].insert(p);
     }
-    size_t n = V.size();
-    vector<double> T( n, INF );
-
-    // calculate euclidean distance between all pairs
-    //#pragma omp parallel for
-    for( size_t i=0; i<n; ++i ) {
-        vector<double> ShortestPaths( n, INF );
-        vector<double> D( n, INF );     // Euclidean distances
-
-        for( size_t j=0; j<n; ++j ) {
-            D.at(j) =
-                i==j ? 0 : d( V.at(i), V.at(j) );
-        }
-
-        Dijkstra( i, V, G, ShortestPaths );
-
-        // Divide each shortest path distance by the euclidean distance between the vertices.
-        for( size_t j=0; j<n; ++j ) {
-            ShortestPaths.at(j) = ( // avoid /0
-                i==j ? 0 : ShortestPaths.at(j)/D.at(j)
-            );
-        }
-        // Find max t and place in T
-        T.at(i) = *max_element(
-            begin( ShortestPaths ),
-            end(   ShortestPaths )
-        );
-    }
-    // Find the big mac daddy t aka big money
-    return *max_element( T.begin(), T.end() );
-}
-
-template< typename RandomAccessIterator >
-double StretchFactorDijkstraParallel( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
-    typedef typename RandomAccessIterator::value_type Edge;
-    typedef typename Edge::first_type Point;
-
-    vector<Point> V; // container for vertices
-    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
-    unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
-    size_t index = 0;
-
-    // Create list of vertices, map to their indices, and adjacency list
-    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
-        // If vMap doesn't contain p, put it in V
-        Point p = eit->first;
-        size_t i_p = index;
-        bool inserted = false;
-        auto vMapIt = vMap.begin();
-        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
-        if( inserted ) {
-            V.push_back(p);
-            ++index;
-        }
-        i_p = vMapIt->second;
-
-        // If vMap doesn't contain q, put it in V
-        Point q = eit->second;
-        size_t i_q = index;
-        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
-        if( inserted ) {
-            V.push_back(q);
-            ++index;
-        }
-        i_q = vMapIt->second;
-
-        G[i_p].insert(i_q); // add edge to adjacency list
-    }
-    size_t n = V.size();
-    vector<double> T( n, INF );
-
-    // calculate euclidean distance between all pairs
-    #pragma omp parallel for
-    for( size_t i=0; i<n; ++i ) {
-        vector<double> ShortestPaths( n, INF );
-        vector<double> D( n, INF );     // Euclidean distances
-
-        for( size_t j=0; j<n; ++j ) {
-            D.at(j) =
-                i==j ? 0 : d( V.at(i), V.at(j) );
-        }
-
-        Dijkstra( i, V, G, D, ShortestPaths );
-
-    // Divide each shortest path distance by the euclidean distance between the vertices.
-        for( size_t j=0; j<n; ++j ) {
-            ShortestPaths.at(j) = ( // avoid /0
-                i==j ? 0 : ShortestPaths.at(j)/D.at(j)
-            );
-        }
-        // Find max t and place in T
-        T.at(i) = *max_element(
-            begin( ShortestPaths ),
-            end(   ShortestPaths )
-        );
-    }
-    // Find the big mac daddy t aka big money
-    return *max_element( T.begin(), T.end() );
-}
-template< typename RandomAccessIterator >
-double StretchFactorDijkstraReduction( RandomAccessIterator edgesBegin,
-                    RandomAccessIterator edgesEnd ) {
-    typedef typename RandomAccessIterator::value_type Edge;
-    typedef typename Edge::first_type Point;
-
-    vector<Point> V; // container for vertices
-    unordered_map< Point, size_t, PointHasher<Point> > vMap; // map point to index in V
-    unordered_map< size_t, unordered_set<size_t> > G; // adjacency list
-    size_t index = 0;
-
-    // Create list of vertices, map to their indices, and adjacency list
-    for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
-        // If vMap doesn't contain p, put it in V
-        Point p = eit->first;
-        size_t i_p = index;
-        bool inserted = false;
-        auto vMapIt = vMap.begin();
-        tie( vMapIt, inserted ) = vMap.emplace( p, i_p ); // map for reverse lookup
-        if( inserted ) {
-            V.push_back(p);
-            ++index;
-        }
-        i_p = vMapIt->second;
-
-        // If vMap doesn't contain q, put it in V
-        Point q = eit->second;
-        size_t i_q = index;
-        tie( vMapIt, inserted ) = vMap.emplace( q, i_q ); // map for reverse lookup
-        if( inserted ) {
-            V.push_back(q);
-            ++index;
-        }
-        i_q = vMapIt->second;
-
-        G[i_p].insert(i_q); // add edge to adjacency list
-    }
-    size_t n = V.size();
     //vector<double> T( n, INF );
     double t_max = 0.0;
 
@@ -622,7 +605,7 @@ double StretchFactorDijkstraReduction( RandomAccessIterator edgesBegin,
 template< typename K, typename RandomAccessIterator>
 double StretchFactorDijkstraConvexHull( RandomAccessIterator edgesBegin,
                     RandomAccessIterator edgesEnd ) {
-    typedef typename RandomAccessIterator::value_type Edge;
+//    typedef typename RandomAccessIterator::value_type Edge;
     typedef typename K::Point_2 Point;
 
     vector<Point> V; // container for vertices

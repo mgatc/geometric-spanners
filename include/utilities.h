@@ -67,10 +67,12 @@ inline double distance( Point p, Point q ) {
     return CGAL::sqrt( CGAL::squared_distance(p,q) );
 }
 
-template< class K >
-double get_angle( const typename K::Point_2& p, const typename K::Point_2& q, const typename K::Point_2& r ) {
-    CGAL::Vector_2<K> pq( p, q );
-    CGAL::Vector_2<K> rq( r, q );
+template< class Point_2 >
+double get_angle( const Point_2& p, const Point_2& q, const Point_2& r ) {
+    //CGAL::Vector_2<K> pq( p, q );
+    //CGAL::Vector_2<K> rq( r, q );
+    auto pq = q - p,
+         rq = q - r;
 
     double result = atan2( pq.y(), pq.x() ) - atan2( rq.y(), rq.x() );
 
@@ -81,6 +83,10 @@ double get_angle( const typename K::Point_2& p, const typename K::Point_2& q, co
     //result = CGAL::min( result, 2*PI );
     //cout<<"angle("<<p<<","<<q<<","<<r<<")="<<result*180/PI<<" ";
     return result;
+}
+template< class K >
+double get_angle( const typename K::Point_2& p, const typename K::Point_2& q, const typename K::Point_2& r ) {
+    return get_angle(p,q,r);
 }
 
 template< typename TriWithInfo, typename OutputIterator >

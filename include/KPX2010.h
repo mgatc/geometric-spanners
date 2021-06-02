@@ -69,17 +69,20 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     //if(printLog) cout<<"alpha:"<<alpha<<",";
 
     // Construct Delaunay triangulation
-    kpx2010::Delaunay T( pointsBegin, pointsEnd );
-    size_t n = T.number_of_vertices();
-
-    vector<kpx2010::Vertex_handle> handles(n);
+    vector<Point> P(pointsBegin,pointsEnd);
+    kpx2010::Delaunay T;
 
     // Add IDs
+    size_t n = P.size();
+    if( n > SIZE_T_MAX - 1 ) return;
+    vector<kpx2010::Vertex_handle> handles(n);
     size_t i=0;
-    for( auto v=T.finite_vertices_begin(); v!=T.finite_vertices_end(); ++v ) {
-        v->info() = i;
-        handles[i] = v;
-        ++i;
+
+    ///TODO: points need to be spatially sorted before insertion, but info much match input order
+    for( size_t i=0; i<n; ++i )
+    {
+        handles[i] = T.insert( P[i] );
+        handles[i]->info() = i;
     }
 
     kpx2010::Vertex_handle v_inf = T.infinite_vertex();
@@ -253,10 +256,10 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
             // Edge list is only needed for printing. Remove for production.
             //edgeList.emplace_back( handles.at(e.first.first)->point(), handles.at(e.first.second)->point() );
 
-            *result = make_pair( handles.at(e.first.first)->point(), handles.at(e.first.second)->point() );
+            *result = e.first;
             ++result;
-            *result = make_pair( handles.at(e.first.second)->point(), handles.at(e.first.first)->point() );
-            ++result;
+//            *result = reverse_pair(e.first);
+//            ++result;
         }
     }
 

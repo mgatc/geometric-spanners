@@ -81,6 +81,7 @@
 		<Unit filename="include/BCC2012.h" />
 		<Unit filename="include/BGS2005.h" />
 		<Unit filename="include/BHS2017.h" />
+		<Unit filename="include/BKPX2015.h" />
 		<Unit filename="include/BSX2009.h" />
 		<Unit filename="include/DelaunayGraph.h" />
 		<Unit filename="include/FloydWarshall.h" />
@@ -89,13 +90,11 @@
 		<Unit filename="include/KPT2017.h" />
 		<Unit filename="include/KPX2010.h" />
 		<Unit filename="include/LW2004.h" />
-		<Unit filename="include/Linf Circulator.h">
-			<Option target="Release" />
-		</Unit>
-		<Unit filename="include/Linf_Delaunay.h">
-			<Option target="Release" />
-		</Unit>
+
 		<Unit filename="include/TDDelaunay.h" />
+		<Unit filename="include/Linf Circulator.h" />
+		<Unit filename="include/Linf_Delaunay.h" />
+
 		<Unit filename="include/metrics.h" />
 		<Unit filename="include/utilities.h" />
 		<Unit filename="main.cpp" />

@@ -126,18 +126,31 @@ namespace gsnunf {
             distances = {INF, INF, INF, INF};
             index = point->storage_site().info();
 
-            while( sdg.is_infinite(++Circ) );
+            while( sdg.is_infinite(Circ) ) {++Circ;}
 
             size_t previousCone = getCone(point, Circ);
 
-            while( !sdg.is_infinite(++Circ) && getCone(point, Circ) == previousCone );
+//            if (sdg.is_infinite(++Circ)) {--Circ;}
+//
+//            else {
+//
+//                while( !sdg.is_infinite(Circ) && getCone(point, Circ) == previousCone ) {++Circ;}
+//
+//                while( sdg.is_infinite(Circ) ) {++Circ;}
+//
+//            }
 
-            if( sdg.is_infinite(Circ) )
-                ++Circ;
+            auto startPoint = Circ++;
+
+            while (!sdg.is_infinite(Circ) && getCone(point, Circ) == previousCone && Circ != startPoint) {++Circ;}
+
+            while (sdg.is_infinite(Circ)) {++Circ;}
 
             auto endpoint = Circ;
+            cone = getCone(point, Circ);
+            previousCone = 10; // invalid value, default as 10
 
-            fans[cone].first = Circ;
+            size_t point_id = point->storage_site().info();
 
             do {
 
@@ -150,6 +163,7 @@ namespace gsnunf {
                     }
                     fans[cone].second = Circ;
                     previousCone = cone;
+
 
                     double proposedDistance = std::max(std::abs(point->site().point().x() - Circ->site().point().x()), std::abs(point->site().point().y() - Circ->site().point().y()));
 
@@ -175,19 +189,14 @@ namespace gsnunf {
             numYaoEdges yaos(4);
             index = point->storage_site().info();
 
-            cout << point->storage_site().info() << endl;
-
             for (size_t cone = 0; cone < 4; cone++) {
 
                 if (yaoEdges[index][cone].second == 0) {
-                    cout << "skip" << endl;
                     continue;
                 }
 
                 auto v1 = (pointFans[index][cone]).first;
                 auto vk = (pointFans[index][cone]).second;
-
-                cout << index << "] <" << v1->storage_site().info() << ", " << vk->storage_site().info() << "> " << endl;
 
                 while (Circ != v1) {
                     ++Circ;
@@ -197,8 +206,6 @@ namespace gsnunf {
                 size_t total = yaoEdges[index][cone].second;
 
                 while (position < (total+1)) {
-
-                    cout << "test" << endl;
 
                     if (yaoEdges[index][cone].first == Circ || yaoEdges[Circ->storage_site().info()][(cone+2)%4].first == point) {
                         ++(yaos[cone]);
@@ -210,8 +217,6 @@ namespace gsnunf {
                 }
 
             }
-
-            cout << point->storage_site().info() << " is complete." << endl;
 
         yaoEdgeCount[index] = yaos;
 
@@ -268,16 +273,16 @@ namespace gsnunf {
                     size_t moves = 1;
                     size_t numNeighbors = yaoEdges[u_id][cone].second;
                     size_t lcount = 1;
-                    size_t yaoTotal = 0;
+        //            size_t yaoTotal = 0;
 
                     while (moves < numNeighbors + 1)
                     {
 
-                        if (yaoEdges[u_id][cone].first == Circ || yaoEdges[Circ->storage_site().info()][(cone+2)%4].first == u) {++yaoTotal;}
-
                         if (Circ == v)
                         {
                             lcount = moves;
+                            moves = numNeighbors+1;
+                            continue;
                         }
 
                         ++moves;
@@ -285,103 +290,111 @@ namespace gsnunf {
 
                     }
 
-                    if (yaoTotal >= 2)
-                    {
-                        Vertex_circulator startCirc = sdg.incident_vertices(u);
-                        while (startCirc != v) {++startCirc;}
+                    Vertex_circulator startCirc = sdg.incident_vertices(u);
+                    while (startCirc != v) {++startCirc;}
 
-                        // establish vlower and vhigher and recalibrate Circ accordingly
-                        auto vlower = --startCirc;
-                        ++startCirc;
-                        auto vhigher = ++startCirc;
-                        --startCirc;
+                    // establish vlower and vhigher and recalibrate Circ accordingly
+                    auto vlower = --startCirc;
+                    ++startCirc;
+                    auto vhigher = ++startCirc;
+                    --startCirc;
 
-                        bool cwCanonical = false;
-                        bool ccwCanonical = false;
+                    bool cwCanonical = false;
+                    bool ccwCanonical = false;
 
-                        if (lcount >= 2 && (yaoEdges[vlower->storage_site().info()][getCone(vlower, v)].first == v &&
-                            yaoEdges[v->storage_site().info()][getCone(v, vlower)].first != vlower)) {
-                                ccwCanonical = true;
-                            }
+                    if (lcount >= 2 && (yaoEdges[vlower->storage_site().info()][getCone(vlower, v)].first == v &&
+                        yaoEdges[v->storage_site().info()][getCone(v, vlower)].first != vlower)) {
+                            ccwCanonical = true;
+                        }
 
-                        if (lcount <= (numNeighbors - 1) && (yaoEdges[vhigher->storage_site().info()][getCone(vhigher, v)].first == v) &&
-                            yaoEdges[v->storage_site().info()][getCone(v, vhigher)].first != vhigher) {
-                                cwCanonical = true;
-                            }
+                    if (!ccwCanonical && lcount <= (numNeighbors - 1) && (yaoEdges[vhigher->storage_site().info()][getCone(vhigher, v)].first == v) &&
+                        yaoEdges[v->storage_site().info()][getCone(v, vhigher)].first != vhigher) {
+                            cwCanonical = true;
+                        }
 
 
-                        if (ccwCanonical) {
+                    if (ccwCanonical) {
 
-                            bool inCanonical = true;
-                            auto higher = startCirc;
-                            size_t position = lcount;
+                        bool inCanonical = true;
+                        auto higher = startCirc;
+                        size_t position = lcount;
 
-                            while (inCanonical) {
-                                higher = startCirc;
-                                --startCirc;
-                                --position;
+                        while (inCanonical) {
+                            higher = startCirc;
+                            --startCirc;
+                            --position;
 
-                                if (position < 1) {
+                            if (position < 1) {
+
+                                if (yaoEdges[u_id][cone].first == higher || yaoEdges[higher->storage_site().info()][(cone+2)%4].first == u) {
                                     anchorEdges[u_id][cone].first = higher;
                                     anchorEdges[u_id][cone].second = Weak;
-                                    inCanonical = false;
-                                    continue;
+                                }
+                                inCanonical = false;
+                                continue;
+                            }
+
+                            bool inCanonical = false;
+
+                            if (yaoEdges[startCirc->storage_site().info()][getCone(startCirc, higher)].first == higher &&
+                                yaoEdges[higher->storage_site().info()][getCone(higher, startCirc)].first != startCirc) {
+                                    inCanonical = true;
                                 }
 
-                                bool inCanonical = false;
-
-                                if (yaoEdges[startCirc->storage_site().info()][getCone(startCirc, higher)].first == higher &&
-                                    yaoEdges[higher->storage_site().info()][getCone(higher, startCirc)].first != startCirc) {
-                                        inCanonical = true;
-                                    }
-
-                                if (!inCanonical) {
+                            if (!inCanonical) {
+                                if (yaoEdges[u_id][cone].first == higher || yaoEdges[higher->storage_site().info()][(cone+2)%4].first == u) {
                                     anchorEdges[u_id][cone].first = higher;
                                     anchorEdges[u_id][cone].second = Weak;
                                 }
                             }
                         }
+                    }
 
-                        else if (cwCanonical) {
+                    else if (cwCanonical) {
 
-                            bool inCanonical = true;
-                            auto lower = startCirc;
-                            size_t position = lcount;
+                        bool inCanonical = true;
+                        auto lower = startCirc;
+                        size_t position = lcount;
 
-                            while (inCanonical) {
+                        while (inCanonical) {
 
-                                lower = startCirc;
-                                ++startCirc;
-                                ++position;
+                            lower = startCirc;
+                            ++startCirc;
+                            ++position;
 
-                                if (position > numNeighbors) {
+                            if (position > numNeighbors) {
 
+                                if (yaoEdges[u_id][cone].first == lower || yaoEdges[lower->storage_site().info()][(cone+2)%4].first == u) {
                                     anchorEdges[u_id][cone].first = lower;
                                     anchorEdges[u_id][cone].second = Weak;
-                                    inCanonical = false;
-                                    continue;
-
                                 }
 
                                 inCanonical = false;
+                                continue;
 
-                                if (yaoEdges[startCirc->storage_site().info()][getCone(startCirc, lower)].first == lower &&
-                                    yaoEdges[lower->storage_site().info()][getCone(lower, startCirc)].first != startCirc) {
-                                        inCanonical = true;
-                                    }
+                            }
 
-                                if (!inCanonical) {
+                            inCanonical = false;
+
+                            if (yaoEdges[startCirc->storage_site().info()][getCone(startCirc, lower)].first == lower &&
+                                yaoEdges[lower->storage_site().info()][getCone(lower, startCirc)].first != startCirc) {
+                                    inCanonical = true;
+                                }
+
+                            if (!inCanonical) {
+                                if (yaoEdges[u_id][cone].first == lower || yaoEdges[lower->storage_site().info()][(cone+2)%4].first == u) {
                                     anchorEdges[u_id][cone].first = lower;
                                     anchorEdges[u_id][cone].second = Weak;
                                 }
                             }
                         }
-
-                        else {
-                            anchorEdges[u_id][cone].first = v;
-                            anchorEdges[u_id][cone].second = Weak;
-                        }
                     }
+
+                    else {
+                        anchorEdges[u_id][cone].first = v;
+                        anchorEdges[u_id][cone].second = Weak;
+                    }
+
                 } // when there are more than 2 edges!
 
             }
@@ -404,6 +417,38 @@ namespace gsnunf {
 
         } // strong anchors are identified
 
+//        cout << endl << endl << "weak anchors" << endl;
+//
+//        size_t totalWeak = 0;
+//
+//        for (auto u : handles) {
+//
+//            size_t u_id = u->storage_site().info();
+//
+//            cout << u_id << "] ";
+//
+//            for (size_t cone = 0; cone < 4; cone++) {
+//
+//                if (anchorEdges[u_id][cone].second == Weak)
+//                {
+//                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
+//                    ++totalWeak;
+//                }
+//                else
+//                {
+//                    cout << "x ";
+//                }
+//                  // num edges in that cone
+//
+//                if (cone == 3) {
+//                    cout << endl;
+//                }
+//
+//            }
+//
+//        }
+//
+//        cout << endl << "Weak Anchors Total: " << totalWeak << endl << endl;
 
         // now it is time to select anchors
         for (auto u : handles) {
@@ -428,17 +473,19 @@ namespace gsnunf {
                     bool inWeakAnchorChain = true;
                     bool previouslyAnalyzed = false;
 
-                    cout << endl << "beginning to process the chain starting at " << current_id << ", " << currentCone << "] " << endl;
+              //      cout << endl << "beginning to process the chain starting at " << current_id << ", " << currentCone << "] " << endl;
 
                     // navigate to the end of the weak anchor chain (terminus = wk)
                     while (inWeakAnchorChain && !previouslyAnalyzed) {
 
-                        if (anchorEdges[current_id][cone].first != next) {
+                        if (anchorEdges[current_id][currentCone].first != next) {
                             inWeakAnchorChain = false;
+                            continue;
                         }
 
                         if (anchorEdges[current_id][currentCone].second == WeakSelected || anchorEdges[current_id][currentCone].second == StartOddChain) {
                             previouslyAnalyzed = true;
+                            continue;
                         }
 
                         if (anchorEdges[current_id][currentCone].second == Strong || anchorEdges[current_id][currentCone].second == StrongSelected) {
@@ -485,7 +532,11 @@ namespace gsnunf {
 
                                 Circ_id = Circ->storage_site().info();
 
-                                if(anchorEdges[Circ_id][(currentCone+2)%4].first == current && anchorEdges[Circ_id][(currentCone+2)%4].second == Weak) {
+                                if ( (anchorEdges[Circ_id][(currentCone+2)%4].first == current && anchorEdges[Circ_id][(currentCone+2)%4].second == WeakSelected)
+                                || (anchorEdges[Circ_id][(currentCone+2)%4].first == current && anchorEdges[Circ_id][(currentCone+2)%4].second == Weak)) {
+
+                                    if (anchorEdges[Circ_id][(currentCone+2)%4].second == WeakSelected) {previouslyAnalyzed = true;}
+
                                     fanCount = total+1;
                                     chainContinues = true;
                                     continue;
@@ -497,9 +548,7 @@ namespace gsnunf {
                             }
                         }
 
-                        if (chainContinues) {
-
-                            cout << current_id << ", " << currentCone << "] " << endl;
+                        if (chainContinues && !previouslyAnalyzed) {
 
                             current = Circ;
                             current_id = current->storage_site().info();
@@ -507,6 +556,12 @@ namespace gsnunf {
                             if (anchorEdges[current_id][(currentCone+2)%4].second == Strong) {
                                 inWeakAnchorChain = false;
                             }
+
+//                            if (anchorEdges[current_id][(currentCone+2)%4].second == WeakSelected || anchorEdges[current_id][(currentCone+2)%4].second == StartOddChain) {
+//                                previouslyAnalyzed = true;
+//                                continue;
+//                            }
+
                             if (!inWeakAnchorChain && (position % 2 == 1)) {
                                 auto startOdd = anchorEdges[current_id][(currentCone+2)%4].first;
                                 anchorEdges[startOdd->storage_site().info()][currentCone].second = StartOddChain;
@@ -525,11 +580,10 @@ namespace gsnunf {
 
                         else {
 
-                            if (position % 2 == 1) {
+                            if (!previouslyAnalyzed && position % 2 == 1) {
                                 anchorEdges[current_id][currentCone].second = StartOddChain;
-                            }
 
-                            cout << endl << "the chain's been processed at " << current_id << ", " << currentCone << endl;
+                            }
                             inWeakAnchorChain = false;
 
                         }
@@ -1081,6 +1135,22 @@ namespace gsnunf {
 
     }
 
+    inline size_t positionList(vector<spannerEdge> edgeList, Vertex_handle u, Vertex_handle v) {
+
+        spannerEdge proposed = std::make_pair(u, v);
+        size_t position = 0;
+
+        for (auto edge : edgeList) {
+            if ((proposed.first == edge.first || proposed.first == edge.second) && (proposed.second == edge.first || proposed.second == edge.second)) {
+                return position;
+            }
+
+            ++position;
+        }
+
+        return false;
+
+    }
 
     inline void processSpanner(vector<spannerCones> &H8,
                             vector<anchorCones> &anchorEdges,
@@ -1090,23 +1160,31 @@ namespace gsnunf {
 
         size_t u_id = handles[0]->storage_site().info();
         size_t charge = 0;
+        size_t cone = 0;
 
         for (auto u : handles) {
 
             u_id = u->storage_site().info();
             Vertex_circulator Circ = sdg.incident_vertices(u);
 
-            for (size_t cone = 0; cone < 4; cone++) {
+            for (size_t cones = 0; cones < 4; cones++) {
 
-                charge = H8[u_id][cone].size();
+                charge = H8[u_id][cones].size();
 
                 if (charge == 2) {
 
+                    cone = cones;
+
                     auto vprev = u;
+                    u_id = vprev->storage_site().info();
                     auto vnext = yaoEdges[u_id][cone].first;
 
-                    cout << u_id << " is the starting vertex " << endl;
-                    cout << vnext->storage_site().info() << " is vnext" << endl;
+                    if (!inEdgeList(H8[u_id][cone], vprev, vnext)) {
+                        continue;
+                    }
+
+//                    cout << u_id << " is the starting vertex " << endl;
+//                    cout << vnext->storage_site().info() << " is vnext" << endl;
 
                     bool plusFirst = false;
                     bool minusFirst = false;
@@ -1130,52 +1208,63 @@ namespace gsnunf {
                     bool inDuplicateChain = true;
                     size_t position = 1;
 
-                    // cannot progress further through the chain --> figure out which orientation to go backwards with
                     if (endOfChain) {
+
                         inDuplicateChain = false;
 
-                        // test out plusFirst
-                        auto v1 = pointFans[u_id][(cone+1)%4].first;
+                        // determine if plusFirst or minusFirst
 
-                        Circ = sdg.incident_vertices(u);
+                        auto v1 = pointFans[vprev->storage_site().info()][(cone+1)%4].first;
+                        Vertex_circulator Circ = sdg.incident_vertices(vprev);
+
                         while (Circ != v1) {++Circ;}
 
-                        size_t fanTotal = yaoEdges[u_id][(cone+1)%4].second;
-                        size_t fanCount = 1;
+                        size_t coneTotal = yaoEdges[vprev->storage_site().info()][(cone+1)%4].second;
+                        size_t conalPosition = 1;
 
-                        while (fanCount < (fanTotal+1)) {
+                        while (conalPosition < coneTotal + 1) {
 
-                            if (!plusFirst && yaoEdges[Circ->storage_site().info()][(cone-1)%4].first == u && yaoEdges[u_id][(cone+1)%4].first != Circ &&
-                                anchorEdges[Circ->storage_site().info()][(cone-1)%4].first != u && anchorEdges[u_id][(cone+1)%4].first != Circ) {
+                            if (yaoEdges[Circ->storage_site().info()][(cone-1)%4].first == vprev &&
+                                yaoEdges[vprev->storage_site().info()][(cone+1)%4].first != Circ &&
+                                inEdgeList(H8[vprev->storage_site().info()][cone], Circ, vprev)) {
                                     plusFirst = true;
-                                    vprev = Circ;
+                                    conalPosition = coneTotal + 1;
+                                    position = 2;
+                                    cone = (cones-1)%4;
+                                    continue;
                                 }
 
-                            ++fanCount;
                             ++Circ;
+                            ++conalPosition;
 
                         }
 
                         if (!plusFirst) {
 
-                                v1 = pointFans[u_id][(cone-1)%4].first;
-                                while (Circ != v1) {++Circ;}
+//                            cout << endl << "perhaps minusFirst?" << endl;
 
-                                fanTotal = yaoEdges[u_id][(cone-1)%4].second;
-                                fanCount = 1;
+                            v1 = pointFans[vprev->storage_site().info()][(cone-1)%4].first;
+                            while (Circ != v1) {++Circ;}
 
-                                while (fanCount < (fanTotal+1)) {
+                            coneTotal = yaoEdges[vprev->storage_site().info()][(cone-1)%4].second;
+                            conalPosition = 1;
 
-                                    if (!minusFirst && yaoEdges[Circ->storage_site().info()][(cone+1)%4].first == u && yaoEdges[u_id][(cone-1)%4].first != Circ &&
-                                        anchorEdges[Circ->storage_site().info()][(cone+1%4)].first != u && anchorEdges[u_id][(cone-1)%4].first != Circ) {
-                                            minusFirst = true;
-                                            vprev = Circ;
-                                        }
+                            while (conalPosition < coneTotal + 1) {
 
-                                    ++fanCount;
-                                    ++Circ;
-
+                                if (yaoEdges[Circ->storage_site().info()][(cone+1)%4].first == vprev &&
+                                yaoEdges[vprev->storage_site().info()][(cone-1)%4].first != Circ &&
+                                inEdgeList(H8[vprev->storage_site().info()][cone], Circ, vprev)) {
+                                    minusFirst = true;
+                                    conalPosition = coneTotal + 1;
+                                    position = 2;
+                                    cone = (cones+1)%4;
+                                    continue;
                                 }
+
+                                ++Circ;
+                                ++conalPosition;
+
+                            }
 
                         }
 
@@ -1190,7 +1279,7 @@ namespace gsnunf {
 
                           //      cout << position << "] " << "<" << vnext->storage_site().info() << ", ";
 
-                                cout << "testing the edge of <" << vprev->storage_site().info() << ", " << vnext->storage_site().info() << ">" << endl;
+//                                cout << "testing the edge of <" << vprev->storage_site().info() << ", " << vnext->storage_site().info() << ">" << endl;
 
                                 inDuplicateChain = false;
 
@@ -1201,7 +1290,7 @@ namespace gsnunf {
                                     inDuplicateChain = true;
                                 }
 
-                                if (inDuplicateChain) {cout<<"    edge works!" <<endl;}
+//                                if (inDuplicateChain) {cout<<"    edge works!" <<endl;}
 
                            //     cout << vnext->storage_site().info() << "> " << endl;
 
@@ -1216,7 +1305,7 @@ namespace gsnunf {
 
                             //    cout << position << "] " << "<" << vnext->storage_site().info() << ", ";
 
-                                cout << "testing the edge of <" << vprev->storage_site().info() << ", " << vnext->storage_site().info() << ">" << endl;
+//                                cout << "testing the edge of <" << vprev->storage_site().info() << ", " << vnext->storage_site().info() << ">" << endl;
 
                                 inDuplicateChain = false;
                                 if (inEdgeList(H8[vnext->storage_site().info()][(cone-1)%4], vprev, vnext)) {
@@ -1226,7 +1315,7 @@ namespace gsnunf {
                                     inDuplicateChain = true;
                                 }
 
-                                if (inDuplicateChain) {cout<<"    edge works!" <<endl;}
+//                                if (inDuplicateChain) {cout<<"    edge works!" <<endl;}
 
                         //        cout << vnext->storage_site().info() << "> " << endl;
 
@@ -1248,7 +1337,7 @@ namespace gsnunf {
 
                                 inDuplicateChain = false;
 
-                                cout << "testing the edge of <" << vprev->storage_site().info() << ", " << vnext->storage_site().info() << ">" << endl;
+//                                cout << "testing the edge of <" << vprev->storage_site().info() << ", " << vnext->storage_site().info() << ">" << endl;
 
                                 if (inEdgeList(H8[vnext->storage_site().info()][cone], vprev, vnext)) {
                                     vprev = vnext;
@@ -1257,7 +1346,7 @@ namespace gsnunf {
                                     ++position;
                                 }
 
-                                if (inDuplicateChain) {cout<<"    edge works!" <<endl;}
+//                                if (inDuplicateChain) {cout<<"    edge works!" <<endl;}
 
                          //       cout << vnext->storage_site().info() << "> " << endl;
 
@@ -1271,7 +1360,7 @@ namespace gsnunf {
 
                             //    cout << position << "] " << "<" << vnext->storage_site().info() << ", ";
 
-                                cout << "testing the edge of <" << vprev->storage_site().info() << ", " << vnext->storage_site().info() << ">" << endl;
+//                                cout << "testing the edge of <" << vprev->storage_site().info() << ", " << vnext->storage_site().info() << ">" << endl;
 
                                 inDuplicateChain = false;
 
@@ -1282,7 +1371,7 @@ namespace gsnunf {
                                     inDuplicateChain = true;
                                 }
 
-                                if (inDuplicateChain) {cout<<"    edge works!" <<endl;}
+//                                if (inDuplicateChain) {cout<<"    edge works!" <<endl;}
 
 
                               //  cout << vnext->storage_site().info() << "> " << endl;
@@ -1298,286 +1387,551 @@ namespace gsnunf {
 
                     }
 
-                    cout << endl << endl << "THE END OF THE CHAIN HAS BEEN REACHED AT " << vprev->storage_site().info() << endl;
+//                    cout << endl << endl << "THE END OF THE CHAIN HAS BEEN REACHED AT " << vnext->storage_site().info() << endl;
 
                     // the end of the chain has been reached --> vnext = wk+1
                     inDuplicateChain = true;
-                    vnext = vprev;
-                    size_t chainCount = 0;
+                    size_t chainCount = 1;
                     size_t fanCount = 1;
                     size_t fanTotal = 0;
                     bool previousFound = false;
                     bool startFound = false;
                     size_t edgeCone = 0;
                     Vertex_circulator Circ = sdg.incident_vertices(vnext);
+                    auto v1 = vprev;
 
-                    cout << endl << endl;
-                    cout << u_id << "] " << cone << endl;
-                    cout << vprev->storage_site().info() << endl;
-                    if (minusFirst) {cout << "minusFirst" << endl;}
-                    if (plusFirst) {cout << "plusFirst" << endl;}
-                    cout << "position: " << position << endl << endl;
+//                    cout << endl << endl;
+              //      cout << u_id << "] " << cone << endl;
+//                    cout << vprev->storage_site().info() << endl;
+//                    if (minusFirst) {cout << "minusFirst" << endl;}
+//                    if (plusFirst) {cout << "plusFirst" << endl;}
+//                    cout << "position: " << position << endl << endl;
 
-                    while (inDuplicateChain) {
-
-                        vnext = vprev;
-                        Circ = sdg.incident_vertices(vnext);
-
-                        cout << "position: " << position << endl;
-
-                        cout << vnext->storage_site().info() << " is vnext!" << endl;
-
-                        previousFound = false;
-
-                        if (position % 2 == 1) {
-
-                            if (plusFirst) {
-
-                                auto v1 = pointFans[vnext->storage_site().info()][(cone-1)%4].first;
-
-                                while (Circ != v1) {++Circ;}
-
-                                fanCount = 1;
-                                fanTotal = yaoEdges[vnext->storage_site().info()][(cone-1)%4].second;
-
-                                while (fanCount < (fanTotal + 1)) {
-
-                                    if (!previousFound && yaoEdges[Circ->storage_site().info()][(cone+1)%4].first == vnext && yaoEdges[vnext->storage_site().info()][(cone-1)%4].first != Circ &&
-                                        anchorEdges[Circ->storage_site().info()][(cone+1)%4].first != vnext && anchorEdges[vnext->storage_site().info()][(cone-1)%4].first != Circ) {
-
-
-                                        for (auto edge : H8[vnext->storage_site().info()][cone]) {
-
-                                            if ((Circ == edge.first || Circ == edge.second) && (vnext == edge.first || vnext == edge.second)) {
-
-                                                previousFound = true;
-                                                vprev = Circ;
-                                                fanCount = fanTotal+1;
-
-                                                if (H8[vprev->storage_site().info()][(cone+1)%4].size() != 2) {startFound = true;}
-
-                                                cout << vprev->storage_site().info() << " is previous!" << endl << endl;
-
-                                            }
-
-                                        }
-
-                                    }
-
-                                    ++Circ;
-                                    ++fanCount;
-
-                                }
-
-
-
-                            }
-
-                            else {
-
-                                auto v1 = pointFans[vnext->storage_site().info()][(cone+1)%4].first;
-
-                                while (Circ != v1) {++Circ;}
-
-                                fanCount = 1;
-                                fanTotal = yaoEdges[vnext->storage_site().info()][(cone+1)%4].second;
-
-                                while (fanCount < (fanTotal + 1)) {
-
-                                    if (!previousFound && yaoEdges[Circ->storage_site().info()][(cone-1)%4].first == vnext && yaoEdges[vnext->storage_site().info()][(cone+1)%4].first != Circ
-                                     && anchorEdges[Circ->storage_site().info()][(cone-1)%4].first != vnext && anchorEdges[vnext->storage_site().info()][(cone+1)%4].first != Circ) {
-
-                                        for (auto edge : H8[vnext->storage_site().info()][cone]) {
-
-                                            if ((Circ == edge.first || Circ == edge.second) && (vnext == edge.first || vnext == edge.second)) {
-
-                                                previousFound = true;
-                                                vprev = Circ;
-                                                fanCount = fanTotal+1;
-
-                                                if (H8[vprev->storage_site().info()][(cone-1)%4].size() != 2) {startFound = true;}
-
-                                                cout << vprev->storage_site().info() << " is previous!" << endl << endl;
-
-                                            }
-
-                                        }
-
-                                    }
-
-                                    ++Circ;
-                                    ++fanCount;
-
-                                }
-
-                            }
-
-                        }
+                    while (inDuplicateChain && !startFound) {
 
                         if (position % 2 == 0) {
 
                             if (plusFirst) {
 
-                                auto v1 = pointFans[vnext->storage_site().info()][(cone+2)%4].first;
+                                previousFound = false;
+
+                                Circ = sdg.incident_vertices(vprev);
+                                v1 = pointFans[vprev->storage_site().info()][(cone+2)%4].first;
 
                                 while (Circ != v1) {++Circ;}
 
+                                fanTotal = yaoEdges[vprev->storage_site().info()][(cone+2)%4].second;
                                 fanCount = 1;
-                                fanTotal = yaoEdges[vnext->storage_site().info()][(cone+2)%4].second;
 
-                                while (fanCount < (fanTotal+1)) {
+                                inDuplicateChain = false;
 
-                                    if (!previousFound && yaoEdges[Circ->storage_site().info()][cone].first == vnext && yaoEdges[vnext->storage_site().info()][(cone+2)%4].first != Circ
-                                     && anchorEdges[Circ->storage_site().info()][cone].first != vnext && anchorEdges[vnext->storage_site().info()][cone].first != Circ) {
+                                while (!previousFound && fanCount < fanTotal + 1) {
 
-                                        for (auto edge : H8[vnext->storage_site().info()][(cone+1)%4]) {
+                                    if (yaoEdges[Circ->storage_site().info()][cone].first == vprev &&
+                                    yaoEdges[vprev->storage_site().info()][(cone+2)%4].first != Circ &&
+                                    inEdgeList(H8[vprev->storage_site().info()][(cone+1)%4], Circ, vprev)) {
 
-                                            if ((Circ == edge.first || Circ == edge.second) && (vnext == edge.first || vnext == edge.second)) {
+                                        inDuplicateChain = true;
+                                        previousFound = true;
 
-                                                previousFound = true;
-                                                vprev = Circ;
-                                                fanCount = fanTotal+1;
+                                        vnext = vprev;
+                                        vprev = Circ;
 
-                                                if (H8[vprev->storage_site().info()][cone].size() != 2) {startFound = true;}
-
-                                                cout << vprev->storage_site().info() << " is previous!" << endl << endl;
-
-                                            }
-
-                                        }
+                                        ++chainCount;
 
                                     }
 
-                                    ++Circ;
                                     ++fanCount;
+                                    ++Circ;
 
                                 }
 
+                                if (inDuplicateChain && H8[vprev->storage_site().info()][cone].size() != 2) {
+                                    startFound = true;
+                                }
 
                             }
 
-                            else {
+                            if (minusFirst) {
 
-                                auto v1 = pointFans[vnext->storage_site().info()][(cone+2)%4].first;
+                                previousFound = false;
+
+                                Circ = sdg.incident_vertices(vprev);
+                                v1 = pointFans[vprev->storage_site().info()][(cone+2)%4].first;
 
                                 while (Circ != v1) {++Circ;}
 
+                                fanTotal = yaoEdges[vprev->storage_site().info()][(cone+2)%4].second;
                                 fanCount = 1;
-                                fanTotal = yaoEdges[vnext->storage_site().info()][(cone+2)%4].second;
 
-                                while (fanCount < (fanTotal+1)) {
+                                inDuplicateChain = false;
 
-                                    if (!previousFound && yaoEdges[Circ->storage_site().info()][cone].first == vnext && yaoEdges[vnext->storage_site().info()][(cone+2)%4].first != Circ
-                                     && anchorEdges[Circ->storage_site().info()][cone].first != vnext && anchorEdges[vnext->storage_site().info()][(cone+2)%4].first != Circ) {
+                                while (!previousFound && fanCount < fanTotal + 1) {
 
-                                        for (auto edge : H8[vnext->storage_site().info()][(cone-1)%4]) {
+                                    if (yaoEdges[Circ->storage_site().info()][cone].first == vprev &&
+                                    yaoEdges[vprev->storage_site().info()][(cone+2)%4].first != Circ &&
+                                    inEdgeList(H8[vprev->storage_site().info()][(cone-1)%4], Circ, vprev)) {
 
-                                            if ((Circ == edge.first || Circ == edge.second) && (vnext == edge.first || vnext == edge.second)) {
+                                        inDuplicateChain = true;
+                                        previousFound = true;
 
-                                                previousFound = true;
-                                                vprev = Circ;
-                                                fanCount = fanTotal+1;
+                                        vnext = vprev;
+                                        vprev = Circ;
 
-                                                if (H8[vprev->storage_site().info()][cone].size() != 2) {startFound = true;}
-
-                                                cout << vprev->storage_site().info() << " is previous!" << endl << endl;
-
-                                            }
-
-                                        }
+                                        ++chainCount;
 
                                     }
 
-                                    ++Circ;
                                     ++fanCount;
+                                    ++Circ;
 
+                                }
+
+                                if (inDuplicateChain && H8[vprev->storage_site().info()][cone].size() != 2) {
+                                    startFound = true;
                                 }
 
                             }
 
+
                         }
 
-                        ++position;
+                        if (position % 2 == 1) {
 
+                            if (plusFirst) {
 
-                        if (previousFound) {
+                                previousFound = false;
 
-                            ++chainCount;
+                                Circ = sdg.incident_vertices(vprev);
+                                v1 = pointFans[vprev->storage_site().info()][(cone-1)%4].first;
 
-                            cout << endl << "----------------------------" << endl << endl;
+                                while (Circ != v1) {++Circ;}
 
-                            cout << "chainCount: " << chainCount << endl;
+                                fanTotal = yaoEdges[vprev->storage_site().info()][(cone-1)%4].second;
+                                fanCount = 1;
 
-                            if (chainCount % 2 == 0) {
+                                inDuplicateChain = false;
 
-                                size_t edgeCone = getCone(vprev, vnext);
-                                bool removed = false;
-                                spannerEdge currentEdge = std::make_pair(vprev, vnext);
+                                while (!previousFound && fanCount < fanTotal + 1) {
 
-                                cout << "currentEdge: <" << currentEdge.first->storage_site().info() << ", " << currentEdge.second->storage_site().info() << "> " << endl;
-                                cout << "edgeCone: " << edgeCone << endl;
-                                size_t i = 0;
-                                // remove the edge from vprev
-                                for (auto edge : H8[vprev->storage_site().info()][edgeCone]) {
+                                    if (yaoEdges[Circ->storage_site().info()][(cone+1)%4].first == vprev &&
+                                    yaoEdges[vprev->storage_site().info()][(cone-1)%4].first != Circ &&
+                                    inEdgeList(H8[vprev->storage_site().info()][cone], Circ, vprev)) {
 
-                                    if (!removed && (currentEdge.first == edge.first || currentEdge.first == edge.second) && (currentEdge.second == edge.first || currentEdge.second == edge.second)) {
-                                        H8[vprev->storage_site().info()][edgeCone].erase(H8[vprev->storage_site().info()][edgeCone].begin() + i);
-                                        removed = true;
+                                        inDuplicateChain = true;
+                                        previousFound = true;
+
+                                        vnext = vprev;
+                                        vprev = Circ;
+
+                                        ++chainCount;
+
                                     }
-                                    ++i;
+
+                                    ++fanCount;
+                                    ++Circ;
 
                                 }
 
-                                i = 0;
-                                removed = false;
-                                // remove the edge from vnext
-
-                                if (plusFirst) {
-
-                                    for (auto edge : H8[vnext->storage_site().info()][(edgeCone+1)%4]) {
-
-                                    if (!removed && (currentEdge.first == edge.first || currentEdge.first == edge.second) && (currentEdge.second == edge.first || currentEdge.second == edge.second)) {
-
-                                        cout << "plusFirst] DOUBLE EDGE FOUND! --> (" << edge.first->storage_site().info() << ", " << edge.second->storage_site().info() << "> " << endl << endl;
-
-                                        H8[vnext->storage_site().info()][(edgeCone+1)%4].erase(H8[vnext->storage_site().info()][(edgeCone+1)%4].begin()+i);
-                                        removed = true;
-                                    }
-                                    ++i;
-
-                                    }
-
+                                if (inDuplicateChain && H8[vprev->storage_site().info()][(cone+1)%4].size() != 2) {
+                                    startFound = true;
                                 }
-
-                                else {
-
-                                    for (auto edge : H8[vnext->storage_site().info()][(edgeCone-1)%4]) {
-
-                                    if (!removed && (currentEdge.first == edge.first || currentEdge.first == edge.second) && (currentEdge.second == edge.first || currentEdge.second == edge.second)) {
-
-                                        cout << "minusFirst] DOUBLE EDGE FOUND! --> (" << edge.first->storage_site().info() << ", " << edge.second->storage_site().info() << "> " << endl << endl;
-
-                                        H8[vnext->storage_site().info()][(edgeCone-1)%4].erase(H8[vnext->storage_site().info()][(edgeCone-1)%4].begin()+i);
-                                        removed = true;;
-                                    }
-                                    ++i;
-
-                                    }
-
-                                }
-
-
 
                             }
 
-                            if (startFound) {inDuplicateChain = false;}
+                            if (minusFirst) {
+
+                                previousFound = false;
+
+                                Circ = sdg.incident_vertices(vprev);
+                                v1 = pointFans[vprev->storage_site().info()][(cone+1)%4].first;
+
+                                while (Circ != v1) {++Circ;}
+
+                                fanTotal = yaoEdges[vprev->storage_site().info()][(cone+1)%4].second;
+                                fanCount = 1;
+
+                                inDuplicateChain = false;
+
+                                while (!previousFound && fanCount < fanTotal + 1) {
+
+                                    if (yaoEdges[Circ->storage_site().info()][(cone-1)%4].first == vprev &&
+                                    yaoEdges[vprev->storage_site().info()][(cone+1)%4].first != Circ &&
+                                    inEdgeList(H8[vprev->storage_site().info()][cone], Circ, vprev)) {
+
+                                        inDuplicateChain = true;
+                                        previousFound = true;
+
+                                        vnext = vprev;
+                                        vprev = Circ;
+
+                                        ++chainCount;
+
+                                    }
+
+                                    ++fanCount;
+                                    ++Circ;
+
+                                }
+
+                                if (inDuplicateChain && H8[vprev->storage_site().info()][(cone-1)%4].size() != 2) {
+                                    startFound = true;
+                                }
+
+                            }
+
 
                         }
 
-                        else {
-                            inDuplicateChain = false;
+                        if (inDuplicateChain) {
+
+                            ++position;
+
+//                            cout << vprev->storage_site().info() << endl;
+//                            cout << "position: " << position << endl << endl;
+//
+//                            cout << "chain count: " << chainCount << endl;
+
+
                         }
+
+
+                        if (previousFound && chainCount % 2 == 0) {
+
+                            size_t currentCone = getCone(vprev, vnext);
+                            size_t indexList = 0;
+
+//                            cout << "<" << vprev->storage_site().info() << ", " << vnext->storage_site().info() << "> will be removed from " << currentCone << " of " << vprev->storage_site().info() << endl << endl;
+
+                            if (inEdgeList(H8[vprev->storage_site().info()][currentCone], vprev, vnext)) {
+
+                                indexList = positionList(H8[vprev->storage_site().info()][currentCone], vprev, vnext);
+                                H8[vprev->storage_site().info()][currentCone].erase(H8[vprev->storage_site().info()][currentCone].begin() + indexList);
+
+                            }
+
+                            bool removed = false;
+
+                            if (!removed && inEdgeList(H8[vnext->storage_site().info()][(currentCone+1)%4], vprev, vnext)) {
+
+                                indexList = positionList(H8[vnext->storage_site().info()][(currentCone+1)%4], vprev, vnext);
+
+                                H8[vnext->storage_site().info()][(currentCone+1)%4].erase(H8[vnext->storage_site().info()][(currentCone+1)%4].begin() + indexList);
+
+                                removed = true;
+
+//                                cout << "<" << vprev->storage_site().info() << ", " << vnext->storage_site().info() << "> has been removed from " << (currentCone+1)%4 << " of " << vnext->storage_site().info() << endl << endl;
+
+                            }
+
+                            if (!removed && inEdgeList(H8[vnext->storage_site().info()][(currentCone-1)%4], vprev, vnext)) {
+
+                                indexList = positionList(H8[vnext->storage_site().info()][(currentCone-1)%4], vprev, vnext);
+
+                                H8[vnext->storage_site().info()][(currentCone-1)%4].erase(H8[vnext->storage_site().info()][(currentCone-1)%4].begin() + indexList);
+
+                                removed = true;
+
+//                                cout << "<" << vprev->storage_site().info() << ", " << vnext->storage_site().info() << "> has been removed from " << (currentCone-1)%4 << " of " << vnext->storage_site().info() << endl << endl;
+
+                            }
+
+
+////                            if (plusFirst) {
+////
+////                                cout << "is it position list for vnext?" << endl;
+////
+////                                indexList = positionList(H8[vnext->storage_site().info()][(currentCone+1)%4], vprev, vnext);
+////
+////                                cout << "seems to be OKAY! maybe erasing?" << endl;
+////
+////                                H8[vnext->storage_site().info()][(currentCone)+1%4].erase(H8[vnext->storage_site().info()][(currentCone)+1%4].begin() + indexList);
+////
+////                                cout << "hmmmmmmmmmm I wonder" << endl;
+////
+////                            }
+//
+//                            if (minusFirst) {
+//
+//                                cout << "is it position list for vnext?" << endl;
+//
+//                                indexList = positionList(H8[vnext->storage_site().info()][(currentCone-1)%4], vprev, vnext);
+//
+//                                cout << "seems to be OKAY! maybe erasing?" << endl;
+//
+//                                H8[vnext->storage_site().info()][(currentCone)-1%4].erase(H8[vnext->storage_site().info()][(currentCone)-1%4].begin() + indexList);
+//
+//                                cout << "hmmmmmmmmmm I wonder" << endl;
+//
+//                            }
+
+
+
+
+                        }
+
                     }
+
+//                    while (inDuplicateChain) {
+//
+//                        vnext = vprev;
+//                        Circ = sdg.incident_vertices(vnext);
+//
+//                        cout << "position: " << position << endl;
+//
+//                        cout << vnext->storage_site().info() << " is vnext!" << endl;
+//
+//                        previousFound = false;
+//
+//                        if (position % 2 == 1) {
+//
+//                            if (plusFirst) {
+//
+//                                auto v1 = pointFans[vnext->storage_site().info()][(cone-1)%4].first;
+//
+//                                while (Circ != v1) {++Circ;}
+//
+//                                fanCount = 1;
+//                                fanTotal = yaoEdges[vnext->storage_site().info()][(cone-1)%4].second;
+//
+//                                while (fanCount < (fanTotal + 1)) {
+//
+//                                    if (!previousFound && yaoEdges[Circ->storage_site().info()][(cone+1)%4].first == vnext && yaoEdges[vnext->storage_site().info()][(cone-1)%4].first != Circ &&
+//                                        anchorEdges[Circ->storage_site().info()][(cone+1)%4].first != vnext && anchorEdges[vnext->storage_site().info()][(cone-1)%4].first != Circ) {
+//
+//
+//                                        for (auto edge : H8[vnext->storage_site().info()][cone]) {
+//
+//                                            if ((Circ == edge.first || Circ == edge.second) && (vnext == edge.first || vnext == edge.second)) {
+//
+//                                                previousFound = true;
+//                                                vprev = Circ;
+//                                                fanCount = fanTotal+1;
+//
+//                                                if (H8[vprev->storage_site().info()][(cone+1)%4].size() != 2) {startFound = true;}
+//
+//                                                cout << vprev->storage_site().info() << " is previous!" << endl << endl;
+//
+//                                            }
+//
+//                                        }
+//
+//                                    }
+//
+//                                    ++Circ;
+//                                    ++fanCount;
+//
+//                                }
+//
+//
+//
+//                            }
+//
+//                            else {
+//
+//                                auto v1 = pointFans[vnext->storage_site().info()][(cone+1)%4].first;
+//
+//                                while (Circ != v1) {++Circ;}
+//
+//                                fanCount = 1;
+//                                fanTotal = yaoEdges[vnext->storage_site().info()][(cone+1)%4].second;
+//
+//                                while (fanCount < (fanTotal + 1)) {
+//
+//                                    if (!previousFound && yaoEdges[Circ->storage_site().info()][(cone-1)%4].first == vnext && yaoEdges[vnext->storage_site().info()][(cone+1)%4].first != Circ
+//                                     && anchorEdges[Circ->storage_site().info()][(cone-1)%4].first != vnext && anchorEdges[vnext->storage_site().info()][(cone+1)%4].first != Circ) {
+//
+//                                        for (auto edge : H8[vnext->storage_site().info()][cone]) {
+//
+//                                            if ((Circ == edge.first || Circ == edge.second) && (vnext == edge.first || vnext == edge.second)) {
+//
+//                                                previousFound = true;
+//                                                vprev = Circ;
+//                                                fanCount = fanTotal+1;
+//
+//                                                if (H8[vprev->storage_site().info()][(cone-1)%4].size() != 2) {startFound = true;}
+//
+//                                                cout << vprev->storage_site().info() << " is previous!" << endl << endl;
+//
+//                                            }
+//
+//                                        }
+//
+//                                    }
+//
+//                                    ++Circ;
+//                                    ++fanCount;
+//
+//                                }
+//
+//                            }
+//
+//                        }
+//
+//                        if (position % 2 == 0) {
+//
+//                            if (plusFirst) {
+//
+//                                auto v1 = pointFans[vnext->storage_site().info()][(cone+2)%4].first;
+//
+//                                while (Circ != v1) {++Circ;}
+//
+//                                fanCount = 1;
+//                                fanTotal = yaoEdges[vnext->storage_site().info()][(cone+2)%4].second;
+//
+//                                while (fanCount < (fanTotal+1)) {
+//
+//                                    if (!previousFound && yaoEdges[Circ->storage_site().info()][cone].first == vnext && yaoEdges[vnext->storage_site().info()][(cone+2)%4].first != Circ
+//                                     && anchorEdges[Circ->storage_site().info()][cone].first != vnext && anchorEdges[vnext->storage_site().info()][cone].first != Circ) {
+//
+//                                        for (auto edge : H8[vnext->storage_site().info()][(cone+1)%4]) {
+//
+//                                            if ((Circ == edge.first || Circ == edge.second) && (vnext == edge.first || vnext == edge.second)) {
+//
+//                                                previousFound = true;
+//                                                vprev = Circ;
+//                                                fanCount = fanTotal+1;
+//
+//                                                if (H8[vprev->storage_site().info()][cone].size() != 2) {startFound = true;}
+//
+//                                                cout << vprev->storage_site().info() << " is previous!" << endl << endl;
+//
+//                                            }
+//
+//                                        }
+//
+//                                    }
+//
+//                                    ++Circ;
+//                                    ++fanCount;
+//
+//                                }
+//
+//
+//                            }
+//
+//                            else {
+//
+//                                auto v1 = pointFans[vnext->storage_site().info()][(cone+2)%4].first;
+//
+//                                while (Circ != v1) {++Circ;}
+//
+//                                fanCount = 1;
+//                                fanTotal = yaoEdges[vnext->storage_site().info()][(cone+2)%4].second;
+//
+//                                while (fanCount < (fanTotal+1)) {
+//
+//                                    if (!previousFound && yaoEdges[Circ->storage_site().info()][cone].first == vnext && yaoEdges[vnext->storage_site().info()][(cone+2)%4].first != Circ
+//                                     && anchorEdges[Circ->storage_site().info()][cone].first != vnext && anchorEdges[vnext->storage_site().info()][(cone+2)%4].first != Circ) {
+//
+//                                        for (auto edge : H8[vnext->storage_site().info()][(cone-1)%4]) {
+//
+//                                            if ((Circ == edge.first || Circ == edge.second) && (vnext == edge.first || vnext == edge.second)) {
+//
+//                                                previousFound = true;
+//                                                vprev = Circ;
+//                                                fanCount = fanTotal+1;
+//
+//                                                if (H8[vprev->storage_site().info()][cone].size() != 2) {startFound = true;}
+//
+//                                                cout << vprev->storage_site().info() << " is previous!" << endl << endl;
+//
+//                                            }
+//
+//                                        }
+//
+//                                    }
+//
+//                                    ++Circ;
+//                                    ++fanCount;
+//
+//                                }
+//
+//                            }
+//
+//                        }
+//
+//                        ++position;
+//
+//
+//                        if (previousFound) {
+//
+//                            ++chainCount;
+//
+//                            cout << endl << "----------------------------" << endl << endl;
+//
+//                            cout << "chainCount: " << chainCount << endl;
+//
+//                            if (chainCount % 2 == 0) {
+//
+//                                size_t edgeCone = getCone(vprev, vnext);
+//                                bool removed = false;
+//                                spannerEdge currentEdge = std::make_pair(vprev, vnext);
+//
+//                                cout << "currentEdge: <" << currentEdge.first->storage_site().info() << ", " << currentEdge.second->storage_site().info() << "> " << endl;
+//                                cout << "edgeCone: " << edgeCone << endl;
+//                                size_t i = 0;
+//                                // remove the edge from vprev
+//                                for (auto edge : H8[vprev->storage_site().info()][edgeCone]) {
+//
+//                                    if (!removed && (currentEdge.first == edge.first || currentEdge.first == edge.second) && (currentEdge.second == edge.first || currentEdge.second == edge.second)) {
+//                                        H8[vprev->storage_site().info()][edgeCone].erase(H8[vprev->storage_site().info()][edgeCone].begin() + i);
+//                                        removed = true;
+//                                    }
+//                                    ++i;
+//
+//                                }
+//
+//                                i = 0;
+//                                removed = false;
+//                                // remove the edge from vnext
+//
+//                                if (plusFirst) {
+//
+//                                    for (auto edge : H8[vnext->storage_site().info()][(edgeCone+1)%4]) {
+//
+//                                    if (!removed && (currentEdge.first == edge.first || currentEdge.first == edge.second) && (currentEdge.second == edge.first || currentEdge.second == edge.second)) {
+//
+//                                        cout << "plusFirst] DOUBLE EDGE FOUND! --> (" << edge.first->storage_site().info() << ", " << edge.second->storage_site().info() << "> " << endl << endl;
+//
+//                                        H8[vnext->storage_site().info()][(edgeCone+1)%4].erase(H8[vnext->storage_site().info()][(edgeCone+1)%4].begin()+i);
+//                                        removed = true;
+//                                    }
+//                                    ++i;
+//
+//                                    }
+//
+//                                }
+//
+//                                else {
+//
+//                                    for (auto edge : H8[vnext->storage_site().info()][(edgeCone-1)%4]) {
+//
+//                                    if (!removed && (currentEdge.first == edge.first || currentEdge.first == edge.second) && (currentEdge.second == edge.first || currentEdge.second == edge.second)) {
+//
+//                                        cout << "minusFirst] DOUBLE EDGE FOUND! --> (" << edge.first->storage_site().info() << ", " << edge.second->storage_site().info() << "> " << endl << endl;
+//
+//                                        H8[vnext->storage_site().info()][(edgeCone-1)%4].erase(H8[vnext->storage_site().info()][(edgeCone-1)%4].begin()+i);
+//                                        removed = true;;
+//                                    }
+//                                    ++i;
+//
+//                                    }
+//
+//                                }
+//
+//
+//
+//                            }
+//
+//                            if (startFound) {inDuplicateChain = false;}
+//
+//                        }
+//
+//                        else {
+//                            inDuplicateChain = false;
+//                        }
+//                    }
                 }
             }
         }
@@ -1658,6 +2012,8 @@ namespace gsnunf {
                         ++i;
                     }
 
+                    assert(v1 != v2);
+
                     currentEdge = std::make_pair(v1, v2);
                     H8[v1->storage_site().info()][getCone(v1,v2)].push_back(currentEdge);
                     H8[v2->storage_site().info()][getCone(v2,v1)].push_back(currentEdge);
@@ -1731,17 +2087,23 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
       ++id;
     }
 
-    assert( sdg.is_valid(true, 1) );
-    cout << endl << endl;
+//    assert( sdg.is_valid(true, 1) );
+//    cout << endl << endl;
 
     //  Print the points and IDs
-    for( auto it = sdg.finite_vertices_begin();
+
+    if (printLog) {
+
+        for( auto it = sdg.finite_vertices_begin();
          it != sdg.finite_vertices_end(); ++it )
-    {
-        cout << it->storage_site().info() << "] ";
-        cout << it->site().point() << endl;
+            {
+                cout << it->storage_site().info() << "] ";
+                cout << it->site().point() << endl;
+            }
+            cout << endl;
+
     }
-    cout << endl;
+
 
     //N is the number of vertices in the delaunay triangulation.
     const size_t n = sdg.number_of_vertices();
@@ -1759,106 +2121,110 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
     //construct YaoEdges
     vector<yaoCones> yaoEdges(n, yaoCones(4));
-    vector<fanCones> pointFans(n);
-    vector<numYaoEdges> yaoEdgeCount(n);
+    vector<fanCones> pointFans(n, fanCones(4));
+    vector<numYaoEdges> yaoEdgeCount(n, numYaoEdges(4));
 
     addYaoEdges(yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
 
-    cout << "yao edge terminals directed from u" << endl;
+    if (printLog) {
 
-    for (auto u : handles) {
+        cout << "yao edge terminals directed from u" << endl;
 
-        size_t u_id = u->storage_site().info();
+        for (auto u : handles) {
 
-        cout << u_id << "] ";
+            size_t u_id = u->storage_site().info();
 
-        for (size_t cone = 0; cone < 4; cone++) {
+            cout << u_id << "] ";
 
-            if (yaoEdges[u_id][cone].second == 0) {
-                cout << "x ";
-            }
-            else {
-              //  size_t neighbor_id = yaoEdges[u_id][cone].first
-                cout << (yaoEdges[u_id][cone].first)->storage_site().info() << " ";
-            }
+            for (size_t cone = 0; cone < 4; cone++) {
 
-            if (cone == 3) {
-                cout << endl;
-            }
+                if (yaoEdges[u_id][cone].second == 0) {
+                    cout << "x ";
+                }
+                else {
+                  //  size_t neighbor_id = yaoEdges[u_id][cone].first
+                    cout << (yaoEdges[u_id][cone].first)->storage_site().info() << " ";
+                }
 
-        }
+                if (cone == 3) {
+                    cout << endl;
+                }
 
-    }
-
-    cout << endl << endl;
-
-    cout << "number of edges in cones" << endl;
-
-    for (auto u : handles) {
-
-        size_t u_id = u->storage_site().info();
-
-        cout << u_id << "] ";
-
-        for (size_t cone = 0; cone < 4; cone++) {
-
-              // num edges in that cone
-            cout << yaoEdges[u_id][cone].second << " ";
-
-
-            if (cone == 3) {
-                cout << endl;
             }
 
         }
 
-    }
+        cout << endl << endl;
 
-    cout << endl << endl;
+        cout << "number of edges in cones" << endl;
 
-    cout << "number of YAO EDGES in cones" << endl;
+        for (auto u : handles) {
 
-    for (auto u : handles) {
+            size_t u_id = u->storage_site().info();
 
-        size_t u_id = u->storage_site().info();
+            cout << u_id << "] ";
 
-        cout << u_id << "] ";
+            for (size_t cone = 0; cone < 4; cone++) {
 
-        for (size_t cone = 0; cone < 4; cone++) {
-
-              // num edges in that cone
-            cout << yaoEdgeCount[u_id][cone] << " ";
+                  // num edges in that cone
+                cout << yaoEdges[u_id][cone].second << " ";
 
 
-            if (cone == 3) {
-                cout << endl;
+                if (cone == 3) {
+                    cout << endl;
+                }
+
             }
 
         }
 
-    }
+        cout << endl << endl;
 
-    cout << endl << endl;
+        cout << "number of YAO EDGES in cones" << endl;
 
-    cout << "fans of the cones" << endl;
+        for (auto u : handles) {
 
-    for (auto u : handles) {
+            size_t u_id = u->storage_site().info();
 
-        size_t u_id = u->storage_site().info();
+            cout << u_id << "] ";
 
-        cout << u_id << "] ";
+            for (size_t cone = 0; cone < 4; cone++) {
 
-        for (size_t cone = 0; cone < 4; cone++) {
+                  // num edges in that cone
+                cout << yaoEdgeCount[u_id][cone] << " ";
 
-            if (yaoEdges[u_id][cone].second == 0) {
-                cout << "< x, x > ";
+
+                if (cone == 3) {
+                    cout << endl;
+                }
+
             }
-            else {
-                cout << "< " << pointFans[u_id][cone].first->storage_site().info() << ", " << pointFans[u_id][cone].second->storage_site().info() << " > ";
-            }
 
-            if (cone == 3) {
-                cout << endl;
+        }
+
+        cout << endl << endl;
+
+        cout << "fans of the cones" << endl;
+
+        for (auto u : handles) {
+
+            size_t u_id = u->storage_site().info();
+
+            cout << u_id << "] ";
+
+            for (size_t cone = 0; cone < 4; cone++) {
+
+                if (yaoEdges[u_id][cone].second == 0) {
+                    cout << "< x, x > ";
+                }
+                else {
+                    cout << "< " << pointFans[u_id][cone].first->storage_site().info() << ", " << pointFans[u_id][cone].second->storage_site().info() << " > ";
+                }
+
+                if (cone == 3) {
+                    cout << endl;
+                }
+
             }
 
         }
@@ -1866,184 +2232,203 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     }
 
     // identify the anchors
-    vector<anchorCones> anchorEdges(n);
+    vector<anchorCones> anchorEdges(n, anchorCones(4));
 
     determineAnchors(anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
 
+    if (printLog) {
 
-    cout << endl << "anchors" << endl;
+        cout << endl << "anchors" << endl;
 
-    for (auto u : handles) {
+        for (auto u : handles) {
 
-        size_t u_id = u->storage_site().info();
+            size_t u_id = u->storage_site().info();
 
-        cout << u_id << "] ";
+            cout << u_id << "] ";
 
-        for (size_t cone = 0; cone < 4; cone++) {
+            for (size_t cone = 0; cone < 4; cone++) {
 
-            if (anchorEdges[u_id][cone].first == nullptr)
-            {
-                cout << "x ";
-            }
-            else
-            {
-                cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-            }
-              // num edges in that cone
+                if (anchorEdges[u_id][cone].first == nullptr)
+                {
+                    cout << "x ";
+                }
+                else
+                {
+                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
+                }
+                  // num edges in that cone
 
-            if (cone == 3) {
-                cout << endl;
-            }
+                if (cone == 3) {
+                    cout << endl;
+                }
 
-        }
-
-    }
-
-    cout << endl << endl << "strong anchors" << endl;
-
-    for (auto u : handles) {
-
-        size_t u_id = u->storage_site().info();
-
-        cout << u_id << "] ";
-
-        for (size_t cone = 0; cone < 4; cone++) {
-
-            if (anchorEdges[u_id][cone].second == Strong || anchorEdges[u_id][cone].second == StrongSelected)
-            {
-                cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-            }
-            else
-            {
-                cout << "x ";
-            }
-              // num edges in that cone
-
-            if (cone == 3) {
-                cout << endl;
             }
 
         }
 
     }
 
-    cout << endl << endl << "selected anchors" << endl;
+    if (printLog) {
 
-    for (auto u : handles) {
+        cout << endl << endl << "strong anchors" << endl;
 
-        size_t u_id = u->storage_site().info();
+        for (auto u : handles) {
 
-        cout << u_id << "] ";
+            size_t u_id = u->storage_site().info();
 
-        for (size_t cone = 0; cone < 4; cone++) {
+            cout << u_id << "] ";
 
-            if (anchorEdges[u_id][cone].second == StrongSelected || anchorEdges[u_id][cone].second == WeakSelected)
-            {
-                cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-            }
-            else
-            {
-                cout << "x ";
-            }
-              // num edges in that cone
+            for (size_t cone = 0; cone < 4; cone++) {
 
-            if (cone == 3) {
-                cout << endl;
-            }
+                if (anchorEdges[u_id][cone].second == Strong || anchorEdges[u_id][cone].second == StrongSelected)
+                {
+                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
+                }
+                else
+                {
+                    cout << "x ";
+                }
+                  // num edges in that cone
 
-        }
+                if (cone == 3) {
+                    cout << endl;
+                }
 
-    }
-
-    cout << endl << endl << "start of odd chain" << endl;
-
-    for (auto u : handles) {
-
-        size_t u_id = u->storage_site().info();
-
-        cout << u_id << "] ";
-
-        for (size_t cone = 0; cone < 4; cone++) {
-
-            if (anchorEdges[u_id][cone].second == StartOddChain)
-            {
-                cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-            }
-            else
-            {
-                cout << "x ";
-            }
-              // num edges in that cone
-
-            if (cone == 3) {
-                cout << endl;
             }
 
         }
 
     }
 
-    cout << endl << endl;
+    if (printLog) {
+
+        cout << endl << endl << "selected anchors" << endl;
+
+        for (auto u : handles) {
+
+            size_t u_id = u->storage_site().info();
+
+            cout << u_id << "] ";
+
+            for (size_t cone = 0; cone < 4; cone++) {
+
+                if (anchorEdges[u_id][cone].second == StrongSelected || anchorEdges[u_id][cone].second == WeakSelected)
+                {
+                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
+                }
+                else
+                {
+                    cout << "x ";
+                }
+                  // num edges in that cone
+
+                if (cone == 3) {
+                    cout << endl;
+                }
+
+            }
+
+        }
+
+    }
+
+    if (printLog) {
+
+        cout << endl << endl << "start of odd chain" << endl;
+
+        for (auto u : handles) {
+
+            size_t u_id = u->storage_site().info();
+
+            cout << u_id << "] ";
+
+            for (size_t cone = 0; cone < 4; cone++) {
+
+                if (anchorEdges[u_id][cone].second == StartOddChain)
+                {
+                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
+                }
+                else
+                {
+                    cout << "x ";
+                }
+                  // num edges in that cone
+
+                if (cone == 3) {
+                    cout << endl;
+                }
+
+            }
+
+        }
+
+        cout << endl << endl;
+
+    }
 
    // construct H8 --> degree 8 spanner
-    vector<spannerCones> H8(n);
+    vector<spannerCones> H8(n, spannerCones(4));
 
     degreeEightSpanner(H8, anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
 
-    cout << "degree 8 spanner edges" << endl;
+    if (printLog) {
 
-    for (auto u : handles) {
+        cout << "degree 8 spanner edges" << endl;
 
-        cout << u->storage_site().info() << "] ";
+        for (auto u : handles) {
 
-        for (size_t cone = 0; cone < 4; cone++) {
+            cout << u->storage_site().info() << "] ";
 
-            if (H8[u->storage_site().info()][cone].size() == 0) {
-             //   cout << "(cone " << cone << " has no edge)";
-            }
-            else {
-                for (auto edge : H8[u->storage_site().info()][cone]) {
-                    cout << "(" << (edge.first)->storage_site().info() << "," << (edge.second)->storage_site().info() <<") ";
+            for (size_t cone = 0; cone < 4; cone++) {
+
+                if (H8[u->storage_site().info()][cone].size() == 0) {
+                 //   cout << "(cone " << cone << " has no edge)";
+                }
+                else {
+                    for (auto edge : H8[u->storage_site().info()][cone]) {
+                        cout << "(" << (edge.first)->storage_site().info() << "," << (edge.second)->storage_site().info() <<") ";
+                    }
                 }
             }
-        }
 
-        cout << endl;
-
-    }
-
-    cout << endl << endl;
-
-    cout << "degree 8 spanner charges" << endl;
-
-    for (auto u : handles) {
-
-        cout << u->storage_site().info() << "] ";
-
-        for (size_t cone = 0; cone < 4; cone++) {
-
-            cout << H8[u->storage_site().info()][cone].size() << " ";
+            cout << endl;
 
         }
 
-        cout << endl;
+        cout << endl << endl;
 
     }
 
-    cout << endl << endl;
+    if (printLog) {
+
+        cout << "degree 8 spanner charges" << endl;
+
+        for (auto u : handles) {
+
+            cout << u->storage_site().info() << "] ";
+
+            for (size_t cone = 0; cone < 4; cone++) {
+
+                cout << H8[u->storage_site().info()][cone].size() << " ";
+
+            }
+
+            cout << endl;
+
+        }
+
+        cout << endl << endl;
+
+    }
 
 
     // AS of here step 2 is complete. it likely has logical errors that will need to be assessed, but it builds so that's good :-)
 
-  processSpanner(H8, anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
+    processSpanner(H8, anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
 
-  cout << "degree 4 spanner edges" << endl;
+    vector<pair<Point_2,Point_2>> edgeList;
 
-  vector<pair<Point_2,Point_2>> edgeList;
-
-  for (auto u : handles) {
-
-        cout << u->storage_site().info() << "] ";
+    for (auto u : handles) {
 
         for (size_t cone = 0; cone < 4; cone++) {
 
@@ -2052,15 +2437,36 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
             }
             else {
                 for (auto edge : H8[u->storage_site().info()][cone]) {
-                    cout << "(" << (edge.first)->storage_site().info() << "," << (edge.second)->storage_site().info() <<") ";
                     edgeList.emplace_back( P.at((edge.first)->storage_site().info()),
                                            P.at((edge.second)->storage_site().info()) );
                 }
             }
         }
+    }
 
-        cout << endl;
+  if (printLog) {
 
+      cout << "degree 4 spanner edges" << endl;
+
+      for (auto u : handles) {
+
+            cout << u->storage_site().info() << "] ";
+
+            for (size_t cone = 0; cone < 4; cone++) {
+
+                if (H8[u->storage_site().info()][cone].size() == 0) {
+                 //   cout << "(cone " << cone << " has no edge)";
+                }
+                else {
+                    for (auto edge : H8[u->storage_site().info()][cone]) {
+                        cout << "(" << (edge.first)->storage_site().info() << "," << (edge.second)->storage_site().info() <<") ";
+                    }
+                }
+            }
+
+            cout << endl;
+
+        }
     }
 
     // Send resultant graph to output iterator
@@ -2076,7 +2482,7 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
     // START PRINTER NONSENSE
     if(printLog) {
-        GraphPrinter printer(10); // argument number is scaling factor --> manipulate based on size of point set
+        GraphPrinter printer(1); // argument number is scaling factor --> manipulate based on size of point set
         GraphPrinter::OptionsList options;
 
         options = {

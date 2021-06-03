@@ -29,10 +29,11 @@ class GraphPrinter {
     double _scaleFactor;
     unordered_set<string> _colors;
 
-    string activeEdgeColor =     "e98570";
-    string inactiveEdgeColor =   "95acc3";
-    string activeVertexColor =   "174681";
-    string inactiveVertexColor = "95acc3";
+    string activeEdgeColor =     "000000";
+    string inactiveEdgeColor =   "bbbbbb";
+    string worstPathEdgeColor =  "ff0000";
+    string activeVertexColor =   "0000ff";
+    string inactiveVertexColor = "f7b267";
     string backgroundColor =     "FEFEF6";
     string textColor =           "111116";
     double vertexRadius = 17;
@@ -45,6 +46,7 @@ class GraphPrinter {
         // define colors in the document
         defineColor(activeEdgeColor);
         defineColor(inactiveEdgeColor);
+        defineColor(worstPathEdgeColor);
         defineColor(activeVertexColor);
         defineColor(inactiveVertexColor);
         defineColor(backgroundColor);
@@ -108,6 +110,13 @@ class GraphPrinter {
         _document += "\n";
     }
 
+    template< typename InputIterator >
+    void drawVerticesWithInfo( const InputIterator &pointsStart, const InputIterator &pointsEnd, const OptionsList& options = {}, const OptionsList& borderOptions = {} ) {
+        size_t id = 0;
+        for( auto it=pointsStart; it!=pointsEnd; ++it )
+            drawVertexWithLabel( it->x(), it->y(), to_string(id++), options, borderOptions );
+        _document += "\n";
+    }
     template< typename T >
     void drawVertexPair( const pair<typename T::Vertex_handle,typename T::Vertex_handle>& vertices, const OptionsList& options = {} ) {
         drawVertex( vertices.first->point().x(), vertices.first->point().y(), options );
@@ -124,7 +133,7 @@ class GraphPrinter {
             stringstream stream;
             stream << fixed << setprecision(1);
             stream << x << "," << y;
-            label = stream.str();
+            //label = stream.str();
         }
         _document += "\\node (vertex" + label + ") [fill,"
                 + expandOptions( options )
@@ -133,13 +142,15 @@ class GraphPrinter {
                 + to_string( y*_scaleFactor )
             + ") {"
                 + label
-            + "};\n"
-            + "\\node () [draw,"
+            + "};\n";
+        if( borderOptions.size() > 0 ) {
+            _document += "\\node () [draw,"
                 + expandOptions( borderOptions )
             + "] at ("
                 + to_string( x*_scaleFactor ) + ","
                 + to_string( y*_scaleFactor )
             + ") {};\n\n";
+        }
 
     }
 
@@ -153,6 +164,26 @@ class GraphPrinter {
                 double y2 = v->point().y();
                 drawLine( x1,y1,x2,y2,options );
             }
+        }
+        _document += "\n";
+    }
+
+    template< typename Triangulation >
+    void drawEdgesOfHalfTheta( const Triangulation& T, const OptionsList& options = {} ) {
+                using CGAL::to_double;
+        //typedef typename Triangulation::Vertex_handle Vertex_handle;
+        for( auto eit = T.edges_begin(); eit != T.edges_end(); ++eit ) {
+            auto e = *eit;
+
+            typename Triangulation::Point_2
+                vp = T._G[source(e,T._G)],
+                vq = T._G[target(e,T._G)];
+
+            double x1 = to_double(vp.x());
+            double y1 = to_double(vp.y());
+            double x2 = to_double(vq.x());
+            double y2 = to_double(vq.y());
+            drawLine( x1,y1,x2,y2,options );
         }
         _document += "\n";
     }
@@ -222,12 +253,13 @@ class GraphPrinter {
     string _header = string("")
         + "\\documentclass[margin=3mm]{standalone} \n"
         + "\\usepackage{tikz}  \n "
-        + "\\usetikzlibrary{backgrounds}\n\n"
+        //+ "\\usetikzlibrary{backgrounds}\n\n"
         + "\\usetikzlibrary{fit}\n\n"
         + "\\begin{document}\n\n"
-        + "\\begin{tikzpicture}[ background rectangle/.style={fill="
-            + backgroundColor
-        + "}, show background rectangle, "
+        + "\\begin{tikzpicture}[ "
+        //+ "background rectangle/.style={fill="
+        //    + backgroundColor
+        //+ "}, show background rectangle, "
         + "vertex/.style = {circle, fill, minimum size=#1, inner sep=0pt, outer sep=0pt}, "
         + "vertex/.default = 6pt, "
         + "border/.style = {circle, draw, minimum size=#1, inner sep=0pt, outer sep=0pt}, "

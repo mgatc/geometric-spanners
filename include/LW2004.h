@@ -76,25 +76,27 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     // ensure valid alpha
     alpha = CGAL::max( EPSILON, CGAL::min( alpha, PI/2 ) );
 
-    // add points to vector and remove any duplicates or AutoCount() will fail
-//    vector<Point> points( pointsBegin, pointsEnd );
-//    std::sort( points.begin(), points.end() );
-//    auto last = std::unique( points.begin(), points.end() );
-//    points.erase( last, points.end() );
+
+    vector<pair<Point,size_t>> P;
+    for( auto it=pointsBegin; it!=pointsEnd; ++it )
+    {
+        size_t id = P.size();
+        P.emplace_back(*it,id);
+    }
 
     //cout << "Step 1 starts...\n";
     Delaunay T;
 
-    T.insert( pointsBegin, pointsEnd );
+    T.insert( P.begin(), P.end() );
 
     // Add IDs
-    size_t i=0;
-    for( auto v=T.finite_vertices_begin(); v!=T.finite_vertices_end(); ++v )
-        v->info() = i++;
+//    size_t i=0;
+//    for( auto v=T.finite_vertices_begin(); v!=T.finite_vertices_end(); ++v )
+//        v->info() = i++;
 
-    assert( i == T.number_of_vertices() );
+    //assert( P.size() == T.number_of_vertices() );
 
-    size_t n = i;
+    size_t n = T.number_of_vertices();
 
     Vertex_handle v_inf = T.infinite_vertex();
 
@@ -135,7 +137,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
     //cout << "Maximum degree in the Delaunay Triangulation: " << maxDegree << endl;
     // Use a heap to walk through G_0 to G_{n-1} and set up the Pi for every vertex
-    i = n-1; // start at the last valid index
+    size_t i = n-1; // start at the last valid index
     while(!H.empty()) {
         size_tPair p = H.top();
         H.pop();
@@ -298,9 +300,9 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     for( size_tPair e : ePrime ) {
         //edgeList.emplace_back( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
 
-        *result = make_pair( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
+        *result = make_pair( e.first, e.second );
         ++result;
-        *result = make_pair( pointID2VertexHandle.at(e.second)->point(), pointID2VertexHandle.at(e.first)->point() );
+        *result = make_pair( e.second, e.first );
         ++result;
     }
 

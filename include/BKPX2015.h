@@ -130,16 +130,6 @@ namespace gsnunf {
 
             size_t previousCone = getCone(point, Circ);
 
-//            if (sdg.is_infinite(++Circ)) {--Circ;}
-//
-//            else {
-//
-//                while( !sdg.is_infinite(Circ) && getCone(point, Circ) == previousCone ) {++Circ;}
-//
-//                while( sdg.is_infinite(Circ) ) {++Circ;}
-//
-//            }
-
             auto startPoint = Circ++;
 
             while (!sdg.is_infinite(Circ) && getCone(point, Circ) == previousCone && Circ != startPoint) {++Circ;}
@@ -148,7 +138,7 @@ namespace gsnunf {
 
             auto endpoint = Circ;
             cone = getCone(point, Circ);
-            previousCone = 10; // invalid value, default as 10
+            previousCone = (cone-1+4) % 4; /// Since we know the actual start cone, we can use the actual previous cone
 
             size_t point_id = point->storage_site().info();
 
@@ -164,7 +154,8 @@ namespace gsnunf {
                     fans[cone].second = Circ;
                     previousCone = cone;
 
-
+                    /// for L_inf distance, use CGAL::l_infinity_distance()
+                    /// see https://doc.cgal.org/latest/Kernel_23/group__l__infinity__distance__grp.html
                     double proposedDistance = std::max(std::abs(point->site().point().x() - Circ->site().point().x()), std::abs(point->site().point().y() - Circ->site().point().y()));
 
                     if (proposedDistance < distances[cone]) {
@@ -176,7 +167,12 @@ namespace gsnunf {
 
             } while(++Circ != endpoint); // finished determining the Yao edges + how many points are in fan of u's cone i
 
-
+            /// This is probably not the best way to do this for the following two lines.
+            /// yaoEdges[index] is already an initialized vector as are "edges" and "fans",
+            /// so using the assignment operator "=" will make an additional copy of
+            /// edges and fans on every loop. There are two fixes I can think of:
+            /// 1) use yaoEdges[index] instead of edges and pointFans[index] instead of fans
+            /// or 2) use std::move() see https://en.cppreference.com/w/cpp/utility/move
             yaoEdges[index] = edges;
             pointFans[index] = fans;
 
@@ -205,26 +201,29 @@ namespace gsnunf {
                 size_t position = 1;
                 size_t total = yaoEdges[index][cone].second;
 
-                while (position < (total+1)) {
-
-                    if (yaoEdges[index][cone].first == Circ || yaoEdges[Circ->storage_site().info()][(cone+2)%4].first == point) {
+                while (position < (total+1))
+                {
+                    if (yaoEdges[index][cone].first == Circ
+                     || yaoEdges[Circ->storage_site().info()][(cone+2)%4].first == point)
+                    {
                         ++(yaos[cone]);
                     }
 
                     ++Circ;
                     ++position;
-
                 }
-
             }
 
-        yaoEdgeCount[index] = yaos;
+        yaoEdgeCount[index] = yaos; /// same as above about unnecessarily copying vectors
 
         } // finished determining incident yao edges in cone i of vertex u
 
     } // yaoEdges are added
 
 
+    /// This function needs to be broken up. It is kind of hard to follow.
+    /// I would put each of the major for loop in their own functions, and possibly
+    /// more as well.
     inline void determineAnchors( vector<anchorCones> &anchorEdges,
                             vector<yaoCones> &yaoEdges, vector<fanCones> &pointFans,
                             vector<numYaoEdges> &yaoEdgeCount, vector<Vertex_handle> &handles,
@@ -233,13 +232,14 @@ namespace gsnunf {
         for (auto u : handles) {
 
             anchorCones anchors(4);
-
+            /// This for loop can be accomplished more succinctly by providing a second argument to
+            /// the initialization of "anchors" see https://en.cppreference.com/w/cpp/container/vector/vector.
             for (size_t i = 0; i < 4; i++) {
                 anchors[i].second = None;
             }
 
             size_t u_id = u->storage_site().info();
-            anchorEdges[u_id] = anchors;
+            anchorEdges[u_id] = anchors; /// copying a vector
 
             for (size_t cone = 0; cone < 4; cone++) {
 
@@ -302,6 +302,8 @@ namespace gsnunf {
                     bool cwCanonical = false;
                     bool ccwCanonical = false;
 
+                    /// These don't need to be "if's", just set cwCanonical and ccwCanonical equal
+                    /// to the boolean expression in the if condition
                     if (lcount >= 2 && (yaoEdges[vlower->storage_site().info()][getCone(vlower, v)].first == v &&
                         yaoEdges[v->storage_site().info()][getCone(v, vlower)].first != vlower)) {
                             ccwCanonical = true;
@@ -312,7 +314,7 @@ namespace gsnunf {
                             cwCanonical = true;
                         }
 
-
+                    /// This if-else has a lot of repeated logic. How can we remove?
                     if (ccwCanonical) {
 
                         bool inCanonical = true;
@@ -407,6 +409,7 @@ namespace gsnunf {
 
                 size_t u_id = u->storage_site().info();
 
+                /// Why are we comparing a Vertex_handle to nullptr?
                 if (anchorEdges[u_id][cone].first == nullptr) {continue;}
 
                 auto v = anchorEdges[u_id][cone].first;
@@ -416,39 +419,6 @@ namespace gsnunf {
             }
 
         } // strong anchors are identified
-
-//        cout << endl << endl << "weak anchors" << endl;
-//
-//        size_t totalWeak = 0;
-//
-//        for (auto u : handles) {
-//
-//            size_t u_id = u->storage_site().info();
-//
-//            cout << u_id << "] ";
-//
-//            for (size_t cone = 0; cone < 4; cone++) {
-//
-//                if (anchorEdges[u_id][cone].second == Weak)
-//                {
-//                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-//                    ++totalWeak;
-//                }
-//                else
-//                {
-//                    cout << "x ";
-//                }
-//                  // num edges in that cone
-//
-//                if (cone == 3) {
-//                    cout << endl;
-//                }
-//
-//            }
-//
-//        }
-//
-//        cout << endl << "Weak Anchors Total: " << totalWeak << endl << endl;
 
         // now it is time to select anchors
         for (auto u : handles) {
@@ -598,8 +568,8 @@ namespace gsnunf {
 
     } // function complete
 
-
-  inline void degreeEightSpanner(vector<spannerCones> &H8,
+/// This function needs to be split up too
+inline void degreeEightSpanner(vector<spannerCones> &H8,
                             vector<anchorCones> &anchorEdges,
                             vector<yaoCones> &yaoEdges, vector<fanCones> &pointFans,
                             vector<numYaoEdges> &yaoEdgeCount, vector<Vertex_handle> &handles,
@@ -610,7 +580,7 @@ namespace gsnunf {
     for (auto w : handles) {
 
         spannerCones edges(4);
-        H8[w->storage_site().info()] = edges;
+        H8[w->storage_site().info()] = edges; /// copying a vector
 
     }
 
@@ -648,6 +618,8 @@ namespace gsnunf {
                 bool cw = false;
                 bool ccw = false;
 
+                /// set the variables directly to the boolean expression
+
                 if (yaoEdges[v1->storage_site().info()][getCone(v1, vk)].first == vk && yaoEdges[vk->storage_site().info()][getCone(vk, v1)].first != v1) {
                     ccw = true;
                 }
@@ -656,7 +628,10 @@ namespace gsnunf {
                     cw = true;
                 }
 
+                /// Repetitive logic. How to remove?
                 if (cw) {
+
+                    /// Set variables directly to boolean expression
 
                     // assess if both vertices are connected to u via yao edges
 
@@ -2029,54 +2004,17 @@ namespace gsnunf {
 }
 
 template<typename RandomAccessIterator, typename OutputIterator>
-void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false) {
+void BKPX2015(RandomAccessIterator pointsBegin,
+              RandomAccessIterator pointsEnd,
+              OutputIterator result,
+              bool printLog = false)
+{
 
     using namespace bkpx2015;
 
-    // construct Linf Delaunay triangulation
-
-  /*
-    vector<Point_2> P =
-    {
-        {0,0},
-        {2,1},
-        {3,3},
-        {1,4},
-        {-1.5,2}
-    };
-
-
-    SDG2 sdg;
-    Site_2 site = Site_2::construct_site_2(P.front());
-
-    for( id_type id=0; id<P.size(); ++id )
-    {
-        site = Site_2::construct_site_2(P[id]);
-        sdg.insert(site,id);
-        cout << id << "] ";
-        cout << site.point() << "\n";
-    }
-    cout << endl;
-
-    assert( sdg.is_valid(true, 1) );
-
-    cout<<endl<<endl;
-
-    // Print the points and IDs
-    for( auto it = sdg.finite_vertices_begin();
-         it != sdg.finite_vertices_end(); ++it )
-    {
-        cout << it->storage_site().info() << "] ";
-        cout << it->site().point() << endl;
-    }
-    cout << endl;
-  */
-
-   // ifstream ifs("data6.txt");
-   // assert( ifs );
-
     vector<Point_2> P(pointsBegin, pointsEnd);
 
+    // construct Linf Delaunay triangulation
     SDG2 sdg;
     Site_2 site;
     id_type id = 0;
@@ -2086,24 +2024,6 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
       sdg.insert(site, id);
       ++id;
     }
-
-//    assert( sdg.is_valid(true, 1) );
-//    cout << endl << endl;
-
-    //  Print the points and IDs
-
-    if (printLog) {
-
-        for( auto it = sdg.finite_vertices_begin();
-         it != sdg.finite_vertices_end(); ++it )
-            {
-                cout << it->storage_site().info() << "] ";
-                cout << it->site().point() << endl;
-            }
-            cout << endl;
-
-    }
-
 
     //N is the number of vertices in the delaunay triangulation.
     const size_t n = sdg.number_of_vertices();
@@ -2119,314 +2039,37 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         handles[i++] = v;
     }
 
+
+    typedef vector<pair<Vertex_handle, Vertex_handle>>                  fanCones;
+    typedef vector<pair<Vertex_handle, size_t>>                         yaoCones;
+    typedef vector<size_t>                                              numYaoEdges;
+    typedef vector<pair<Vertex_handle, AnchorType>>                     anchorCones;
+    typedef vector<vector<spannerEdge>>                                 spannerCones;
+
     //construct YaoEdges
+    /// Are the sizes of the nested containers always going to be 4? It may be better to use a c-style array
+    /// see https://stackoverflow.com/questions/7129717/what-does-c-style-array-mean-and-how-does-it-differ-from-stdarray-c-style
     vector<yaoCones> yaoEdges(n, yaoCones(4));
     vector<fanCones> pointFans(n, fanCones(4));
     vector<numYaoEdges> yaoEdgeCount(n, numYaoEdges(4));
 
     addYaoEdges(yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
 
-    if (printLog) {
-
-        cout << "yao edge terminals directed from u" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (yaoEdges[u_id][cone].second == 0) {
-                    cout << "x ";
-                }
-                else {
-                  //  size_t neighbor_id = yaoEdges[u_id][cone].first
-                    cout << (yaoEdges[u_id][cone].first)->storage_site().info() << " ";
-                }
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-        cout << endl << endl;
-
-        cout << "number of edges in cones" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                  // num edges in that cone
-                cout << yaoEdges[u_id][cone].second << " ";
-
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-        cout << endl << endl;
-
-        cout << "number of YAO EDGES in cones" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                  // num edges in that cone
-                cout << yaoEdgeCount[u_id][cone] << " ";
-
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-        cout << endl << endl;
-
-        cout << "fans of the cones" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (yaoEdges[u_id][cone].second == 0) {
-                    cout << "< x, x > ";
-                }
-                else {
-                    cout << "< " << pointFans[u_id][cone].first->storage_site().info() << ", " << pointFans[u_id][cone].second->storage_site().info() << " > ";
-                }
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-    }
-
     // identify the anchors
     vector<anchorCones> anchorEdges(n, anchorCones(4));
 
     determineAnchors(anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
-
-    if (printLog) {
-
-        cout << endl << "anchors" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (anchorEdges[u_id][cone].first == nullptr)
-                {
-                    cout << "x ";
-                }
-                else
-                {
-                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-                }
-                  // num edges in that cone
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-    }
-
-    if (printLog) {
-
-        cout << endl << endl << "strong anchors" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (anchorEdges[u_id][cone].second == Strong || anchorEdges[u_id][cone].second == StrongSelected)
-                {
-                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-                }
-                else
-                {
-                    cout << "x ";
-                }
-                  // num edges in that cone
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-    }
-
-    if (printLog) {
-
-        cout << endl << endl << "selected anchors" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (anchorEdges[u_id][cone].second == StrongSelected || anchorEdges[u_id][cone].second == WeakSelected)
-                {
-                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-                }
-                else
-                {
-                    cout << "x ";
-                }
-                  // num edges in that cone
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-    }
-
-    if (printLog) {
-
-        cout << endl << endl << "start of odd chain" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (anchorEdges[u_id][cone].second == StartOddChain)
-                {
-                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-                }
-                else
-                {
-                    cout << "x ";
-                }
-                  // num edges in that cone
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-        cout << endl << endl;
-
-    }
 
    // construct H8 --> degree 8 spanner
     vector<spannerCones> H8(n, spannerCones(4));
 
     degreeEightSpanner(H8, anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
 
-    if (printLog) {
-
-        cout << "degree 8 spanner edges" << endl;
-
-        for (auto u : handles) {
-
-            cout << u->storage_site().info() << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (H8[u->storage_site().info()][cone].size() == 0) {
-                 //   cout << "(cone " << cone << " has no edge)";
-                }
-                else {
-                    for (auto edge : H8[u->storage_site().info()][cone]) {
-                        cout << "(" << (edge.first)->storage_site().info() << "," << (edge.second)->storage_site().info() <<") ";
-                    }
-                }
-            }
-
-            cout << endl;
-
-        }
-
-        cout << endl << endl;
-
-    }
-
-    if (printLog) {
-
-        cout << "degree 8 spanner charges" << endl;
-
-        for (auto u : handles) {
-
-            cout << u->storage_site().info() << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                cout << H8[u->storage_site().info()][cone].size() << " ";
-
-            }
-
-            cout << endl;
-
-        }
-
-        cout << endl << endl;
-
-    }
-
-
     // AS of here step 2 is complete. it likely has logical errors that will need to be assessed, but it builds so that's good :-)
 
     processSpanner(H8, anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
 
-    vector<pair<Point_2,Point_2>> edgeList;
+    vector<pair<size_t,size_t>> edgeList;
 
     for (auto u : handles) {
 
@@ -2437,35 +2080,10 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
             }
             else {
                 for (auto edge : H8[u->storage_site().info()][cone]) {
-                    edgeList.emplace_back( P.at((edge.first)->storage_site().info()),
-                                           P.at((edge.second)->storage_site().info()) );
+                    edgeList.emplace_back( (edge.first)->storage_site().info(),
+                                           (edge.second)->storage_site().info() );
                 }
             }
-        }
-    }
-
-  if (printLog) {
-
-      cout << "degree 4 spanner edges" << endl;
-
-      for (auto u : handles) {
-
-            cout << u->storage_site().info() << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (H8[u->storage_site().info()][cone].size() == 0) {
-                 //   cout << "(cone " << cone << " has no edge)";
-                }
-                else {
-                    for (auto edge : H8[u->storage_site().info()][cone]) {
-                        cout << "(" << (edge.first)->storage_site().info() << "," << (edge.second)->storage_site().info() <<") ";
-                    }
-                }
-            }
-
-            cout << endl;
-
         }
     }
 
@@ -2476,44 +2094,42 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
         *result = e;
         ++result;
-        *result = make_pair(e.second,e.first);
-        ++result;
     }
-
-    // START PRINTER NONSENSE
-    if(printLog) {
-        GraphPrinter printer(1); // argument number is scaling factor --> manipulate based on size of point set
-        GraphPrinter::OptionsList options;
-
-        options = {
-            {"color", printer.inactiveEdgeColor},
-            {"line width", to_string(printer.inactiveEdgeWidth)}
-        };
-        printer.drawEdgesOfSDG(sdg, options);
-
-        options = { // active edge options
-            {"color", printer.activeEdgeColor},
-            {"line width", to_string(printer.activeEdgeWidth)}
-        };
-        printer.drawEdges(edgeList.begin(), edgeList.end(), options);
-
-
-        options = {
-            {"vertex", make_optional(to_string(printer.vertexRadius))}, // vertex width
-            {"color", make_optional(printer.backgroundColor)}, // text color
-            {"fill", make_optional(printer.activeVertexColor)}, // vertex color
-            {"line width", make_optional(to_string(0))} // vertex border (same color as text)
-        };
-        GraphPrinter::OptionsList borderOptions = {
-            {"border", make_optional(to_string(printer.vertexRadius))}, // choose shape of vertex
-            {"color", printer.activeEdgeColor}, // additional border color
-            {"line width", to_string(printer.inactiveEdgeWidth)}, // additional border width
-        };
-        printer.drawVerticesWithInfoSDG(sdg, options, borderOptions);
-
-        printer.print("BKPX2015");
-        cout << "\n";
-    }
+//
+//    // START PRINTER NONSENSE
+//    if(printLog) {
+//        GraphPrinter printer(1); // argument number is scaling factor --> manipulate based on size of point set
+//        GraphPrinter::OptionsList options;
+//
+//        options = {
+//            {"color", printer.inactiveEdgeColor},
+//            {"line width", to_string(printer.inactiveEdgeWidth)}
+//        };
+//        printer.drawEdgesOfSDG(sdg, options);
+//
+//        options = { // active edge options
+//            {"color", printer.activeEdgeColor},
+//            {"line width", to_string(printer.activeEdgeWidth)}
+//        };
+//        printer.drawEdges(edgeList.begin(), edgeList.end(), options);
+//
+//
+//        options = {
+//            {"vertex", make_optional(to_string(printer.vertexRadius))}, // vertex width
+//            {"color", make_optional(printer.backgroundColor)}, // text color
+//            {"fill", make_optional(printer.activeVertexColor)}, // vertex color
+//            {"line width", make_optional(to_string(0))} // vertex border (same color as text)
+//        };
+//        GraphPrinter::OptionsList borderOptions = {
+//            {"border", make_optional(to_string(printer.vertexRadius))}, // choose shape of vertex
+//            {"color", printer.activeEdgeColor}, // additional border color
+//            {"line width", to_string(printer.inactiveEdgeWidth)}, // additional border width
+//        };
+//        printer.drawVerticesWithInfoSDG(sdg, options, borderOptions);
+//
+//        printer.print("BKPX2015");
+//        cout << "\n";
+//    }
     // END PRINTER NONSENSE
 
 }

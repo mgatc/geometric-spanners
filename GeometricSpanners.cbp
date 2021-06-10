@@ -65,7 +65,7 @@
 			<Add library="mpfr" />
 			<Add library="boost_system" />
 			<Add library="boost_thread" />
-			<Add library="CGAL" />
+			<Add library="-I/usr/include/CGAL" />
 			<Add directory="/usr/include/CGAL" />
 			<Add directory="/usr/include/" />
 		</Linker>
@@ -79,6 +79,7 @@
 			<Option target="Release" />
 		</Unit>
 		<Unit filename="include/BCC2012.h" />
+		<Unit filename="include/BGHP2010.h" />
 		<Unit filename="include/BGS2005.h" />
 		<Unit filename="include/BHS2017.h" />
 		<Unit filename="include/BSX2009.h" />
@@ -101,8 +102,6 @@
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<envvars set="openmp" />
-			<code_completion />
-			<debugger />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

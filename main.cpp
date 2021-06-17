@@ -174,8 +174,8 @@ int main( int argc, char *argv[] ) {
         }
     }
 
-    //experiment( experimentParameters[0],experimentParameters[1],experimentParameters[2],experimentParameters[3] );
-    scratch();
+    experiment( experimentParameters[0],experimentParameters[1],experimentParameters[2],experimentParameters[3] );
+    //scratch();
 
     //singleRun( 0, 0, "kptTestResult", "data-75_4330.127019x4330.127019.txt", true, true );
 

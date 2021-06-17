@@ -43,9 +43,9 @@ typedef HalfThetaTriangulation<K> TD_Delaunay_2;
 typedef TD_Delaunay_2::Vertex_descriptor Vertex_descriptor;
 
 enum EdgeLabel { // per cone
-    CLOSEST,
-    FIRST,
-    LAST
+    FIRST = 1,
+    CLOSEST = 0,
+    LAST = -1
 };
 
 enum ConePolarity {
@@ -56,6 +56,12 @@ enum ConePolarity {
 inline ConePolarity getConePolarity( const size_t p, const size_t q, const vector<Point_2> &h )
 {
     return ConePolarity( getCone(p,q,h) % 2 );
+}
+
+template< class Container >
+inline double get_canonical_angle( const size_t p, const size_t q, const size_t r, const Container &P )
+{
+    return CGAL::min( get_angle(p,q,r,P), get_angle(r,q,p,P) );
 }
 
 //Finds the bisector length of a given edge.
@@ -80,6 +86,16 @@ inline K::FT bisectorLength( const pair<size_t,size_t> &e, const vector<Point_2>
     double bisectorLen = distance(h[e.first], intersectionPoint);
 
     return bisectorLen;
+}
+
+inline size_t iPlusOne(const size_t i)
+{
+    return ((i+1) % 6);
+}
+
+inline size_t iLessOne(const size_t i)
+{
+    return ((i-1+6) % 6);
 }
 
 template< class KeyEdgesMap, class Triangulation, class PointContainer >
@@ -128,37 +144,204 @@ void findKeyEdges( KeyEdgesMap &KeyEdges, Triangulation &D, const PointContainer
     }
 }
 template< class Triangulation, class PointContainer, class KeyEdgesContainer >
-bool is_i_relevant( const Vertex_descriptor w,
-                    const Vertex_descriptor u,
-                    const Vertex_descriptor v,
+bool is_i_relevant( const Vertex_descriptor child,
+                    const Vertex_descriptor parent,
+                    const Vertex_descriptor grandparent,
                     size_t i,
                     Triangulation &D,
                     const PointContainer &P,
                     KeyEdgesContainer &KeyEdges )
 {
-    //cout<<"u:"<<u<<" v:"<<v<<" w:"<<w<<"\n";
-
-    if( w == SIZE_T_MAX || v == SIZE_T_MAX )
-        return false;
-    // get closest vertex v to vertex u in cone i
-//    Vertex_descriptor v = KeyEdges[CLOSEST][u][i];
-//    if( v == SIZE_T_MAX )
-//        return false;
-    // get cone (v,w)
-    size_t w_cone = getCone(w,v,P);
-    //cout<<"second check in i-relevant "<< w_cone << " "<< i<<"\n";
-
-    if( w_cone != i )
+    if( child == SIZE_T_MAX || grandparent == SIZE_T_MAX )
         return false;
 
-    size_t iPlusOne = ((i+1) % 6),
-           iLessOne = ((i-1+6) % 6);
+    size_t child_cone = getCone(child,grandparent,P);
 
-    //cout<<"last check in i-relevant\n";
+    if( child_cone != i )
+        return false;
 
+    return ( child == KeyEdges[FIRST][parent][iPlusOne(i)/2] && child != KeyEdges[CLOSEST][parent][iPlusOne(i)/2] )
+        || ( child == KeyEdges [LAST][parent][iLessOne(i)/2] && child != KeyEdges[CLOSEST][parent][iLessOne(i)/2] );
+}
 
-    return ( w == KeyEdges[FIRST][u][iPlusOne/2] && w != KeyEdges[CLOSEST][u][iPlusOne/2] )
-        || ( w == KeyEdges [LAST][u][iLessOne/2] && w != KeyEdges[CLOSEST][u][iLessOne/2] );
+template< class Triangulation, class PointContainer, class EdgeList, class KeyEdgesContainer >
+bool is_i_distant( const Vertex_descriptor w,
+                   const size_t i,
+                   const size_t charge,
+                   Triangulation &D,
+                   const PointContainer &P,
+                   const EdgeList &E,
+                   KeyEdgesContainer &KeyEdges )
+{
+    if( charge < 2 )
+        return false;
+
+    Vertex_descriptor u = D.parent(w,i),
+        first = KeyEdges[FIRST][w][iPlusOne(i)/2],
+        last = KeyEdges [LAST][w][iLessOne(i)/2];
+
+    //cout<< "w:"<<w<<" u:"<<u<<" i:"<<i<< " first:"<<first<<" last:"<<last<<endl;
+
+    //return false;
+    return !contains( E, make_pair(w,u) )
+        && is_i_relevant( first, w, u, iPlusOne(i), D, P, KeyEdges )
+        && is_i_relevant( last,  w, u, iLessOne(i), D, P, KeyEdges );
+}
+
+template< class AdjacencyList, class PointSet, class ChargeList, class EdgeList>
+void addClosestInNegativeCones(const AdjacencyList &ClosestEdges,
+                               const PointSet &P,
+                               ChargeList &Charges,
+                               EdgeList &E,
+                               bool printLog)
+{
+    const size_t n = P.size();
+    // Add closest in each negative cone for each vertex
+    if(printLog) cout<<"\nClosest\n";
+    for( size_t u=0; u<n; ++u ) {
+        for( auto v : ClosestEdges[u] ) {
+            if( v != SIZE_T_MAX )
+            {
+                size_t cone = getCone(u,v,P);
+                auto pair1 = make_pair(u,cone),
+                     pair2 = make_pair(u,(cone+3)%6);
+                Charges.try_emplace( pair1, 0 );
+                Charges[pair1]++;
+                Charges.try_emplace( pair2, 0 );
+                Charges[pair2]++;
+
+                E.emplace( u,v );
+                if( printLog ) cout<<v<<" "<<u<<"\n";
+            }
+        }
+    }
+}
+
+template< class KeyEdgeList, class PointSet, class Triangulation, class ChargeList, class EdgeList>
+void add_i_relevantNeighbors(  KeyEdgeList &KeyEdges,
+                               const PointSet &P,
+                               const Triangulation &D,
+                               ChargeList &Charges,
+                               EdgeList &E,
+                               bool printLog)
+{
+    const size_t n = P.size();
+
+    // Add first and last in each negative cone if it is (i+1)-relevant
+    if(printLog) cout<<"\nFirst and Last\n";
+    for( size_t u=0; u<n; ++u ) {
+        // get edges from positive cones
+        for( auto it= D.positive_cone_edges_begin(u);
+                  it!=D.positive_cone_edges_end(u);
+                  ++it )
+        {
+            auto e = *it;
+            auto v = D.target(e);
+            size_t posCone = getCone(u,v,P);
+            for( int j=-1; j<=1; ++j )
+            {
+                size_t i = (posCone + 6 + j) % 6;
+                //size_t iLessOne = (i - 1 + 6) % 6;
+                EdgeLabel w_label = static_cast<EdgeLabel>(j); // FIRST or LAST
+                auto w = KeyEdges[w_label][u][i/2];
+
+                if( is_i_relevant( w, u, v, posCone, D, P, KeyEdges ) ) {
+
+                    size_t cone = getCone(u,v,P);
+                    auto pair2 = make_pair(v,cone);
+                    Charges.try_emplace( pair2, 0 );
+                    Charges[pair2]++;
+
+                    E.emplace( u,w );
+                    if( printLog ) cout<<w<<" "<<u<<"\n";
+                }
+            }
+        }
+    }
+}
+
+template< class KeyEdgeList, class PointSet, class Triangulation, class ChargeList, class EdgeList>
+void handle_i_distantCharge2s(  KeyEdgeList &KeyEdges,
+                               const PointSet &P,
+                               const Triangulation &D,
+                               ChargeList &Charges,
+                               EdgeList &E,
+                               bool printLog)
+{
+    const size_t n = P.size();
+
+    for( auto it=Charges.begin();
+         it!=Charges.end(); ++it )
+    {
+        auto cone = *it;
+        Vertex_descriptor w = cone.first.first;
+        size_t i = cone.first.second;
+        size_t& charge = cone.second;
+        if( is_i_distant( w, i, charge, D, P, E, KeyEdges ) )
+        {
+            auto next = KeyEdges[FIRST][w][iPlusOne(i)/2],
+                 prev = KeyEdges[LAST] [w][iLessOne(i)/2];
+            E.emplace( next, prev );
+
+            // remove the edge to w that is farthest from w's grandparent in cone i
+            Vertex_descriptor u = D.parent(w,i);
+            auto thetaNext = get_canonical_angle(w,u,next,P),
+                 thetaPrev = get_canonical_angle(w,u,prev,P);
+            auto remove = make_pair( w, thetaNext > thetaPrev ? next : prev );
+            assert( contains(E,remove) );
+            E.erase(remove);
+
+            // update charges
+            auto nextCharge = make_pair(next,iPlusOne(i)),
+                 prevCharge = make_pair(prev,iLessOne(i));
+            ++(Charges[nextCharge]);
+            ++(Charges[prevCharge]);
+            --charge;
+        }
+    }
+}
+
+template< class KeyEdgeList, class PointSet, class Triangulation, class ChargeList, class EdgeList>
+void handleOtherCharge2s(  KeyEdgeList &KeyEdges,
+                               const PointSet &P,
+                               const Triangulation &D,
+                               ChargeList &Charges,
+                               EdgeList &E,
+                               bool printLog)
+{
+    const size_t n = P.size();
+
+    for( auto it=Charges.begin();
+         it!=Charges.end(); ++it )
+    {
+        auto cone = *it;
+        Vertex_descriptor w = cone.first.first;
+        size_t i = cone.first.second;
+        size_t& charge = cone.second;
+        if( charge == 2
+         && Charges[make_pair(w,iLessOne(i))] == 1
+         && Charges[make_pair(w,iPlusOne(i))] == 1 )
+        {
+            auto w_parent = D.parent(w,i);
+            if( w_parent == SIZE_T_MAX )
+                continue;
+            auto next = KeyEdges[FIRST][w][iPlusOne(i)/2],
+                 prev = KeyEdges[LAST] [w][iLessOne(i)/2];
+
+            auto remove = make_pair( w, w == KeyEdges[LAST][w_parent][i] ? prev : next );
+
+            //assert( contains(E,remove) );
+
+            if (printLog) cout<<"Edge "<<remove.first<<"-"<<remove.second<<" ";
+            if( printLog && !contains(E,remove) ) cout<<"not ";
+            if( printLog) cout<<"found\n";
+
+            E.erase( remove );
+
+            // update charge
+            --charge;
+        }
+    }
 }
 
 } // namespace bghp2010
@@ -170,6 +353,7 @@ void BGHP2010(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 {
     using namespace bghp2010;
 
+    // Step 1
     vector<Point_2> P( pointsBegin, pointsEnd );
     TD_Delaunay_2 D( P.begin(), P.end() );
 
@@ -185,92 +369,43 @@ void BGHP2010(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
         findKeyEdges( KeyEdges, D, P );
 
-        vector<pair<size_t,size_t>> E;
+        set<pair<size_t,size_t>> E;
         map<pair<Vertex_descriptor,size_t>, size_t> Charges;
 
-        // Add closest in each negative cone for each vertex
-        if(printLog) cout<<"\nClosest\n";
-        for( size_t u=0; u<n; ++u ) {
-            for( auto v : KeyEdges[CLOSEST][u] ) {
-                if( v != SIZE_T_MAX ) {
-
-                    size_t cone = getCone(u,v,P);
-                    auto pair1 = make_pair(u,cone),
-                         pair2 = make_pair(u,(cone+3)%6);
-                    Charges.try_emplace( pair1, 0 );
-                    Charges[pair1]++;
-                    Charges.try_emplace( pair2, 0 );
-                    Charges[pair2]++;
-
-                    E.emplace_back( u,v );
-                    if( printLog ) cout<<v<<" "<<u<<"\n";
-                }
-            }
-        }
-        // Add first in each negative cone if it is (i+1)-relevant
-        if(printLog) cout<<"\nFirst\n";
-        for( size_t u=0; u<n; ++u ) {
-            // get edges from positive cones
-            for( auto it= D.positive_cone_edges_begin(u);
-                      it!=D.positive_cone_edges_end(u);
-                      ++it )
-            {
-                auto e = *it;
-                auto v = D.target(e);
-                size_t posCone = getCone(u,v,P);
-                size_t i = (posCone + 1) % 6;
-                //size_t iLessOne = (i - 1 + 6) % 6;
-                auto w = KeyEdges[FIRST][u].at(i/2);
-
-                if( is_i_relevant( w, u, v, posCone, D, P, KeyEdges ) ) {
-
-                    size_t cone = getCone(u,v,P);
-                    auto pair2 = make_pair(v,cone);
-                    Charges.try_emplace( pair2, 0 );
-                    Charges[pair2]++;
-
-                    E.emplace_back( u,w );
-                    if( printLog ) cout<<w<<" "<<u<<"\n";
-                }
-            }
-        }
-        // Add last in each negative cone if it is (i-1)-relevant
-        if(printLog) cout<<"\nLast\n";
-        for( size_t u=0; u<n; ++u ) {
-            // get edges from positive cones
-            for( auto it= D.positive_cone_edges_begin(u);
-                      it!=D.positive_cone_edges_end(u);
-                      ++it )
-            {
-                auto e = *it;
-                auto v = D.target(e);
-                size_t posCone = getCone(u,v,P);
-                size_t i = (posCone - 1 + 6) % 6;
-                //size_t iLessOne = (i - 1 + 6) % 6;
-                auto w = KeyEdges[LAST][u].at(i/2);
-
-                if( is_i_relevant( w, u, v, posCone, D, P, KeyEdges ) ) {
-
-                    size_t cone = getCone(u,v,P);
-                    auto pair2 = make_pair(v,cone);
-                    Charges.try_emplace( pair2, 0 );
-                    Charges[pair2]++;
-
-                    E.emplace_back( u,w );
-                    if( printLog ) cout<<w<<" "<<u<<"\n";
-                }
-            }
-        }
+        // Step 2
+        addClosestInNegativeCones( KeyEdges[CLOSEST], P, Charges, E, printLog );
+        add_i_relevantNeighbors( KeyEdges, P, D, Charges, E, printLog );
 
         // Sanity check after step 2...
         //      each negative (odd) cone should have at most 1 edge,
         //      each positive (even) cone should have at most 2 edges
 
-        cout<<"\nCharges\n";
+        if(printLog)cout<<"\nCharges after step 2\n";
         for(auto charge: Charges)
         {
             size_t cone = charge.first.second;
-            cout<< charge.first.first<< "  "<<cone<<"   "<<charge.second<<"   "<<((cone%2==1&&charge.second <= 1)||(cone%2==0 && charge.second<=2)? "OK":"FAIL")<<"\n";
+            if(printLog)cout<< charge.first.first<< "  "<<cone<<"   "<<charge.second<<"   "<<((cone%2==1&&charge.second <= 1)||(cone%2==0 && charge.second<=2)? "OK":"FAIL")<<"\n";
+        }
+
+        // Step 3
+        handle_i_distantCharge2s( KeyEdges, P, D, Charges, E, printLog );
+
+        if(printLog)cout<<"\nCharges after step 3\n";
+        for(auto charge: Charges)
+        {
+            size_t cone = charge.first.second;
+            if(printLog)cout<< charge.first.first<< "  "<<cone<<"   "<<charge.second<<"   "<<((cone%2==1&&charge.second <= 1)||(cone%2==0 && charge.second<=2)? "OK":"FAIL")<<"\n";
+        }
+        cout<<endl;
+
+        // Step 4
+        handleOtherCharge2s( KeyEdges, P, D, Charges, E, printLog );
+
+        if(printLog)cout<<"\nCharges after step 4\n";
+        for(auto charge: Charges)
+        {
+            size_t cone = charge.first.second;
+            if(printLog)cout<< charge.first.first<< "  "<<cone<<"   "<<charge.second<<"   "<<((cone%2==1&&charge.second <= 1)||(cone%2==0 && charge.second<=2)? "OK":"FAIL")<<"\n";
         }
 
         // Send resultant graph to output iterator

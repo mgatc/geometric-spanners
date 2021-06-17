@@ -68,7 +68,7 @@ inline double distance( Point p, Point q ) {
 }
 
 template< class Point_2 >
-double get_angle( const Point_2& p, const Point_2& q, const Point_2& r ) {
+inline double get_angle( const Point_2& p, const Point_2& q, const Point_2& r ) {
     //CGAL::Vector_2<K> pq( p, q );
     //CGAL::Vector_2<K> rq( r, q );
     auto pq = q - p,
@@ -84,8 +84,13 @@ double get_angle( const Point_2& p, const Point_2& q, const Point_2& r ) {
     //cout<<"angle("<<p<<","<<q<<","<<r<<")="<<result*180/PI<<" ";
     return result;
 }
+template< class Container >
+inline double get_angle( const size_t p, const size_t q, const size_t r, const Container &P )
+{
+    return get_angle( P[p], P[q], P[r] );
+}
 template< class K >
-double get_angle( const typename K::Point_2& p, const typename K::Point_2& q, const typename K::Point_2& r ) {
+inline double get_angle( const typename K::Point_2& p, const typename K::Point_2& q, const typename K::Point_2& r ) {
     return get_angle(p,q,r);
 }
 

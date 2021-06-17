@@ -23,6 +23,7 @@
 #include "BCC2012.h"
 //#include "BHS2017.h"
 #include "KPT2017.h"
+#include "BGHP2010.h"
 #include "metrics.h"
 //#include "delaunay.h"
 #include "utilities.h"
@@ -173,8 +174,8 @@ int main( int argc, char *argv[] ) {
         }
     }
 
-    experiment( experimentParameters[0],experimentParameters[1],experimentParameters[2],experimentParameters[3] );
-    //scratch();
+    //experiment( experimentParameters[0],experimentParameters[1],experimentParameters[2],experimentParameters[3] );
+    scratch();
 
     //singleRun( 0, 0, "kptTestResult", "data-75_4330.127019x4330.127019.txt", true, true );
 
@@ -340,7 +341,8 @@ void scratch() {
             //BCC2012<6>( points.begin(), points.end(), back_inserter(result) );
             //BCC2012<7>( points.begin(), points.end(), back_inserter(result) );
             //BHS2017(points.begin(), points.end(), back_inserter(result) );
-            KPT2017(points.begin(), points.end(), back_inserter(result), true );
+            //KPT2017(points.begin(), points.end(), back_inserter(result), true );
+            BGHP2010(points.begin(), points.end(), back_inserter(result), true );
             //delaunay_testing( points.begin(), points.end(), back_inserter(result) );
         //}
 
@@ -354,11 +356,11 @@ void scratch() {
 //                     make_optional(inserter(WorstPath,WorstPath.begin())) );
 
 
-        cout << degree( result.begin(), result.end() );
-        cout<<",";
-        double t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout<< t;
-        cout<<",";
+//        cout << degree( result.begin(), result.end() );
+//        cout<<",";
+//        double t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+//        cout<< t;
+//        cout<<",";
 
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";

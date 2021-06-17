@@ -79,6 +79,7 @@
 			<Option target="Release" />
 		</Unit>
 		<Unit filename="include/BCC2012.h" />
+		<Unit filename="include/BGHP2010.h" />
 		<Unit filename="include/BGS2005.h" />
 		<Unit filename="include/BHS2017.h" />
 		<Unit filename="include/BSX2009.h" />

@@ -204,7 +204,7 @@ void addClosestInNegativeCones(const AdjacencyList &ClosestEdges,
             {
                 size_t cone = getCone(u,v,P);
                 auto pair1 = make_pair(u,cone),
-                     pair2 = make_pair(u,(cone+3)%6);
+                     pair2 = make_pair(v,(cone+3)%6);
                 Charges.try_emplace( pair1, 0 );
                 Charges[pair1]++;
                 Charges.try_emplace( pair2, 0 );
@@ -247,8 +247,8 @@ void add_i_relevantNeighbors(  KeyEdgeList &KeyEdges,
 
                 if( is_i_relevant( w, u, v, posCone, D, P, KeyEdges ) ) {
 
-                    size_t cone = getCone(u,v,P);
-                    auto pair2 = make_pair(v,cone);
+                    //size_t cone = getCone( u, v, P );
+                    auto pair2 = make_pair( u, posCone );
                     Charges.try_emplace( pair2, 0 );
                     Charges[pair2]++;
 
@@ -384,29 +384,39 @@ void BGHP2010(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         for(auto charge: Charges)
         {
             size_t cone = charge.first.second;
-            if(printLog)cout<< charge.first.first<< "  "<<cone<<"   "<<charge.second<<"   "<<((cone%2==1&&charge.second <= 1)||(cone%2==0 && charge.second<=2)? "OK":"FAIL")<<"\n";
+            //
+            if(printLog)
+                cout<< charge.first.first<< "  "
+                    <<cone<<"   "
+                    <<charge.second<<"   "
+                    <<((cone%2==1&&charge.second <= 1)
+                     ||(cone%2==0 && charge.second<=2) ? "OK":"FAIL")
+                    <<"\n";
+            else
+                assert( charge.second <= 2-(cone%2) );
+
         }
 
         // Step 3
-        handle_i_distantCharge2s( KeyEdges, P, D, Charges, E, printLog );
-
-        if(printLog)cout<<"\nCharges after step 3\n";
-        for(auto charge: Charges)
-        {
-            size_t cone = charge.first.second;
-            if(printLog)cout<< charge.first.first<< "  "<<cone<<"   "<<charge.second<<"   "<<((cone%2==1&&charge.second <= 1)||(cone%2==0 && charge.second<=2)? "OK":"FAIL")<<"\n";
-        }
-        cout<<endl;
-
-        // Step 4
-        handleOtherCharge2s( KeyEdges, P, D, Charges, E, printLog );
-
-        if(printLog)cout<<"\nCharges after step 4\n";
-        for(auto charge: Charges)
-        {
-            size_t cone = charge.first.second;
-            if(printLog)cout<< charge.first.first<< "  "<<cone<<"   "<<charge.second<<"   "<<((cone%2==1&&charge.second <= 1)||(cone%2==0 && charge.second<=2)? "OK":"FAIL")<<"\n";
-        }
+//        handle_i_distantCharge2s( KeyEdges, P, D, Charges, E, printLog );
+//
+//        if(printLog)cout<<"\nCharges after step 3\n";
+//        for(auto charge: Charges)
+//        {
+//            size_t cone = charge.first.second;
+//            if(printLog)cout<< charge.first.first<< "  "<<cone<<"   "<<charge.second<<"   "<<((cone%2==1&&charge.second <= 1)||(cone%2==0 && charge.second<=2)? "OK":"FAIL")<<"\n";
+//        }
+//        cout<<endl;
+//
+//        // Step 4
+//        handleOtherCharge2s( KeyEdges, P, D, Charges, E, printLog );
+//
+//        if(printLog)cout<<"\nCharges after step 4\n";
+//        for(auto charge: Charges)
+//        {
+//            size_t cone = charge.first.second;
+//            if(printLog)cout<< charge.first.first<< "  "<<cone<<"   "<<charge.second<<"   "<<((cone%2==1&&charge.second <= 1)||(cone%2==0 && charge.second<=2)? "OK":"FAIL")<<"\n";
+//        }
 
         // Send resultant graph to output iterator
         for(auto e : E)

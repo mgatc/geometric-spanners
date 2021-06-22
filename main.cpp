@@ -177,7 +177,7 @@ int main( int argc, char *argv[] ) {
     experiment( experimentParameters[0],experimentParameters[1],experimentParameters[2],experimentParameters[3] );
     //scratch();
 
-    //singleRun( 0, 0, "kptTestResult", "data-75_4330.127019x4330.127019.txt", true, true );
+    //singleRun( 0, 0, "bghpTestResult", "data-31_2783.882181x2783.882181.txt", true, true );
 
     return 0;
 }
@@ -654,7 +654,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-    if( deg > 6 || t > 6 || forcePrint ) {
+    if( deg > 9 || t > 6 || forcePrint ) {
 
         string resultFileName = ( filename ? *filename : *generatedFile );
         // strip file extension
@@ -670,6 +670,8 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
         resultFileName += ( filename ? "redo" : "orig" );
 
         cout << "DEGREE ERROR!!! DEGREE:" << deg << "\n"<<endl;
+        cout << *generatedFile <<endl;
+
         if( generatedFile )
             singleRun( n, width, resultFileName, *generatedFile, true, true );
 

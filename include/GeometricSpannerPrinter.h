@@ -206,6 +206,7 @@ class GraphPrinter {
         return rgb;
     }
     void print( string fName ) {
+        fName = _outputFilePrefix + fName;
         boost::erase_all(fName, ".");
         FILE *fp = fopen( fName.c_str(), "w" );
 
@@ -227,6 +228,7 @@ class GraphPrinter {
     }
 
   private:
+    string _outputFilePrefix = "out-";
     string _document = "";
     string _header = string("")
         + "\\documentclass[margin=3mm]{standalone} \n"

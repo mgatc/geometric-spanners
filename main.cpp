@@ -608,27 +608,31 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 ////    cout <<"\n";
 ////
 ////    result.clear();
-//
-//
-//
-//
-//
-//    cout<< points.size();
-//    cout<< ",";
-//    cout<< size;
-//    cout<< ",";
-//    {
-//        Timer tim;
-//        KPT2017( points.begin(), points.end(), back_inserter(result), printLog );
-//    }
-//
-//    deg = degree( result.begin(), result.end() );
-//    cout << deg;
-//    cout <<",";
-//
-//    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-//        cout << t;
-//    cout <<"\n";
+
+
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    {
+        Timer tim;
+        KPT2017( points.begin(), points.end(), back_inserter(result), printLog );
+    }
+
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+    cout << t;
+    cout <<"\n";
+
+
+
+
 
     result.clear();
 
@@ -646,7 +650,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout <<",";
 
     t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
+    cout << t;
     cout <<"\n";
 
     result.clear();
@@ -654,7 +658,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-    if( deg > 9 || t > 6 || forcePrint ) {
+    if( deg > 6 || t > 6 || forcePrint ) {
 
         string resultFileName = ( filename ? *filename : *generatedFile );
         // strip file extension

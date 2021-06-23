@@ -330,7 +330,7 @@ void handleOtherCharge2s(  KeyEdgeList &KeyEdges,
 
             auto remove = make_pair( w, w == KeyEdges[LAST][w_parent][i] ? prev : next );
 
-            //assert( contains(E,remove) );
+            assert( contains(E,remove) );
 
             if (printLog) cout<<"Edge "<<remove.first<<"-"<<remove.second<<" ";
             if( printLog && !contains(E,remove) ) cout<<"not ";
@@ -398,33 +398,32 @@ void BGHP2010(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         }
 
         // Step 3
-//        handle_i_distantCharge2s( KeyEdges, P, D, Charges, E, printLog );
-//
-//        if(printLog)cout<<"\nCharges after step 3\n";
-//        for(auto charge: Charges)
-//        {
-//            size_t cone = charge.first.second;
-//            if(printLog)cout<< charge.first.first<< "  "<<cone<<"   "<<charge.second<<"   "<<((cone%2==1&&charge.second <= 1)||(cone%2==0 && charge.second<=2)? "OK":"FAIL")<<"\n";
-//        }
-//        cout<<endl;
-//
-//        // Step 4
-//        handleOtherCharge2s( KeyEdges, P, D, Charges, E, printLog );
-//
-//        if(printLog)cout<<"\nCharges after step 4\n";
-//        for(auto charge: Charges)
-//        {
-//            size_t cone = charge.first.second;
-//            if(printLog)cout<< charge.first.first<< "  "<<cone<<"   "<<charge.second<<"   "<<((cone%2==1&&charge.second <= 1)||(cone%2==0 && charge.second<=2)? "OK":"FAIL")<<"\n";
-//        }
+        handle_i_distantCharge2s( KeyEdges, P, D, Charges, E, printLog );
+
+        if(printLog)cout<<"\nCharges after step 3\n";
+        for(auto charge: Charges)
+        {
+            size_t cone = charge.first.second;
+            if(printLog)cout<< charge.first.first<< "  "<<cone<<"   "<<charge.second<<"   "<<((cone%2==1&&charge.second <= 1)||(cone%2==0 && charge.second<=2)? "OK":"FAIL")<<"\n";
+        }
+        //cout<<endl;
+
+        // Step 4
+
+        handleOtherCharge2s( KeyEdges, P, D, Charges, E, printLog );
+
+        if(printLog)cout<<"\nCharges after step 4\n";
+        for(auto charge: Charges)
+        {
+            size_t cone = charge.first.second;
+            if(printLog)cout<< charge.first.first<< "  "<<cone<<"   "<<charge.second<<"   "<<((cone%2==1&&charge.second <= 1)||(cone%2==0 && charge.second<=2)? "OK":"FAIL")<<"\n";
+        }
 
         // Send resultant graph to output iterator
         for(auto e : E)
         {
             *result = e;
             ++result;
-//            *result = reverse_pair(e);
-//            ++result;
         }
 
 

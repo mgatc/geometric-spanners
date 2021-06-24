@@ -44,7 +44,7 @@ typedef pair<size_t,size_t>                                         size_tPair;
 typedef boost::hash<size_tPair>                                     size_tPairHash;
 typedef unordered_map<size_tPair,bool,size_tPairHash>               size_tPairMap;
 
-bool selectEdge( const Delaunay& T, size_tPairMap &E, const Vertex_handle i, const Vertex_handle j, const size_t n, bool printLog = false ) {
+bool selectEdge( const Delaunay& T, size_tPairMap &E, const Vertex_handle i, const Vertex_handle j ) {
     assert( T.is_edge( i, j ) );
     //if( printLog ) cout<<"add:("<<i->info()<<","<<j->info()<<") ";
 
@@ -238,7 +238,7 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         for( auto v : selected ) {
             if( !T.is_infinite(v) ) {
                 //if( printLog ) cout<<"forward_";
-                inserted = selectEdge( T, G_prime, m, v, n, printLog );
+                inserted = selectEdge( T, G_prime, m, v );
             }
         }
 

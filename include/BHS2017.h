@@ -310,7 +310,6 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     //Angle of the cones. Results in 6 cones for a given vertex.
     const double alpha = PI / 3;
 
-    ///TODO: store the points in a vector, spatially sort, then insert to DT with info one by one
     vector<Point> P(pointsBegin, pointsEnd);
     vector<size_t> index;
     spatialSort<K>(P, index);
@@ -327,8 +326,10 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
     /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
       (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
+    Delaunay::Face_handle hint;
     for(size_t entry : index) {
-        auto vh = DT.insert(P[entry]);
+        auto vh = DT.insert(P[entry], hint);
+        hint = vh->face();
         vh->info() = entry;
         handles[entry] = vh;
     }

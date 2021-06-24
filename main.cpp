@@ -453,28 +453,28 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout <<"\n";
 //
 //    result.clear();
-//
-//
-//
-//    cout<< points.size();
-//    cout<< ",";
-//    cout<< size;
-//    cout<< ",";
-//    cout<< "BCC2012-6,";
-//    {
-//        Timer tim;
-//        BCC2012<6>( points.begin(), points.end(), back_inserter(result), printLog );
-//    }
-//
-//    deg = degree( result.begin(), result.end() );
-//    cout << deg;
-//    cout <<",";
-//
-//    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-//    cout << t;
-//    cout <<"\n";
-//
-//    result.clear();
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    cout<< "BCC2012-6,";
+    {
+        Timer tim;
+        BCC2012<6>( points.begin(), points.end(), back_inserter(result), printLog );
+    }
+
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+    cout << t;
+    cout <<"\n";
+
+    result.clear();
 
 
 

@@ -17,7 +17,7 @@
 //#include "GeometricSpannerPrinter.h"
 ////#include "GraphAlgoTV.h"
 //#include "BGS2005.h"
-//#include "LW2004.h"
+#include "LW2004.h"
 #include "BSX2009.h"
 #include "KPX2010.h"
 #include "BCC2012.h"
@@ -361,24 +361,24 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-//    cout<< points.size();
-//    cout<< ",";
-//    cout<< size;
-//    cout<< ",";
-//    cout<< "LW2004,";
-//    {
-//        Timer tim;
-//        LW2004( points.begin(), points.end(), back_inserter(result) );
-//    }
-//    deg = degree( result.begin(), result.end() );
-//    cout << deg;
-//    cout <<",";
-//
-//    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-//    cout << t;
-//    cout <<"\n";
-//
-//    result.clear();
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    cout<< "LW2004,";
+    {
+        Timer tim;
+        LW2004( points.begin(), points.end(), back_inserter(result) );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+    cout << t;
+    cout <<"\n";
+
+    result.clear();
 
 
 

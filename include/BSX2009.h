@@ -105,10 +105,6 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
 
     //************* Step 2 ****************//
-    vector<Vertex_handle> pointID2VertexHandle(n, v_inf);
-    for( auto vit = T.finite_vertices_begin(); vit != T.finite_vertices_end(); ++vit )
-        pointID2VertexHandle[ vit->info() ] = vit;
-
     Heap H;
     vector<handle> handleToHeap(n);
     vector<size_t> piIndexedByV(n), piIndexedByPiU(n);
@@ -116,7 +112,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
     // Initialize the vector currentNeighbors with appropriate neighbors for every vertex
     for( size_t it=0; it<n; ++it ) {
-        Vertex_circulator N = T.incident_vertices( pointID2VertexHandle.at(it) ),
+        Vertex_circulator N = T.incident_vertices( handles.at(it) ),
             done(N);
         do {
             if( !T.is_infinite(N) )
@@ -165,7 +161,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
     // Iterate through vertices by piU ordering
     for( size_t u : piIndexedByPiU ) {
-        u_handle = pointID2VertexHandle.at(u);
+        u_handle = handles.at(u);
         assert( !T.is_infinite(u_handle) );
         Point u_point = u_handle->point();
         isProcessed[u] = true;
@@ -234,7 +230,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         for( auto v : closestInCones ) {
             if( !T.is_infinite(v) ) {
                 //if( printLog ) cout<<"forward_";
-                inserted = createNewEdge( T, pointID2VertexHandle, ePrime, u, v->info(), n, printLog );
+                inserted = createNewEdge( T, handles, ePrime, u, v->info(), n, printLog );
                 //degree += size_t(inserted);
                 //if( printLog ) cout<<"degree:"<<degree<<",";
             }
@@ -249,7 +245,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                 if( !( T.is_infinite(lastN) || isProcessed.at(lastN->info()) ) ) {
                     // don't add to degree for cross edges, they are not incident on u!
                     //if( printLog ) cout<<"cross_";
-                    inserted = createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n, printLog );
+                    inserted = createNewEdge( T, handles, ePrime, lastN->info(), N->info(), n, printLog );
                 }
             }
             lastN = N->handle();
@@ -278,11 +274,11 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     // Send resultant graph to output iterator
     for( size_tPair e : ePrime ) {
         // Edge list is only needed for printing. Remove for production.
-        //edgeList.emplace_back( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
+        //edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
 
         *result = e;
         ++result;
-//        *result = make_pair( pointID2VertexHandle.at(e.second)->point(), pointID2VertexHandle.at(e.first)->point() );
+//        *result = make_pair( handles.at(e.second)->point(), handles.at(e.first)->point() );
 //        ++result;
     }
 

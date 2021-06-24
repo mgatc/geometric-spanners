@@ -76,27 +76,29 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     // ensure valid alpha
     alpha = CGAL::max( EPSILON, CGAL::min( alpha, PI/2 ) );
 
+    vector<Point> P(pointsBegin, pointsEnd);
+    vector<size_t> index;
+    spatialSort<K>(P, index);
 
-    vector<pair<Point,size_t>> P;
-    for( auto it=pointsBegin; it!=pointsEnd; ++it )
-    {
-        size_t id = P.size();
-        P.emplace_back(*it,id);
+    //Step 1: Construct Delaunay triangulation
+    lw2004::Delaunay T;
+
+    //N is the number of vertices in the delaunay triangulation.
+    size_t n = P.size();
+    if(n > SIZE_T_MAX - 1) return;
+
+    //Stores all the vertex handles (CGAL's representation of a vertex, its properties, and data).
+    vector<lw2004::Vertex_handle> handles(n);
+
+    /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
+      (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
+    Delaunay::Face_handle hint;
+    for(size_t entry : index) {
+        auto vh = T.insert(P[entry], hint);
+        hint = vh->face();
+        vh->info() = entry;
+        handles[entry] = vh;
     }
-
-    //cout << "Step 1 starts...\n";
-    Delaunay T;
-
-    T.insert( P.begin(), P.end() );
-
-    // Add IDs
-//    size_t i=0;
-//    for( auto v=T.finite_vertices_begin(); v!=T.finite_vertices_end(); ++v )
-//        v->info() = i++;
-
-    //assert( P.size() == T.number_of_vertices() );
-
-    size_t n = T.number_of_vertices();
 
     Vertex_handle v_inf = T.infinite_vertex();
 
@@ -104,11 +106,6 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     // TriangulationPrinter tp(T);
     // tp.draw("del");
     //************* Step 2 ****************//
-    vector<Vertex_handle> pointID2VertexHandle(n, v_inf);
-    for( auto vit = T.finite_vertices_begin(); vit != T.finite_vertices_end(); ++vit ) {
-        //assert( !T.is_infinite(vit) );
-        pointID2VertexHandle[ vit->info() ] = vit;
-    }
 
     Heap H;
     vector<handle> handleToHeap(n);
@@ -118,7 +115,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
    // size_t maxDegree = 0;
     // Initialize the vector currentNeighbours with appropriate neighbours for every vertex
     for( size_t it = 0; it < n; it++ ) {
-        Vertex_circulator N = T.incident_vertices( pointID2VertexHandle.at(it) ),
+        Vertex_circulator N = T.incident_vertices( handles.at(it) ),
             done(N);
         //if (vc != 0) {
         do {
@@ -174,7 +171,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
     // Iterate through vertices by pi ordering
     for( size_t u : piIndexedByPiU ) {
-        u_handle = pointID2VertexHandle.at(u);
+        u_handle = handles.at(u);
         assert( !T.is_infinite(u_handle) );
         isProcessed[u] = true;
         //if( printLog ) cout<<"\nu:"<<u<<" ";
@@ -268,7 +265,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
                     // cross edges
                     if( !T.is_infinite( lastN ) && !isProcessed.at( lastN->info() ) ) {
 //                        if( printLog ) cout<<"cross_";
-                        createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n, false );
+                        createNewEdge( T, handles, ePrime, lastN->info(), N->info(), n, false );
                     }
                 }
             }
@@ -280,7 +277,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
          && !T.is_infinite( lastN ) && !isProcessed.at( lastN->info() ) )
         {
 //            if( printLog ) cout<<"cross_";
-            createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n, false );
+            createNewEdge( T, handles, ePrime, lastN->info(), N->info(), n, false );
         }
 
         // Add edges in closest
@@ -288,7 +285,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
             for( auto v : segment )
                 if( !T.is_infinite(v) ) {
 //                    if( printLog ) cout<<"forward_";
-                    createNewEdge( T, pointID2VertexHandle, ePrime, u, v->info(), n, false );
+                    createNewEdge( T, handles, ePrime, u, v->info(), n, false );
                 }
     }
 
@@ -298,11 +295,9 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
     // Send resultant graph to output iterator
     for( size_tPair e : ePrime ) {
-        //edgeList.emplace_back( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
+        //edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
 
-        *result = make_pair( e.first, e.second );
-        ++result;
-        *result = make_pair( e.second, e.first );
+        *result = e;
         ++result;
     }
 

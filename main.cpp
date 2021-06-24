@@ -18,7 +18,7 @@
 ////#include "GraphAlgoTV.h"
 //#include "BGS2005.h"
 //#include "LW2004.h"
-//#include "BSX2009.h"
+#include "BSX2009.h"
 #include "KPX2010.h"
 #include "BCC2012.h"
 #include "BHS2017.h"
@@ -386,27 +386,25 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-//    cout<< points.size();
-//    cout<< ",";
-//    cout<< size;
-//    cout<< ",";
-//    cout<< "BSX2009,";
-//    {
-//        Timer tim;
-//        BSX2009( points.begin(), points.end(), back_inserter(result) );
-//    }
-//    deg = degree( result.begin(), result.end() );
-//    cout << deg;
-//    cout <<",";
-////
-//    {
-//        Timer tim;
-//        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-//    }
-//    cout << t;
-//    cout <<"\n";
-//
-//    result.clear();
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    cout<< "BSX2009,";
+    {
+        Timer tim;
+        BSX2009( points.begin(), points.end(), back_inserter(result) );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+
+    cout << t;
+    cout <<"\n";
+
+    result.clear();
 
 
 

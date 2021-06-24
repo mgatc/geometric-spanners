@@ -76,17 +76,30 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     size_t FINAL_DEGREE_BOUND = 14 + numCones;
 
 
-    //cout << "Step 1 starts...\n";
-    Delaunay T( pointsBegin, pointsEnd );
+    vector<Point> P(pointsBegin, pointsEnd);
+    vector<size_t> index;
+    spatialSort<K>(P, index);
 
-    // Add IDs
-    size_t i=0;
-    for( auto v=T.finite_vertices_begin(); v!=T.finite_vertices_end(); ++v )
-        v->info() = i++;
+    //Step 1: Construct Delaunay triangulation
+    bsx2009::Delaunay T;
 
-    assert( i == T.number_of_vertices() );
+    //N is the number of vertices in the delaunay triangulation.
+    size_t n = P.size();
+    if(n > SIZE_T_MAX - 1) return;
 
-    size_t n = i;
+    //Stores all the vertex handles (CGAL's representation of a vertex, its properties, and data).
+    vector<bsx2009::Vertex_handle> handles(n);
+
+    /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
+      (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
+    Delaunay::Face_handle hint;
+    for(size_t entry : index) {
+        auto vh = T.insert(P[entry], hint);
+        hint = vh->face();
+        vh->info() = entry;
+        handles[entry] = vh;
+    }
+
     Vertex_handle v_inf = T.infinite_vertex();
 
 
@@ -115,7 +128,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     }
 
     // Use a heap to walk through G_0 to G_{n-1} and set up the Pi for every vertex
-    i = n-1; // start at the last valid index
+    size_t i = n-1; // start at the last valid index
 
     while( !H.empty() ) {
         size_tPair p = H.top();
@@ -267,10 +280,10 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         // Edge list is only needed for printing. Remove for production.
         //edgeList.emplace_back( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
 
-        *result = make_pair( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
+        *result = e;
         ++result;
-        *result = make_pair( pointID2VertexHandle.at(e.second)->point(), pointID2VertexHandle.at(e.first)->point() );
-        ++result;
+//        *result = make_pair( pointID2VertexHandle.at(e.second)->point(), pointID2VertexHandle.at(e.first)->point() );
+//        ++result;
     }
 
 

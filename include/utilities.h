@@ -6,9 +6,13 @@
 #include <iostream>
 #include <limits>
 #include <string>
+#include <vector>
 
+#include <CGAL/boost/iterator/counting_iterator.hpp>
 #include <CGAL/Kernel/global_functions.h>
 #include <CGAL/Vector_2.h>
+#include <CGAL/spatial_sort.h>
+#include <CGAL/Spatial_sort_traits_adapter_2.h>
 
 
 
@@ -132,7 +136,24 @@ struct pointConeEquality{
     }
 };
 
+template< class K>
+void spatialSort(vector<typename K::Point_2> &P, vector<size_t> &index)
+{
+    typedef CGAL::Spatial_sort_traits_adapter_2<K,
+          typename CGAL::Pointer_property_map< typename K::Point_2>::type > Search_traits_2;
 
+    index.clear();
+    index.reserve(P.size());
+
+    std::copy( boost::counting_iterator<std::size_t>(0),
+               boost::counting_iterator<std::size_t>(P.size()),
+               std::back_inserter(index));
+
+    CGAL::spatial_sort( index.begin(),
+                        index.end(),
+                        Search_traits_2(CGAL::make_property_map(P)) );
+    //cout<<"done sorting"<<endl;
+}
 
 
 } // namespace gsnunf

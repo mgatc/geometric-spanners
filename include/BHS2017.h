@@ -238,15 +238,15 @@ namespace gsnunf {
             }
 
             //First and last edges in the canonical neighborhood are considered and added by 3 criteria. (4.4)
-            vector<int> cone(6);
+            vector<size_t> cone(6);
             for( size_t i=0; i<6; ++i ) {
                 cone[i] = (p_cone+i)%6;
             }
 
             //If the edges are in cone 1 or 5 with respect to a and z add. (4.4 a)
-            for( auto i=0; i<canExtrema.size(); ++i ) {
+            for( size_t i=0; i<canExtrema.size(); ++i ) {
                 const auto e = canExtrema[i];
-                const int z_cone = 1 + int(i==1)*4;
+                const size_t z_cone = 1 + int(i==1)*4;
                 if( getCone(e.second, e.first, h) == cone[z_cone] ) {
                     E_CAN.push_back(e);
                     if(printLog) cout<<e.first<<"-"<<e.second<<"["<<i<<"]\\"<<cone[z_cone]<<"/,";
@@ -262,9 +262,9 @@ namespace gsnunf {
             const auto blank = AL_e_a.end(); //Iterator to end of map to check if an edge exists.
 
             //If the edges are in cone 2 or 4 with respect to a and z and cone for has no edge with an end edge point in E_A add. (4.4 b)
-            for( auto i=0; i<canExtrema.size(); ++i ) {
+            for( size_t i=0; i<canExtrema.size(); ++i ) {
                 const auto e = canExtrema[i];
-                const int z_cone = 2 + int(i==1)*2;
+                const size_t z_cone = 2 + int(i==1)*2;
                 if( endpointZ[i] == blank && getCone(e.second, e.first, h) == cone[z_cone] ){
                     E_CAN.push_back(e);
 
@@ -275,9 +275,9 @@ namespace gsnunf {
             /*Checks if end edges have an end point a or z in E_A and an edge different from one made with vertex b or y in cone 2 or 4 woth respect
               to a and z if found the edge (b,c) or (w,y) is added. (4.4 c)*/
             // (a,b)
-            for( auto i=0; i<canExtrema.size(); ++i ) {
+            for( size_t i=0; i<canExtrema.size(); ++i ) {
                 const auto e = canExtrema[i];
-                const int z_cone = 2 + int(i==1)*2;
+                const size_t z_cone = 2 + int(i==1)*2;
                 if( getCone(e.second, e.first, h) == cone[z_cone]
                  && endpointZ[i] != blank
                  && endpointZ[i]->second != e.first ) {
@@ -310,11 +310,16 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     //Angle of the cones. Results in 6 cones for a given vertex.
     const double alpha = PI / 3;
 
+    ///TODO: store the points in a vector, spatially sort, then insert to DT with info one by one
+    vector<Point> P(pointsBegin, pointsEnd);
+    vector<size_t> index;
+    spatialSort<K>(P, index);
+
     //Step 1: Construct Delaunay triangulation
-    bhs2017::Delaunay DT(pointsBegin, pointsEnd);
+    bhs2017::Delaunay DT;
 
     //N is the number of vertices in the delaunay triangulation.
-    size_t n = DT.number_of_vertices();
+    size_t n = P.size();
     if(n > SIZE_T_MAX - 1) return;
 
     //Stores all the vertex handles (CGAL's representation of a vertex, its properties, and data).
@@ -322,11 +327,10 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
     /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
       (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
-    size_t i=0;
-    for(auto v = DT.finite_vertices_begin(); v != DT.finite_vertices_end(); ++v) {
-        v->info() = i;
-        handles[i] = v;
-        ++i;
+    for(size_t entry : index) {
+        auto vh = DT.insert(P[entry]);
+        vh->info() = entry;
+        handles[entry] = vh;
     }
 
     //Put edges in a vector.
@@ -334,8 +338,6 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
     //Creates a map of edges as keys to its respective bisector length as the value. (Edges are not directional 1-2 is equivilent to 2-1)
     edgeBisectorMap B(L.size());
-
-
 
 
     {
@@ -346,11 +348,10 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
             e->first->vertex((e->second + 1) % 3)->info(),
             e->first->vertex((e->second + 2) % 3)->info()
         );
-        L.emplace_back(
-            edge,
-            bisectorLength( alpha, edge, handles )
-        );
-        B.emplace( e.first, e.second);
+        auto length = bisectorLength( alpha, edge, handles );
+
+        L.emplace_back( edge, length );
+        B.emplace( edge, length );
     }
         //Timer t;
     //Step 2: Edges in the set L are sorted by their bisector length in non-decreasing order.
@@ -412,10 +413,10 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         // Edge list is only needed for printing. Remove for production.
         edgeList.emplace_back(handles.at(e.first)->point(), handles.at(e.second)->point());
 
-        *result = make_pair(handles.at(e.first)->point(), handles.at(e.second)->point());
+        *result = e;
         ++result;
-        *result = make_pair(handles.at(e.second)->point(), handles.at(e.first)->point());
-        ++result;
+//        *result = make_pair(handles.at(e.second)->point(), handles.at(e.first)->point());
+//        ++result;
     }
 
     // START PRINTER NONSENSE

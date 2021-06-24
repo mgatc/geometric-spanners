@@ -21,7 +21,7 @@
 //#include "BSX2009.h"
 #include "KPX2010.h"
 #include "BCC2012.h"
-//#include "BHS2017.h"
+#include "BHS2017.h"
 #include "KPT2017.h"
 #include "BGHP2010.h"
 #include "metrics.h"
@@ -340,6 +340,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout<< ",";
 //    cout<< size;
 //    cout<< ",";
+//    cout<< "BGS2005,";
 //
 //    {
 //        Timer tim;
@@ -364,6 +365,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout<< ",";
 //    cout<< size;
 //    cout<< ",";
+//    cout<< "LW2004,";
 //    {
 //        Timer tim;
 //        LW2004( points.begin(), points.end(), back_inserter(result) );
@@ -388,6 +390,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout<< ",";
 //    cout<< size;
 //    cout<< ",";
+//    cout<< "BSX2009,";
 //    {
 //        Timer tim;
 //        BSX2009( points.begin(), points.end(), back_inserter(result) );
@@ -412,6 +415,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout<< ",";
 //    cout<< size;
 //    cout<< ",";
+//    cout<< "KPX2010,";
 //    {
 //        Timer tim;
 //        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
@@ -434,6 +438,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout<< ",";
 //    cout<< size;
 //    cout<< ",";
+//    cout<< "BCC2012-7,";
 //    {
 //        Timer tim;
 //        BCC2012<7>( points.begin(), points.end(), back_inserter(result), printLog );
@@ -455,6 +460,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout<< ",";
 //    cout<< size;
 //    cout<< ",";
+//    cout<< "BCC2012-6,";
 //    {
 //        Timer tim;
 //        BCC2012<6>( points.begin(), points.end(), back_inserter(result), printLog );
@@ -469,27 +475,28 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout <<"\n";
 //
 //    result.clear();
-//
-//
-//
-////    cout<< points.size();
-////    cout<< ",";
-////    cout<< size;
-////    cout<< ",";
-////    {
-////        Timer tim;
-////        BHS2017( points.begin(), points.end(), back_inserter(result), printLog );
-////    }
-////
-////    deg = degree( result.begin(), result.end() );
-////    cout << deg;
-////    cout <<",";
-////
-////    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-////        cout << t;
-////    cout <<"\n";
-////
-////    result.clear();
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    cout<< "BHS2017,";
+    {
+        Timer tim;
+        BHS2017( points.begin(), points.end(), back_inserter(result), printLog );
+    }
+
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        cout << t;
+    cout <<"\n";
+
+    result.clear();
 
 
 
@@ -499,6 +506,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout<< ",";
     cout<< size;
     cout<< ",";
+    cout<< "KPT2017,";
     {
         Timer tim;
         KPT2017( points.begin(), points.end(), back_inserter(result), printLog );
@@ -522,6 +530,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout<< ",";
     cout<< size;
     cout<< ",";
+    cout<< "BGHP2010,";
     {
         Timer tim;
         BGHP2010( points.begin(), points.end(), back_inserter(result), printLog );

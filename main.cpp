@@ -411,48 +411,49 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-//    cout<< points.size();
-//    cout<< ",";
-//    cout<< size;
-//    cout<< ",";
-//    cout<< "KPX2010,";
-//    {
-//        Timer tim;
-//        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
-//    }
-//    deg = degree( result.begin(), result.end() );
-//    cout << deg;
-//    cout <<",";
-//
-//
-//    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-//    cout << t;
-//    cout <<"\n";
-//
-//    result.clear();
-//
-//
-//
-//
-//    cout<< points.size();
-//    cout<< ",";
-//    cout<< size;
-//    cout<< ",";
-//    cout<< "BCC2012-7,";
-//    {
-//        Timer tim;
-//        BCC2012<7>( points.begin(), points.end(), back_inserter(result), printLog );
-//    }
-//    deg = degree( result.begin(), result.end() );
-//    cout << deg;
-//    cout <<",";
-//
-//
-//    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-//    cout << t;
-//    cout <<"\n";
-//
-//    result.clear();
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    cout<< "KPX2010,";
+    const size_t k = 14; // the max degree of the spanner such that k>=14
+    {
+        Timer tim;
+        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+
+    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+    cout << t;
+    cout <<"\n";
+
+    result.clear();
+
+
+
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    cout<< "BCC2012-7,";
+    {
+        Timer tim;
+        BCC2012<7>( points.begin(), points.end(), back_inserter(result), printLog );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+
+    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+    cout << t;
+    cout <<"\n";
+
+    result.clear();
 
 
 

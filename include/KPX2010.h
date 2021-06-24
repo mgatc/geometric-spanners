@@ -69,20 +69,29 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     //if(printLog) cout<<"alpha:"<<alpha<<",";
 
     // Construct Delaunay triangulation
-    vector<Point> P(pointsBegin,pointsEnd);
+
+    vector<Point> P(pointsBegin, pointsEnd);
+    vector<size_t> index;
+    spatialSort<K>(P, index);
+
+    //Step 1: Construct Delaunay triangulation
     kpx2010::Delaunay T;
 
-    // Add IDs
+    //N is the number of vertices in the delaunay triangulation.
     size_t n = P.size();
-    if( n > SIZE_T_MAX - 1 ) return;
-    vector<kpx2010::Vertex_handle> handles(n);
-    size_t i=0;
+    if(n > SIZE_T_MAX - 1) return;
 
-    ///TODO: points need to be spatially sorted before insertion, but info much match input order
-    for( size_t i=0; i<n; ++i )
-    {
-        handles[i] = T.insert( P[i] );
-        handles[i]->info() = i;
+    //Stores all the vertex handles (CGAL's representation of a vertex, its properties, and data).
+    vector<kpx2010::Vertex_handle> handles(n);
+
+    /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
+      (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
+    Delaunay::Face_handle hint;
+    for(size_t entry : index) {
+        auto vh = T.insert(P[entry], hint);
+        hint = vh->face();
+        vh->info() = entry;
+        handles[entry] = vh;
     }
 
     kpx2010::Vertex_handle v_inf = T.infinite_vertex();

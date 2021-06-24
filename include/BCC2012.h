@@ -195,6 +195,8 @@ inline void wedge<7>( const Delaunay& DT,
     }
 }
 
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wunused_parameter"
 template<>
 inline void wedge<6>( const Delaunay& DT,
                       const vector<Vertex_handle>& handles,
@@ -400,6 +402,7 @@ inline void wedge<6>( const Delaunay& DT,
 //
 //    if(printLog)cout<<"\n\n";
 }
+//#pragma GCC diagnostic pop
 
 
 } // namespace bcc2012

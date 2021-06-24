@@ -115,7 +115,7 @@ void findKeyEdges( KeyEdgesMap &KeyEdges, Triangulation &D, const PointContainer
             D.fan_of_cone(w,cone,fan);
 
             // Find closest
-            Vertex_descriptor closestKnown;
+            Vertex_descriptor closestKnown = w;
             K::FT closestKnownBisector = INF;
 
             for( auto e : fan )
@@ -129,7 +129,7 @@ void findKeyEdges( KeyEdgesMap &KeyEdges, Triangulation &D, const PointContainer
                 }
             }
             size_t flattenedCone = cone/2;
-            if( closestKnownBisector < INF )
+            if( closestKnown != w )
             {
                 KeyEdges[CLOSEST][w][flattenedCone] = closestKnown;
             }
@@ -143,12 +143,11 @@ void findKeyEdges( KeyEdgesMap &KeyEdges, Triangulation &D, const PointContainer
         }
     }
 }
-template< class Triangulation, class PointContainer, class KeyEdgesContainer >
+template< class PointContainer, class KeyEdgesContainer >
 bool is_i_relevant( const Vertex_descriptor child,
                     const Vertex_descriptor parent,
                     const Vertex_descriptor grandparent,
                     size_t i,
-                    Triangulation &D,
                     const PointContainer &P,
                     KeyEdgesContainer &KeyEdges )
 {
@@ -184,8 +183,8 @@ bool is_i_distant( const Vertex_descriptor w,
 
     //return false;
     return !contains( E, make_pair(w,u) )
-        && is_i_relevant( first, w, u, iPlusOne(i), D, P, KeyEdges )
-        && is_i_relevant( last,  w, u, iLessOne(i), D, P, KeyEdges );
+        && is_i_relevant( first, w, u, iPlusOne(i), P, KeyEdges )
+        && is_i_relevant( last,  w, u, iLessOne(i), P, KeyEdges );
 }
 
 template< class AdjacencyList, class PointSet, class ChargeList, class EdgeList>
@@ -245,7 +244,7 @@ void add_i_relevantNeighbors(  KeyEdgeList &KeyEdges,
                 EdgeLabel w_label = static_cast<EdgeLabel>(j); // FIRST or LAST
                 auto w = KeyEdges[w_label][u][i/2];
 
-                if( is_i_relevant( w, u, v, posCone, D, P, KeyEdges ) ) {
+                if( is_i_relevant( w, u, v, posCone, P, KeyEdges ) ) {
 
                     //size_t cone = getCone( u, v, P );
                     auto pair2 = make_pair( u, posCone );
@@ -265,10 +264,9 @@ void handle_i_distantCharge2s(  KeyEdgeList &KeyEdges,
                                const PointSet &P,
                                const Triangulation &D,
                                ChargeList &Charges,
-                               EdgeList &E,
-                               bool printLog)
+                               EdgeList &E)
 {
-    const size_t n = P.size();
+    //const size_t n = P.size();
 
     for( auto it=Charges.begin();
          it!=Charges.end(); ++it )
@@ -301,15 +299,14 @@ void handle_i_distantCharge2s(  KeyEdgeList &KeyEdges,
     }
 }
 
-template< class KeyEdgeList, class PointSet, class Triangulation, class ChargeList, class EdgeList>
+template< class KeyEdgeList, class Triangulation, class ChargeList, class EdgeList>
 void handleOtherCharge2s(  KeyEdgeList &KeyEdges,
-                               const PointSet &P,
-                               const Triangulation &D,
-                               ChargeList &Charges,
-                               EdgeList &E,
-                               bool printLog)
+                           const Triangulation &D,
+                           ChargeList &Charges,
+                           EdgeList &E,
+                           bool printLog)
 {
-    const size_t n = P.size();
+    //const size_t n = P.size();
 
     for( auto it=Charges.begin();
          it!=Charges.end(); ++it )
@@ -398,7 +395,7 @@ void BGHP2010(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         }
 
         // Step 3
-        handle_i_distantCharge2s( KeyEdges, P, D, Charges, E, printLog );
+        handle_i_distantCharge2s( KeyEdges, P, D, Charges, E );
 
         if(printLog)cout<<"\nCharges after step 3\n";
         for(auto charge: Charges)
@@ -410,7 +407,7 @@ void BGHP2010(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
         // Step 4
 
-        handleOtherCharge2s( KeyEdges, P, D, Charges, E, printLog );
+        handleOtherCharge2s( KeyEdges, D, Charges, E, printLog );
 
         if(printLog)cout<<"\nCharges after step 4\n";
         for(auto charge: Charges)

@@ -185,131 +185,16 @@ int main( int argc, char *argv[] ) {
 void scratch() {
     using namespace std;
 
-    const double width = 5;
-    size_t i=30;
-//
-//    //for( i=1; i<=17; ++i ) {
         vector<Point> points;
-        // SET POINT SET
-//        points = {
-//            {
-//                0,0
-//            },
-//            {
-//                0,2
-//            },
-//            {
-//                3,1
-//            },
-//            {
-//                -3,1
-//            },
-//            {
-//                2,-1
-//            },
-//            {
-//                -2,-1
-//            }
-//        };
-
-            // POINT SET FROM PAPER, PAGE 253
-//    points = {
-//        { -1, 0.1 },
-//        { -0.9, 3 },
-//        { -2, 6 },
-//        { -7, 3.1 },
-//        { -6, -0.1 },
-//        { -9, -0.2 },
-//        { -7.7, -1 },
-//        { -6.1, -1.5 },
-//        { -10, -4 },
-//        { -4, -3 },
-//        { -1.5, -6 },
-//        { 1, -9 },
-//        { 4, -4 },
-//        { 4.1, 0 },
-//        { 3.9, 5.9 },
-//        { 5, 3 },
-//        { 5, -2 },
-//        { 9, 1 }
-//    };
-
-//    points = {
-//        {
-//            2.73,4.13
-//        },
-//        {
-//            2.87,0
-//        },
-//        {
-//            3.5,-1.4
-//        },
-//        {
-//            -6.3,-0.14
-//        },
-//        {
-//            -4.27,-1.05
-//        },
-//        {
-//            -2.8,-2.1
-//        },
-//        {
-//            -7.2,-2.8
-//        },
-//        {
-//            -5.39,-0.7
-//        },
-//        {
-//            -4.2,-0.07
-//        },
-//        {
-//            -1.4,4.2
-//        },
-//        {
-//            -4.9,2.17
-//        },
-//        {
-//            6.3,0.7
-//        },
-//        {
-//            3.5,2.1
-//        },
-//        {
-//            -0.63,2.1
-//        },
-//        {
-//            -0.7,0.07
-//        },
-//        {
-//            2.8,-2.8
-//        },
-//        {
-//            0.7,-6.3
-//        },
-//        {
-//            -1.05,-4.2
-//        },
-//    };
-        size_t n = 1000;
-
-//        std::copy_n( g1, n/3, back_inserter(points) );
-//        std::copy_n( g2, n/3, back_inserter(points) );
-//        std::copy_n( g3, n/6, back_inserter(points) );
-//        std::copy_n( g4, n, back_inserter(points) );
-//        points.emplace_back( 0,0 );
-//        points.emplace_back( 0,1 );
-//        points.emplace_back( 1,0 );
-//        points.emplace_back( 1,1 );
-//        points.emplace_back( 2,1 );
-
 
 
         string filename = "data-89_4716.990566x4716.990566.txt";
         readPointsFromFile( back_inserter( points ), filename );
 
-        //generatePointsNovel(back_inserter(points));
-
+//        size_t n = 1000;
 //        generateRandomPoints( n, width/2, back_inserter(points) );
+
+
         cout<< points.size();
         cout<< "\n";
 //        list< pair< Point, Point > > result;
@@ -425,9 +310,10 @@ bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment )
     return invalid == 0;
 }
 
-bool singleRun( size_t n, double width, string resultFilename, optional<string> filename, bool forcePrint, bool printLog ) {
+bool singleRun( size_t n, double width, string resultFilename, optional<string> filename, bool forcePrint, bool printLog )
+{
     double size = width/2; // cgal's generators produce width 2x given value
-    size_t k = 14;
+
     // SET POINT SET
     list<Point> points;
     optional<string> generatedFile = nullopt;
@@ -437,10 +323,6 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     else
         generatedFile = make_optional( generateRandomPoints( n, size, back_inserter(points) ) );
 
-//    cout<< points.size();
-//    cout<< ",";
-//    cout<< size;
-//    cout<< ",";
 
 //    list< pair< Point, Point > > result;
     list< pair< size_t, size_t > > result;

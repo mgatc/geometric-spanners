@@ -290,6 +290,9 @@ inline void wedge<6>( const Delaunay& DT,
 
     // Line 5:
     switch( Q_primePos ) {
+    case not_set:
+        assert(Q_primePos != not_set);
+        break;
     case between_i_k:
         // Line 6-7
         if( i != j

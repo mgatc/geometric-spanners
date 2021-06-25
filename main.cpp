@@ -323,10 +323,13 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     else
         generatedFile = make_optional( generateRandomPoints( n, size, back_inserter(points) ) );
 
+    bool measureStretchFactor = false;
 
 //    list< pair< Point, Point > > result;
     list< pair< size_t, size_t > > result;
     size_t deg;
+//
+    double t;
 
     // Delaunay triangulation
     //CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
@@ -350,11 +353,13 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    deg = degree( result.begin(), result.end() );
 //    cout << deg;
 //    cout <<",";
-////
-    double t;
-//    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );////    cout << t;
+//
+//      if(measureStretchFactor){
+//    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+//    cout << t;
+//      }
 //    cout <<"\n";
-////
+//
 //    result.clear();
 
 
@@ -374,8 +379,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout << deg;
     cout <<",";
 
-    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-    cout << t;
+    if(measureStretchFactor){
+        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        cout << t;
+    }
     cout <<"\n";
 
     result.clear();
@@ -399,9 +406,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout << deg;
     cout <<",";
 
-    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-
-    cout << t;
+    if(measureStretchFactor){
+        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        cout << t;
+    }
     cout <<"\n";
 
     result.clear();
@@ -423,9 +431,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout << deg;
     cout <<",";
 
-
-    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-    cout << t;
+    if(measureStretchFactor){
+        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        cout << t;
+    }
     cout <<"\n";
 
     result.clear();
@@ -446,9 +455,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout << deg;
     cout <<",";
 
-
-    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-    cout << t;
+    if(measureStretchFactor){
+        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        cout << t;
+    }
     cout <<"\n";
 
     result.clear();
@@ -469,8 +479,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout << deg;
     cout <<",";
 
-    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-    cout << t;
+    if(measureStretchFactor){
+        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        cout << t;
+    }
     cout <<"\n";
 
     result.clear();
@@ -491,8 +503,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout << deg;
     cout <<",";
 
-    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+    if(measureStretchFactor){
+        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
         cout << t;
+    }
     cout <<"\n";
 
     result.clear();
@@ -515,8 +529,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout << deg;
     cout <<",";
 
-    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-    cout << t;
+    if(measureStretchFactor){
+        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        cout << t;
+    }
     cout <<"\n";
 
 
@@ -539,8 +555,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout << deg;
     cout <<",";
 
-    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-    cout << t;
+    if(measureStretchFactor){
+        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        cout << t;
+    }
     cout <<"\n";
 
     result.clear();
@@ -548,29 +566,29 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-    if( deg > 6 || t > 6 || forcePrint ) {
-
-        string resultFileName = ( filename ? *filename : *generatedFile );
-        // strip file extension
-        const std::string ext(".txt");
-        if ( resultFileName != ext &&
-             resultFileName.size() > ext.size() &&
-             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
-        {
-           // if so then strip them off
-           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
-        }
-        resultFileName += "_result-";
-        resultFileName += ( filename ? "redo" : "orig" );
-
-        cout << "DEGREE ERROR!!! DEGREE:" << deg << "\n"<<endl;
-        cout << *generatedFile <<endl;
-
-        if( generatedFile )
-            singleRun( n, width, resultFileName, *generatedFile, true, true );
-
-        return false;
-    }
+//    if( deg > 6 || t > 6 || forcePrint ) {
+//
+//        string resultFileName = ( filename ? *filename : *generatedFile );
+//        // strip file extension
+//        const std::string ext(".txt");
+//        if ( resultFileName != ext &&
+//             resultFileName.size() > ext.size() &&
+//             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
+//        {
+//           // if so then strip them off
+//           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
+//        }
+//        resultFileName += "_result-";
+//        resultFileName += ( filename ? "redo" : "orig" );
+//
+//        cout << "DEGREE ERROR!!! DEGREE:" << deg << "\n"<<endl;
+//        cout << *generatedFile <<endl;
+//
+//        if( generatedFile )
+//            singleRun( n, width, resultFileName, *generatedFile, true, true );
+//
+//        return false;
+//    }
 
     result.clear();
 

@@ -355,7 +355,7 @@ void BGHP2010(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     TD_Delaunay_2 D( P.begin(), P.end() );
 
     {
-        Timer tim;
+        //Timer tim;
         size_t n = D.number_of_vertices();
 
         map<EdgeLabel, vector<vector<size_t>>> KeyEdges = {

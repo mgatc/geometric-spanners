@@ -34,7 +34,7 @@
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="10 1000 10000 1000" />
+				<Option parameters="10 500 50000 500" />
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-std=c++17" />
@@ -58,6 +58,7 @@
 			<Add option="-frounding-math" />
 			<Add option="-fexceptions" />
 			<Add option="-fopenmp" />
+			<Add option="-Wno-unused" />
 			<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include" />
 		</Compiler>
 		<Linker>

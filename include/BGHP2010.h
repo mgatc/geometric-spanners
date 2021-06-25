@@ -432,11 +432,6 @@ void BGHP2010(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         {
             vector<pair<Point_2,Point_2>> edgeList;
 
-            for(auto e : E)
-            {
-                edgeList.emplace_back(P.at(e.first), P.at(e.second));
-            }
-
             GraphPrinter printer(0.01);
             GraphPrinter::OptionsList options;
 
@@ -451,7 +446,7 @@ void BGHP2010(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                 {"line width", to_string(printer.activeEdgeWidth)}
             };
 
-            printer.drawEdges(edgeList.begin(), edgeList.end(), options);
+            printer.drawEdges(E.begin(), E.end(), P, options);
 
             options = {
                 {"vertex", make_optional(to_string(printer.vertexRadius))}, // vertex width

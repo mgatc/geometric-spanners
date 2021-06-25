@@ -435,7 +435,7 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
             {"color", printer.activeEdgeColor},
             {"line width", to_string(printer.activeEdgeWidth)}
         };
-        printer.drawEdges(edgeList.begin(), edgeList.end(), options);
+        printer.drawEdges(E_A.begin(), E_A.end(), P, options);
 
 
         options = {

@@ -189,10 +189,11 @@ void scratch() {
 
 
         string filename = "data-89_4716.990566x4716.990566.txt";
-        readPointsFromFile( back_inserter( points ), filename );
+        //readPointsFromFile( back_inserter( points ), filename );
 
-//        size_t n = 1000;
-//        generateRandomPoints( n, width/2, back_inserter(points) );
+        size_t n = 1000;
+        double width = 50;
+        generateRandomPoints( n, width/2, back_inserter(points) );
 
 
         cout<< points.size();
@@ -241,11 +242,11 @@ void scratch() {
 //                     make_optional(inserter(WorstPath,WorstPath.begin())) );
 
 
-//        cout << degree( result.begin(), result.end() );
-//        cout<<",";
-//        double t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-//        cout<< t;
-//        cout<<",";
+        cout << degree( result.begin(), result.end() );
+        cout<<",";
+        double t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        cout<< t;
+        cout<<",";
 
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
@@ -253,37 +254,37 @@ void scratch() {
 //        GraphPrinter printer(9);
 //        GraphPrinter::OptionsList options;
 //
-//        options = {
-//            { "color", printer.inactiveEdgeColor },
-//            { "line width", to_string(printer.inactiveEdgeWidth) }
-//        };
-//        printer.drawEdges( Del, options );
+////        options = {
+////            { "color", printer.inactiveEdgeColor },
+////            { "line width", to_string(printer.inactiveEdgeWidth) }
+////        };
+////        printer.drawEdges( Del, options );
 //
 //        options = { // active edge options
 //            { "color", printer.activeEdgeColor },
 //            { "line width", to_string(printer.inactiveEdgeWidth) }
 //        };
-//        printer.drawEdges( result.begin(), result.end(), options );
+//        printer.drawEdges( result.begin(), result.end(), points, options );
 //
-//        options = { // worst path edge options
-//            { "color", printer.worstPathEdgeColor },
-//            { "line width", to_string(printer.activeEdgeWidth) }
-//        };
-//        printer.drawEdges( WorstPath.begin(), WorstPath.end(), options );
+////        options = { // worst path edge options
+////            { "color", printer.worstPathEdgeColor },
+////            { "line width", to_string(printer.activeEdgeWidth) }
+////        };
+////        printer.drawEdges( WorstPath.begin(), WorstPath.end(), options );
 //
 //
-//        options = {
-//            { "vertex", make_optional( to_string(printer.vertexRadius/3) ) }, // vertex width
-//            { "color", make_optional( printer.backgroundColor ) }, // text color
-//            { "fill", make_optional( printer.activeEdgeColor ) }, // vertex color
-//            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-//        };
-//        GraphPrinter::OptionsList borderOptions = {
-//            { "border", make_optional( to_string(printer.vertexRadius/2) ) }, // choose shape of vertex
-//            { "color", printer.activeVertexColor }, // additional border color
-//            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-//        };
-//        printer.drawVertices( Del, options );
+////        options = {
+////            { "vertex", make_optional( to_string(printer.vertexRadius/3) ) }, // vertex width
+////            { "color", make_optional( printer.backgroundColor ) }, // text color
+////            { "fill", make_optional( printer.activeEdgeColor ) }, // vertex color
+////            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+////        };
+////        GraphPrinter::OptionsList borderOptions = {
+////            { "border", make_optional( to_string(printer.vertexRadius/2) ) }, // choose shape of vertex
+////            { "color", printer.activeVertexColor }, // additional border color
+////            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+////        };
+////        printer.drawVertices( Del, options );
 //
 //        string outputFilename = "lw";
 //        outputFilename += to_string(points.size());

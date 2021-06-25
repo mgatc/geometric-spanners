@@ -25,8 +25,6 @@ class GraphPrinter {
   public:
     typedef pair<string,optional<string>> Option;
     typedef vector<Option> OptionsList;
-
-    double _scaleFactor;
     unordered_set<string> _colors;
 
     string activeEdgeColor =     "000000";
@@ -42,7 +40,7 @@ class GraphPrinter {
     double inactiveEdgeWidth = 1.36;
 
     GraphPrinter( double scale = 1.0 )
-      : _scaleFactor(scale) {
+      : _scaleFactor(scale), _resizeFactor(1) {
         // define colors in the document
         defineColor(activeEdgeColor);
         defineColor(inactiveEdgeColor);
@@ -55,10 +53,13 @@ class GraphPrinter {
 
     void clear() { _document = ""; }
 
-    template< typename RandomAccessIterator >
-    void drawEdges( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd, const OptionsList& options = {} ) {
+    template< typename RandomAccessIterator, typename PointContainer >
+    void drawEdges( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd, const PointContainer &P, const OptionsList& options = {} ) {
         for( auto e=edgesBegin; e!=edgesEnd; ++e ) {
-            drawLine( e->first.x(), e->first.y(), e->second.x(), e->second.y(), options );
+            drawLine( P[e->first].x(),
+                      P[e->first].y(),
+                      P[e->second].x(),
+                      P[e->second].y(), options );
         }
     }
 
@@ -228,6 +229,8 @@ class GraphPrinter {
     }
 
   private:
+    double _scaleFactor;
+    double _resizeFactor;
     string _outputFilePrefix = "out-";
     string _document = "";
     string _header = string("")

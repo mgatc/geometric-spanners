@@ -31,7 +31,8 @@ const double FOUR_PI_OVER_SEVEN = 4*PI / 7;
 const double TAN30 = tan(PI / 6);
 const double COS30 = cos(PI / 6);
 const double COT30 = 1/TAN30;
-
+const double PI_OVER_FIVE = PI / 5;
+const double FOUR_PI_OVER_FIVE = 4*PI / 5;
 
 
 

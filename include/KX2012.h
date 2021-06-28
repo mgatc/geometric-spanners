@@ -95,14 +95,22 @@ namespace gsnunf {
         }
 
         kx2012::Vertex_handle v_inf = T.infinite_vertex();
+<<<<<<< Updated upstream
         size_tPairMap G_prime; // list of potential edges, value must be true for insertion to result
 
         // Iterate through vertices in T
+=======
+        size_tPairMap Degree_Eleven_Graph; // list of potential edges, value must be true for insertion to result
+
+        // Iterate through vertices in T
+        
+>>>>>>> Stashed changes
         for (auto m = T.finite_vertices_begin(); m != T.finite_vertices_end(); ++m) {
             //if( printLog ) cout<<"\n\nm:"<<m->info()<<" ";
 
             // Get neighbors of m
             kx2012::Vertex_circulator N = T.incident_vertices(m);
+<<<<<<< Updated upstream
             //if( printLog ) cout<<"N_init:"<<(T.is_infinite(N)?size_t(numeric_limits<size_t>::max):size_t(N->info()))<<" ";
             if (T.is_infinite(N)) --N;
 
@@ -266,6 +274,97 @@ namespace gsnunf {
             if (e.second) { // e.second holds the bool value of whether both vertices of an edge selected the edge
                 // Edge list is only needed for printing. Remove for production.
                 //edgeList.emplace_back( handles.at(e.first.first)->point(), handles.at(e.first.second)->point() );
+=======
+            
+            if(T.is_infinite(N)) ++N; //Verify N is not starting at infinity
+            kx2012::Vertex_circulator done(N); //Artificial end to circulator
+
+            //if( printLog ) cout<<"N_init:"<<(T.is_infinite(N)?size_t(numeric_limits<size_t>::max):size_t(N->info()))<<" ";
+            
+           
+            
+            //if(printLog) cout<<"done:"<<done->info()<<",";
+            vector<kx2012::Vertex_handle> angle_Set; //Store the 3 verticies in a vector for each angle set
+            while(angle_Set.size() < 3)
+            {
+                if(!T.is_infinite(N)) angle_Set.emplace_back(N);
+                N++;
+            }
+            
+            //N is set to 
+            Point p = m->point();
+            size_t currentPointIndex = m->info();
+            double angle_Sum =0;
+            set<kx2012::Vertex_handle> WideVertices;
+            
+            do{ if (T.is_infinite(N)) {N++;}
+                
+                angle_Sum = get_angle(angle_Set[2]->point(),p,angle_Set[0]->point());
+
+                if(angle_Sum > FOUR_PI_OVER_FIVE)
+                {
+                    WideVertices.insert(angle_Set.begin(),angle_Set.end());
+                    if(printLog)
+                    {
+                        cout << "Points: {" << angle_Set[2]->info() << ","<< m->info()<< "," << angle_Set[0]->info() << "} make angle: " << angle_Sum << endl;
+
+                    }
+                }
+                
+                angle_Set[0] = angle_Set[1];
+                angle_Set[1] = angle_Set[2];
+                angle_Set[2] = N++;
+                
+            }while(angle_Set[0] != done);
+            
+            for(auto v : WideVertices){
+                selectEdge(T,Degree_Eleven_Graph,m,v);
+            }
+            if (T.is_infinite(N)){N++;}
+            done = N;
+            Point Cone_Calculation_Point(p.x(),p.y()+1);
+            double conalAngle = 0;
+            vector<kx2012::Vertex_handle> closestVertexInCone(10,v_inf);
+            vector<double> closestPointDistanceInCone(10,INF);
+            do{ 
+                if (!T.is_infinite(N)&& !contains(WideVertices,N)){
+
+                    conalAngle = get_angle(N->point(),p,Cone_Calculation_Point);   
+                    size_t currentCone = conalAngle/PI_OVER_FIVE;
+                    double currentDistance = distance(p,N->point());
+
+                    if(currentDistance < closestPointDistanceInCone[currentCone])
+                    {
+                        closestVertexInCone[currentCone] = N;
+                        closestPointDistanceInCone[currentCone] = currentDistance;
+                    }
+
+                    
+                }
+            }while(++N != done);
+
+            for(auto v : closestVertexInCone)
+            {
+                if(v != v_inf)
+                {
+                    selectEdge(T,Degree_Eleven_Graph,m,v);
+                }
+            }
+       
+        }
+       
+        // Done. Send edges from G_prime with value == true (selected by both endpoints) to output.
+
+        // Edge list is only needed for printing. Remove for production.
+       vector< pair<size_t,size_t> > edgeList;
+       edgeList.reserve( Degree_Eleven_Graph.size() );
+
+        // Send resultant graph to output iterator
+        for (auto e : Degree_Eleven_Graph) {
+            if (e.second) { // e.second holds the bool value of whether both vertices of an edge selected the edge
+                // Edge list is only needed for printing. Remove for production.
+                edgeList.push_back(e.first);
+>>>>>>> Stashed changes
 
                 *result = e.first;
                 ++result;
@@ -281,6 +380,7 @@ namespace gsnunf {
         //
         //
 
+<<<<<<< Updated upstream
     //    if( printLog ) {
     //        GraphPrinter printer(1);
     //        GraphPrinter::OptionsList options;
@@ -314,6 +414,41 @@ namespace gsnunf {
     //        printer.print( "bsx2009" );
     //        cout<<"\n";
     //    }
+=======
+       if( printLog ) {
+           GraphPrinter printer(1);
+           GraphPrinter::OptionsList options;
+    
+           options = {
+               { "color", printer.inactiveEdgeColor },
+               { "line width", to_string(printer.inactiveEdgeWidth) }
+           };
+           printer.drawEdges( T, options );
+    
+           options = { // active edge options
+               { "color", printer.activeEdgeColor },
+               { "line width", to_string(printer.activeEdgeWidth) }
+           };
+           printer.drawEdges( edgeList.begin(), edgeList.end(),P, options );
+    
+    
+           options = {
+               { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+               { "color", make_optional( printer.backgroundColor ) }, // text color
+               { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+               { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+           };
+           GraphPrinter::OptionsList borderOptions = {
+               { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
+               { "color", printer.activeEdgeColor }, // additional border color
+               { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+           };
+           printer.drawVerticesWithInfo( T, options, borderOptions );
+    
+           printer.print( "KX2012" );
+           cout<<"\n";
+       }
+>>>>>>> Stashed changes
 
         //
         //

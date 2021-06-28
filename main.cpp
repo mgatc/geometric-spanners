@@ -16,14 +16,19 @@
 //#include "FloydWarshall.h"
 //#include "GeometricSpannerPrinter.h"
 ////#include "GraphAlgoTV.h"
-//#include "BGS2005.h"
+#include "BGS2005.h"
 #include "LW2004.h"
 #include "BSX2009.h"
 #include "KPX2010.h"
+#include "KX2012.h"
 #include "BCC2012.h"
 #include "BHS2017.h"
 #include "KPT2017.h"
+<<<<<<< Updated upstream
 #include "BKPX2015.h"
+=======
+//#include "BKPX2015.h"
+>>>>>>> Stashed changes
 #include "BGHP2010.h"
 #include "metrics.h"
 //#include "delaunay.h"
@@ -176,8 +181,13 @@ int main( int argc, char *argv[] ) {
         }
     }
 
+<<<<<<< Updated upstream
     experiment( experimentParameters[0],experimentParameters[1],experimentParameters[2],experimentParameters[3] );
 //    scratch();
+=======
+    //experiment( experimentParameters[0],experimentParameters[1],experimentParameters[2],experimentParameters[3] );
+    scratch();
+>>>>>>> Stashed changes
 
  //   singleRun( 0, 0, "BKPXTestResult", "positive_points.txt", true, true );
 
@@ -190,10 +200,17 @@ void scratch() {
 
         vector<Point> points;
 
+<<<<<<< Updated upstream
         string filename = "data-89_4716.990566x4716.990566.txt";
         //readPointsFromFile( back_inserter( points ), filename );
 
         size_t n = 1000;
+=======
+        //string filename = "data-89_4716.990566x4716.990566.txt";
+        //readPointsFromFile( back_inserter( points ), filename );
+
+        size_t n = 50;
+>>>>>>> Stashed changes
         double width = 50;
         generateRandomPoints( n, width/2, back_inserter(points) );
 
@@ -229,8 +246,14 @@ void scratch() {
             //BCC2012<7>( points.begin(), points.end(), back_inserter(result) );
             //BHS2017(points.begin(), points.end(), back_inserter(result) );
             //KPT2017(points.begin(), points.end(), back_inserter(result), true );
+<<<<<<< Updated upstream
             BKPX2015(points.begin(), points.end(), back_inserter(result), true );
           //  BGHP2010(points.begin(), points.end(), back_inserter(result), true );
+=======
+            //BKPX2015(points.begin(), points.end(), back_inserter(result), true );
+          //  BGHP2010(points.begin(), points.end(), back_inserter(result), true );
+            KX2012( points.begin(), points.end(), back_inserter(result), true);
+>>>>>>> Stashed changes
             //delaunay_testing( points.begin(), points.end(), back_inserter(result) );
         //}
 
@@ -244,11 +267,19 @@ void scratch() {
 //                     make_optional(inserter(WorstPath,WorstPath.begin())) );
 
 
+<<<<<<< Updated upstream
         cout << degree( result.begin(), result.end() );
         cout<<",";
         double t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
         cout<< t;
         cout<<",";
+=======
+        cout << degree( result.begin(), result.end() )<<endl;
+        // cout<<",";
+        // double t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        // cout<< t;
+        // cout<<",";
+>>>>>>> Stashed changes
 
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
@@ -456,6 +487,7 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout <<"\n";
 //
 //    result.clear();
+<<<<<<< Updated upstream
     cout << "BKPX2015, ";
     cout<< points.size();
     cout<< ",";
@@ -478,6 +510,30 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout <<"\n";
 
     result.clear();
+=======
+    // cout << "BKPX2015, ";
+    // cout<< points.size();
+    // cout<< ",";
+    // cout<< size;
+    // cout<< ",";
+    // cout<< "BCC2012-7,";
+    // {
+    //     Timer tim;
+    //     BKPX2015( points.begin(), points.end(), back_inserter(result), printLog );
+    // }
+    // deg = degree( result.begin(), result.end() );
+    // cout << deg;
+    // cout <<",";
+
+
+    // if(measureStretchFactor){
+    //     t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+    //     cout << t;
+    // }
+    // cout <<"\n";
+
+    // result.clear();
+>>>>>>> Stashed changes
 
     cout<< points.size();
     cout<< ",";

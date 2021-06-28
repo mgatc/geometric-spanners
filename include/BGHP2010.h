@@ -432,7 +432,8 @@ void BGHP2010(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         {
             vector<pair<Point_2,Point_2>> edgeList;
 
-            GraphPrinter printer(0.01);
+            GraphPrinter printer;
+            printer.autoscale( P.begin(), P.end(),20 );
             GraphPrinter::OptionsList options;
 
             options = {

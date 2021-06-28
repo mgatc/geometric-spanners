@@ -25,6 +25,8 @@ class GraphPrinter {
   public:
     typedef pair<string,optional<string>> Option;
     typedef vector<Option> OptionsList;
+
+    double _scaleFactor;
     unordered_set<string> _colors;
 
     string activeEdgeColor =     "000000";
@@ -37,10 +39,10 @@ class GraphPrinter {
     double vertexRadius = 17;
     //double vertexBorderWidth = 0.63;
     double activeEdgeWidth = 2.0;
-    double inactiveEdgeWidth = 1.36;
+    double inactiveEdgeWidth = 1.0;
 
     GraphPrinter( double scale = 1.0 )
-      : _scaleFactor(scale), _resizeFactor(1) {
+      : _scaleFactor(scale) {
         // define colors in the document
         defineColor(activeEdgeColor);
         defineColor(inactiveEdgeColor);
@@ -49,6 +51,31 @@ class GraphPrinter {
         defineColor(inactiveVertexColor);
         defineColor(backgroundColor);
         defineColor(textColor);
+    }
+    // begin and end are iterators over the point set that will be printed
+    // this is for proper scaling of the points to work with the latex document
+    // the points will not be printed unless you call drawVertices() on them
+    template< class InputIterator>
+    void autoscale( InputIterator pointsBegin, InputIterator pointsEnd, double documentSize = 10 )
+    {
+        double minX = pointsBegin->x(),
+               maxX = minX,
+               minY = pointsBegin->y(),
+               maxY = minY;
+
+        for( auto p=pointsBegin; p!=pointsEnd; ++p )
+        {
+            minX = CGAL::min( p->x(), minX );
+            maxX = CGAL::max( p->x(), maxX );
+            minY = CGAL::min( p->y(), minY );
+            maxY = CGAL::max( p->y(), maxY );
+        }
+
+        double deltaX = abs( minX - maxX ),
+               deltaY = abs( minY - maxY ),
+               delta  = CGAL::max( deltaX, deltaY );
+
+        _scaleFactor = documentSize / delta;
     }
 
     void clear() { _document = ""; }
@@ -229,8 +256,6 @@ class GraphPrinter {
     }
 
   private:
-    double _scaleFactor;
-    double _resizeFactor;
     string _outputFilePrefix = "out-";
     string _document = "";
     string _header = string("")
@@ -239,6 +264,7 @@ class GraphPrinter {
         //+ "\\usetikzlibrary{backgrounds}\n\n"
         + "\\usetikzlibrary{fit}\n\n"
         + "\\begin{document}\n\n"
+        + "\\resizebox{\\textwidth}{!}{"
         + "\\begin{tikzpicture}[ "
         //+ "background rectangle/.style={fill="
         //    + backgroundColor
@@ -246,9 +272,11 @@ class GraphPrinter {
         + "vertex/.style = {circle, fill, minimum size=#1, inner sep=0pt, outer sep=0pt}, "
         + "vertex/.default = 6pt, "
         + "border/.style = {circle, draw, minimum size=#1, inner sep=0pt, outer sep=0pt}, "
-        + "border/.default = 6pt ]\n\n";
+        + "border/.default = 6pt ]\n\n"
+        + "\tiny\n\n";
     string _footer = string("")
-        + "\n\n\\end{tikzpicture}\n\n"
+        + "\n\n\\end{tikzpicture}\n"
+        + "}\n\n"
         + "\\end{document}";
 
 }; // class GraphPrinter

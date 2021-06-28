@@ -174,8 +174,8 @@ int main( int argc, char *argv[] ) {
         }
     }
 
-    experiment( experimentParameters[0],experimentParameters[1],experimentParameters[2],experimentParameters[3] );
-    //scratch();
+    //experiment( experimentParameters[0],experimentParameters[1],experimentParameters[2],experimentParameters[3] );
+    scratch();
 
     //singleRun( 0, 0, "bghpTestResult", "data-31_2783.882181x2783.882181.txt", true, true );
 
@@ -185,111 +185,83 @@ int main( int argc, char *argv[] ) {
 void scratch() {
     using namespace std;
 
-        vector<Point> points;
+    vector<Point> points;
 
+    /////////// GET POINTS SOMEHOW //////////////////////////
 
-        string filename = "data-89_4716.990566x4716.990566.txt";
-        //readPointsFromFile( back_inserter( points ), filename );
+    string filename = "data-89_4716.990566x4716.990566.txt";
+    //readPointsFromFile( back_inserter( points ), filename );
 
-        size_t n = 1000;
-        double width = 50;
-        generateRandomPoints( n, width/2, back_inserter(points) );
+    size_t n = 200;
+    double width = 5;
+    generateRandomPoints( n, width/2, back_inserter(points) );
 
+    /////////////////////////////////////////////////////////
 
-        cout<< points.size();
-        cout<< "\n";
-//        list< pair< Point, Point > > result;
-        list< pair< size_t,size_t > > result;
+    cout<< points.size();
+    cout<< "\n";
 
-        // Delaunay triangulation
-//        lw2004::Delaunay Del( points.begin(), points.end() );
-//        // Add IDs
-//        size_t id=0;
-//        for( auto v=Del.finite_vertices_begin(); v!=Del.finite_vertices_end(); ++v )
-//            v->info() = id++;
+    list< pair< size_t,size_t > > result;
 
-//                cout<<degree(Del);
-//                cout<<",";
-//                cout << weight( Del );
-//                cout <<",";
-//               Del.add_all_edges();
-//                t = StretchFactor(Del);
-//                cout<< t.second;
-//                cout<<",";
+    { // RUN THE ALGORITHM(S) /////////////////////////////////////
 
-//        {
+        Timer tim;
+        //LW2004( points.begin(), points.end(), back_inserter(result) );
+        //BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3 );
+        //BGS2005( points.begin(), points.end(), back_inserter(result) );
+        //KPX2010( points.begin(), points.end(), back_inserter(result), 18 );
+        //BCC2012<6>( points.begin(), points.end(), back_inserter(result) );
+        //BCC2012<7>( points.begin(), points.end(), back_inserter(result) );
+        //BHS2017(points.begin(), points.end(), back_inserter(result) );
+        //KPT2017(points.begin(), points.end(), back_inserter(result), true );
+        BGHP2010(points.begin(), points.end(), back_inserter(result), false );
+        //delaunay_testing( points.begin(), points.end(), back_inserter(result) );
+    }
 
-//                Timer tim;
-            //LW2004( points.begin(), points.end(), back_inserter(result) );
-            //BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3 );
-            //BGS2005( points.begin(), points.end(), back_inserter(result) );
-            //KPX2010( points.begin(), points.end(), back_inserter(result), 18 );
-            //BCC2012<6>( points.begin(), points.end(), back_inserter(result) );
-            //BCC2012<7>( points.begin(), points.end(), back_inserter(result) );
-            //BHS2017(points.begin(), points.end(), back_inserter(result) );
-            //KPT2017(points.begin(), points.end(), back_inserter(result), true );
-            BGHP2010(points.begin(), points.end(), back_inserter(result), true );
-            //delaunay_testing( points.begin(), points.end(), back_inserter(result) );
-        //}
-
-//        for( auto edge : result ) {
-//            cout<<edge.first<<"("<<points.at(edge.first)<<") -- "
-//                <<edge.second<<"("<<points.at(edge.second)<<")\n";
-//        }
+    // PRINT STUFF ABOUT THE RESULTING GRAPH TO CONSOLE
+    cout << degree( result.begin(), result.end() );
+    cout<<",";
+    double t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+    cout<< t;
+    cout<<",";
 
 //        list< pair< Point, Point > > WorstPath;
 //        SFWorstPath( result.begin(), result.end(),
 //                     make_optional(inserter(WorstPath,WorstPath.begin())) );
 
 
-        cout << degree( result.begin(), result.end() );
-        cout<<",";
-        double t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout<< t;
-        cout<<",";
+    // PRODUCE A LaTeX / TiKz DOCUMENT AND DISPLAY
 
-//        cout << weight( result.begin(), result.end() )/2;
-//        cout <<",";
+    GraphPrinter printer;
 
-//        GraphPrinter printer(9);
-//        GraphPrinter::OptionsList options;
-//
-////        options = {
-////            { "color", printer.inactiveEdgeColor },
-////            { "line width", to_string(printer.inactiveEdgeWidth) }
-////        };
-////        printer.drawEdges( Del, options );
-//
-//        options = { // active edge options
-//            { "color", printer.activeEdgeColor },
-//            { "line width", to_string(printer.inactiveEdgeWidth) }
-//        };
-//        printer.drawEdges( result.begin(), result.end(), points, options );
-//
-////        options = { // worst path edge options
-////            { "color", printer.worstPathEdgeColor },
-////            { "line width", to_string(printer.activeEdgeWidth) }
-////        };
-////        printer.drawEdges( WorstPath.begin(), WorstPath.end(), options );
-//
-//
-////        options = {
-////            { "vertex", make_optional( to_string(printer.vertexRadius/3) ) }, // vertex width
-////            { "color", make_optional( printer.backgroundColor ) }, // text color
-////            { "fill", make_optional( printer.activeEdgeColor ) }, // vertex color
-////            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-////        };
-////        GraphPrinter::OptionsList borderOptions = {
-////            { "border", make_optional( to_string(printer.vertexRadius/2) ) }, // choose shape of vertex
-////            { "color", printer.activeVertexColor }, // additional border color
-////            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-////        };
-////        printer.drawVertices( Del, options );
-//
-//        string outputFilename = "lw";
-//        outputFilename += to_string(points.size());
-//        printer.print( outputFilename );
-//        cout<<"\n";
+    double documentSizeInCm = 20;
+
+    printer.autoscale( points.begin(), points.end(), documentSizeInCm );
+    GraphPrinter::OptionsList options;
+
+    options = { // active edge options
+        {"color", printer.activeEdgeColor},
+        {"line width", to_string(printer.activeEdgeWidth)}
+    };
+
+    printer.drawEdges(result.begin(), result.end(), points, options);
+
+    options = {
+        {"vertex", make_optional(to_string(printer.vertexRadius))}, // vertex width
+        {"color", make_optional(printer.backgroundColor)}, // text color
+        {"fill", make_optional(printer.activeVertexColor)}, // vertex color
+        {"line width", make_optional(to_string(0))} // vertex border (same color as text)
+    };
+    GraphPrinter::OptionsList borderOptions = {
+        {"border", make_optional(to_string(printer.vertexRadius))}, // choose shape of vertex
+        {"color", printer.activeEdgeColor}, // additional border color
+        {"line width", to_string(printer.inactiveEdgeWidth)}, // additional border width
+    };
+    printer.drawVerticesWithInfo(points.begin(), points.end(), options, borderOptions);
+
+    printer.print("BGHP2010");
+    cout << "\n";
+
 }
 
 bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment ) {

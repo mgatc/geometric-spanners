@@ -79,11 +79,15 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     size_t i=0;
 
     ///TODO: points need to be spatially sorted before insertion, but info much match input order
+{
+    Timer t;
     for( size_t i=0; i<n; ++i )
     {
         handles[i] = T.insert( P[i] );
         handles[i]->info() = i;
     }
+}
+
 
     kpx2010::Vertex_handle v_inf = T.infinite_vertex();
     size_tPairMap G_prime; // list of potential edges, value must be true for insertion to result

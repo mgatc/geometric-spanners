@@ -20,6 +20,8 @@
 #include "GeometricSpannerPrinter.h"
 //#include "GraphAlgoTV.h"
 #include "utilities.h"
+#include "metrics.h"
+
 
 namespace gsnunf {
 
@@ -86,8 +88,11 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
     //cout << "Step 1 starts...\n";
     Delaunay T;
-
+{
+    Timer tim;
     T.insert( P.begin(), P.end() );
+
+}
 
     // Add IDs
 //    size_t i=0;

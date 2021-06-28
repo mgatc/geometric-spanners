@@ -102,7 +102,7 @@ class GraphPrinter {
             drawVertexWithLabel( it->point().x(), it->point().y(), to_string(it->info()), options, borderOptions );
         _document += "\n";
     }
-<<<<<<< HEAD
+
     template< typename InputIterator >
     void drawVerticesWithInfo( const InputIterator &pointsStart, const InputIterator &pointsEnd, const OptionsList& options = {}, const OptionsList& borderOptions = {} ) {
         size_t id = 0;
@@ -110,7 +110,6 @@ class GraphPrinter {
             drawVertexWithLabel( it->x(), it->y(), to_string(id++), options, borderOptions );
         _document += "\n";
     }
-=======
 
     template< typename T >
     void drawVerticesWithInfoSDG( const T &Triangulation, const OptionsList& options = {}, const OptionsList& borderOptions = {} ) {
@@ -119,7 +118,6 @@ class GraphPrinter {
         _document += "\n";
     }
 
->>>>>>> BKPX2015
     template< typename T >
     void drawVertexPair( const pair<typename T::Vertex_handle,typename T::Vertex_handle>& vertices, const OptionsList& options = {} ) {
         drawVertex( vertices.first->point().x(), vertices.first->point().y(), options );

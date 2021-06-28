@@ -77,7 +77,10 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
 
     //cout << "Step 1 starts...\n";
+{
+    Timer tim;
     Delaunay T( pointsBegin, pointsEnd );
+}
 
     // Add IDs
     size_t i=0;

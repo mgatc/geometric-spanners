@@ -551,7 +551,7 @@ void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
                 {"color", printer.activeEdgeColor},
                 {"line width", to_string(printer.activeEdgeWidth)}
             };
-            printer.drawEdges(edgeList.begin(), edgeList.end(), options);
+            printer.drawEdges(S.begin(), S.end(), P, options);
 
             options = {
                 {"vertex", make_optional(to_string(printer.vertexRadius))}, // vertex width

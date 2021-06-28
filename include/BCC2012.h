@@ -574,7 +574,7 @@ void BCC2012( RandomAccessIterator pointsBegin,
             { "color", printer.activeEdgeColor },
             { "line width", to_string(printer.activeEdgeWidth) }
         };
-        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
+        printer.drawEdges( E.begin(), E.end(), P, options );
 
         options = {
             { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width

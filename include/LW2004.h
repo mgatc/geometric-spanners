@@ -20,6 +20,8 @@
 #include "GeometricSpannerPrinter.h"
 //#include "GraphAlgoTV.h"
 #include "utilities.h"
+#include "metrics.h"
+
 
 namespace gsnunf {
 
@@ -99,6 +101,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         vh->info() = entry;
         handles[entry] = vh;
     }
+
 
     Vertex_handle v_inf = T.infinite_vertex();
 

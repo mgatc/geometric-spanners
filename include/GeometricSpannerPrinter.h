@@ -25,8 +25,6 @@ class GraphPrinter {
   public:
     typedef pair<string,optional<string>> Option;
     typedef vector<Option> OptionsList;
-
-    double _scaleFactor;
     unordered_set<string> _colors;
 
     string activeEdgeColor =     "000000";
@@ -42,7 +40,7 @@ class GraphPrinter {
     double inactiveEdgeWidth = 1.36;
 
     GraphPrinter( double scale = 1.0 )
-      : _scaleFactor(scale) {
+      : _scaleFactor(scale), _resizeFactor(1) {
         // define colors in the document
         defineColor(activeEdgeColor);
         defineColor(inactiveEdgeColor);
@@ -55,10 +53,13 @@ class GraphPrinter {
 
     void clear() { _document = ""; }
 
-    template< typename RandomAccessIterator >
-    void drawEdges( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd, const OptionsList& options = {} ) {
+    template< typename RandomAccessIterator, typename PointContainer >
+    void drawEdges( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd, const PointContainer &P, const OptionsList& options = {} ) {
         for( auto e=edgesBegin; e!=edgesEnd; ++e ) {
-            drawLine( e->first.x(), e->first.y(), e->second.x(), e->second.y(), options );
+            drawLine( P[e->first].x(),
+                      P[e->first].y(),
+                      P[e->second].x(),
+                      P[e->second].y(), options );
         }
     }
 
@@ -75,6 +76,20 @@ class GraphPrinter {
         _document += "\n";
     }
 
+    template< typename Triangulation >
+    void drawEdgesOfSDG( const Triangulation& T, const OptionsList& options = {} ) {
+        for( auto eit = T.finite_edges_begin(); eit != T.finite_edges_end(); ++eit ) {
+            auto e = *eit;
+            double x1 = e.first->vertex( (e.second+1)%3 )->site().point().x();
+            double y1 = e.first->vertex( (e.second+1)%3 )->site().point().y();
+            double x2 = e.first->vertex( (e.second+2)%3 )->site().point().x();
+            double y2 = e.first->vertex( (e.second+2)%3 )->site().point().y();
+            drawLine( x1,y1,x2,y2,options );
+        }
+        _document += "\n";
+    }
+
+
     template< typename T >
     void drawVertices( const T &Triangulation, const OptionsList& options = {}, const OptionsList& borderOptions = {} ) {
         for( typename T::Finite_vertices_iterator it = Triangulation.finite_vertices_begin(); it != Triangulation.finite_vertices_end(); ++it )
@@ -88,6 +103,7 @@ class GraphPrinter {
             drawVertexWithLabel( it->point().x(), it->point().y(), to_string(it->info()), options, borderOptions );
         _document += "\n";
     }
+
     template< typename InputIterator >
     void drawVerticesWithInfo( const InputIterator &pointsStart, const InputIterator &pointsEnd, const OptionsList& options = {}, const OptionsList& borderOptions = {} ) {
         size_t id = 0;
@@ -95,6 +111,14 @@ class GraphPrinter {
             drawVertexWithLabel( it->x(), it->y(), to_string(id++), options, borderOptions );
         _document += "\n";
     }
+
+    template< typename T >
+    void drawVerticesWithInfoSDG( const T &Triangulation, const OptionsList& options = {}, const OptionsList& borderOptions = {} ) {
+        for( typename T::Finite_vertices_iterator it = Triangulation.finite_vertices_begin(); it != Triangulation.finite_vertices_end(); ++it )
+            drawVertexWithLabel( it->site().point().x(), it->site().point().y(), to_string(it->storage_site().info()), options, borderOptions );
+        _document += "\n";
+    }
+
     template< typename T >
     void drawVertexPair( const pair<typename T::Vertex_handle,typename T::Vertex_handle>& vertices, const OptionsList& options = {} ) {
         drawVertex( vertices.first->point().x(), vertices.first->point().y(), options );
@@ -228,6 +252,8 @@ class GraphPrinter {
     }
 
   private:
+    double _scaleFactor;
+    double _resizeFactor;
     string _outputFilePrefix = "out-";
     string _document = "";
     string _header = string("")

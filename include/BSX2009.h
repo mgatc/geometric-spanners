@@ -75,7 +75,6 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     double alphaReal = 2*PI / numCones;
     size_t FINAL_DEGREE_BOUND = 14 + numCones;
 
-
     vector<Point> P(pointsBegin, pointsEnd);
     vector<size_t> index;
     spatialSort<K>(P, index);

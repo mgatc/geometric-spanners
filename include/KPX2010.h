@@ -94,6 +94,8 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         handles[entry] = vh;
     }
 
+
+
     kpx2010::Vertex_handle v_inf = T.infinite_vertex();
     size_tPairMap G_prime; // list of potential edges, value must be true for insertion to result
 

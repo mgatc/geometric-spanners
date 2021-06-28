@@ -20,6 +20,7 @@
 #include "LW2004.h"
 #include "BSX2009.h"
 #include "KPX2010.h"
+#include "KX2012.h"
 #include "BCC2012.h"
 #include "BHS2017.h"
 #include "KPT2017.h"
@@ -174,8 +175,8 @@ int main( int argc, char *argv[] ) {
         }
     }
 
-    experiment( experimentParameters[0],experimentParameters[1],experimentParameters[2],experimentParameters[3] );
-    //scratch();
+    //experiment( experimentParameters[0],experimentParameters[1],experimentParameters[2],experimentParameters[3] );
+    scratch();
 
     //singleRun( 0, 0, "bghpTestResult", "data-31_2783.882181x2783.882181.txt", true, true );
 
@@ -188,11 +189,12 @@ void scratch() {
         vector<Point> points;
 
 
-        string filename = "data-89_4716.990566x4716.990566.txt";
-        readPointsFromFile( back_inserter( points ), filename );
+        //string filename = "data-89_4716.990566x4716.990566.txt";
+        //readPointsFromFile( back_inserter( points ), filename );
 
-//        size_t n = 1000;
-//        generateRandomPoints( n, width/2, back_inserter(points) );
+        size_t n = 1000;
+        double width = 10;
+        generateRandomPoints( n, width/2, back_inserter(points) );
 
 
         cout<< points.size();
@@ -227,7 +229,8 @@ void scratch() {
             //BCC2012<7>( points.begin(), points.end(), back_inserter(result) );
             //BHS2017(points.begin(), points.end(), back_inserter(result) );
             //KPT2017(points.begin(), points.end(), back_inserter(result), true );
-            BGHP2010(points.begin(), points.end(), back_inserter(result), true );
+            //BGHP2010(points.begin(), points.end(), back_inserter(result), true );
+              KX2012(points.begin(), points.end(), back_inserter(result), true );
             //delaunay_testing( points.begin(), points.end(), back_inserter(result) );
         //}
 

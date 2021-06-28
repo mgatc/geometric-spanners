@@ -1434,7 +1434,7 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
         }
 
-        printer.drawEdges(pointEdgeList.begin(), pointEdgeList.end(), options);
+        printer.drawEdges(edgeList.begin(), edgeList.end(), P, options);
 
 
         options = {

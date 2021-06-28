@@ -102,23 +102,6 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         handles[entry] = vh;
     }
 
-    //cout << "Step 1 starts...\n";
-    Delaunay T;
-{
-    Timer tim;
-    T.insert( P.begin(), P.end() );
-
-}
-
-    // Add IDs
-//    size_t i=0;
-//    for( auto v=T.finite_vertices_begin(); v!=T.finite_vertices_end(); ++v )
-//        v->info() = i++;
-
-    //assert( P.size() == T.number_of_vertices() );
-
-    size_t n = T.number_of_vertices();
-
 
     Vertex_handle v_inf = T.infinite_vertex();
 

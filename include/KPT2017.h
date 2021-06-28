@@ -24,7 +24,7 @@
 #include "GeometricSpannerPrinter.h"
 //#include "GraphAlgoTV.h"
 #include "metrics.h"
-//#include "TDDelaunay.h"
+#include "TDDelaunay.h"
 #include "utilities.h"
 
 

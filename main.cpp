@@ -23,10 +23,12 @@
 #include "BCC2012.h"
 #include "BHS2017.h"
 #include "KPT2017.h"
+#include "BKPX2015.h"
 #include "BGHP2010.h"
 #include "metrics.h"
 //#include "delaunay.h"
 #include "utilities.h"
+
 
 using namespace gsnunf;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;

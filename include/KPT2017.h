@@ -91,7 +91,9 @@ inline K::FT bisectorLength( const pair<size_t,size_t> &e, const vector<Point_2>
 }
 
 template< class AnchorListMap, class Triangulation, class PointContainer >
-void findAnchors( AnchorListMap &anchors, Triangulation &D, const PointContainer &P )
+void findAnchors( AnchorListMap &anchors,
+                  Triangulation &D,
+                  const PointContainer &P )
 {
     anchors =
     {
@@ -203,8 +205,11 @@ void addWhiteAnchors(AnchorList &whiteAnchors, const PointContainer &P, EdgeList
     }
 }
 
-template< class Triangulation, class EdgeList, class PointContainer, class AnchorList, class AdjacencyList >
-void addBlueCanonicalEdges( const Triangulation &D, const EdgeList &A, const PointContainer &P, const AnchorList &blueAnchors, AdjacencyList &S )
+template< class Triangulation, class EdgeList, class AnchorList, class AdjacencyList >
+void addBlueCanonicalEdges( const Triangulation &D,
+                            const EdgeList &A,
+                            const AnchorList &blueAnchors,
+                            AdjacencyList &S )
 {
     for( auto blueAnchor : blueAnchors )
     {
@@ -238,7 +243,11 @@ void addBlueCanonicalEdges( const Triangulation &D, const EdgeList &A, const Poi
 }
 
 template< class Triangulation, class EdgeList, class PointContainer, class AnchorList, class AdjacencyList >
-void addWhiteCanonicalEdges( const Triangulation &D, const EdgeList &A, const PointContainer &P, const AnchorList &whiteAnchors, AdjacencyList &S )
+void addWhiteCanonicalEdges( const Triangulation &D,
+                             const EdgeList &A,
+                             const PointContainer &P,
+                             const AnchorList &whiteAnchors,
+                             AdjacencyList &S )
 {
     for( auto whiteAnchor : whiteAnchors )
     {
@@ -325,8 +334,11 @@ void addBlueShortcuts( const Triangulation &D, AdjacencyList &S_not_A )
 
 
 
-template< class Triangulation, class EdgeList, class PointContainer, class AnchorList, class AdjacencyList >
-void addWhiteShortcuts( const Triangulation &D, const EdgeList &A, const PointContainer &P, const AnchorList &whiteAnchors, AdjacencyList &S )
+template< class Triangulation, class PointContainer, class AnchorList, class AdjacencyList >
+void addWhiteShortcuts( const Triangulation &D,
+                        const PointContainer &P,
+                        const AnchorList &whiteAnchors,
+                        AdjacencyList &S )
 {
     typedef typename Triangulation::Edge_descriptor Edge_descriptor;
 
@@ -453,8 +465,8 @@ void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
     TD_Delaunay_2 D( P.begin(), P.end() );
     {
-        Timer tim;
-        size_t n = D.number_of_vertices();
+        //Timer tim;
+
         map<Color,vector<pair<size_t,size_t>>> Anchors;
         findAnchors( Anchors, D, P );
 
@@ -477,7 +489,7 @@ void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         typedef map<size_t, set<size_t>> AdjacencyList;
         AdjacencyList S_not_A;
         // Add to S every canonical edge in negative blue cones (cone 1) if the edge isn't in A
-        addBlueCanonicalEdges(D,A,P,Anchors[BLUE],S_not_A);
+        addBlueCanonicalEdges(D,A,Anchors[BLUE],S_not_A);
 
         //Step 4.
         addBlueShortcuts(D,S_not_A);
@@ -486,7 +498,7 @@ void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         addWhiteCanonicalEdges(D,A,P,Anchors[WHITE],S_not_A);
 
         //Step 6.
-        addWhiteShortcuts(D,A,P,Anchors[WHITE],S_not_A);
+        addWhiteShortcuts(D,P,Anchors[WHITE],S_not_A);
 
 
 
@@ -539,7 +551,7 @@ void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
                 {"color", printer.activeEdgeColor},
                 {"line width", to_string(printer.activeEdgeWidth)}
             };
-            printer.drawEdges(edgeList.begin(), edgeList.end(), options);
+            printer.drawEdges(S.begin(), S.end(), P, options);
 
             options = {
                 {"vertex", make_optional(to_string(printer.vertexRadius))}, // vertex width

@@ -195,6 +195,8 @@ inline void wedge<7>( const Delaunay& DT,
     }
 }
 
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wunused_parameter"
 template<>
 inline void wedge<6>( const Delaunay& DT,
                       const vector<Vertex_handle>& handles,
@@ -269,7 +271,6 @@ inline void wedge<6>( const Delaunay& DT,
 //        cout<<"j+1:"<<int(j+1)<<" i-2:"<<int(i-2)<<" k:"<<k<<endl;
 //    }
 
-    // TODO:I don't trust the types here... i and k are size_t. Converting to int isn't good...
     // Line 4: Add select edges
     for( int n=j+1; n<int(i)-2; ++n )
         if( !contains( Q_prime, Q.at(n)) && !contains( Q_prime, Q.at(n+1)) )
@@ -290,6 +291,9 @@ inline void wedge<6>( const Delaunay& DT,
 
     // Line 5:
     switch( Q_primePos ) {
+    case not_set:
+        // skip
+        break;
     case between_i_k:
         // Line 6-7
         if( i != j
@@ -397,6 +401,7 @@ inline void wedge<6>( const Delaunay& DT,
 //
 //    if(printLog)cout<<"\n\n";
 }
+//#pragma GCC diagnostic pop
 
 
 } // namespace bcc2012
@@ -416,20 +421,29 @@ void BCC2012( RandomAccessIterator pointsBegin,
 
     // Construct Delaunay triangulation
     vector<Point> P(pointsBegin,pointsEnd);
+    vector<size_t> index;
+    spatialSort<K>(P, index);
+
+    //Step 1: Construct Delaunay triangulation
     bcc2012::Delaunay DT;
 
-    // Add IDs
+    //N is the number of vertices in the delaunay triangulation.
     size_t n = P.size();
-    if( n > SIZE_T_MAX - 1 ) return;
-    vector<bcc2012::Vertex_handle> handles(n);
-    size_t i=0;
+    if(n > SIZE_T_MAX - 1) return;
 
-    ///TODO: points need to be spatially sorted before insertion, but info much match input order
-    for( size_t i=0; i<n; ++i )
-    {
-        handles[i] = DT.insert( P[i] );
-        handles[i]->info() = i;
+    //Stores all the vertex handles (CGAL's representation of a vertex, its properties, and data).
+    vector<bcc2012::Vertex_handle> handles(n);
+
+    /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
+      (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
+    Delaunay::Face_handle hint;
+    for(size_t entry : index) {
+        auto vh = DT.insert(P[entry], hint);
+        hint = vh->face();
+        vh->info() = entry;
+        handles[entry] = vh;
     }
+
 //    if(printLog) cout<<"n:"<<n<<"\n";
 
 
@@ -560,7 +574,7 @@ void BCC2012( RandomAccessIterator pointsBegin,
             { "color", printer.activeEdgeColor },
             { "line width", to_string(printer.activeEdgeWidth) }
         };
-        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
+        printer.drawEdges( E.begin(), E.end(), P, options );
 
         options = {
             { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width

@@ -247,7 +247,16 @@ class HalfThetaTriangulation {
     Vertex_descriptor target( const Edge_descriptor& e ) const {
         return boost::target(e,_G);
     }
-    // is_edge
+    Vertex_descriptor parent( const Vertex_descriptor child, const size_t i ) const {
+        for( auto it=positive_cone_edges_begin(child);
+             it!=positive_cone_edges_end(child); ++it )
+        {
+            Vertex_descriptor v = target(*it);
+            if( getCone(child,v) == i )
+                return v;
+        }
+        return SIZE_T_MAX;
+    }
 
 
   protected:

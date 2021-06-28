@@ -75,30 +75,35 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     double alphaReal = 2*PI / numCones;
     size_t FINAL_DEGREE_BOUND = 14 + numCones;
 
+    vector<Point> P(pointsBegin, pointsEnd);
+    vector<size_t> index;
+    spatialSort<K>(P, index);
 
-    //cout << "Step 1 starts...\n";
-{
-    Timer tim;
-    Delaunay T( pointsBegin, pointsEnd );
-}
+    //Step 1: Construct Delaunay triangulation
+    bsx2009::Delaunay T;
 
-    // Add IDs
-    size_t i=0;
-    for( auto v=T.finite_vertices_begin(); v!=T.finite_vertices_end(); ++v )
-        v->info() = i++;
+    //N is the number of vertices in the delaunay triangulation.
+    size_t n = P.size();
+    if(n > SIZE_T_MAX - 1) return;
 
-    assert( i == T.number_of_vertices() );
+    //Stores all the vertex handles (CGAL's representation of a vertex, its properties, and data).
+    vector<bsx2009::Vertex_handle> handles(n);
 
-    size_t n = i;
+    /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
+      (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
+    Delaunay::Face_handle hint;
+    for(size_t entry : index) {
+        auto vh = T.insert(P[entry], hint);
+        hint = vh->face();
+        vh->info() = entry;
+        handles[entry] = vh;
+    }
+
     Vertex_handle v_inf = T.infinite_vertex();
 
 
 
     //************* Step 2 ****************//
-    vector<Vertex_handle> pointID2VertexHandle(n, v_inf);
-    for( auto vit = T.finite_vertices_begin(); vit != T.finite_vertices_end(); ++vit )
-        pointID2VertexHandle[ vit->info() ] = vit;
-
     Heap H;
     vector<handle> handleToHeap(n);
     vector<size_t> piIndexedByV(n), piIndexedByPiU(n);
@@ -106,7 +111,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
     // Initialize the vector currentNeighbors with appropriate neighbors for every vertex
     for( size_t it=0; it<n; ++it ) {
-        Vertex_circulator N = T.incident_vertices( pointID2VertexHandle.at(it) ),
+        Vertex_circulator N = T.incident_vertices( handles.at(it) ),
             done(N);
         do {
             if( !T.is_infinite(N) )
@@ -118,7 +123,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     }
 
     // Use a heap to walk through G_0 to G_{n-1} and set up the Pi for every vertex
-    i = n-1; // start at the last valid index
+    size_t i = n-1; // start at the last valid index
 
     while( !H.empty() ) {
         size_tPair p = H.top();
@@ -155,7 +160,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
     // Iterate through vertices by piU ordering
     for( size_t u : piIndexedByPiU ) {
-        u_handle = pointID2VertexHandle.at(u);
+        u_handle = handles.at(u);
         assert( !T.is_infinite(u_handle) );
         Point u_point = u_handle->point();
         isProcessed[u] = true;
@@ -224,7 +229,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         for( auto v : closestInCones ) {
             if( !T.is_infinite(v) ) {
                 //if( printLog ) cout<<"forward_";
-                inserted = createNewEdge( T, pointID2VertexHandle, ePrime, u, v->info(), n, printLog );
+                inserted = createNewEdge( T, handles, ePrime, u, v->info(), n, printLog );
                 //degree += size_t(inserted);
                 //if( printLog ) cout<<"degree:"<<degree<<",";
             }
@@ -239,7 +244,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                 if( !( T.is_infinite(lastN) || isProcessed.at(lastN->info()) ) ) {
                     // don't add to degree for cross edges, they are not incident on u!
                     //if( printLog ) cout<<"cross_";
-                    inserted = createNewEdge( T, pointID2VertexHandle, ePrime, lastN->info(), N->info(), n, printLog );
+                    inserted = createNewEdge( T, handles, ePrime, lastN->info(), N->info(), n, printLog );
                 }
             }
             lastN = N->handle();
@@ -268,12 +273,12 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     // Send resultant graph to output iterator
     for( size_tPair e : ePrime ) {
         // Edge list is only needed for printing. Remove for production.
-        //edgeList.emplace_back( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
+        //edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
 
-        *result = make_pair( pointID2VertexHandle.at(e.first)->point(), pointID2VertexHandle.at(e.second)->point() );
+        *result = e;
         ++result;
-        *result = make_pair( pointID2VertexHandle.at(e.second)->point(), pointID2VertexHandle.at(e.first)->point() );
-        ++result;
+//        *result = make_pair( handles.at(e.second)->point(), handles.at(e.first)->point() );
+//        ++result;
     }
 
 

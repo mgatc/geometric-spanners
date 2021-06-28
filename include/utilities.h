@@ -6,9 +6,13 @@
 #include <iostream>
 #include <limits>
 #include <string>
+#include <vector>
 
+#include <CGAL/boost/iterator/counting_iterator.hpp>
 #include <CGAL/Kernel/global_functions.h>
 #include <CGAL/Vector_2.h>
+#include <CGAL/spatial_sort.h>
+#include <CGAL/Spatial_sort_traits_adapter_2.h>
 
 
 
@@ -68,7 +72,7 @@ inline double distance( Point p, Point q ) {
 }
 
 template< class Point_2 >
-double get_angle( const Point_2& p, const Point_2& q, const Point_2& r ) {
+inline double get_angle( const Point_2& p, const Point_2& q, const Point_2& r ) {
     //CGAL::Vector_2<K> pq( p, q );
     //CGAL::Vector_2<K> rq( r, q );
     auto pq = q - p,
@@ -84,8 +88,13 @@ double get_angle( const Point_2& p, const Point_2& q, const Point_2& r ) {
     //cout<<"angle("<<p<<","<<q<<","<<r<<")="<<result*180/PI<<" ";
     return result;
 }
+template< class Container >
+inline double get_angle( const size_t p, const size_t q, const size_t r, const Container &P )
+{
+    return get_angle( P[p], P[q], P[r] );
+}
 template< class K >
-double get_angle( const typename K::Point_2& p, const typename K::Point_2& q, const typename K::Point_2& r ) {
+inline double get_angle( const typename K::Point_2& p, const typename K::Point_2& q, const typename K::Point_2& r ) {
     return get_angle(p,q,r);
 }
 
@@ -127,7 +136,24 @@ struct pointConeEquality{
     }
 };
 
+template< class K>
+void spatialSort(vector<typename K::Point_2> &P, vector<size_t> &index)
+{
+    typedef CGAL::Spatial_sort_traits_adapter_2<K,
+          typename CGAL::Pointer_property_map< typename K::Point_2>::type > Search_traits_2;
 
+    index.clear();
+    index.reserve(P.size());
+
+    std::copy( boost::counting_iterator<std::size_t>(0),
+               boost::counting_iterator<std::size_t>(P.size()),
+               std::back_inserter(index));
+
+    CGAL::spatial_sort( index.begin(),
+                        index.end(),
+                        Search_traits_2(CGAL::make_property_map(P)) );
+    //cout<<"done sorting"<<endl;
+}
 
 
 } // namespace gsnunf

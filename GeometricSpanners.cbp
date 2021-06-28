@@ -81,8 +81,6 @@
 		<Unit filename="include/KPT2017.h" />
 		<Unit filename="include/KPX2010.h" />
 		<Unit filename="include/LW2004.h" />
-		<Unit filename="include/Linf Circulator.h" />
-		<Unit filename="include/Linf_Delaunay.h" />
 		<Unit filename="include/TDDelaunay.h" />
 		<Unit filename="include/metrics.h" />
 		<Unit filename="include/utilities.h" />

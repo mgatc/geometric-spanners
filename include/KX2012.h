@@ -47,11 +47,11 @@ namespace gsnunf {
         bool selectEdge(const Delaunay& T, size_tPairMap& E, const Vertex_handle i, const Vertex_handle j) {
             assert(T.is_edge(i, j));
             //if( printLog ) cout<<"add:("<<i->info()<<","<<j->info()<<") ";
-
+            auto Edge_j_i = make_pair(j->info(),i->info());
             auto existing = E.begin();
             bool inserted = false;
-            tie(existing, inserted) = E.try_emplace(makeNormalizedPair(i->info(), j->info()), false);
-            if (!inserted) existing->second = true;
+            tie(existing, inserted) = E.try_emplace(make_pair(i->info(),j->info()), false);
+            if(gsnunf::contains(E,Edge_j_i) ){E[Edge_j_i] = true;}
 
             return inserted;
         }
@@ -61,7 +61,7 @@ namespace gsnunf {
     template< typename RandomAccessIterator, typename OutputIterator >
     void KX2012(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false) {
         using namespace kx2012;
-
+        using gsnunf::contains;
         // ensure k >= 14
         size_t k = 14;
         const double alpha = 2 * PI / k;
@@ -95,38 +95,15 @@ namespace gsnunf {
         }
 
         kx2012::Vertex_handle v_inf = T.infinite_vertex();
-        size_tPairMap G_prime; // list of potential edges, value must be true for insertion to result
+        size_tPairMap Degree_Eleven_Graph; // list of potential edges, value must be true for insertion to result
 
         // Iterate through vertices in T
+        
         for (auto m = T.finite_vertices_begin(); m != T.finite_vertices_end(); ++m) {
             //if( printLog ) cout<<"\n\nm:"<<m->info()<<" ";
 
             // Get neighbors of m
             kx2012::Vertex_circulator N = T.incident_vertices(m);
-
-            bool inserted = false;
-            // now add edges from each to the current vertex (u)
-            for (auto v : selected) {
-                if (!T.is_infinite(v)) {
-                    //if( printLog ) cout<<"forward_";
-                    inserted = selectEdge(T, G_prime, m, v);
-                }
-            }
-
-        }
-
-        // Done. Send edges from G_prime with value == true (selected by both endpoints) to output.
-
-        // Edge list is only needed for printing. Remove for production.
-    //    vector< pair<Point,Point> > edgeList;
-    //    edgeList.reserve( G_prime.size() );
-
-        // Send resultant graph to output iterator
-        for (auto e : G_prime) {
-            if (e.second) { // e.second holds the bool value of whether both vertices of an edge selected the edge
-                // Edge list is only needed for printing. Remove for production.
-                //edgeList.emplace_back( handles.at(e.first.first)->point(), handles.at(e.first.second)->point() );
-
             
             if(T.is_infinite(N)) ++N; //Verify N is not starting at infinity
             kx2012::Vertex_circulator done(N); //Artificial end to circulator
@@ -148,7 +125,9 @@ namespace gsnunf {
             size_t currentPointIndex = m->info();
             double angle_Sum =0;
             set<kx2012::Vertex_handle> WideVertices;
-            
+
+            if (T.is_infinite(N)) {N++;}
+            kx2012::Vertex_handle ConalReferencePoint = N;
             do{ if (T.is_infinite(N)) {N++;}
                 
                 angle_Sum = get_angle(angle_Set[2]->point(),p,angle_Set[0]->point());
@@ -161,6 +140,7 @@ namespace gsnunf {
                         cout << "Points: {" << angle_Set[2]->info() << ","<< m->info()<< "," << angle_Set[0]->info() << "} make angle: " << angle_Sum << endl;
 
                     }
+                    ConalReferencePoint = angle_Set[2];
                 }
                 
                 angle_Set[0] = angle_Set[1];
@@ -168,41 +148,99 @@ namespace gsnunf {
                 angle_Set[2] = N++;
                 
             }while(angle_Set[0] != done);
+
             
+
             for(auto v : WideVertices){
                 selectEdge(T,Degree_Eleven_Graph,m,v);
             }
             if (T.is_infinite(N)){N++;}
             done = N;
-            Point Cone_Calculation_Point(p.x(),p.y()+1);
+            Point Cone_Calculation_Point(ConalReferencePoint->point());
             double conalAngle = 0;
-            vector<kx2012::Vertex_handle> closestVertexInCone(10,v_inf);
-            vector<double> closestPointDistanceInCone(10,INF);
+            unordered_map<size_t,kx2012::Vertex_handle> closestVertexInCone;
+            unordered_map<size_t,double> closestPointDistanceInCone;
+
             do{ 
-                if (!T.is_infinite(N)&& !contains(WideVertices,N)){
-
-                    conalAngle = get_angle(N->point(),p,Cone_Calculation_Point);   
-                    size_t currentCone = conalAngle/PI_OVER_FIVE;
-                    double currentDistance = distance(p,N->point());
-
-                    if(currentDistance < closestPointDistanceInCone[currentCone])
+                if (!T.is_infinite(N)){
+                    if(gsnunf::contains(WideVertices,N))
                     {
-                        closestVertexInCone[currentCone] = N;
-                        closestPointDistanceInCone[currentCone] = currentDistance;
-                    }
+                        Cone_Calculation_Point = N->point();
+                        for(auto v : closestVertexInCone)
+                        {
+                                selectEdge(T,Degree_Eleven_Graph,m,v.second);
+                        }
+                        closestVertexInCone.clear();
+                        closestPointDistanceInCone.clear();
 
+                    }else
+                    {
+                        conalAngle = get_angle(N->point(),p,Cone_Calculation_Point);   
+                        size_t currentCone = conalAngle/PI_OVER_FIVE;
+                        double currentDistance = distance(p,N->point());
+
+                        if(!gsnunf::contains(closestPointDistanceInCone,currentCone) || (currentDistance < closestPointDistanceInCone[currentCone]))
+                        {
+                            closestVertexInCone[currentCone] = N;
+                            closestPointDistanceInCone[currentCone] = currentDistance;
+                        }
+
+                    
+                    }
                     
                 }
             }while(++N != done);
 
             for(auto v : closestVertexInCone)
             {
-                if(v != v_inf)
-                {
-                    selectEdge(T,Degree_Eleven_Graph,m,v);
-                }
+                selectEdge(T,Degree_Eleven_Graph,m,v.second);
             }
-       
+            while(!gsnunf::contains(WideVertices,N) && ++N!=done);
+            done = N;
+            pair<int,kx2012::Vertex_handle> previousPoint(-1,v_inf);
+            do{ 
+                if (!T.is_infinite(N)){
+
+                    if(gsnunf::contains(WideVertices,N))
+                    {
+                        Cone_Calculation_Point = N->point();
+                        previousPoint.second = N;
+                        previousPoint.first = -1;
+
+                    }else
+                    {
+                        conalAngle = get_angle(N->point(),p,Cone_Calculation_Point);   
+                        size_t currentCone = conalAngle/PI_OVER_FIVE;
+                        int conalDifference = currentCone-previousPoint.first;
+
+                        for(int conalEdgesToAdd = min(conalDifference-1,2) ; conalEdgesToAdd > 0 ; conalEdgesToAdd--)
+                        {
+                            //Determine if one of the edges adjacent to the empty cone is selected already
+                            bool containsPreviousPoint = gsnunf::contains(Degree_Eleven_Graph, make_pair(currentPointIndex, previousPoint.second->info())) ;
+                            bool containsN = gsnunf::contains(Degree_Eleven_Graph, make_pair(currentPointIndex, N->info())) ;
+                            assert(previousPoint.second != v_inf);
+                            assert(N->handle() != v_inf);
+                            if(containsPreviousPoint && !containsN)
+                            {
+                                selectEdge(T,Degree_Eleven_Graph,m,previousPoint.second);
+                            }else if(!containsPreviousPoint && containsN)
+                            {
+                                selectEdge(T,Degree_Eleven_Graph,m,N->handle());
+                            }else //If neither adjacent edge is already selected, add the longest one
+                            {
+                                kx2012::Vertex_handle edgeToAdd = distance(N->point(),p) > distance(previousPoint.second->point(),p) ?  N->handle() : previousPoint.second;
+                                
+                                selectEdge(T,Degree_Eleven_Graph,m,edgeToAdd);
+                            }
+                        
+                        }
+
+                    previousPoint.first = currentCone;
+                    previousPoint.second = N;
+                    }
+                    
+                }
+            }while(++N != done);
         }
        
         // Done. Send edges from G_prime with value == true (selected by both endpoints) to output.
@@ -217,13 +255,19 @@ namespace gsnunf {
                 // Edge list is only needed for printing. Remove for production.
                 edgeList.push_back(e.first);
 
-
                 *result = e.first;
                 ++result;
                 //            *result = reverse_pair(e.first);
                 //            ++result;
             }
         }
+
+
+        //
+        //
+        // START PRINTER NONSENSE
+        //
+        //
 
        if( printLog ) {
            GraphPrinter printer(1);

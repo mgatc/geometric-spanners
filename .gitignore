@@ -17,3 +17,5 @@ include/workspace.code-workspace
 .vs/geometric-spanners/v16/Browse.VC.db-wal
 .vs/geometric-spanners/v16/Browse.VC.db-shm
 .sfdx/tools/apex.db
+.idea/
+cmake-build-debug/

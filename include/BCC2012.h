@@ -27,7 +27,7 @@ namespace bcc2012 {
 
 enum Q_primePosition  { between_j_i=0, between_i_k=1, not_set=2 };
 
-inline K::FT edgeLength( const vector<Vertex_handle>& H, const size_tPair& e ) {
+inline number_t edgeLength( const vector<Vertex_handle>& H, const size_tPair& e ) {
     return distance( H[e.first]->point(), H[e.second]->point() );
 }
 
@@ -35,7 +35,7 @@ inline size_t getCone( const vector<Vertex_handle>& handles,
                        const vector<size_t>& closest,
                        const size_t p,
                        const size_t q,
-                       const double alpha ) {
+                       const number_t alpha ) {
     return size_t( get_angle(
             handles.at(closest.at(p))->point(),
             handles.at(p)->point(),
@@ -62,15 +62,9 @@ inline bool vertexAgreesOnEdge( const vector<Vertex_handle>& handles,
         closest.at(p) = q;
         qOnBoundary = true; // the only vertex that falls on a boundary should be the closest
     }
-    const double ALPHA = 2*PI/NUM_CONES;
+    const number_t ALPHA = 2*PI/NUM_CONES;
     cone = getCone( handles, closest, p, q, ALPHA );
     conePrev = getPreviousCone( cone, NUM_CONES );
-
-//    double theta = get_angle<bcc2012::K>(
-//        handles.at(closest.at(p))->point(),
-//        handles.at(p)->point(),
-//        handles.at(q)->point()
-//    );
 
     bool pGivenConeFilled = filled.at(p)[cone],
          pPrevConeFilled = filled.at(p)[conePrev];
@@ -97,14 +91,14 @@ inline void updateVertexConeStatus( vector<bitset<NUM_CONES>>& filled,
     filled.at(p)[cone] = true;
 }
 
-inline double get_min_angle( const Vertex_handle& p,
-                             const Vertex_handle& q,
-                             const Vertex_handle& r ) {
-    return CGAL::min(
-        get_angle<K>( p->point(), q->point(), r->point() ),
-        get_angle<K>( r->point(), q->point(), p->point() )
-    );
-}
+//inline double get_min_angle( const Vertex_handle& p,
+//                             const Vertex_handle& q,
+//                             const Vertex_handle& r ) {
+//    return CGAL::min(
+//        get_angle<K>( p->point(), q->point(), r->point() ),
+//        get_angle<K>( r->point(), q->point(), p->point() )
+//    );
+//}
 
 /*
  *  Performs algorithm "wedge" with the exception of line 1. The
@@ -131,7 +125,7 @@ inline void wedge<7>( const Delaunay_triangulation& DT,
                       vector<size_tPair>& addToE_star,
                       const Vertex_circulator& q_i ) {
 
-    const double ALPHA = 2*PI/8;
+    const number_t ALPHA = 2*PI/8;
 
     const size_t& p = params.at(0);
 //    const size_t& q = params.at(1);
@@ -142,8 +136,8 @@ inline void wedge<7>( const Delaunay_triangulation& DT,
 
     // Setup function objects for wedge
     vector<std::function<Vertex_circulator(Vertex_circulator&)>> step;
-    step.push_back( [] ( Vertex_circulator& c ) { return ++c; } );
-    step.push_back( [] ( Vertex_circulator& c ) { return --c; } );
+    step.emplace_back( [] ( Vertex_circulator& c ) { return ++c; } );
+    step.emplace_back( [] ( Vertex_circulator& c ) { return --c; } );
 
     for( size_t i=0; i<step.size(); i++ ) {
         fill( q_m.begin(), q_m.end(), q_i );
@@ -173,7 +167,7 @@ inline void wedge<7>( const Delaunay_triangulation& DT,
             }
             step[i](q_m[2]);
             step[i](q_m[1]);
-        };
+        }
     }
 }
 
@@ -187,7 +181,7 @@ inline void wedge<6>( const Delaunay_triangulation& DT,
                       vector<size_tPair>& addToE_star,
                       const Vertex_circulator& q_i ) {
 
-    const double ALPHA = 2*PI/7;
+    const number_t ALPHA = 2*PI/7;
 
     const size_t& p = params.at(0);
     const size_t& q = params.at(1);
@@ -254,16 +248,18 @@ inline void wedge<6>( const Delaunay_triangulation& DT,
 //    }
 
     // Line 4: Add select edges
-    for( int n=j+1; n<int(i)-2; ++n )
-        if( !contains( Q_prime, Q.at(n)) && !contains( Q_prime, Q.at(n+1)) )
-            addToE_star.emplace_back( Q.at(n), Q.at(n+1) );
+    if( i > 1 )
+        for( size_t n=j+1; n<i-2; ++n )
+            if( !contains( Q_prime, Q.at(n)) && !contains( Q_prime, Q.at(n+1)) )
+                addToE_star.emplace_back( Q.at(n), Q.at(n+1) );
 
 //    if(printLog)cout<<"add to E_star:";
 //    if(printLog)for( auto e : addToE_star ) cout<<e.first<<" "<<e.second<<" - ";
 
-    for( int n=i+1; n<int(k)-2; ++n )
-        if( !contains( Q_prime, Q.at(n)) && !contains( Q_prime, Q.at(n+1)) )
-            addToE_star.emplace_back( Q.at(n), Q.at(n+1) );
+    if( k > 1 )
+        for( size_t n=i+1; n<k-2; ++n )
+            if( !contains( Q_prime, Q.at(n)) && !contains( Q_prime, Q.at(n+1)) )
+                addToE_star.emplace_back( Q.at(n), Q.at(n+1) );
 
 //    if(printLog)cout<<"add to E_star:";
 //    if(printLog)for( auto e : addToE_star ) cout<<e.first<<" "<<e.second<<" - ";

@@ -40,7 +40,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     alpha = CGAL::max( EPSILON, CGAL::min( alpha, 2*PI/3 ) );
     size_t numCones = rint( ceil( 2*PI / alpha ) );
     assert( numCones > 0 ); // guard against /0
-    double alphaReal = 2*PI / numCones;
+    number_t alphaReal = 2*PI / numCones;
     size_t FINAL_DEGREE_BOUND = 14 + numCones;
 
     vector<Point> P(pointsBegin, pointsEnd);
@@ -80,11 +80,11 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     //************* Step 3 ****************//
     size_tPairSet ePrime;
     vector<bool> isProcessed(n, false);
-    Vertex_handle u_handle = v_inf;
+    //Vertex_handle u_handle = v_inf;
 
     // Iterate through vertices by piU ordering
     for( size_t u : piIndexedByPiU ) {
-        u_handle = handles.at(u);
+        Vertex_handle u_handle = handles.at(u);
         assert( !T.is_infinite(u_handle) );
         Point u_point = u_handle->point();
         isProcessed[u] = true;
@@ -102,7 +102,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         // Track degree and number of processed neighbors to ensure correctness
         size_t processedNeighbors = 0;
         size_t degree = 0;
-        bool inserted = false;
+        //bool inserted = false;
 
         do { // Find closest unprocessed neighbor, also count processed neighbors and neighbors in ePrime
             if( !T.is_infinite(N) ) {
@@ -135,7 +135,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                     u_point,
                     N->point()
                 );
-                size_t cone = size_t( (theta-EPSILON) / alphaReal );
+                auto cone = size_t( (theta-EPSILON) / alphaReal );
                 // trap neighbors in forbidden cones by putting them in 0 (which is already guaranteed to be closest)
                 cone = ( cone < closestInCones.size() ? cone : 0 );
 
@@ -150,10 +150,10 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         }
         // We've found all the closest neighbors in each now,
         // now add edges from each to the current vertex (u)
-        for( auto v : closestInCones ) {
+        for( const auto &v : closestInCones ) {
             if( !T.is_infinite(v) ) {
                 //if( printLog ) cout<<"forward_";
-                inserted = createNewEdge( T, handles, ePrime, u, v->info(), n, printLog );
+                createNewEdge( T, handles, ePrime, u, v->info(), n, printLog );
                 //degree += size_t(inserted);
                 //if( printLog ) cout<<"degree:"<<degree<<",";
             }
@@ -168,7 +168,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                 if( !( T.is_infinite(lastN) || isProcessed.at(lastN->info()) ) ) {
                     // don't add to degree for cross edges, they are not incident on u!
                     //if( printLog ) cout<<"cross_";
-                    inserted = createNewEdge( T, handles, ePrime, lastN->info(), N->info(), n, printLog );
+                    createNewEdge( T, handles, ePrime, lastN->info(), N->info(), n, printLog );
                 }
             }
             lastN = N->handle();

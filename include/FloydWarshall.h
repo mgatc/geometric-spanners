@@ -52,9 +52,9 @@ void FloydWarshall( const DelaunayGraph& G,
 
     // Add distance of each edge (u,v) in G._E to dist[u][v]
     // using indices of u and v mapped in index
-    for( const auto& adjacent : G._E ) {
+    for( const auto& adjacent : G.m_E ) {
         Vertex_handle u = adjacent.first; // get vertex handle
-        for( const Vertex_handle v : adjacent.second )
+        for( const Vertex_handle &v : adjacent.second )
             dist.at(index.at(u)).at(index.at(v)) = make_optional( CGAL::sqrt( CGAL::squared_distance( u->point(), v->point() ) ) );
 
     }
@@ -70,8 +70,6 @@ void FloydWarshall( const DelaunayGraph& G,
 
     // swap the addresses for array we built with the address given in parameters
     swap( dist, distances );
-
-    return;
 }
 
 } // namespace gsnunf

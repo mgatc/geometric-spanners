@@ -142,7 +142,7 @@ namespace gsnunf {
         size_t cone = 0;
         size_t index = 0;
 
-        for (auto point : handles) {
+        for (const auto &point : handles) {
 
             Circ = sdg.incident_vertices(point);
             distances = {INF, INF, INF, INF};
@@ -202,18 +202,18 @@ namespace gsnunf {
 
             } while(++Circ != endpoint); // finished determining the Yao edges + how many points are in fan of u's cone i
 
-            for (size_t cone = 0; cone < 4; cone++) {
+            for (size_t otherCone = 0; otherCone < 4; otherCone++) {
 
-                if (yaoEdges[index][cone].second == 0)
+                if (yaoEdges[index][otherCone].second == 0)
                     continue;
 
-                auto v = yaoEdges[index][cone].first;
+                auto v = yaoEdges[index][otherCone].first;
                 size_t v_id = v->storage_site().info();
 
-                if (yaoEdges[v_id][(cone+2)%4].first != point)
+                if (yaoEdges[v_id][(otherCone+2)%4].first != point)
                 {
-                    ++(yaoEdgeCount[index][cone]);
-                    ++(yaoEdgeCount[v_id][(cone+2)%4]);
+                    ++(yaoEdgeCount[index][otherCone]);
+                    ++(yaoEdgeCount[v_id][(otherCone+2)%4]);
                 }
             }
         } // finished moving through points
@@ -228,7 +228,7 @@ namespace gsnunf {
                                   SDG2 &sdg)
     {
 
-        for (auto u : handles) {
+        for (const auto &u : handles) {
 
             size_t u_id = u->storage_site().info();
 
@@ -327,7 +327,7 @@ namespace gsnunf {
             }
         }
 
-        for (auto u : handles) {
+        for (const auto &u : handles) {
             for (size_t cone = 0; cone < 4; cone++)
             {
                 size_t u_id = u->storage_site().info();
@@ -346,7 +346,7 @@ namespace gsnunf {
 
 
         // now it is time to select anchors
-        for (auto u : handles)
+        for (const auto &u : handles)
         {
             size_t u_id = u->storage_site().info();
 
@@ -426,11 +426,14 @@ namespace gsnunf {
                            const Vertex_handle u,
                            const Vertex_handle v)
     {
-        for (auto edge : edgeList)
-            if ((u == edge.first || u == edge.second) && (v == edge.first || v == edge.second))
-                return true;
 
-        return false;
+//        for (const auto &edge : edgeList)
+//            if ((u == edge.first || u == edge.second) && (v == edge.first || v == edge.second))
+//                return true;
+
+        return any_of(edgeList.begin(), edgeList.end(), [&]( const auto &e ) {
+            return (u == e.first || u == e.second) && (v == e.first || v == e.second);
+        });
     }
 
 
@@ -443,13 +446,13 @@ namespace gsnunf {
                                  SDG2 &sdg)
     {
         // put the edges conal vector
-        for (auto w : handles)
+        for (const auto &w : handles)
         {
             spannerCones edges(4);
             H8[w->storage_site().info()] = edges;
         }
 
-        for (auto w : handles) {
+        for (const auto &w : handles) {
 
             size_t w_id = w->storage_site().info();
 
@@ -572,12 +575,11 @@ namespace gsnunf {
                                const vector<anchorCones> &anchorEdges,
                                const vector<yaoCones> &yaoEdges,
                                const vector<fanCones> &pointFans,
-                               const vector<numYaoEdges> &yaoEdgeCount,
                                const vector<Vertex_handle> &handles,
                                const SDG2 &sdg)
     {
 
-        for (auto u : handles) {
+        for (const auto &u : handles) {
 
             size_t u_id = u->storage_site().info();
 
@@ -632,9 +634,9 @@ namespace gsnunf {
 
                             // it's time to process edges
 
-                            for (size_t i = 0; i < total; i += 2) {
+                            for (size_t j = 0; j < total; j += 2) {
 
-                                size_t l = (total-i);
+                                size_t l = (total - j);
 
                                 auto finish = visited.at(l);
                                 auto start = visited.at(l-1);
@@ -642,15 +644,15 @@ namespace gsnunf {
                                 size_t finish_id = finish->storage_site().info();
                                 size_t start_id = start->storage_site().info();
 
-                                spannerEdge edge = std::make_pair(start, finish);
+                                spannerEdge newEdge = std::make_pair(start, finish);
 
-                                for (size_t i = 0; i < 4; i++) {
+                                for (size_t k = 0; k < 4; k++) {
 
-                                    while (inEdgeList(H8[start_id][i], start, finish))
-                                        H8[start_id][i].erase(find(H8[start_id][i].begin(), H8[start_id][i].end(), edge));
+                                    while (inEdgeList(H8[start_id][k], start, finish))
+                                        H8[start_id][k].erase(find(H8[start_id][k].begin(), H8[start_id][k].end(), newEdge));
 
-                                    while (inEdgeList(H8[finish_id][i], start, finish))
-                                        H8[finish_id][i].erase(find(H8[finish_id][i].begin(), H8[finish_id][i].end(), edge));
+                                    while (inEdgeList(H8[finish_id][k], start, finish))
+                                        H8[finish_id][k].erase(find(H8[finish_id][k].begin(), H8[finish_id][k].end(), newEdge));
 
                                 }
                             }
@@ -660,7 +662,7 @@ namespace gsnunf {
             }
         }
 
-        for (auto u : handles) {
+        for (const auto &u : handles) {
 
             size_t u_id = u->storage_site().info();
             Vertex_circulator middle = sdg.incident_vertices(u);
@@ -807,13 +809,13 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     degreeEightSpanner(H8, anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
 
 
-    processSpanner(H8, anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
+    processSpanner(H8, anchorEdges, yaoEdges, pointFans, handles, sdg);
 
     vector<size_tPair> edgeList;
 
-    for (auto u : handles) {
+    for (const auto &u : handles) {
         for (size_t cone = 0; cone < 4; cone++) {
-            for (auto edge : H8[u->storage_site().info()][cone]) {
+            for (const auto &edge : H8[u->storage_site().info()][cone]) {
                 edgeList.emplace_back( (edge.first)->storage_site().info(),
                                        (edge.second)->storage_site().info() );
             }

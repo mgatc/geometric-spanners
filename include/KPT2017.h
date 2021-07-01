@@ -34,7 +34,7 @@ typedef HalfThetaTriangulation<K> TD_Delaunay_2;
 typedef TD_Delaunay_2::Vertex_descriptor Vertex_descriptor;
 
 enum Color {
-    BLUE, WHITE, RED = WHITE, GREEN = WHITE
+    BLUE, WHITE
 };
 enum ConePolarity {
     POSITIVE = 0, // even cones
@@ -61,14 +61,11 @@ inline ConePolarity getConePolarity( const size_t p, const size_t q, const vecto
 inline number_t bisectorLength( const size_tPair &e, const vector<Point> &h )
 {
     size_t cone = getCone(e.first, e.second, h);
-
-    number_t xCord = h.at(e.first).x();
-    number_t yCord = h[e.first].y() + 1;
-
     assert(cone<6);
     assert(e.first<h.size());
 
-    xCord = h[e.first].x() - orthBisectorSlopes.at(cone);
+    number_t xCord =  h[e.first].x() - orthBisectorSlopes.at(cone);
+    number_t yCord = h[e.first].y() + 1;
 
     Point bisectorPoint(xCord, yCord);
 
@@ -477,8 +474,8 @@ void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         addWhiteAnchors( Anchors[WHITE], P, A );
 
         // Step 3.
-        typedef map<size_t, set<size_t>> AdjacencyList;
-        AdjacencyList S_not_A;
+        typedef map<size_t, set<size_t>> AdjacencyListMap;
+        AdjacencyListMap S_not_A;
         // Add to S every canonical edge in negative blue cones (cone 1) if the edge isn't in A
         addBlueCanonicalEdges(D,A,Anchors[BLUE],S_not_A);
 
@@ -498,8 +495,8 @@ void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         set<size_tPair> S( A.begin(), A.end() );
 
         //cout<<"Adding S_not_A to S...\n";
-        for( auto v : S_not_A ) {
-            if( v.second.size() > 0) {
+        for( const auto& v : S_not_A ) {
+            if( !v.second.empty() ) {
                 for( auto u : v.second ) {
                     S.emplace( u, v.first );
                 }
@@ -507,13 +504,14 @@ void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         }
 
         // Send resultant graph to output iterator
-        for(auto e : S)
-        {
-            *result = e;
-            ++result;
-//            *result = reverse_pair(e);
+        std::copy( S.begin(), S.end(), result );
+//        for(auto e : S)
+//        {
+//            *result = e;
 //            ++result;
-        }
+////            *result = reverse_pair(e);
+////            ++result;
+//        }
 
 
 

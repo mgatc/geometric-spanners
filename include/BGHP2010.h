@@ -43,34 +43,22 @@ enum EdgeLabel { // per cone
     LAST = -1
 };
 
-enum ConePolarity {
-    POSITIVE = 0, // even cones
-    NEGATIVE = 1  // odd cones
-};
-
-inline ConePolarity getConePolarity( const size_t p, const size_t q, const vector<Point> &h )
-{
-    return ConePolarity( getCone(p,q,h) % 2 );
-}
-
 template< class Container >
-inline double get_canonical_angle( const size_t p, const size_t q, const size_t r, const Container &P )
+inline number_t get_canonical_angle( const size_t p, const size_t q, const size_t r, const Container &P )
 {
     return CGAL::min( get_angle(p,q,r,P), get_angle(r,q,p,P) );
 }
 
 //Finds the bisector length of a given edge.
-inline K::FT bisectorLength( const pair<size_t,size_t> &e, const vector<Point> &h )
+inline number_t bisectorLength( const size_tPair &e, const vector<Point> &h )
 {
     size_t cone = getCone(e.first, e.second, h);
 
-    double xCord = h.at(e.first).x();
-    double yCord = h[e.first].y() + 1;
+//    assert(cone<6);
+//    assert(e.first<h.size());
 
-    assert(cone<6);
-    assert(e.first<h.size());
-
-    xCord = h[e.first].x() - orthBisectorSlopes.at(cone);
+    number_t xCord = h[e.first].x() - orthBisectorSlopes[cone];
+    number_t yCord = h[e.first].y() + 1;
 
     Point bisectorPoint(xCord, yCord);
 
@@ -78,7 +66,7 @@ inline K::FT bisectorLength( const pair<size_t,size_t> &e, const vector<Point> &
 
     Point intersectionPoint = bisectorLine.projection(h[e.second]);
 
-    double bisectorLen = distance(h[e.first], intersectionPoint);
+    number_t bisectorLen = distance(h[e.first], intersectionPoint);
 
     return bisectorLen;
 }

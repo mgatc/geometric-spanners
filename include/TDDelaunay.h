@@ -13,41 +13,10 @@
 
 #include "utilities.h"
 
-//namespace std {
-//    template < class Gt >
-//    struct hash<Vertex_base<Gt>> {
-//        size_t operator()(const Vertex_base<Gt>& v) const {
-//            size_t seed = 0;
-//
-//            boost::hash_combine(seed, boost::hash_value(v->point()));
-//
-//            return seed;
-//        }
-//    };
-//}
+
 
 namespace gsnunf {
 
-//template< class Gt >
-//class Vertex_base {
-//  public:
-//    typedef typename Gt::Point_2 Point_2;
-//    Vertex_base() {}
-//    Vertex_base(const Point_2& p) : _p(p) {}
-//    void set_point(const Point_2& p) { _p = p; }
-//    const Point_2&  point() const { return _p; }
-//    friend bool operator<(const Vertex_base<Gt>& l, const Vertex_base<Gt>& r ) {
-//        return l->point() < r->point();
-//    }
-//    bool operator==(const Vertex_base<Gt>& other) const {
-//        return _p == other->point();
-//    }
-//  private:
-//    Point_2 _p;
-//};
-//class Vertex_circulator {
-//
-//};
 //Cone angles.
 const number_t tan30 = TAN30;
 const number_t cot30 = 1 / tan30;
@@ -55,18 +24,18 @@ const number_t cot30 = 1 / tan30;
 const number_t alpha = PI/3;
 
 //Slopes of the cone boundary lines.
-const vector<number_t> bisectorSlopes{ INF, tan30, -1*tan30, INF, tan30, -1*tan30 };
+//const vector<number_t> bisectorSlopes{ INF, tan30, -1*tan30, INF, tan30, -1*tan30 };
 const vector<number_t> orthBisectorSlopes{ 0, -1*cot30, cot30, 0, -1*cot30, cot30 };
 
 //Finds the cone of p containing vertex q, for this algorithm all vertices have 6 cones (0-5) with an angle of (PI/3).
-template<class Point>
-inline size_t getSingleCone(const size_t p, const size_t q, const vector<Point> &h)
+template<class Point_2>
+inline size_t getSingleCone(const size_t p, const size_t q, const vector<Point_2> &h)
 {
     if( CGAL::compare_y(h[p], h[q]) == CGAL::EQUAL ) {
         return 1 + 3*int(CGAL::compare_x(h[p], h[q]) == CGAL::LARGER);
     }
-    const Point refPoint( h.at(p).x() - tan30, h[p].y() + 1 );
-    //Point refPoint(h[p]->point().x(), h[p] ->point().y() + 1);
+    const Point_2 refPoint(h.at(p).x() - tan30, h[p].y() + 1 );
+    //Point_2 refPoint(h[p]->point().x(), h[p] ->point().y() + 1);
 
     number_t theta = get_angle(refPoint, h[p], h.at(q));
 

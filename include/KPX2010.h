@@ -101,7 +101,7 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                     m->point(),
                     N->point()
                 );
-                size_t cone = size_t( theta / alpha );
+                auto cone = size_t( theta / alpha );
                 //if(printLog) cout<<"N:"<<N->info()<<",theta:"<<theta<<",cone:"<<cone<<",";
 
                 if( T.is_infinite( closestInCones.at(cone) )
@@ -174,7 +174,7 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
             //return;
             if( l > 1 ) {
                 // select the first ceil(l/2) unselected edges CCW
-                size_t remainingToAdd = size_t(rint(ceil(l/2.0)));
+                auto remainingToAdd = size_t(rint(ceil(l/2.0)));
                 //if( printLog ) cout << "CCWadds:"<< remainingToAdd<<",";
 
                 while( remainingToAdd > 0 && ++N != afterSequence ) {
@@ -223,7 +223,7 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
         bool inserted = false;
         // now add edges from each to the current vertex (u)
-        for( auto v : selected ) {
+        for( const auto& v : selected ) {
             if( !T.is_infinite(v) ) {
                 //if( printLog ) cout<<"forward_";
                 inserted = selectEdge( T, G_prime, m, v );

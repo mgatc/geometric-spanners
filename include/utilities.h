@@ -24,6 +24,13 @@ namespace gsnunf {
 
 using namespace std;
 
+
+typedef CGAL::Exact_predicates_inexact_constructions_kernel     K;
+
+typedef K::Point_2                                              Point;
+typedef K::Vector_2                                             Vector_2;
+typedef K::FT                                                   number_t;
+
 typedef size_t index_t;
 typedef size_t cone_t;
 
@@ -80,18 +87,18 @@ inline std::pair<T,T> makeNormalizedPair( const T& i, const T& j ) {
 }
 
 template< typename Point >
-inline double distance( Point p, Point q ) {
-    return CGAL::sqrt( CGAL::squared_distance(p,q) );
+inline number_t distance( Point p, Point q ) {
+    return p == q ? 0 : CGAL::sqrt( CGAL::squared_distance(p,q) );
 }
 
 template< class Point_2 >
-inline double get_angle( const Point_2& p, const Point_2& q, const Point_2& r ) {
+inline number_t get_angle( const Point_2& p, const Point_2& q, const Point_2& r ) {
     //CGAL::Vector_2<K> pq( p, q );
     //CGAL::Vector_2<K> rq( r, q );
     auto pq = q - p,
          rq = q - r;
 
-    double result = atan2( pq.y(), pq.x() ) - atan2( rq.y(), rq.x() );
+    number_t result = atan2( pq.y(), pq.x() ) - atan2( rq.y(), rq.x() );
 
     // atan() returns a value between -PI and PI. From zero ("up"), CCW rotation is negative and CW is positive.
     // Our zero is also "up," but we only want positive values between 0 and 2*PI:

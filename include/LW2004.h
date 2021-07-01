@@ -181,7 +181,7 @@ void LW2004( RandomAccessIterator pointsBegin,
                         N->point()
                     );
                     // get angle will return 360 for any angle(vuv) (we want it to be 0 here)
-                    size_t cone = size_t( (theta-EPSILON) / alphaReal.at(sector) );
+                    auto cone = size_t( (theta-EPSILON) / alphaReal.at(sector) );
                     if( cone >= closest.at(sector).size() )
                         cone = 0;
                     // Store value until after all neighbors are processed, then add
@@ -210,8 +210,8 @@ void LW2004( RandomAccessIterator pointsBegin,
         }
 
         // Add edges in closest
-        for( auto segment : closest )
-            for( auto v : segment )
+        for( const auto& segment : closest )
+            for( const auto& v : segment )
                 if( !T.is_infinite(v) ) {
 //                    if( printLog ) cout<<"forward_";
                     createNewEdge( T, handles, ePrime, u, v->info(), n, false );

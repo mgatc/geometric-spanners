@@ -39,7 +39,7 @@ class GraphPrinter {
     double activeEdgeWidth = 2.0;
     double inactiveEdgeWidth = 1.0;
 
-    GraphPrinter( double scale = 1.0 )
+    explicit GraphPrinter( double scale = 1.0 )
       : _scaleFactor(scale), _resizeFactor(1) {
         // define colors in the document
         defineColor(activeEdgeColor);
@@ -154,9 +154,9 @@ class GraphPrinter {
         drawVertexWithLabel( x, y, "", options );
     }
 
-    void drawVertexWithLabel( double x, double y, string label, const OptionsList& options = {}, const OptionsList& borderOptions = {} ) {
+    void drawVertexWithLabel( double x, double y, const string &label, const OptionsList& options = {}, const OptionsList& borderOptions = {} ) {
 
-        if( label == "" ){
+        if( label.empty() ){
             stringstream stream;
             stream << fixed << setprecision(1);
             stream << x << "," << y;
@@ -170,7 +170,7 @@ class GraphPrinter {
             + ") {"
                 + label
             + "};\n";
-        if( borderOptions.size() > 0 ) {
+        if( !borderOptions.empty() ) {
             _document += "\\node () [draw,"
                 + expandOptions( borderOptions )
             + "] at ("
@@ -182,8 +182,8 @@ class GraphPrinter {
     }
 
     void drawEdges( const DelaunayGraph& DG, const OptionsList& options = {} ) {
-        for( auto el : DG._E ) {
-            for( auto v : el.second ) {
+        for( const auto &el : DG.m_E ) {
+            for( const auto& v : el.second ) {
                 //std::cout << el.first->point() << " " << v->point() << "\n";
                 double x1 = el.first->point().x();
                 double y1 = el.first->point().y();
@@ -220,7 +220,7 @@ class GraphPrinter {
             + to_string(x1*_scaleFactor) + "," + to_string(y1*_scaleFactor) + ") -- ("
             + to_string(x2*_scaleFactor) + "," + to_string(y2*_scaleFactor) + ");\n";
     }
-    void defineColor( string hex ) {
+    void defineColor( const string& hex ) {
         // parse the hex value
         vector<size_t> color = parseHexRGB( hex );
         // add color to document
@@ -234,8 +234,8 @@ class GraphPrinter {
         _colors.insert( hex );
     }
 
-    string expandOptions( const OptionsList& options ) {
-        string optionsString("");
+    static string expandOptions( const OptionsList& options ) {
+        string optionsString;
         for( auto& o : options ) {
             optionsString += o.first
                 + ( o.second?("=" + *o.second):"") // include second param if given
@@ -244,7 +244,7 @@ class GraphPrinter {
         // remove trailing comma
         return optionsString.substr( 0, optionsString.size()-1 );
     }
-    vector<size_t> parseHexRGB( string hex_str ) {
+    static vector<size_t> parseHexRGB( const string& hex_str ) {
         // the hex string should contain 6 digits
         // three 2-digit hex numbers
         vector<size_t> rgb(3, 0);
@@ -280,7 +280,7 @@ class GraphPrinter {
     double _scaleFactor;
     double _resizeFactor;
     string _outputFilePrefix = "out-";
-    string _document = "";
+    string _document;
     string _header = string("")
         + "\\documentclass[margin=3mm]{standalone} \n"
         + "\\usepackage{tikz}  \n "

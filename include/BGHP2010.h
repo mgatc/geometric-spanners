@@ -48,7 +48,7 @@ enum ConePolarity {
     NEGATIVE = 1  // odd cones
 };
 
-inline ConePolarity getConePolarity( const size_t p, const size_t q, const vector<Point_2> &h )
+inline ConePolarity getConePolarity( const size_t p, const size_t q, const vector<Point> &h )
 {
     return ConePolarity( getCone(p,q,h) % 2 );
 }
@@ -60,7 +60,7 @@ inline double get_canonical_angle( const size_t p, const size_t q, const size_t 
 }
 
 //Finds the bisector length of a given edge.
-inline K::FT bisectorLength( const pair<size_t,size_t> &e, const vector<Point_2> &h )
+inline K::FT bisectorLength( const pair<size_t,size_t> &e, const vector<Point> &h )
 {
     size_t cone = getCone(e.first, e.second, h);
 
@@ -72,11 +72,11 @@ inline K::FT bisectorLength( const pair<size_t,size_t> &e, const vector<Point_2>
 
     xCord = h[e.first].x() - orthBisectorSlopes.at(cone);
 
-    Point_2 bisectorPoint(xCord, yCord);
+    Point bisectorPoint(xCord, yCord);
 
     K::Line_2 bisectorLine(h[e.first], bisectorPoint);
 
-    Point_2 intersectionPoint = bisectorLine.projection(h[e.second]);
+    Point intersectionPoint = bisectorLine.projection(h[e.second]);
 
     double bisectorLen = distance(h[e.first], intersectionPoint);
 
@@ -346,7 +346,7 @@ void BGHP2010(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     using namespace bghp2010;
 
     // Step 1
-    vector<Point_2> P( pointsBegin, pointsEnd );
+    vector<Point> P( pointsBegin, pointsEnd );
     TD_Delaunay_2 D( P.begin(), P.end() );
 
     {
@@ -425,7 +425,7 @@ void BGHP2010(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         // START PRINTER NONSENSE
         if(printLog)
         {
-            vector<pair<Point_2,Point_2>> edgeList;
+            vector<pair<Point,Point>> edgeList;
 
             GraphPrinter printer;
             printer.autoscale( P.begin(), P.end(),20 );

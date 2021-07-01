@@ -34,11 +34,6 @@ using namespace std;
 
 namespace bghp2010 {
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel Epick;
-typedef Epick                     K;
-typedef K::Point_2                Point_2;
-typedef K::FT                     FT;
-
 typedef HalfThetaTriangulation<K> TD_Delaunay_2;
 typedef TD_Delaunay_2::Vertex_descriptor Vertex_descriptor;
 
@@ -241,7 +236,7 @@ void add_i_relevantNeighbors(  KeyEdgeList &KeyEdges,
             {
                 size_t i = (posCone + 6 + j) % 6;
                 //size_t iLessOne = (i - 1 + 6) % 6;
-                EdgeLabel w_label = static_cast<EdgeLabel>(j); // FIRST or LAST
+                auto w_label = static_cast<EdgeLabel>(j); // FIRST or LAST
                 auto w = KeyEdges[w_label][u][i/2];
 
                 if( is_i_relevant( w, u, v, posCone, P, KeyEdges ) ) {

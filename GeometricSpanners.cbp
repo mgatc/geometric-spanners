@@ -14,9 +14,6 @@
 				<Option parameters="10 100 1000 100" />
 				<Compiler>
 					<Add option="-g" />
-					<Add option="-std=c++17" />
-					<Add option="-frounding-math" />
-					<Add option="-fexceptions" />
 					<Add directory="include" />
 				</Compiler>
 			</Target>
@@ -28,9 +25,6 @@
 				<Option parameters="10 100 1000 100" />
 				<Compiler>
 					<Add option="-O3" />
-					<Add option="-std=c++17" />
-					<Add option="-frounding-math" />
-					<Add option="-fexceptions" />
 					<Add directory="include" />
 				</Compiler>
 				<Linker>
@@ -69,6 +63,7 @@
 			<Option target="Release" />
 		</Unit>
 		<Unit filename="include/BCC2012.h" />
+		<Unit filename="include/BGHP2010.h" />
 		<Unit filename="include/BGS2005.h" />
 		<Unit filename="include/BHS2017.h" />
 		<Unit filename="include/BKPX2015.h" />
@@ -76,7 +71,6 @@
 		<Unit filename="include/DelaunayGraph.h" />
 		<Unit filename="include/FloydWarshall.h" />
 		<Unit filename="include/GeometricSpannerPrinter.h" />
-		<Unit filename="include/GraphAlgoTV.h" />
 		<Unit filename="include/KPT2017.h" />
 		<Unit filename="include/KPX2010.h" />
 		<Unit filename="include/LW2004.h" />

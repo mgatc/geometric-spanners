@@ -25,8 +25,6 @@ class GraphPrinter {
   public:
     typedef pair<string,optional<string>> Option;
     typedef vector<Option> OptionsList;
-
-    double _scaleFactor;
     unordered_set<string> _colors;
 
     string activeEdgeColor =     "000000";
@@ -42,7 +40,7 @@ class GraphPrinter {
     double inactiveEdgeWidth = 1.0;
 
     GraphPrinter( double scale = 1.0 )
-      : _scaleFactor(scale) {
+      : _scaleFactor(scale), _resizeFactor(1) {
         // define colors in the document
         defineColor(activeEdgeColor);
         defineColor(inactiveEdgeColor);
@@ -279,6 +277,8 @@ class GraphPrinter {
     }
 
   private:
+    double _scaleFactor;
+    double _resizeFactor;
     string _outputFilePrefix = "out-";
     string _document = "";
     string _header = string("")

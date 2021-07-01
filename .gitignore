@@ -10,3 +10,10 @@ send/
 build*/
 data-*
 out-*
+include/workspace.code-workspace
+.vscode/settings.json
+.vscode/launch.json
+.vs/geometric-spanners/v16/Browse.VC.opendb
+.vs/geometric-spanners/v16/Browse.VC.db-wal
+.vs/geometric-spanners/v16/Browse.VC.db-shm
+.sfdx/tools/apex.db

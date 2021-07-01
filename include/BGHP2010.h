@@ -434,6 +434,7 @@ void BGHP2010(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
             GraphPrinter printer;
             printer.autoscale( P.begin(), P.end(),20 );
+
             GraphPrinter::OptionsList options;
 
             options = {

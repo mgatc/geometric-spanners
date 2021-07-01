@@ -315,7 +315,8 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //
     double t;
 
-    // Delaunay triangulation
+    // STANDARD L2 DELAUNAY TRIANGULATION BASED ALGORITHMS ///////////////
+
     //CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
 //                cout << degree(DT);
 //                cout << ",";
@@ -345,6 +346,9 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout <<"\n";
 //
 //    result.clear();
+
+
+
 
     cout<< points.size();
     cout<< ",";
@@ -413,62 +417,14 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-
     cout<< points.size();
     cout<< ",";
     cout<< size;
     cout<< ",";
-    cout<< "BHS2017,";
+    cout<< "KX2012,";
     {
         Timer tim;
-        BHS2017( points.begin(), points.end(), back_inserter(result), printLog );
-    }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-    result.clear();
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout << "BKPX2015, ";
-    {
-        Timer tim;
-        BKPX2015( points.begin(), points.end(), back_inserter(result), printLog );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-    result.clear();
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "KPT2017,";
-    {
-        Timer tim;
-        KPT2017( points.begin(), points.end(), back_inserter(result), printLog );
+        KX2012( points.begin(), points.end(), back_inserter(result), printLog );
     }
 
     deg = degree( result.begin(), result.end() );
@@ -532,6 +488,33 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    cout<< "BHS2017,";
+    {
+        Timer tim;
+        BHS2017( points.begin(), points.end(), back_inserter(result), printLog );
+    }
+
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+    if(measureStretchFactor){
+        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        cout << t;
+    }
+    cout <<"\n";
+    result.clear();
+
+
+
+
+    // TD-DELAUNAY / HALF-THETA-6 GRAPH BASED ALGORITHMS /////////////
+
     cout<< points.size();
     cout<< ",";
     cout<< size;
@@ -559,10 +542,10 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     cout<< ",";
     cout<< size;
     cout<< ",";
-    cout<< "KX2012,";
+    cout<< "KPT2017,";
     {
         Timer tim;
-        KX2012( points.begin(), points.end(), back_inserter(result), printLog );
+        KPT2017( points.begin(), points.end(), back_inserter(result), printLog );
     }
 
     deg = degree( result.begin(), result.end() );
@@ -575,6 +558,31 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     }
     cout <<"\n";
     result.clear();
+
+
+
+    // Linf DELAUNAY GRAPH BASED ALGORITHMS /////////////////////////////
+
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    cout << "BKPX2015, ";
+    {
+        Timer tim;
+        BKPX2015( points.begin(), points.end(), back_inserter(result), printLog );
+    }
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+    if(measureStretchFactor){
+        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        cout << t;
+    }
+    cout <<"\n";
+    result.clear();
+
 
 
 

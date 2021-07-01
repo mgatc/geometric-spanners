@@ -10,6 +10,7 @@
 
 #include <CGAL/circulator.h>
 #include <CGAL/Delaunay_triangulation_2.h>
+#include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Vector_2.h>
 
@@ -26,15 +27,21 @@ class DelaunayGraph {
   public:
     /* Types */
     typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-    typedef CGAL::Delaunay_triangulation_2<K> Delaunay_triangulation_2;
+    typedef K::FT FT;
+    typedef K::Point_2 Point;
+    typedef K::Vector_2 Vector_2;
+
+    typedef CGAL::Triangulation_vertex_base_with_info_2<size_t, K>    Vb;
+    typedef CGAL::Triangulation_face_base_2<K>                          Fb;
+    typedef CGAL::Triangulation_data_structure_2<Vb, Fb>                Tds;
+    typedef CGAL::Delaunay_triangulation_2<K, Tds> Delaunay_triangulation_2;
+
     typedef Delaunay_triangulation_2::Vertex_handle Vertex_handle;
     typedef Delaunay_triangulation_2::Vertex_circulator Vertex_circulator;
     typedef Delaunay_triangulation_2::Finite_vertices_iterator Finite_vertices_iterator;
     typedef Delaunay_triangulation_2::Finite_edges_iterator Finite_edges_iterator;
     typedef Delaunay_triangulation_2::Face_handle Face_handle;
-    typedef K::FT FT;
-    typedef K::Point_2 Point;
-    typedef CGAL::Vector_2<K> Vector_2;
+
     typedef CGAL::Container_from_circulator<Vertex_circulator> Vertex_container;
 
     typedef set<Vertex_handle> VertexSet;
@@ -58,7 +65,22 @@ class DelaunayGraph {
     /* Functions */
     DelaunayGraph() {}
     template< typename RandomAccessIterator >
-    DelaunayGraph( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd ) : _DT( pointsBegin, pointsEnd ) {}
+    DelaunayGraph( RandomAccessIterator pointsBegin,
+                   RandomAccessIterator pointsEnd )
+    {
+        vector<Point> P(pointsBegin, pointsEnd);
+        vector<size_t> index;
+        spatialSort<K>(P, index);
+
+        /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
+          (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
+        Face_handle hint;
+        for(size_t entry : index) {
+            auto vh = _DT.insert(P[entry], hint);
+            hint = vh->face();
+            vh->info() = entry;
+        }
+    }
 
     template< typename RandomAccessIterator >
     // kitty: bnnnnn23333333333333333333333,m000000000000000000000000000000000000000000000000000000000re	IIIKKKKKKKKKKKHUG0

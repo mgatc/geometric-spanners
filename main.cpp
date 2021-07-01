@@ -17,6 +17,7 @@
 //#include "GeometricSpannerPrinter.h"
 ////#include "GraphAlgoTV.h"
 #include "BGS2005.h"
+//#include "BGS2005_2.h"
 #include "LW2004.h"
 #include "BSX2009.h"
 #include "KPX2010.h"
@@ -324,28 +325,28 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //                cout << ",";
 
 
-//    cout<< points.size();
-//    cout<< ",";
-//    cout<< size;
-//    cout<< ",";
-//    cout<< "BGS2005,";
-//
-//    {
-//        Timer tim;
-//        BGS2005( points.begin(), points.end(), back_inserter(result) );
-//    }
-//
-//    deg = degree( result.begin(), result.end() );
-//    cout << deg;
-//    cout <<",";
-//
-//      if(measureStretchFactor){
-//    t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-//    cout << t;
-//      }
-//    cout <<"\n";
-//
-//    result.clear();
+    cout<< points.size();
+    cout<< ",";
+    cout<< size;
+    cout<< ",";
+    cout<< "BGS2005,";
+
+    {
+        Timer tim;
+        BGS2005( points.begin(), points.end(), back_inserter(result) );
+    }
+
+    deg = degree( result.begin(), result.end() );
+    cout << deg;
+    cout <<",";
+
+    if(measureStretchFactor){
+        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+        cout << t;
+    }
+    cout <<"\n";
+
+    result.clear();
 
 
 
@@ -588,29 +589,29 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-    if( deg > 11 || t > 7 || forcePrint ) {
-
-       string resultFileName = ( filename ? *filename : *generatedFile );
-       // strip file extension
-       const std::string ext(".txt");
-       if ( resultFileName != ext &&
-            resultFileName.size() > ext.size() &&
-            resultFileName.substr(resultFileName.size() - ext.size()) == ext )
-       {
-          // if so then strip them off
-          resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
-       }
-       resultFileName += "_result-";
-       resultFileName += ( filename ? "redo" : "orig" );
-
-       cout << "DEGREE ERROR!!! DEGREE:" << deg << "\n"<<endl;
-       cout << *generatedFile <<endl;
-
-       if( generatedFile )
-           singleRun( n, width, resultFileName, *generatedFile, true, true );
-
-       return false;
-    }
+//    if( deg > 11 || t > 7 || forcePrint ) {
+//
+//       string resultFileName = ( filename ? *filename : *generatedFile );
+//       // strip file extension
+//       const std::string ext(".txt");
+//       if ( resultFileName != ext &&
+//            resultFileName.size() > ext.size() &&
+//            resultFileName.substr(resultFileName.size() - ext.size()) == ext )
+//       {
+//          // if so then strip them off
+//          resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
+//       }
+//       resultFileName += "_result-";
+//       resultFileName += ( filename ? "redo" : "orig" );
+//
+//       cout << "DEGREE ERROR!!! DEGREE:" << deg << "\n"<<endl;
+//       cout << *generatedFile <<endl;
+//
+//       if( generatedFile )
+//           singleRun( n, width, resultFileName, *generatedFile, true, true );
+//
+//       return false;
+//    }
 
     cout<<endl;
 

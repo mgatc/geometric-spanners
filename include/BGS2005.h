@@ -337,12 +337,11 @@ void TransformPolygon( const DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEd
     v_1_finder = SG.orient_circulator( v_1_finder, v_inf );
     ++v_1_finder; // rotate once CCW
 
-    SplitVertex s_first( s_1_finder, 0 ); // v_1 will need an s_1 to point to
-    SplitVertex v_1( v_1_finder, s_first ),
-                   v_next( v_1 ); // used in the traversal to hold vertex before insertion
+    SplitVertex s_1( s_1_finder, 0 ); // v_1 will need an s_1 to point to
 
-    SplitVertex s_1 = s_first;
-    SplitVertex v_i = V.at( add_vertex( V, v_1_finder, s_1 ) );
+    SplitVertex v_1 = V.at( add_vertex( V, v_1_finder, s_1 ) ),
+                v_i = v_1,
+                v_next = v_1;
     //cout<<v_i<<"\n";
 
     Vertex_circulator N;
@@ -678,7 +677,7 @@ void BGS2005( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     for( auto const& adj : G._E ) {
         Vertex_handle v_1 = adj.first;
         for( auto const& v_2 : adj.second ) {
-            *result = make_pair( v_1->point(), v_2->point() );
+            *result = make_pair( v_1->info(), v_2->info() );
             ++result;
         }
     }

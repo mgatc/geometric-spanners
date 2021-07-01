@@ -34,18 +34,19 @@ optional<N> min( const optional<N>& ij, const pair< optional<N>,optional<N> >& i
 
 } // namespace floyd_warshall
 
-void FloydWarshall( const DelaunayGraph& G, const DelaunayGraph::template VertexMap<size_t>& index, vector< vector< optional<DelaunayGraph::FT> > >& distances ) {
+void FloydWarshall( const DelaunayGraph& G,
+                    const VertexMap<size_t>& index,
+                    vector< vector< optional<number_t> > >& distances ) {
     using namespace floyd_warshall;
-    using Vertex_handle = DelaunayGraph::Vertex_handle;
     size_t N = G.n();
 
     // Create an NxN table to hold distances.
-    vector< vector< optional<DelaunayGraph::FT> > > dist( N, vector< optional<DelaunayGraph::FT> >( N, nullopt ) );
+    vector< vector< optional<number_t> > > dist( N, vector< optional<number_t> >( N, nullopt ) );
     // container constructor should initialize optionals using default constructor, aka nullopt, aka infinity
 
     // Set all i==j to 0 (distance to self)
     for( size_t i=0; i<N; ++i )
-        dist.at(i).at(i) = make_optional( DelaunayGraph::FT(0) );
+        dist.at(i).at(i) = make_optional( number_t(0) );
 
     assert( index.size() == N );
 

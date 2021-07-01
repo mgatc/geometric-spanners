@@ -6,7 +6,11 @@
 #include <iostream>
 #include <limits>
 #include <string>
+#include <unordered_set>
 #include <vector>
+
+#include <boost/functional/hash.hpp> // hashing pairs
+#include <boost/heap/fibonacci_heap.hpp> // ordering
 
 #include <CGAL/boost/iterator/counting_iterator.hpp>
 #include <CGAL/Kernel/global_functions.h>
@@ -19,6 +23,14 @@
 namespace gsnunf {
 
 using namespace std;
+
+typedef size_t index_t;
+typedef size_t cone_t;
+
+typedef pair<size_t,size_t>                             size_tPair;
+typedef boost::hash<size_tPair>                         size_tPairHash;
+typedef unordered_set<size_tPair,size_tPairHash>        size_tPairSet;
+typedef unordered_map<size_tPair,bool,size_tPairHash>   size_tPairMap;
 
 const double EPSILON = 0.000001;
 const double INF = std::numeric_limits<double>::infinity();
@@ -154,6 +166,77 @@ void spatialSort(vector<typename K::Point_2> &P, vector<size_t> &index)
                         index.end(),
                         Search_traits_2(CGAL::make_property_map(P)) );
     //cout<<"done sorting"<<endl;
+}
+
+
+
+
+struct comparatorForMinHeap {
+    bool operator()(const size_tPair &n1, const size_tPair &n2) const {
+        return (n1.first > n2.first) || ((n1.first == n2.first) && (n1.second > n2.second));
+    }
+};
+template< class Graph, class OutputIterator>
+void reverseLowDegreeOrdering( const Graph &T, OutputIterator out )
+{
+
+
+    typedef boost::heap::fibonacci_heap<size_tPair,boost::heap::compare<comparatorForMinHeap>> Heap;
+    typedef Heap::handle_type handle;
+    typedef typename Graph::Vertex_circulator Vertex_circulator;
+
+    const size_t n = T.number_of_vertices();
+
+    Heap H;
+    vector<handle> handleToHeap(n);
+    //vector<size_t> piIndexedByV(n);
+    vector<size_t> piIndexedByPiU(n);
+    vector<unordered_set<size_t>> currentNeighbors(n);
+
+    // Initialize the vector currentNeighbors with appropriate neighbors for every vertex
+    for( auto it=T.finite_vertices_begin();
+         it!=T.finite_vertices_end(); ++it )
+    {
+        Vertex_circulator N = T.incident_vertices(it),
+            done(N);
+        do {
+            if( !T.is_infinite(N) )
+                currentNeighbors.at(it->info()).insert( N->info() );
+        } while( ++N != done );
+
+        size_t degree = currentNeighbors.at(it->info()).size();
+        handleToHeap[it->info()] = H.emplace( degree, it->info() );
+    }
+
+    // Use a heap to walk through G_0 to G_{n-1} and set up the Pi for every vertex
+    size_t i = n-1; // start at the last valid index
+
+    while( !H.empty() ) {
+        size_tPair p = H.top();
+        H.pop();
+        // make sure our math is correct, e.g., degree from heap key matches neighbor container size
+        assert( p.first == currentNeighbors.at( p.second ).size() );
+        assert( 0 <= p.first && p.first <= 5 ); // Lemma 1
+
+        // Erase this vertex from incidence list of neighbors and update the neighbors' key in the heap
+        for( size_t neighbor : currentNeighbors.at( p.second ) ) {
+            currentNeighbors.at(neighbor).erase(p.second);
+            handle h = handleToHeap.at(neighbor);
+            size_tPair q = make_pair( currentNeighbors.at( neighbor ).size(), neighbor );
+            H.update(h,q);
+            H.update(h);
+        }
+        currentNeighbors.at(p.second).clear();
+        //piIndexedByV[p.second] = i;
+        piIndexedByPiU[i] = p.second;
+        --i;
+    }
+
+    for( auto v : piIndexedByPiU )
+    {
+        *out = v;
+        ++out;
+    }
 }
 
 

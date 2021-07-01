@@ -9,16 +9,12 @@
 #include <unordered_map> // G_prime
 #include <vector>        // handles
 
-#include <boost/functional/hash.hpp> // size_t pair hash
 
 #include <CGAL/algorithm.h> //
 #include <CGAL/circulator.h>
-#include <CGAL/Delaunay_triangulation_2.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
+#include "DelaunayGraph.h"
 #include "GeometricSpannerPrinter.h"
-//#include "GraphAlgoTV.h"
 #include "metrics.h"
 #include "utilities.h"
 
@@ -29,23 +25,9 @@ using namespace std;
 
 namespace bcc2012 {
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel         K;
-typedef CGAL::Triangulation_vertex_base_with_info_2<size_t, K>      Vb;
-typedef CGAL::Triangulation_face_base_2<K>                          Fb;
-typedef CGAL::Triangulation_data_structure_2<Vb, Fb>                Tds;
-typedef CGAL::Delaunay_triangulation_2<K, Tds>                      Delaunay;
-typedef CGAL::Aff_transformation_2<K>                               Transformation;
-typedef Delaunay::Vertex_handle                                     Vertex_handle;
-typedef Delaunay::Vertex_circulator                                 Vertex_circulator;
-typedef CGAL::Vector_2<K>                                           Vector_2;
-typedef Delaunay::Point                                             Point;
-typedef Delaunay::Finite_vertices_iterator                          Finite_vertices_iterator;
-typedef Delaunay::Finite_edges_iterator                             Finite_edges_iterator;
-
-
 enum Q_primePosition  { between_j_i=0, between_i_k=1, not_set=2 };
 
-inline K::FT edgeLength( const vector<Vertex_handle>& H, const pair<size_t,size_t>& e ) {
+inline K::FT edgeLength( const vector<Vertex_handle>& H, const size_tPair& e ) {
     return distance( H[e.first]->point(), H[e.second]->point() );
 }
 
@@ -54,7 +36,7 @@ inline size_t getCone( const vector<Vertex_handle>& handles,
                        const size_t p,
                        const size_t q,
                        const double alpha ) {
-    return size_t( get_angle<bcc2012::K>(
+    return size_t( get_angle(
             handles.at(closest.at(p))->point(),
             handles.at(p)->point(),
             handles.at(q)->point() )
@@ -132,21 +114,21 @@ inline double get_min_angle( const Vertex_handle& p,
  *  the specialized templates are used, defined below.
  */
 template<size_t DEGREE, size_t NUM_CONES=DEGREE+1>
-inline void wedge( const Delaunay& DT,
+inline void wedge( const Delaunay_triangulation& DT,
                    const vector<Vertex_handle>& handles,
                    const vector<size_t>& closest,
                    const vector<size_t>& params,
-                   vector<pair<size_t,size_t>>& addToE_star,
+                   vector<size_tPair>& addToE_star,
                    const Vertex_circulator& q_i ) {
     assert(DEGREE==6||DEGREE==7);
 }
 
 template<>
-inline void wedge<7>( const Delaunay& DT,
+inline void wedge<7>( const Delaunay_triangulation& DT,
                       const vector<Vertex_handle>& handles,
                       const vector<size_t>& closest,
                       const vector<size_t>& params,
-                      vector<pair<size_t,size_t>>& addToE_star,
+                      vector<size_tPair>& addToE_star,
                       const Vertex_circulator& q_i ) {
 
     const double ALPHA = 2*PI/8;
@@ -198,11 +180,11 @@ inline void wedge<7>( const Delaunay& DT,
 //#pragma GCC diagnostic push
 //#pragma GCC diagnostic ignored "-Wunused_parameter"
 template<>
-inline void wedge<6>( const Delaunay& DT,
+inline void wedge<6>( const Delaunay_triangulation& DT,
                       const vector<Vertex_handle>& handles,
                       const vector<size_t>& closest,
                       const vector<size_t>& params,
-                      vector<pair<size_t,size_t>>& addToE_star,
+                      vector<size_tPair>& addToE_star,
                       const Vertex_circulator& q_i ) {
 
     const double ALPHA = 2*PI/7;
@@ -425,18 +407,18 @@ void BCC2012( RandomAccessIterator pointsBegin,
     spatialSort<K>(P, index);
 
     //Step 1: Construct Delaunay triangulation
-    bcc2012::Delaunay DT;
+    Delaunay_triangulation DT;
 
     //N is the number of vertices in the delaunay triangulation.
     size_t n = P.size();
     if(n > SIZE_T_MAX - 1) return;
 
     //Stores all the vertex handles (CGAL's representation of a vertex, its properties, and data).
-    vector<bcc2012::Vertex_handle> handles(n);
+    vector<Vertex_handle> handles(n);
 
     /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
       (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
-    Delaunay::Face_handle hint;
+    Face_handle hint;
     for(size_t entry : index) {
         auto vh = DT.insert(P[entry], hint);
         hint = vh->face();
@@ -448,7 +430,7 @@ void BCC2012( RandomAccessIterator pointsBegin,
 
 
     // Put edges in a vector, then sort on weight
-    vector<pair<size_t,size_t> > L;
+    vector<size_tPair > L;
 
     for( auto e=DT.finite_edges_begin(); e!=DT.finite_edges_end(); ++e ) {
         L.emplace_back( e->first->vertex( (e->second+1)%3 )->info(),
@@ -460,8 +442,8 @@ void BCC2012( RandomAccessIterator pointsBegin,
 
     vector<size_t> closest( n, SIZE_T_MAX ); // id of closest vertex for orienting cones
     vector<bitset<NUM_CONES>> filled(n); // status of each cone
-    vector<pair<size_t,size_t>> E; // output edge list
-    vector<pair<size_t,size_t>> E_star; // edges added from "Wedge"
+    vector<size_tPair> E; // output edge list
+    vector<size_tPair> E_star; // edges added from "Wedge"
 
     for( auto pq : L ) {
         size_t p = pq.first,
@@ -515,7 +497,7 @@ void BCC2012( RandomAccessIterator pointsBegin,
             // Bookkeeping for q
             updateVertexConeStatus<DEGREE>( filled, W, q, p, pOnBoundary, cone_q, cone_qPrev );
 
-            vector<pair<size_t,size_t>> addToE_star;
+            vector<size_tPair> addToE_star;
 
             // Wedge on p, q
             for( auto params : W ) {
@@ -540,13 +522,13 @@ void BCC2012( RandomAccessIterator pointsBegin,
 
 
     // Edge list is only needed for printing. Remove for production.
-    vector< pair<Point,Point> > edgeList;
-    edgeList.reserve( E.size() );
+//    vector< pair<Point,Point> > edgeList;
+//    edgeList.reserve( E.size() );
 
     // Send resultant graph to output iterator
     for( auto e : E ) {
         // Edge list is only needed for printing. Remove for production.
-        edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
+        //edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
 
         *result = e;
         ++result;
@@ -560,38 +542,38 @@ void BCC2012( RandomAccessIterator pointsBegin,
     //
     //
 
-    if( printLog && n <= 200 ) {
-        GraphPrinter printer(1);
-        GraphPrinter::OptionsList options;
-
-        options = {
-            { "color", printer.inactiveEdgeColor },
-            { "line width", to_string(printer.inactiveEdgeWidth) }
-        };
-        printer.drawEdges( DT, options );
-
-        options = { // active edge options
-            { "color", printer.activeEdgeColor },
-            { "line width", to_string(printer.activeEdgeWidth) }
-        };
-        printer.drawEdges( E.begin(), E.end(), P, options );
-
-        options = {
-            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
-            { "color", make_optional( printer.backgroundColor ) }, // text color
-            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
-            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-        };
-        GraphPrinter::OptionsList borderOptions = {
-            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
-            { "color", printer.activeEdgeColor }, // additional border color
-            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-        };
-        printer.drawVerticesWithInfo( DT, options, borderOptions );
-
-        printer.print( "bcc2012" );
-        cout<<"\n";
-    }
+//    if( printLog && n <= 200 ) {
+//        GraphPrinter printer(1);
+//        GraphPrinter::OptionsList options;
+//
+//        options = {
+//            { "color", printer.inactiveEdgeColor },
+//            { "line width", to_string(printer.inactiveEdgeWidth) }
+//        };
+//        printer.drawEdges( DT, options );
+//
+//        options = { // active edge options
+//            { "color", printer.activeEdgeColor },
+//            { "line width", to_string(printer.activeEdgeWidth) }
+//        };
+//        printer.drawEdges( E.begin(), E.end(), P, options );
+//
+//        options = {
+//            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
+//            { "color", make_optional( printer.backgroundColor ) }, // text color
+//            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
+//            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
+//        };
+//        GraphPrinter::OptionsList borderOptions = {
+//            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
+//            { "color", printer.activeEdgeColor }, // additional border color
+//            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
+//        };
+//        printer.drawVerticesWithInfo( DT, options, borderOptions );
+//
+//        printer.print( "bcc2012" );
+//        cout<<"\n";
+//    }
 
     //
     //

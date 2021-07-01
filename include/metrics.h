@@ -67,12 +67,14 @@ void Johnsons( InputIterator edgesBegin, InputIterator edgesEnd ) {
 
 namespace metrics {
 
-inline DelaunayGraph::FT getDistance( const DelaunayGraph::Vertex_handle a, const DelaunayGraph::Vertex_handle b ) {
+inline number_t getDistance( const Vertex_handle a, const Vertex_handle b ) {
     return a == b ? 0 : CGAL::sqrt( CGAL::squared_distance( a->point(), b->point() ) );
 }
 
 
-void createVertexToIndexMaps( const DelaunayGraph& G, DelaunayGraph::template VertexMap<size_t>& handleToIndex, vector<DelaunayGraph::Vertex_handle>& indexToHandle ) {
+void createVertexToIndexMaps( const DelaunayGraph& G,
+                              VertexMap<size_t>& handleToIndex,
+                              vector<Vertex_handle>& indexToHandle ) {
     handleToIndex.clear();
     indexToHandle.clear();
     handleToIndex.reserve( G.n() );
@@ -89,12 +91,14 @@ void createVertexToIndexMaps( const DelaunayGraph& G, DelaunayGraph::template Ve
 
 } // namespace metrics
 
-void EuclideanDistanceMatrix( const DelaunayGraph& G, const DelaunayGraph::template VertexMap<size_t>& index, vector< vector< optional<DelaunayGraph::FT> > >& euclidean ) {
+void EuclideanDistanceMatrix( const DelaunayGraph& G,
+                              const VertexMap<size_t>& index,
+                              vector< vector< optional<number_t> > >& euclidean ) {
     using namespace metrics;
     size_t N = G.n();
 
     // Create an NxN table to hold distances.
-    vector< vector< optional<DelaunayGraph::FT> > > eucl( N, vector< optional<DelaunayGraph::FT> >(N, nullopt) );
+    vector< vector< optional<number_t> > > eucl( N, vector< optional<number_t> >(N, nullopt) );
 
     for( auto i = G._DT.finite_vertices_begin(); i != G._DT.finite_vertices_end(); ++i )
         for( auto j = G._DT.finite_vertices_begin(); j != G._DT.finite_vertices_end(); ++j )
@@ -113,28 +117,28 @@ void EuclideanDistanceMatrix( const DelaunayGraph& G, const DelaunayGraph::templ
     return;
 }
 
-using StretchFactorIndexEntry = pair<pair<size_t,size_t>, DelaunayGraph::FT>;
-using StretchFactorVertexHandleEntry = pair<pair<DelaunayGraph::Vertex_handle,DelaunayGraph::Vertex_handle>, DelaunayGraph::FT>;
+using StretchFactorIndexEntry = pair<pair<size_t,size_t>, number_t>;
+using StretchFactorVertexHandleEntry = pair<pair<Vertex_handle,Vertex_handle>, number_t>;
 
 StretchFactorVertexHandleEntry StretchFactorFloydWarshall( const DelaunayGraph& G ) {
     using namespace metrics;
-    vector< vector< optional<DelaunayGraph::FT> > > stretch;
+    vector< vector< optional<number_t> > > stretch;
     size_t N = G.n();
 
     // First, create a vertex-to-index map
     // Add all vertices to a vertex map and assign an index
 
-    DelaunayGraph::template VertexMap< size_t > handleToIndex;
-    vector<DelaunayGraph::Vertex_handle> indexToHandle;
+    VertexMap< size_t > handleToIndex;
+    vector<Vertex_handle> indexToHandle;
     createVertexToIndexMaps( G, handleToIndex, indexToHandle );
 
     // Next, conduct Floyd-Warshall to determine all paths' cost
     FloydWarshall( G, handleToIndex, stretch );
     // Next, determine Euclidean distance between all vertices
-    vector< vector< optional<DelaunayGraph::FT> > > euclidean;
+    vector< vector< optional<number_t> > > euclidean;
     EuclideanDistanceMatrix( G, handleToIndex, euclidean );
 
-    vector< vector< optional<DelaunayGraph::FT> > > quotient( N, vector< optional<DelaunayGraph::FT> >(N) );
+    vector< vector< optional<number_t> > > quotient( N, vector< optional<number_t> >(N) );
 
     for( size_t i=0; i<N; ++i )
         for( size_t j=0; j<N; ++j )

@@ -13,53 +13,49 @@
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Vector_2.h>
+#include <CGAL/utils.h> // min, max
 
-#include "GraphAlgoTV.h"
 #include "utilities.h"
 
 namespace gsnunf {
 
 using namespace std;
 
-namespace bgs2005 {
+
+
+typedef CGAL::Exact_predicates_inexact_constructions_kernel     K;
+
+typedef K::Point_2                                              Point;
+typedef K::Vector_2                                             Vector_2;
+typedef K::FT                                                   number_t;
+
+typedef CGAL::Triangulation_vertex_base_with_info_2<index_t, K> Vb;
+typedef CGAL::Triangulation_face_base_2<K>                      Fb;
+typedef CGAL::Triangulation_data_structure_2<Vb, Fb>            Tds;
+typedef CGAL::Delaunay_triangulation_2<K, Tds>                  Delaunay_triangulation;
+
+typedef Delaunay_triangulation::Vertex_handle                   Vertex_handle;
+typedef Delaunay_triangulation::Vertex_circulator               Vertex_circulator;
+typedef Delaunay_triangulation::Finite_vertices_iterator        Finite_vertices_iterator;
+typedef Delaunay_triangulation::Finite_edges_iterator           Finite_edges_iterator;
+typedef Delaunay_triangulation::Face_handle                     Face_handle;
+
+typedef set<Vertex_handle> VertexSet;
+typedef unordered_set<Vertex_handle> VertexHash;
+template< typename V >
+using VertexMap = unordered_map< Vertex_handle, V >;
+using AdjacencyList = VertexMap< VertexSet >;
+template< typename N >
+using EdgeInfoMap = VertexMap< VertexMap< optional<N> > >;
+
+typedef CGAL::Container_from_circulator<Vertex_circulator> Vertex_container;
 
 class DelaunayGraph {
   public:
-    /* Types */
-    typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-    typedef K::FT FT;
-    typedef K::Point_2 Point;
-    typedef K::Vector_2 Vector_2;
-
-    typedef CGAL::Triangulation_vertex_base_with_info_2<size_t, K>    Vb;
-    typedef CGAL::Triangulation_face_base_2<K>                          Fb;
-    typedef CGAL::Triangulation_data_structure_2<Vb, Fb>                Tds;
-    typedef CGAL::Delaunay_triangulation_2<K, Tds> Delaunay_triangulation_2;
-
-    typedef Delaunay_triangulation_2::Vertex_handle Vertex_handle;
-    typedef Delaunay_triangulation_2::Vertex_circulator Vertex_circulator;
-    typedef Delaunay_triangulation_2::Finite_vertices_iterator Finite_vertices_iterator;
-    typedef Delaunay_triangulation_2::Finite_edges_iterator Finite_edges_iterator;
-    typedef Delaunay_triangulation_2::Face_handle Face_handle;
-
-    typedef CGAL::Container_from_circulator<Vertex_circulator> Vertex_container;
-
-    typedef set<Vertex_handle> VertexSet;
-    typedef unordered_set<Vertex_handle> VertexHash;
-    template< typename V >
-    using VertexMap = unordered_map< Vertex_handle, V >;
-    using AdjacencyList = VertexMap< VertexSet >;
-    template< typename N >
-    using EdgeInfoMap = VertexMap< VertexMap< optional<N> > >;
-
-
 
     /* Data */
-    Delaunay_triangulation_2 _DT;
+    Delaunay_triangulation _DT;
     AdjacencyList _E;
-
-    //GraphAlgoTV _algoTV;
-
 
 
     /* Functions */
@@ -110,7 +106,7 @@ class DelaunayGraph {
 
     void add_all_edges() {
         for( auto eit = _DT.finite_edges_begin(); eit != _DT.finite_edges_end(); ++eit ) {
-            Delaunay_triangulation_2::Edge e = *eit;
+            Delaunay_triangulation::Edge e = *eit;
             Vertex_handle p = e.first->vertex( (e.second+1)%3 ),
                           q = e.first->vertex( (e.second+2)%3 );
             add_edge( p, q );
@@ -276,21 +272,6 @@ class DelaunayGraph {
     }
 
 }; // class DelaunayGraph
-
-
-// Make some key types of DelaunayGraph public in the namespace
-
-using Vertex_handle = DelaunayGraph::Vertex_handle;
-using Vertex_circulator = DelaunayGraph::Vertex_circulator;
-using Point = DelaunayGraph::K::Point_2;
-
-} // namespace bgs2005
-
-using DelaunayGraph = bgs2005::DelaunayGraph;
-template<class V >
-using VertexMap = DelaunayGraph::template VertexMap<V>;
-using VertexSet = DelaunayGraph::VertexSet;
-using VertexHash = DelaunayGraph::VertexHash;
 
 } // namespace gsnunf
 

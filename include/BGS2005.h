@@ -490,7 +490,6 @@ void add_cross_edges( const DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEdg
 void add_forward_edges( const DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEdgeMap& E, SplitVertexEdgeMap& E_P,
                         SplitVertex& p, SplitVertex& q, SplitVertex& r,
                         const VertexStatusMap& status ) {
-    using Vector_2 = typename DelaunayGraph::Vector_2;
 
     //double deg = 180/PI; // used for displaying angles in degree
 
@@ -660,7 +659,7 @@ void PolygonSpanner( DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEdgeMap& E
 
 
 template< typename RandomAccessIterator, typename OutputIterator >
-void BGS2005( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result ) {
+void BGS2005( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false ) {
     using namespace bgs2005;
 
     DelaunayGraph G( pointsBegin, pointsEnd ); // Step 1

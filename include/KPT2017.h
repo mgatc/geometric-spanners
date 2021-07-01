@@ -9,20 +9,11 @@
 #include <unordered_map> // G_prime
 #include <vector>        // handles
 
-//Boost library
-#include <boost/functional/hash.hpp> // size_t pair hash
-
 //CGAL library
 #include <CGAL/algorithm.h>
-#include <CGAL/circulator.h>
-#include <CGAL/Delaunay_triangulation_2.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Line_2.h>
-#include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
 //Project library
 #include "GeometricSpannerPrinter.h"
-//#include "GraphAlgoTV.h"
 #include "metrics.h"
 #include "TDDelaunay.h"
 #include "utilities.h"
@@ -34,10 +25,10 @@ using namespace std;
 
 namespace kpt2017 {
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel Epick;
-typedef Epick                     K;
-typedef K::Point_2                Point_2;
-typedef K::FT                     FT;
+//typedef CGAL::Exact_predicates_inexact_constructions_kernel Epick;
+//typedef Epick                     K;
+//typedef K::Point_2                Point_2;
+//typedef K::FT                     FT;
 
 typedef HalfThetaTriangulation<K> TD_Delaunay_2;
 typedef TD_Delaunay_2::Vertex_descriptor Vertex_descriptor;
@@ -51,41 +42,41 @@ enum ConePolarity {
 };
 
 //Compute max of getCone(p,q) and (getCone(q,p)+3)%6, is used to make sure cones are calculated correctly.
-inline Color getColor( const size_t p, const size_t q, const vector<Point_2> &h )
+inline Color getColor( const size_t p, const size_t q, const vector<Point> &h )
 {
     //cout<<"Getting color of "<<p<<"-"<<q<<endl;
     return getCone(p,q,h) % 3 == 1 ? BLUE : WHITE;
 }
-inline Color getColor( const pair<size_t,size_t> &e, const vector<Point_2> &h )
+inline Color getColor( const pair<size_t,size_t> &e, const vector<Point> &h )
 {
     return getColor( e.first, e.second, h );
 }
 
-inline ConePolarity getConePolarity( const size_t p, const size_t q, const vector<Point_2> &h )
+inline ConePolarity getConePolarity( const size_t p, const size_t q, const vector<Point> &h )
 {
     return ConePolarity( getCone(p,q,h) % 2 );
 }
 
 //Finds the bisector length of a given edge.
-inline K::FT bisectorLength( const pair<size_t,size_t> &e, const vector<Point_2> &h )
+inline number_t bisectorLength( const size_tPair &e, const vector<Point> &h )
 {
     size_t cone = getCone(e.first, e.second, h);
 
-    double xCord = h.at(e.first).x();
-    double yCord = h[e.first].y() + 1;
+    number_t xCord = h.at(e.first).x();
+    number_t yCord = h[e.first].y() + 1;
 
     assert(cone<6);
     assert(e.first<h.size());
 
     xCord = h[e.first].x() - orthBisectorSlopes.at(cone);
 
-    Point_2 bisectorPoint(xCord, yCord);
+    Point bisectorPoint(xCord, yCord);
 
     K::Line_2 bisectorLine(h[e.first], bisectorPoint);
 
-    Point_2 intersectionPoint = bisectorLine.projection(h[e.second]);
+    Point intersectionPoint = bisectorLine.projection(h[e.second]);
 
-    double bisectorLen = distance(h[e.first], intersectionPoint);
+    number_t bisectorLen = distance(h[e.first], intersectionPoint);
 
     return bisectorLen;
 }
@@ -110,7 +101,7 @@ void findAnchors( AnchorListMap &anchors,
 
         // negative cones
         Vertex_descriptor local_anchors[3];
-        K::FT local_minimum_bisectors[3] = {INF,INF,INF};
+        number_t local_minimum_bisectors[3] = {INF,INF,INF};
 
         // get the edges for which w is the target
         for( auto eit=D.negative_cone_edges_begin(w);
@@ -461,23 +452,23 @@ void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 {
     using namespace kpt2017;
 
-    vector<Point_2> P( pointsBegin, pointsEnd );
+    vector<Point> P( pointsBegin, pointsEnd );
 
     TD_Delaunay_2 D( P.begin(), P.end() );
     {
         //Timer tim;
 
-        map<Color,vector<pair<size_t,size_t>>> Anchors;
+        map<Color,vector<size_tPair>> Anchors;
         findAnchors( Anchors, D, P );
 
-        auto AnchorComp = [&P]( const pair<size_t,size_t> &lhs, const pair<size_t,size_t> &rhs )
+        auto AnchorComp = [&P]( const size_tPair &lhs, const size_tPair &rhs )
         {
             return   lhs.second  < rhs.second
                 || ( lhs.second == rhs.second
                     && getCone(lhs.second, lhs.first,P) < getCone(rhs.second,rhs.first,P) );
         };
         // Step 1. add all blue anchors to A
-        set<pair<size_t,size_t>,decltype(AnchorComp)> A(
+        set<size_tPair,decltype(AnchorComp)> A(
             Anchors[BLUE].begin(),
             Anchors[BLUE].end(),
             AnchorComp );
@@ -504,7 +495,7 @@ void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
 
         // Since we didn't set S to A in step 3, we need to combine them now
-        set<pair<size_t,size_t>> S( A.begin(), A.end() );
+        set<size_tPair> S( A.begin(), A.end() );
 
         //cout<<"Adding S_not_A to S...\n";
         for( auto v : S_not_A ) {
@@ -529,46 +520,46 @@ void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
 
         // START PRINTER NONSENSE
-        if(printLog)
-        {
-            vector<pair<Point_2,Point_2>> edgeList;
-
-            for(auto e : S)
-            {
-                edgeList.emplace_back(P.at(e.first), P.at(e.second));
-            }
-
-            GraphPrinter printer(0.01);
-            GraphPrinter::OptionsList options;
-
-            options = {
-                {"color", printer.inactiveEdgeColor},
-                {"line width", to_string(printer.inactiveEdgeWidth)}
-            };
-            printer.drawEdgesOfHalfTheta(D, options);
-
-            options = { // active edge options
-                {"color", printer.activeEdgeColor},
-                {"line width", to_string(printer.activeEdgeWidth)}
-            };
-            printer.drawEdges(S.begin(), S.end(), P, options);
-
-            options = {
-                {"vertex", make_optional(to_string(printer.vertexRadius))}, // vertex width
-                {"color", make_optional(printer.backgroundColor)}, // text color
-                {"fill", make_optional(printer.activeVertexColor)}, // vertex color
-                {"line width", make_optional(to_string(0))} // vertex border (same color as text)
-            };
-            GraphPrinter::OptionsList borderOptions = {
-                {"border", make_optional(to_string(printer.vertexRadius))}, // choose shape of vertex
-                {"color", printer.activeEdgeColor}, // additional border color
-                {"line width", to_string(printer.inactiveEdgeWidth)}, // additional border width
-            };
-            printer.drawVerticesWithInfo(D.points_begin(), D.points_end(), options, borderOptions);
-
-            printer.print("KPT2017");
-            cout << "\n";
-        }
+//        if(printLog)
+//        {
+//            vector<pair<Point_2,Point_2>> edgeList;
+//
+//            for(auto e : S)
+//            {
+//                edgeList.emplace_back(P.at(e.first), P.at(e.second));
+//            }
+//
+//            GraphPrinter printer(0.01);
+//            GraphPrinter::OptionsList options;
+//
+//            options = {
+//                {"color", printer.inactiveEdgeColor},
+//                {"line width", to_string(printer.inactiveEdgeWidth)}
+//            };
+//            printer.drawEdgesOfHalfTheta(D, options);
+//
+//            options = { // active edge options
+//                {"color", printer.activeEdgeColor},
+//                {"line width", to_string(printer.activeEdgeWidth)}
+//            };
+//            printer.drawEdges(S.begin(), S.end(), P, options);
+//
+//            options = {
+//                {"vertex", make_optional(to_string(printer.vertexRadius))}, // vertex width
+//                {"color", make_optional(printer.backgroundColor)}, // text color
+//                {"fill", make_optional(printer.activeVertexColor)}, // vertex color
+//                {"line width", make_optional(to_string(0))} // vertex border (same color as text)
+//            };
+//            GraphPrinter::OptionsList borderOptions = {
+//                {"border", make_optional(to_string(printer.vertexRadius))}, // choose shape of vertex
+//                {"color", printer.activeEdgeColor}, // additional border color
+//                {"line width", to_string(printer.inactiveEdgeWidth)}, // additional border width
+//            };
+//            printer.drawVerticesWithInfo(D.points_begin(), D.points_end(), options, borderOptions);
+//
+//            printer.print("KPT2017");
+//            cout << "\n";
+//        }
         // END PRINTER NONSENSE
     }
 } // function KPT2017

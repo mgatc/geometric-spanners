@@ -9,20 +9,13 @@
 #include <unordered_map> // G_prime
 #include <vector>        // handles
 
-//Boost library
-#include <boost/functional/hash.hpp> // size_t pair hash
-
 //CGAL library
 #include <CGAL/algorithm.h>
-#include <CGAL/circulator.h>
-#include <CGAL/Delaunay_triangulation_2.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Line_2.h>
-#include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
 //Project library
-//#include "GeometricSpannerPrinter.h"
-//#include "GraphAlgoTV.h"
+#include "DelaunayGraph.h"
+#include "GeometricSpannerPrinter.h"
 #include "metrics.h"
 #include "utilities.h"
 
@@ -33,43 +26,25 @@ namespace gsnunf {
 
     namespace bhs2017 {
 
-    //CGAL objects
-    typedef CGAL::Exact_predicates_inexact_constructions_kernel                         K;
-    typedef CGAL::Triangulation_vertex_base_with_info_2<size_t,K>                       Vb;
-    typedef CGAL::Triangulation_face_base_2<K>                                          Fb;
-    typedef CGAL::Triangulation_data_structure_2<Vb,Fb>                                 Tds;
-    typedef CGAL::Delaunay_triangulation_2<K,Tds>                                       Delaunay;
-    typedef CGAL::Aff_transformation_2<K>                                               Transformation;
-    typedef Delaunay::Vertex_handle                                                     Vertex_handle;
-    typedef Delaunay::Vertex_circulator                                                 Vertex_circulator;
-    typedef CGAL::Vector_2<K>                                                           Vector_2;
     typedef CGAL::Line_2<K>                                                             Line;
-    typedef Delaunay::Point                                                             Point;
-    typedef Delaunay::Finite_vertices_iterator                                          Finite_vertices_iterator;
-    typedef Delaunay::Finite_edges_iterator                                             Finite_edges_iterator;
-
-    //Project objects
-    typedef pair<size_t,size_t>                                                         size_tPair;
-    typedef boost::hash<size_tPair>                                                     size_tPairHash;
-    typedef unordered_map<size_tPair,bool,size_tPairHash>                               size_tPairMap;
-    typedef unordered_map<pair<size_t,size_t>,double,pointPairHash,edgeEquality>        edgeBisectorMap;
-    typedef unordered_map<pair<size_t,size_t>,size_t,pointConeHash,pointConeEquality>   pointConeMap;
+    typedef unordered_map<size_tPair,number_t,pointPairHash,edgeEquality>        edgeBisectorMap;
+    typedef unordered_map<size_tPair,size_t,pointConeHash,pointConeEquality>   pointConeMap;
 
     //Cone angles.
-    const double tan30 = TAN30;
-    const double cot30 = 1 / tan30;
+    const number_t tan30 = TAN30;
+    const number_t cot30 = 1 / tan30;
 
     //Slopes of the cone boundry lines.
-    const vector<double> bisectorSlopes{ INF, tan30, -1*tan30, INF, tan30, -1*tan30 };
-    const vector<double> orthBisectorSlopes{ 0, -1*cot30, cot30, 0, -1*cot30, cot30 };
+    const vector<number_t> bisectorSlopes{ INF, tan30, -1*tan30, INF, tan30, -1*tan30 };
+    const vector<number_t> orthBisectorSlopes{ 0, -1*cot30, cot30, 0, -1*cot30, cot30 };
 
     //Finds the cone of p containing vertex q, for this algorithm all vertices have 6 cones (0-5) with an angle of (PI/3).
     inline size_t getSingleCone(const size_t p, const size_t q, const vector<Vertex_handle> &h){
-        const double alpha = PI/3;
+        const number_t alpha = PI/3;
         const Point refPoint( h.at(p)->point().x() - tan30, h[p]->point().y() + 1 );
         //Point refPoint(h[p]->point().x(), h[p] ->point().y() + 1);
 
-        double theta = get_angle<bhs2017::K>(refPoint, h[p]->point(), h.at(q)->point());
+        number_t theta = get_angle(refPoint, h[p]->point(), h.at(q)->point());
 
         size_t cone = (theta / alpha);
 
@@ -86,12 +61,12 @@ namespace gsnunf {
     }
 
     //Finds the bisector length of a given edge.
-    inline K::FT bisectorLength( const double alpha, const pair<size_t,size_t> &e, const vector<Vertex_handle> &h ) {
+    inline number_t bisectorLength( const double alpha, const size_tPair &e, const vector<Vertex_handle> &h ) {
 
         size_t cone = getCone(e.first, e.second, h);
 
-        double xCord = h.at(e.first)->point().x();
-        double yCord = h[e.first]->point().y() + 1;
+        number_t xCord = h.at(e.first)->point().x();
+        number_t yCord = h[e.first]->point().y() + 1;
 
         assert(cone<6);
         assert(e.first<h.size());
@@ -104,7 +79,7 @@ namespace gsnunf {
 
         Point intersectionPoint = bisectorLine.projection(h[e.second]->point());
 
-        double bisectorLen = distance(h[e.first]->point(), intersectionPoint);
+        number_t bisectorLen = distance(h[e.first]->point(), intersectionPoint);
 
         return bisectorLen;
     }
@@ -117,9 +92,9 @@ namespace gsnunf {
     */
     inline void addIncident( vector<pair<size_t,size_t>> &E_A,
                              pointConeMap &AL_E_A,
-                             const double alpha,
+                             const number_t alpha,
                              const vector<Vertex_handle> &h,
-                             const vector<pair<pair<size_t,size_t>,double>> &l ) {
+                             const vector<pair<size_tPair,number_t>> &l ) {
         //Loops through the entire set L.
         for( auto e : l ) {
 
@@ -154,12 +129,12 @@ namespace gsnunf {
                                        const size_t& p,
                                        const size_t& r,
                                        const size_t cone,
-                                       const Delaunay &dt,
+                                       const Delaunay_triangulation &dt,
                                        const vector<Vertex_handle> &h,
                                        const edgeBisectorMap &b,
                                        bool printLog = false ) {
 
-        pair<size_t,size_t> e = make_pair(p, r);
+        size_tPair e = make_pair(p, r);
 
         /*Vertex circulator oriented to r to find fist and last end vertex. Once r is the circulator is oriented to the first vertex in the cone,
           that is in the canonical neighborhood. Once found all neighbors are added in clockwise order. For a vertex to be in the canonical
@@ -190,18 +165,18 @@ namespace gsnunf {
         (4.4 c) Checks if end edges have a end point a or z in E_A and an edge different from one made with vertex b or y in cone 2 or 4 woth respect
                 to a and z if found the edge (b,c) or (w,y) is added.
     */
-    inline void addCanonical( vector<pair<size_t,size_t>> &E_CAN,
+    inline void addCanonical( vector<size_tPair> &E_CAN,
                               const size_t p,
                               const size_t r,
                               const double alpha,
-                              const Delaunay &dt,
+                              const Delaunay_triangulation &dt,
                               const vector<Vertex_handle> &h,
                               const edgeBisectorMap &b,
                               pointConeMap& AL_e_a,
                               bool printLog=false ) {
 
         //Creates an edge (p,r)
-        pair<size_t,size_t> e = make_pair(p, r);
+        size_tPair e = make_pair(p, r);
 
         //Computes the cone of p containing r.
         size_t p_cone  = getCone(p, r, h);
@@ -224,7 +199,7 @@ namespace gsnunf {
             }
 
             //End edges in the canonical neighborhood.
-            const vector<pair<size_t,size_t>> canExtrema {
+            const vector<size_tPair> canExtrema {
                 make_pair( canNeighbors.at(1), canNeighbors.front() ),
                 make_pair( canNeighbors.at(canEdges - 1), canNeighbors.back() )
             };
@@ -308,25 +283,25 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     using namespace bhs2017;
 
     //Angle of the cones. Results in 6 cones for a given vertex.
-    const double alpha = PI / 3;
+    const number_t alpha = PI / 3;
 
     vector<Point> P(pointsBegin, pointsEnd);
     vector<size_t> index;
     spatialSort<K>(P, index);
 
     //Step 1: Construct Delaunay triangulation
-    bhs2017::Delaunay DT;
+    Delaunay_triangulation DT;
 
     //N is the number of vertices in the delaunay triangulation.
     size_t n = P.size();
     if(n > SIZE_T_MAX - 1) return;
 
     //Stores all the vertex handles (CGAL's representation of a vertex, its properties, and data).
-    vector<bhs2017::Vertex_handle> handles(n);
+    vector<Vertex_handle> handles(n);
 
     /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
       (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
-    Delaunay::Face_handle hint;
+    Face_handle hint;
     for(size_t entry : index) {
         auto vh = DT.insert(P[entry], hint);
         hint = vh->face();
@@ -335,7 +310,7 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     }
 
     //Put edges in a vector.
-    vector<pair<pair<size_t,size_t>,double>> L;
+    vector<pair<size_tPair,number_t>> L;
 
     //Creates a map of edges as keys to its respective bisector length as the value. (Edges are not directional 1-2 is equivilent to 2-1)
     edgeBisectorMap B(L.size());
@@ -365,7 +340,7 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
 
     //Creates a set which will contain all edges returned by addIncident.
-    vector<pair<size_t,size_t>> E_A;
+    vector<size_tPair> E_A;
 
     /*Creates an adjacency list where the inner lists are of size 6 representing the cones. The value stored in a particular inner index
       is the vertex that creates an edge with the outer vertex in the given cone. (i.e. If AL_E_A[10][4] = 5 in cone 4 of vertex 10 there
@@ -379,7 +354,7 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     }
 
     //Add canonical E_CAN
-    vector<pair<size_t,size_t>> E_CAN;
+    vector<size_tPair> E_CAN;
 
     //Step 4
     {
@@ -407,12 +382,12 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     }
 
     // Edge list is only needed for printing. Remove for production.
-    vector<pair<Point,Point>> edgeList;
+    //vector<pair<Point,Point>> edgeList;
 
     // Send resultant graph to output iterator
     for(auto e : E_A) {
         // Edge list is only needed for printing. Remove for production.
-        edgeList.emplace_back(handles.at(e.first)->point(), handles.at(e.second)->point());
+        //edgeList.emplace_back(handles.at(e.first)->point(), handles.at(e.second)->point());
 
         *result = e;
         ++result;
@@ -421,39 +396,39 @@ void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     }
 
     // START PRINTER NONSENSE
-    if(printLog) {
-        GraphPrinter printer(0.01);
-        GraphPrinter::OptionsList options;
-
-        options = {
-            {"color", printer.inactiveEdgeColor},
-            {"line width", to_string(printer.inactiveEdgeWidth)}
-        };
-        printer.drawEdges(DT, options);
-
-        options = { // active edge options
-            {"color", printer.activeEdgeColor},
-            {"line width", to_string(printer.activeEdgeWidth)}
-        };
-        printer.drawEdges(E_A.begin(), E_A.end(), P, options);
-
-
-        options = {
-            {"vertex", make_optional(to_string(printer.vertexRadius))}, // vertex width
-            {"color", make_optional(printer.backgroundColor)}, // text color
-            {"fill", make_optional(printer.activeVertexColor)}, // vertex color
-            {"line width", make_optional(to_string(0))} // vertex border (same color as text)
-        };
-        GraphPrinter::OptionsList borderOptions = {
-            {"border", make_optional(to_string(printer.vertexRadius))}, // choose shape of vertex
-            {"color", printer.activeEdgeColor}, // additional border color
-            {"line width", to_string(printer.inactiveEdgeWidth)}, // additional border width
-        };
-        printer.drawVerticesWithInfo(DT, options, borderOptions);
-
-        printer.print("BHS2017");
-        cout << "\n";
-    }
+//    if(printLog) {
+//        GraphPrinter printer(0.01);
+//        GraphPrinter::OptionsList options;
+//
+//        options = {
+//            {"color", printer.inactiveEdgeColor},
+//            {"line width", to_string(printer.inactiveEdgeWidth)}
+//        };
+//        printer.drawEdges(DT, options);
+//
+//        options = { // active edge options
+//            {"color", printer.activeEdgeColor},
+//            {"line width", to_string(printer.activeEdgeWidth)}
+//        };
+//        printer.drawEdges(E_A.begin(), E_A.end(), P, options);
+//
+//
+//        options = {
+//            {"vertex", make_optional(to_string(printer.vertexRadius))}, // vertex width
+//            {"color", make_optional(printer.backgroundColor)}, // text color
+//            {"fill", make_optional(printer.activeVertexColor)}, // vertex color
+//            {"line width", make_optional(to_string(0))} // vertex border (same color as text)
+//        };
+//        GraphPrinter::OptionsList borderOptions = {
+//            {"border", make_optional(to_string(printer.vertexRadius))}, // choose shape of vertex
+//            {"color", printer.activeEdgeColor}, // additional border color
+//            {"line width", to_string(printer.inactiveEdgeWidth)}, // additional border width
+//        };
+//        printer.drawVerticesWithInfo(DT, options, borderOptions);
+//
+//        printer.print("BHS2017");
+//        cout << "\n";
+//    }
     // END PRINTER NONSENSE
 
 } // function BHS2017

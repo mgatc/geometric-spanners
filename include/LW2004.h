@@ -6,19 +6,8 @@
 #include <unordered_set> // hashed adjacency list
 #include <vector> // vertex containers
 
-#include <boost/functional/hash.hpp> // hashing pairs
-#include <boost/heap/fibonacci_heap.hpp> // ordering
-
-//#include <CGAL/algorithm.h>
-#include <CGAL/circulator.h>
-#include <CGAL/Delaunay_triangulation_2.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Triangulation_vertex_base_with_info_2.h>
-#include <CGAL/utils.h> // min, max
-#include <CGAL/Vector_2.h>
-
+#include "DelaunayGraph.h"
 #include "GeometricSpannerPrinter.h"
-//#include "GraphAlgoTV.h"
 #include "utilities.h"
 #include "metrics.h"
 
@@ -31,37 +20,19 @@ namespace lw2004 {
 
 using namespace CGAL;
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel         K;
-typedef CGAL::Triangulation_vertex_base_with_info_2<size_t, K>    Vb;
-typedef CGAL::Triangulation_face_base_2<K>                          Fb;
-typedef CGAL::Triangulation_data_structure_2<Vb, Fb>                Tds;
-typedef CGAL::Delaunay_triangulation_2<K, Tds>                      Delaunay;
-typedef CGAL::Aff_transformation_2<K>                               Transformation;
-typedef Delaunay::Vertex_handle                                     Vertex_handle;
-typedef Delaunay::Vertex_circulator                                 Vertex_circulator;
-typedef CGAL::Vector_2<K>                                           Vector_2;
-typedef Delaunay::Point                                             Point;
-typedef Delaunay::Finite_vertices_iterator                          Finite_vertices_iterator;
-typedef Delaunay::Finite_edges_iterator                             Finite_edges_iterator;
-
-typedef pair<size_t,size_t>                                         size_tPair;
-typedef boost::hash<size_tPair>                                     size_tPairHash;
-typedef unordered_set<size_tPair,size_tPairHash>                    size_tPairSet;
-
-struct comparatorForMinHeap {
-    bool operator()(const size_tPair &n1, const size_tPair &n2) const {
-        return (n1.first > n2.first) || ((n1.first == n2.first) && (n1.second > n2.second));
-    }
-};
-
-typedef boost::heap::fibonacci_heap<size_tPair,boost::heap::compare<comparatorForMinHeap>> Heap;
-typedef Heap::handle_type handle;
-
-inline size_tPair createEdge( const size_t i, const size_t j ) {
+inline size_tPair createEdge( const size_t i, const size_t j )
+{
     return make_pair( std::min(i,j), std::max(i,j) );
 }
 
-inline void createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_handle>& handles, size_tPairSet &E, const size_t i, const size_t j, const size_t n, bool printLog = false ) {
+inline void createNewEdge( const Delaunay_triangulation& T,
+                           const vector<Vertex_handle>& handles,
+                           size_tPairSet &E,
+                           const size_t i,
+                           const size_t j,
+                           const size_t n,
+                           bool printLog = false )
+{
     assert( std::max(i,j) < n );
     assert( T.is_edge( handles.at(i), handles.at(j) ) );
     //if( printLog ) cout<<"add:("<<i<<","<<j<<") ";
@@ -72,7 +43,11 @@ inline void createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_hand
 
 // alpha is set to pi/2
 template< typename RandomAccessIterator, typename OutputIterator >
-void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, double alpha = PI/2 ) {
+void LW2004( RandomAccessIterator pointsBegin,
+             RandomAccessIterator pointsEnd,
+             OutputIterator result,
+             double alpha = PI/2 )
+{
     using namespace lw2004;
 
     // ensure valid alpha
@@ -83,18 +58,18 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     spatialSort<K>(P, index);
 
     //Step 1: Construct Delaunay triangulation
-    lw2004::Delaunay T;
+    Delaunay_triangulation T;
 
     //N is the number of vertices in the delaunay triangulation.
     size_t n = P.size();
     if(n > SIZE_T_MAX - 1) return;
 
     //Stores all the vertex handles (CGAL's representation of a vertex, its properties, and data).
-    vector<lw2004::Vertex_handle> handles(n);
+    vector<Vertex_handle> handles(n);
 
     /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
       (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
-    Delaunay::Face_handle hint;
+    Face_handle hint;
     for(size_t entry : index) {
         auto vh = T.insert(P[entry], hint);
         hint = vh->face();
@@ -110,59 +85,10 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     // tp.draw("del");
     //************* Step 2 ****************//
 
-    Heap H;
-    vector<handle> handleToHeap(n);
-    vector<size_t> piIndexedByV(n), piIndexedByPiU(n);
-    vector<unordered_set<size_t>> currentNeighbours(n);
+    vector<size_t> piIndexedByPiU;
+    piIndexedByPiU.reserve(n);
+    reverseLowDegreeOrdering(T,back_inserter(piIndexedByPiU));
 
-   // size_t maxDegree = 0;
-    // Initialize the vector currentNeighbours with appropriate neighbours for every vertex
-    for( size_t it = 0; it < n; it++ ) {
-        Vertex_circulator N = T.incident_vertices( handles.at(it) ),
-            done(N);
-        //if (vc != 0) {
-        do {
-            if( !T.is_infinite(N) ) {
-                //degree++;
-                currentNeighbours.at(it).insert( N->info() );
-            }
-        } while( ++N != done );
-        //}
-       // if(degree > maxDegree)
-        //    maxDegree = degree;
-
-        size_t degree = currentNeighbours.at(it).size();
-        handleToHeap[it] = H.emplace( degree,it );
-    }
-
-    //cout << "Maximum degree in the Delaunay Triangulation: " << maxDegree << endl;
-    // Use a heap to walk through G_0 to G_{n-1} and set up the Pi for every vertex
-    size_t i = n-1; // start at the last valid index
-    while(!H.empty()) {
-        size_tPair p = H.top();
-        H.pop();
-        // make sure our math is correct, e.g., degree from heap key matches neighbor container size
-        assert( p.first == currentNeighbours.at( p.second ).size() );
-        // make sure our assumptions about the graph G_i are correct (see p. 5 in LW2004)
-        assert( 0 <= p.first && p.first <= 5 );
-
-        for( size_t neighbour : currentNeighbours.at( p.second ) ) {
-            currentNeighbours.at(neighbour).erase(p.second);
-            handle h = handleToHeap.at(neighbour);
-            size_tPair q = make_pair( currentNeighbours.at( neighbour ).size(), neighbour );
-            H.update(h,q);
-            H.update(h);
-        }
-        currentNeighbours.at(p.second).clear();
-        piIndexedByV[p.second] = i;
-        piIndexedByPiU[i] = p.second;
-        --i;
-    }
-
-    handleToHeap.clear();
-    H.clear();
-    currentNeighbours.clear();
-    //cout << "Step 2 is over...\n";
 
 
 
@@ -170,7 +96,7 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     // In this step we assume alpha = pi/2 in order to minimize the degree
     size_tPairSet ePrime; // without set duplicate edges could be inserted (use the example down below)
     vector<bool> isProcessed(n, false);
-    Delaunay::Vertex_handle u_handle = v_inf;
+    Vertex_handle u_handle = v_inf;
 
     // Iterate through vertices by pi ordering
     for( size_t u : piIndexedByPiU ) {

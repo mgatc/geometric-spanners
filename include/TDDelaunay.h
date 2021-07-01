@@ -49,26 +49,26 @@ namespace gsnunf {
 //
 //};
 //Cone angles.
-const double tan30 = TAN30;
-const double cot30 = 1 / tan30;
+const number_t tan30 = TAN30;
+const number_t cot30 = 1 / tan30;
 
-const double alpha = PI/3;
+const number_t alpha = PI/3;
 
 //Slopes of the cone boundary lines.
-const vector<double> bisectorSlopes{ INF, tan30, -1*tan30, INF, tan30, -1*tan30 };
-const vector<double> orthBisectorSlopes{ 0, -1*cot30, cot30, 0, -1*cot30, cot30 };
+const vector<number_t> bisectorSlopes{ INF, tan30, -1*tan30, INF, tan30, -1*tan30 };
+const vector<number_t> orthBisectorSlopes{ 0, -1*cot30, cot30, 0, -1*cot30, cot30 };
 
 //Finds the cone of p containing vertex q, for this algorithm all vertices have 6 cones (0-5) with an angle of (PI/3).
-template<class Point_2>
-inline size_t getSingleCone(const size_t p, const size_t q, const vector<Point_2> &h)
+template<class Point>
+inline size_t getSingleCone(const size_t p, const size_t q, const vector<Point> &h)
 {
     if( CGAL::compare_y(h[p], h[q]) == CGAL::EQUAL ) {
         return 1 + 3*int(CGAL::compare_x(h[p], h[q]) == CGAL::LARGER);
     }
-    const Point_2 refPoint( h.at(p).x() - tan30, h[p].y() + 1 );
+    const Point refPoint( h.at(p).x() - tan30, h[p].y() + 1 );
     //Point refPoint(h[p]->point().x(), h[p] ->point().y() + 1);
 
-    double theta = get_angle(refPoint, h[p], h.at(q));
+    number_t theta = get_angle(refPoint, h[p], h.at(q));
 
     size_t cone = (theta / alpha);
 
@@ -76,8 +76,8 @@ inline size_t getSingleCone(const size_t p, const size_t q, const vector<Point_2
 }
 
 //Compute max of getCone(p,q) and (getCone(q,p)+3)%6, is used to make sure cones are calculated correctly.
-template<class Point_2>
-inline size_t getCone( const size_t p, const size_t q, const vector<Point_2> &h )
+template<class Point>
+inline size_t getCone( const size_t p, const size_t q, const vector<Point> &h )
 {
     return p < q ?
         getSingleCone(p,q,h)

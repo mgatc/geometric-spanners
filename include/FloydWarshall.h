@@ -13,7 +13,7 @@
 
 #include "DelaunayGraph.h"
 
-namespace gsnunf {
+namespace unf_planespanners {
 
 using namespace std;
 
@@ -44,17 +44,17 @@ void FloydWarshall( const DelaunayGraph& G,
     vector< vector< optional<number_t> > > dist( N, vector< optional<number_t> >( N, nullopt ) );
     // container constructor should initialize optionals using default constructor, aka nullopt, aka infinity
 
-    // Set all i==j to 0 (distance to self)
+    // Set all i==j to 0 (getDistance to self)
     for( size_t i=0; i<N; ++i )
         dist.at(i).at(i) = make_optional( number_t(0) );
 
     assert( index.size() == N );
 
-    // Add distance of each edge (u,v) in G._E to dist[u][v]
+    // Add getDistance of each edge (u,v) in G._E to dist[u][v]
     // using indices of u and v mapped in index
     for( const auto& adjacent : G.m_E ) {
-        Vertex_handle u = adjacent.first; // get vertex handle
-        for( const Vertex_handle &v : adjacent.second )
+        VertexHandle u = adjacent.first; // get vertex handle
+        for( const VertexHandle &v : adjacent.second )
             dist.at(index.at(u)).at(index.at(v)) = make_optional( CGAL::sqrt( CGAL::squared_distance( u->point(), v->point() ) ) );
 
     }
@@ -72,7 +72,7 @@ void FloydWarshall( const DelaunayGraph& G,
     swap( dist, distances );
 }
 
-} // namespace gsnunf
+} // namespace unf_planespanners
 
 
 #endif // GSNUNF_FLOYDWARSHALL_H

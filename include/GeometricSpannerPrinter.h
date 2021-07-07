@@ -17,7 +17,7 @@
 
 #include "DelaunayGraph.h"
 
-namespace gsnunf {
+namespace unf_planespanners {
 
 using namespace std;
 
@@ -198,7 +198,7 @@ class GraphPrinter {
     template< typename Triangulation >
     void drawEdgesOfHalfTheta( const Triangulation& T, const OptionsList& options = {} ) {
                 using CGAL::to_double;
-        //typedef typename Triangulation::Vertex_handle Vertex_handle;
+        //typedef typename Triangulation::VertexHandle VertexHandle;
         for( auto eit = T.edges_begin(); eit != T.edges_end(); ++eit ) {
             auto e = *eit;
 
@@ -304,6 +304,6 @@ class GraphPrinter {
 
 }; // class GraphPrinter
 
-} // namespace gsnunf
+} // namespace unf_planespanners
 
 #endif // GSNUNF_GRAPHPRINTER_H

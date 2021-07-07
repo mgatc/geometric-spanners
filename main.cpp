@@ -32,7 +32,7 @@
 #include "utilities.h"
 
 
-using namespace gsnunf;
+using namespace unf_planespanners;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef K::Point_2 Point;
 typedef CGAL::Creator_uniform_2<double,Point> Creator;
@@ -291,7 +291,7 @@ bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment )
             }
         }
     }
-    //cout<<"\nTesting complete. "<< invalid << " of "<<(trials*(n_end-n_start))<<" invalid results.\n\n";
+    //cout<<"\nTesting Complete. "<< invalid << " of "<<(trials*(n_end-n_start))<<" invalid results.\n\n";
     return invalid == 0;
 }
 

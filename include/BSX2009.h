@@ -11,16 +11,16 @@
 #include "utilities.h"
 
 
-namespace gsnunf {
+namespace unf_planespanners {
 
 using namespace std;
 
 namespace bsx2009 {
 
-inline bool createNewEdge( const Delaunay_triangulation& T,
-                           const vector<Vertex_handle>& handles,
-                           size_tPairSet &E,
-                           const size_t i, const size_t j, const size_t n, bool printLog = false ) {
+inline bool createNewEdge(const DelaunayTriangulation& T,
+                          const vector<VertexHandle>& handles,
+                          index_tPairSet &E,
+                          const index_t i, const index_t j, const index_t n, bool printLog = false ) {
     assert( std::max(i,j) < n );
     assert( T.is_edge( handles.at(i), handles.at(j) ) );
     //if( printLog ) cout<<"add:("<<i<<","<<j<<") ";
@@ -33,69 +33,69 @@ inline bool createNewEdge( const Delaunay_triangulation& T,
 } // namespace bsx2009
 
 template< typename RandomAccessIterator, typename OutputIterator >
-void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, double alpha = 2*PI/3, bool printLog = false ) {
+void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, number_t alpha = 2*PI/3, bool printLog = false ) {
     using namespace bsx2009;
 
     // ensure valid alpha
     alpha = CGAL::max( EPSILON, CGAL::min( alpha, 2*PI/3 ) );
-    size_t numCones = rint( ceil( 2*PI / alpha ) );
+    auto numCones = cone_t( rint( ceil( 2*PI / alpha ) ) );
     assert( numCones > 0 ); // guard against /0
-    number_t alphaReal = 2*PI / numCones;
-    size_t FINAL_DEGREE_BOUND = 14 + numCones;
+    auto alphaReal =2*PI / number_t(numCones);
+    cone_t FINAL_DEGREE_BOUND = 14 + numCones;
 
     vector<Point> P(pointsBegin, pointsEnd);
-    vector<size_t> index;
+    vector<index_t> index;
     spatialSort<K>(P, index);
 
     //Step 1: Construct Delaunay triangulation
-    Delaunay_triangulation T;
+    DelaunayTriangulation T;
 
     //N is the number of vertices in the delaunay triangulation.
     size_t n = P.size();
     if(n > SIZE_T_MAX - 1) return;
 
     //Stores all the vertex handles (CGAL's representation of a vertex, its properties, and data).
-    vector<Vertex_handle> handles(n);
+    vector<VertexHandle> handles(n);
 
     /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
       (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
-    Face_handle hint;
-    for(size_t entry : index) {
+    FaceHandle hint;
+    for(index_t entry : index) {
         auto vh = T.insert(P[entry], hint);
         hint = vh->face();
         vh->info() = entry;
         handles[entry] = vh;
     }
 
-    Vertex_handle v_inf = T.infinite_vertex();
+    VertexHandle v_inf = T.infinite_vertex();
 
 
 
     //************* Step 2 ****************//
-    vector<size_t> piIndexedByPiU;
-    piIndexedByPiU.reserve(n);
-    reverseLowDegreeOrdering(T,back_inserter(piIndexedByPiU));
+    vector<index_t> ordering;
+    ordering.reserve(n);
+    reverseLowDegreeOrdering(T,back_inserter(ordering));
 
 
     //************* Step 3 ****************//
-    size_tPairSet ePrime;
+    index_tPairSet ePrime;
     vector<bool> isProcessed(n, false);
-    //Vertex_handle u_handle = v_inf;
+    //VertexHandle u_handle = v_inf;
 
-    // Iterate through vertices by piU ordering
-    for( size_t u : piIndexedByPiU ) {
-        Vertex_handle u_handle = handles.at(u);
+    // Iterate through vertices
+    for( index_t u : ordering ) {
+        VertexHandle u_handle = handles.at(u);
         assert( !T.is_infinite(u_handle) );
         Point u_point = u_handle->point();
         isProcessed[u] = true;
         //if( printLog ) cout<<"\nu:"<<u<<" ";
 
         // Get neighbors of u
-        Vertex_circulator N = T.incident_vertices( u_handle );
+        VertexCirculator N = T.incident_vertices(u_handle );
         //if( printLog ) cout<<"N_init:"<<(T.is_infinite(N)?size_t(numeric_limits<size_t>::max):size_t(N->info()))<<" ";
         if( T.is_infinite(N) ) --N;
 
-        Vertex_circulator
+        VertexCirculator
             closest(N),
             done(N);
 
@@ -106,7 +106,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
         do { // Find closest unprocessed neighbor, also count processed neighbors and neighbors in ePrime
             if( !T.is_infinite(N) ) {
-                if( gsnunf::contains( ePrime, makeNormalizedPair( u, N->info() ) ) )
+                if( unf_planespanners::contains(ePrime, makeNormalizedPair(u, N->info() ) ) )
                     ++degree;
 
                 if( isProcessed.at( N->info() ) )
@@ -122,7 +122,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
         // We will add a max of numCones-1 since we are guaranteed to add the closest
         // but cannot add to the two cones touching closest.
-        vector<Vertex_handle> closestInCones( numCones-1, v_inf );
+        vector<VertexHandle> closestInCones(numCones - 1, v_inf );
         closestInCones.front() = closest; // add closest to "add" list
         while( --N != closest ); // start from the closest vertex
 
@@ -130,12 +130,12 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         while( --N != closest ) {
             if( !T.is_infinite(N) && !isProcessed.at(N->info()) ) {
                 // evaluate possible forward edges
-                double theta = get_angle<K>(
-                    closest->point(),
-                    u_point,
-                    N->point()
+                number_t theta = getAngle(
+                        closest->point(),
+                        u_point,
+                        N->point()
                 );
-                auto cone = size_t( (theta-EPSILON) / alphaReal );
+                auto cone = cone_t( (theta-EPSILON) / alphaReal );
                 // trap neighbors in forbidden cones by putting them in 0 (which is already guaranteed to be closest)
                 cone = ( cone < closestInCones.size() ? cone : 0 );
 
@@ -161,7 +161,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
         // Loop through neighbors again and add cross edges between
         // consecutive neighbors that are NOT processed (or infinite).
-        Vertex_handle lastN = N;
+        VertexHandle lastN = N;
         do {
             --N; // Increment first, then check validity
             if( !( T.is_infinite(N) || isProcessed.at(N->info()) ) ) {
@@ -174,16 +174,6 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
             lastN = N->handle();
         } while( N != closest );
 
-
-
-//        if( printLog && degree>FINAL_DEGREE_BOUND ) {
-//            break; // exit to printer
-//        } else if( !printLog && degree>FINAL_DEGREE_BOUND ) {
-//            // recurse to print log
-//            cout<<"BOUND:"<<FINAL_DEGREE_BOUND<<",deg:"<<degree<<"\n";
-//            list<pair<Point,Point> > result;
-//            BSX2009( pointsBegin, pointsEnd, back_inserter(result), alpha, true );
-//        }
         assert( degree <= FINAL_DEGREE_BOUND ); // Lemma 3
 
     } // END OF STEP 3 LOOP
@@ -195,15 +185,14 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 //    edgeList.reserve( ePrime.size() );
 
     // Send resultant graph to output iterator
-    for( size_tPair e : ePrime ) {
-        // Edge list is only needed for printing. Remove for production.
-        //edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
-
-        *result = e;
-        ++result;
-//        *result = make_pair( handles.at(e.second)->point(), handles.at(e.first)->point() );
+    std::copy( ePrime.begin(), ePrime.end(), result );
+//    for( index_tPair e : ePrime ) {
+//        // Edge list is only needed for printing. Remove for production.
+//        //edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
+//
+//        *result = e;
 //        ++result;
-    }
+//    }
 
 
     //
@@ -258,6 +247,6 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
 } // function BSX2009
 
-} // namespace gsnunf
+} // namespace unf_planespanners
 
 #endif // GSNUNF_BSX2009_H

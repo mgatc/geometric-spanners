@@ -7,7 +7,7 @@
 //
 //#include "utilities.h"
 //
-//namespace gsnunf {
+//namespace unf_planespanners {
 //
 //using namespace std;
 //
@@ -63,15 +63,15 @@
 ////template< class P >
 ////struct EdgeEvent {
 ////    std::pair<
-////        typename T::Vertex_handle,
-////        typename T::Vertex_handle
+////        typename T::VertexHandle,
+////        typename T::VertexHandle
 ////    > e;
-////    EdgeEvent( std::pair<typename T::Vertex_handle,typename T::Vertex_handle> e ) : e(e) {}
+////    EdgeEvent( std::pair<typename T::VertexHandle,typename T::VertexHandle> e ) : e(e) {}
 ////};
 ////
 ////template< class T >
 ////struct VertexStatusEvent : public GraphAlgorithmEvent, VertexEvent<T>, StatusEvent {
-////    VertexStatusEvent<T>( typename T::Vertex_handle vertex, bool status )
+////    VertexStatusEvent<T>( typename T::VertexHandle vertex, bool status )
 ////        : GraphAlgorithmEvent(EventType::Vertex), VertexEvent<T>(vertex), StatusEvent(status) {}
 ////    VertexStatusEvent<T>( const VertexStatusEvent& other )
 ////        : GraphAlgorithmEvent(EventType::Vertex), VertexEvent<T>( other.v ), StatusEvent( other.active ) {}
@@ -79,7 +79,7 @@
 ////
 ////template<class T>
 ////struct EdgeStatusEvent : public GraphAlgorithmEvent, EdgeEvent<T>, StatusEvent {
-////    EdgeStatusEvent<T>( std::pair<typename T::Vertex_handle,typename T::Vertex_handle> edge, bool status )
+////    EdgeStatusEvent<T>( std::pair<typename T::VertexHandle,typename T::VertexHandle> edge, bool status )
 ////        : GraphAlgorithmEvent(EventType::Edge), EdgeEvent<T>(edge), StatusEvent(status) {}
 ////    EdgeStatusEvent<T>( const EdgeStatusEvent& other )
 ////        : GraphAlgorithmEvent( EventType::Edge ), EdgeEvent<T>( other.e ), StatusEvent( other.active ) {}
@@ -87,7 +87,7 @@
 ////
 ////template< class T >
 ////struct VertexFocusEvent : public GraphAlgorithmEvent, VertexEvent<T>, FocusEvent {
-////    VertexFocusEvent<T>( typename T::Vertex_handle vertex, size_t lvl )
+////    VertexFocusEvent<T>( typename T::VertexHandle vertex, size_t lvl )
 ////        : GraphAlgorithmEvent(EventType::Focus), VertexEvent<T>(vertex), FocusEvent(lvl) {}
 ////    VertexFocusEvent<T>( const VertexFocusEvent& other )
 ////        : GraphAlgorithmEvent(EventType::Focus), VertexEvent<T>( other.v ), FocusEvent( other.level ) {}
@@ -180,21 +180,21 @@
 //    }
 //
 ////    // Change status of vertex v
-////    void addToEventQueue( Vertex_handle v, bool status ) {
+////    void addToEventQueue( VertexHandle v, bool status ) {
 ////        VertexStatusEvent<T> add( v, status );
 ////        _vertexStatusEvents.push_back( add ); // put the event in a container that won't slice it
 ////        _eventQueue.push( &_vertexStatusEvents.back() );           // put the event's address in the event queue
 ////    }
 ////
 ////    // Change focus[level] to highlight vertex v
-////    void addToEventQueue( Vertex_handle v, int level ) {
+////    void addToEventQueue( VertexHandle v, int level ) {
 ////        VertexFocusEvent<T> add( v, level );
 ////        _focusEvents.push_back( add ); // put the event in a container that won't slice it
 ////        _eventQueue.push( &_focusEvents.back() );          // put the event's address in the event queue
 ////    }
 ////
 ////    // Change status of edge e
-////    void addToEventQueue( std::pair<Vertex_handle,Vertex_handle> e, bool status ) {
+////    void addToEventQueue( std::pair<VertexHandle,VertexHandle> e, bool status ) {
 ////        EdgeStatusEvent<T> add( e, status );
 ////        _edgeStatusEvents.push_back( add ); // put the event in a container that won't slice it
 ////        _eventQueue.push( &_edgeStatusEvents.back() );           // put the event's address in the event queue
@@ -209,7 +209,7 @@
 ////        GraphAlgorithmEvent* e;
 ////        EventQueue events( _eventQueue );
 ////        AdjacencyList E;
-////        std::vector<Vertex_handle> focus;
+////        std::vector<VertexHandle> focus;
 ////        VertexHash V;
 ////
 ////        for( auto it=_DT.finite_vertices_begin(); it!=_DT.finite_vertices_end(); ++it )
@@ -233,7 +233,7 @@
 ////            case EventType::Edge: {
 ////                // cast the event to the proper type, e is a pointer
 ////                auto event = static_cast< EdgeStatusEvent<DelaunayGraph>* >(e);
-////                Vertex_handle v1 = event->e.first,
+////                VertexHandle v1 = event->e.first,
 ////                              v2 = event->e.second;
 ////
 ////                if( !contains( E, v1 ) )
@@ -272,7 +272,7 @@
 ////    }
 //};
 //
-//} // namespace gsnunf
+//} // namespace unf_planespanners
 
 #endif // GSNUNF_GRAPHALGOTV_H
 

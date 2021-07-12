@@ -130,6 +130,159 @@ namespace unf_planespanners {
         return getAngle(P[p], P[q], P[r]);
     }
 
+
+    enum Algorithm {
+        First=0,
+        Bgs2005 = First,
+        Lw2004,
+        Bsx2009,
+        Kpx2010,
+        Kx2012,
+        Bcc2012_7,
+        Bcc2012_6,
+        Bhs2017,
+        Bghp2010,
+        Kpt2017,
+        Bkpx2015,
+        Last
+    };
+
+    struct Result {
+        Algorithm algorithm;
+        size_t n;
+        size_t runtime;
+        size_t degree;
+        std::optional<double> t;
+
+        Result(Algorithm algorithm, size_t n, size_t runtime, size_t degree, std::optional<double> t = nullopt)
+                : algorithm(algorithm), n(n), runtime(runtime), degree(degree), t(t) {}
+
+        friend ostream &operator<<(ostream &os, const Result &result);
+    };
+
+    ostream &operator<<(ostream &os, const Result &result) {
+        os << result.n << ","
+           << result.algorithm << ","
+           << result.runtime << ","
+           << result.degree << ",";
+
+        if(result.t)
+            os << *(result.t);
+
+        os << ",\n";
+
+        return os;
+    }
+
+    template< class OutputIterator >
+    void readPointsFromFile( OutputIterator out, const string outputFileName, const size_t n=SIZE_T_MAX ) {
+        ifstream in(outputFileName);
+        if (in.is_open()) {
+            double x,y;
+            size_t i = 0;
+            while ( i<n && in >> x >> y ) {
+                *out = Point(x,y);
+                ++out;
+                ++i;
+            }
+            in.close();
+        }
+    }
+
+    template< class OutputIterator >
+    string generateRandomPoints( index_t n, number_t size, OutputIterator pointsOut ) {
+        typedef CGAL::Creator_uniform_2<number_t,Point> Creator;
+
+        auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( size );
+        auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   size );
+        auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( size );
+        auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( size );
+
+
+        auto g1s = CGAL::Random_points_in_square_2<Point,Creator>( size/4 );
+        auto g2s = CGAL::Random_points_in_disc_2<Point,Creator>(   size/4 );
+        auto g3s = CGAL::Random_points_on_square_2<Point,Creator>( size/4 );
+        auto g4s = CGAL::Random_points_on_circle_2<Point,Creator>( size/4 );
+
+        std::set<Point> points;
+
+        std::copy_n( g2, n/9, inserter(points) );
+        std::copy_n( g3, n/9, inserter(points) );
+        std::copy_n( g4, n/9, inserter(points) );
+
+        std::copy_n( g1s, n/9, inserter(points) );
+        std::copy_n( g2s, n*2/9, inserter(points) );
+        std::copy_n( g3s, n/9, inserter(points) );
+        std::copy_n( g4s, n/18, inserter(points) );
+
+        int remaining;
+        while( (remaining = long(n)-long(points.size())) > 0) {
+            std::copy_n( g1, remaining, inserter(points) );
+        }
+
+
+        //points.emplace(0,0);
+
+        // copy points to output iterator
+        for( Point p : points )
+            *(pointsOut++) = p;
+
+        // copy points to file
+        ofstream out;
+        string fName;
+        fName = "data-" + to_string(n) + "_" + to_string(size) + "x" + to_string(size) + ".txt";
+        out.open( fName, ios::trunc );
+        for( Point p : points )
+            out << p << endl;
+
+        out.close();
+
+        return fName;
+    }
+
+    template< class OutputIterator >
+    string generatePointsNovel( OutputIterator pointsOut, size_t rows = 10, size_t cols = 10 ) {
+
+        vector<Point> points;
+
+        const double skew = 0.01;
+        for( size_t i=0; i<rows; ++i ) {
+            bool rowIsOdd = i%2;
+            for( size_t j=rowIsOdd; j<cols; j+=1+(rowIsOdd) ) {
+                bool colIsOdd = j%2;
+                double y = i;
+                y += (rowIsOdd || colIsOdd) ?
+                     0 : (skew * ( (i+j)%4 == 0 ? -1 : 1 ) );
+//            if( rowIsEven && j%2 == 0 ) {
+//                if( (i+j)%4 == 0 ) {
+//                    y -= skew;
+//                } else {
+//                    y += skew;
+//                }
+//            }
+                Point p(j,y);
+                //cout<<p<<"\n";
+                points.push_back(p);
+            }
+        }
+
+        // copy points to output iterator
+        for( Point p : points )
+            *(pointsOut++) = p;
+
+        // copy points to file
+        ofstream out;
+        string fName;
+        fName = "data-NOVEL-" + to_string(points.size()) + "_" + to_string(rows) + "x" + to_string(cols) + ".txt";
+        out.open( fName, ios::trunc );
+        for( Point p : points )
+            out << p << endl;
+
+        out.close();
+
+        return fName;
+    }
+
     template< typename Point_2 >
     struct EuclideanDistanceToPoint {
         Point_2 goal;

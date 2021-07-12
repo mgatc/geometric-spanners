@@ -387,6 +387,239 @@ using namespace std;
         return t_max;
     }
 
+    class DelaunayTriangulationSFH {
+        typedef CGAL::Triangulation_vertex_base_with_info_2<index_t, K> Vb;
+        typedef CGAL::Triangulation_data_structure_2<Vb> Tds;
+        typedef CGAL::Delaunay_triangulation_2<K, Tds> Delaunay;
+        class PointSFH : public K::Point_2 {
+        public:
+            index_t id = numeric_limits<index_t>::max(); // dummy value for id
+            string color = "white";
+
+            PointSFH() = default;
+
+            PointSFH(number_t X, number_t Y) : K::Point_2(X, Y) { }
+            PointSFH(number_t X, number_t Y, index_t k) : K::Point_2(X, Y) { id = k; }
+
+            friend ostream &operator<<(ostream &strm, const PointSFH &p) {
+                return strm << p.id << ": (" << p.x() << ", " << p.y() << ")";
+            }
+        };
+
+        Delaunay T;
+    public:
+        DelaunayTriangulationSFH(const vector<Point> &P, vector<Edge> &E) {
+            insertPoints(P);
+            getEdges(E);
+        }
+
+        DelaunayTriangulationSFH(const vector<Point> &P) {
+            insertPoints(P);
+        }
+
+        void getEdges(vector<Edge> &E) {
+            for(auto it = T.finite_edges_begin(); it != T.finite_edges_end(); ++it) {
+                Delaunay::Edge e=*it;
+                index_t i1 = e.first->vertex( (e.second+1)%3 )->info();
+                index_t i2 = e.first->vertex( (e.second+2)%3 )->info();
+                E.emplace_back(i1,i2);
+            }
+        }
+
+        void insertPoints(const vector<Point> &P) {
+            vector<pair<PointSFH, index_t> > points;
+            index_t id = 0;
+
+            for( Point p : P )
+                points.emplace_back(make_pair(PointSFH(p.x(),p.y()),id++));
+
+            T.insert(points.begin(), points.end());
+        }
+
+        index_t findClosestPoint(const Point &p) {
+            auto handle = T.nearest_vertex(p);
+            return handle->info();
+        }
+    };
+
+    struct priorityComparator{
+        bool operator()(const pair<number_t,index_t> &p1, const pair<number_t,index_t> &p2) const{
+            return p1.first > p2.first;
+        }
+    };
+
+    typedef boost::heap::fibonacci_heap<pair<number_t,index_t>, boost::heap::compare<priorityComparator>> FibonacciHeap;
+
+    number_t aStar(const vector<Point> &P, const vector<unordered_set<index_t>> &G, const index_t startVertex, const index_t goalVertex){
+
+        FibonacciHeap openSet;
+        vector<index_t> cameFrom(P.size(),-1);
+        vector<bool> isInOpenSet(P.size(),false);
+        vector<FibonacciHeap::handle_type> handleOfVertex(P.size());
+        vector<number_t>  g(P.size(), INF);
+
+        handleOfVertex[startVertex] = openSet.push(make_pair(getDistance(P[startVertex],P[goalVertex]),startVertex));
+        isInOpenSet[startVertex] = true;
+        g[startVertex] = 0;
+
+        //unsigned count = 0;
+        //bool flag = false;
+
+        while( !openSet.empty() ){
+            // count++;
+
+//        if( count == 400 ) {
+//            flag = true;
+//            break;
+//        }
+
+            pair<number_t,index_t> current = openSet.top();
+            openSet.pop();
+            isInOpenSet[current.second] = false;
+
+            if( current.second == goalVertex ) {
+                number_t pathLength = 0;
+                index_t currentVertex = current.second;
+                while ( currentVertex !=  startVertex ) {
+                    pathLength += getDistance( P[currentVertex], P[cameFrom[currentVertex]]);
+                    currentVertex = cameFrom[currentVertex];
+                }
+                return pathLength;
+            }
+
+            for( index_t neighbor : G[current.second] ) {
+
+                number_t tentativeGscore = g[current.second] + getDistance(P[current.second],P[neighbor]);
+                if( tentativeGscore < g[neighbor]){
+                    cameFrom[neighbor] = current.second;
+                    g[neighbor] = tentativeGscore;
+                    number_t fOfNeighbor = g[neighbor] + getDistance(P[neighbor], P[goalVertex]);
+
+                    if (!isInOpenSet[neighbor]) {
+                        handleOfVertex[neighbor] = openSet.push(make_pair(fOfNeighbor, neighbor));
+                        isInOpenSet[neighbor] = true;
+                    }
+                    else
+                        openSet.decrease(handleOfVertex[neighbor],make_pair(fOfNeighbor, neighbor));
+                }
+            }
+        }
+
+        return INF;
+    }
+
+    template<typename VertexIterator, typename EdgeIterator>
+    number_t StretchFactorUsingHeuristic(VertexIterator pointsBegin,
+                                                VertexIterator pointsEnd,
+                                                EdgeIterator edgesBegin,
+                                                EdgeIterator edgesEnd,
+                                                const size_t numberOfThreads = 4) {
+        const vector<Point> P(pointsBegin, pointsEnd);
+        const vector<Edge> E(edgesBegin, edgesEnd);
+        vector<unordered_set<index_t>> G(P.size()),
+            DelG(P.size());
+
+        for (Edge e : E) {
+            G[e.first].insert(e.second);
+            G[e.second].insert(e.first);
+        }
+
+        vector<Edge> edgesOfDT;
+        DelaunayTriangulationSFH DT(P, edgesOfDT);
+        for(Edge e : edgesOfDT ) {
+            DelG[e.first].insert(e.second);
+            DelG[e.second].insert(e.first);
+        }
+
+        vector<number_t> stretchFactorOfG(numberOfThreads,0);
+        vector<pair<index_t, index_t>> worstPairOfG(numberOfThreads);
+        vector<unordered_map<index_t,number_t>> tracker(P.size());
+
+#pragma omp parallel for num_threads(numberOfThreads)
+        for( index_t u = 0; u < P.size(); u++ ) {
+
+            number_t largestSfFromU = 0, currentStretchFactor = 0;
+            pair<index_t, index_t> worstPairSoFar, worstPairCurrent;
+            unordered_set<index_t> localPoints;
+
+            vector<bool> isConsidered(P.size(),false);
+            isConsidered[u] = true;
+            localPoints.insert(u);
+
+            while( true ) {
+
+                unordered_set<index_t> underConsideration;
+                for (auto i : localPoints) {
+                    for (auto j : DelG[i]) {
+                        if (!isConsidered[j]) {
+                            underConsideration.insert(j);
+                            isConsidered[j] = true;
+                        }
+                    }
+                }
+
+                for (index_t v : underConsideration) {
+
+                    unordered_map<index_t,number_t>::iterator result;
+
+#pragma omp critical
+                    result = tracker[std::min(u,v)].find(std::max(u,v));
+
+                    if (result == tracker[u].end()) {
+                        number_t stretchFactorUV = aStar(P, G, u, v) / getDistance(P[u], P[v]);
+
+                        if (stretchFactorUV > currentStretchFactor) {
+                            worstPairCurrent.first  = u;
+                            worstPairCurrent.second = v;
+                        }
+
+                        currentStretchFactor = std::max(currentStretchFactor, stretchFactorUV);
+
+#pragma omp critical
+                        tracker[std::min(u,v)].insert(make_pair(std::max(u,v), stretchFactorUV));
+                    }
+                    else {
+                        if( (*result).second > currentStretchFactor ){
+                            worstPairCurrent.first = u;
+                            worstPairCurrent.second = v;
+                            currentStretchFactor = (*result).second;
+                        }
+                    }
+                }
+
+                if (currentStretchFactor > largestSfFromU) {
+                    largestSfFromU = currentStretchFactor;
+                    worstPairSoFar.first  = worstPairCurrent.first;
+                    worstPairSoFar.second = worstPairCurrent.second;
+                }
+                else
+                    break;
+
+                localPoints.clear();
+                for( index_t i : underConsideration )
+                    localPoints.insert(i);
+            }
+
+            if (largestSfFromU > stretchFactorOfG[omp_get_thread_num()]) {
+                worstPairOfG[omp_get_thread_num()].first  = worstPairSoFar.first;
+                worstPairOfG[omp_get_thread_num()].second = worstPairSoFar.second;
+                stretchFactorOfG[omp_get_thread_num()]    = largestSfFromU;
+            }
+        }
+
+        index_t worstPairU = worstPairOfG[0].first, worstPairV = worstPairOfG[0].second;
+        number_t finalSf = stretchFactorOfG[0];
+        for(index_t i = 1; i < numberOfThreads; i++)
+            if( stretchFactorOfG[i] >  finalSf ) {
+                finalSf = stretchFactorOfG[i];
+                worstPairU = worstPairOfG[i].first;
+                worstPairV = worstPairOfG[i].second;
+            }
+
+        //cout << "Heuristic worst pair: " <<  worstPairU << ", " << worstPairV << endl;
+        return *std::max_element(stretchFactorOfG.begin(),stretchFactorOfG.end());
+    }
+
 /*template< typename VertexContainer, typename VertexMap, typename AdjacencyList, typename Matrix, typename H>
 void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_prime, Matrix<double>& ShortestKnownPaths, const Matrix<double>& EuclideanDistances, Matrix<H>& upperBoundHandles, size_t start, size_t goal ) {
     typedef pair<double,size_t>
@@ -472,25 +705,29 @@ void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_pr
 
     class Timer {
     public:
-        explicit Timer(std::string delimiter = ",") : m_delimiter(std::move(delimiter)) {
+        explicit Timer(std::string delimiter = ",") : running(true), m_delimiter(std::move(delimiter)) {
             m_startTime = std::chrono::high_resolution_clock::now();
         }
 
         ~Timer() {
-            stop();
+            if( running ) {
+                std::cout << stop() << m_delimiter;
+            }
         }
 
-        void stop() {
+        size_t stop() {
             auto endTime = std::chrono::high_resolution_clock::now();
             auto start = std::chrono::time_point_cast<std::chrono::microseconds>(
                     m_startTime).time_since_epoch().count();
             auto end = std::chrono::time_point_cast<std::chrono::microseconds>(endTime).time_since_epoch().count();
             auto duration = end - start;
+            running = false;
 
-            std::cout << duration << m_delimiter;
+            return duration;
         }
 
     private:
+        bool running;
         std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
         std::string m_delimiter;
     };

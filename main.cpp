@@ -1,166 +1,49 @@
 #include <chrono>
 #include <fstream> //Reading and writing point sets.
 #include <list>
-#include <limits>
 #include <optional>
 #include <set>
 #include <utility>
 
 //Random point generation, testing.
 #include <CGAL/point_generators_2.h>
-
-#include <CGAL/Delaunay_triangulation_2.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
-//#include "FloydWarshall.h"
-//#include "GeometricSpannerPrinter.h"
-////#include "GraphAlgoTV.h"
+#include "BCC2012.h"
+#include "BGHP2010.h"
 #include "BGS2005.h"
-//#include "BGS2005_2.h"
-#include "LW2004.h"
+#include "BHS2017.h"
+#include "BKPX2015.h"
 #include "BSX2009.h"
+#include "KPT2017.h"
 #include "KPX2010.h"
 #include "KX2012.h"
-#include "BCC2012.h"
-#include "BHS2017.h"
-#include "KPT2017.h"
-#include "BKPX2015.h"
-#include "BGHP2010.h"
+#include "LW2004.h"
+
+#include "Experiment.h"
+//#include "GeometricSpannerPrinter.h"
+#include "LineGraphPrinter.h"
 #include "metrics.h"
-//#include "delaunay.h"
 #include "utilities.h"
 
 
+
 using namespace unf_planespanners;
-typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef K::Point_2 Point;
-typedef CGAL::Creator_uniform_2<double,Point> Creator;
 
 bool experiment(size_t,size_t,size_t,size_t=1);
 bool singleRun(size_t,double,string,optional<string> = nullopt,bool=false,bool=false);
 void scratch(size_t n1);
-void stretchScratch();
-void stretchFactorAndDegreeExperiment();
-void algoTVScratch();
-
-template< class OutputIterator >
-void readPointsFromFile( OutputIterator out, const string outputFileName, const size_t n=SIZE_T_MAX ) {
-    ifstream in(outputFileName);
-    if (in.is_open()) {
-        double x,y;
-        size_t i = 0;
-        while ( i<n && in >> x >> y ) {
-            *out = Point(x,y);
-            ++out;
-            ++i;
-        }
-        in.close();
-    }
-}
-
-template< class OutputIterator >
-string generateRandomPoints( size_t n, double size, OutputIterator pointsOut ) {
-    typedef CGAL::Creator_uniform_2<double,Point> Creator;
-
-    auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( size );
-    auto g2 = CGAL::Random_points_in_disc_2<Point,Creator>(   size );
-    auto g3 = CGAL::Random_points_on_square_2<Point,Creator>( size );
-    auto g4 = CGAL::Random_points_on_circle_2<Point,Creator>( size );
 
 
-    auto g1s = CGAL::Random_points_in_square_2<Point,Creator>( size/4 );
-    auto g2s = CGAL::Random_points_in_disc_2<Point,Creator>(   size/4 );
-    auto g3s = CGAL::Random_points_on_square_2<Point,Creator>( size/4 );
-    auto g4s = CGAL::Random_points_on_circle_2<Point,Creator>( size/4 );
-
-    std::set<Point> points;
-
-    std::copy_n( g2, n/9, inserter(points) );
-    std::copy_n( g3, n/9, inserter(points) );
-    std::copy_n( g4, n/9, inserter(points) );
-
-    std::copy_n( g1s, n/9, inserter(points) );
-    std::copy_n( g2s, n*2/9, inserter(points) );
-    std::copy_n( g3s, n/9, inserter(points) );
-    std::copy_n( g4s, n/18, inserter(points) );
-
-    int remaining;
-    while( (remaining = int(n)-int(points.size())) > 0) {
-        std::copy_n( g1, remaining, inserter(points) );
-    }
-
-
-    //points.emplace(0,0);
-
-    // copy points to output iterator
-    for( Point p : points )
-        *(pointsOut++) = p;
-
-    // copy points to file
-    ofstream out;
-    string fName;
-    fName = "data-" + to_string(n) + "_" + to_string(size) + "x" + to_string(size) + ".txt";
-    out.open( fName, ios::trunc );
-    for( Point p : points )
-        out << p << endl;
-
-    out.close();
-
-    return fName;
-}
-
-template< class OutputIterator >
-string generatePointsNovel( OutputIterator pointsOut, size_t rows = 10, size_t cols = 10 ) {
-
-    vector<Point> points;
-
-    const double skew = 0.01;
-    for( size_t i=0; i<rows; ++i ) {
-        bool rowIsOdd = i%2;
-        for( size_t j=rowIsOdd; j<cols; j+=1+(rowIsOdd) ) {
-            bool colIsOdd = j%2;
-            double y = i;
-            y += (rowIsOdd || colIsOdd) ?
-                0 : (skew * ( (i+j)%4 == 0 ? -1 : 1 ) );
-//            if( rowIsEven && j%2 == 0 ) {
-//                if( (i+j)%4 == 0 ) {
-//                    y -= skew;
-//                } else {
-//                    y += skew;
-//                }
-//            }
-            Point p(j,y);
-            //cout<<p<<"\n";
-            points.push_back(p);
-        }
-    }
-
-    // copy points to output iterator
-    for( Point p : points )
-        *(pointsOut++) = p;
-
-    // copy points to file
-    ofstream out;
-    string fName;
-    fName = "data-NOVEL-" + to_string(points.size()) + "_" + to_string(rows) + "x" + to_string(cols) + ".txt";
-    out.open( fName, ios::trunc );
-    for( Point p : points )
-        out << p << endl;
-
-    out.close();
-
-    return fName;
-}
 
 int main( int argc, char *argv[] ) {
 
-    const size_t runs      =   100;
-    const size_t n_begin   =  5000;
-    const size_t n_end     = 10000;
-    const size_t increment =  1000;
+    const index_t runs      =   100;
+    const index_t n_begin   =  5000;
+    const index_t n_end     = 10000;
+    const index_t increment =  1000;
 
-    vector<size_t> experimentParameters = {
+    vector<index_t> experimentParameters = {
         runs, n_begin, n_end, increment
     };
 
@@ -184,6 +67,7 @@ int main( int argc, char *argv[] ) {
 
  //   singleRun( 0, 0, "BKPXTestResult", "positive_points.txt", true, true );
 
+    lineGraph.print( "testgraph");
 
     return 0;
 }
@@ -282,6 +166,7 @@ bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment )
     size_t invalid = 0;
     size_t trialNum = 1;
 
+
     for( size_t trial=0; trial<trials; ++trial ) {
         for( size_t n=n_start; n<=n_end; n+=increment ) {
             trialNum++;
@@ -308,285 +193,11 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     else
         generatedFile = make_optional( generateRandomPoints( n, size, back_inserter(points) ) );
 
-    bool measureStretchFactor = true;
-
-//    list< pair< Point, Point > > result;
-    list< pair< size_t, size_t > > result;
-    size_t deg;
-//
-    double t;
-
-    // STANDARD L2 DELAUNAY TRIANGULATION BASED ALGORITHMS ///////////////
-
-    //CGAL::Delaunay_triangulation_2<K> DT( points.begin(), points.end() );
-//                cout << degree(DT);
-//                cout << ",";
-//                cout << weight(DT);
-//                cout << ",";
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "BGS2005,";
-
+    for( int alg=Algorithm::First;
+         alg!=Algorithm::Last; ++alg )
     {
-        Timer tim;
-        BGS2005( points.begin(), points.end(), back_inserter(result) );
+        PlaneSpannerExperiment( points, static_cast<Algorithm>(alg) );
     }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-
-    result.clear();
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout << "LW2004,   ";
-    {
-        Timer tim;
-        LW2004( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-    result.clear();
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "BSX2009,";
-    {
-        Timer tim;
-        BSX2009( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-    result.clear();
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "KPX2010,";
-    const size_t k = 14; // the max degree of the spanner such that k>=14
-    {
-        Timer tim;
-        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-    result.clear();
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "KX2012,";
-    {
-        Timer tim;
-        KX2012( points.begin(), points.end(), back_inserter(result), printLog );
-    }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-    result.clear();
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "BCC-7,";
-    {
-        Timer tim;
-        BCC2012<7>( points.begin(), points.end(), back_inserter(result), printLog );
-    }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-    result.clear();
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "BCC-6,";
-    {
-        Timer tim;
-        BCC2012<6>( points.begin(), points.end(), back_inserter(result), printLog );
-    }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-    result.clear();
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "BHS2017,";
-    {
-        Timer tim;
-        BHS2017( points.begin(), points.end(), back_inserter(result), printLog );
-    }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-    result.clear();
-
-
-
-
-    // TD-DELAUNAY / HALF-THETA-6 GRAPH BASED ALGORITHMS /////////////
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "BGHP2010,";
-    {
-        Timer tim;
-        BGHP2010( points.begin(), points.end(), back_inserter(result), printLog );
-    }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-    result.clear();
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "KPT2017,";
-    {
-        Timer tim;
-        KPT2017( points.begin(), points.end(), back_inserter(result), printLog );
-    }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-    result.clear();
-
-
-
-    // Linf DELAUNAY GRAPH BASED ALGORITHMS /////////////////////////////
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout << "BKPX2015, ";
-    {
-        Timer tim;
-        BKPX2015( points.begin(), points.end(), back_inserter(result), printLog );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-    result.clear();
-
-
-
-
 
 
 //    if( deg > 11 || t > 7 || forcePrint ) {

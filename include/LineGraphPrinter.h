@@ -1,6 +1,13 @@
 #ifndef GEOMETRIC_SPANNERS_PGFPLOTSPRINTER_H
 #define GEOMETRIC_SPANNERS_PGFPLOTSPRINTER_H
 
+/*
+ * TODO: Separate statistics calculations into a separate
+ *  class that will be accepted by PgfplotsPrinter and
+ *  TablePrinter to print appropriate results without the
+ *  need to perform redundant measurements on the data
+ */
+
 #include <map>
 #include <iostream>
 #include <optional>
@@ -29,7 +36,7 @@ namespace unf_planespanners {
 
         PgfplotsPrinter(string filename, string documentType = "standalone")
                 : TikzPrinter(filename,documentType){
-            
+
         }
 
 

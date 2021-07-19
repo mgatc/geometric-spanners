@@ -11,7 +11,11 @@
 #include <utility>
 #include <vector>
 
+
 #include <boost/functional/hash.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/kruskal_min_spanning_tree.hpp>
 #include <boost/heap/fibonacci_heap.hpp>
 
 #include <CGAL/convex_hull_2.h>
@@ -54,6 +58,29 @@ using namespace std;
 
         return max_el->second.size();
     }
+    template<typename RandomAccessIterator>
+    number_t degreeAvg(RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd) {
+        typedef typename RandomAccessIterator::value_type EdgeType;
+        typedef typename EdgeType::first_type VertexType;
+
+        std::vector<EdgeType> edges(edgesBegin, edgesEnd);
+        std::unordered_map<VertexType, unordered_set<VertexType>> adj;
+        // for each edge
+        for (auto e : edges) {
+            auto first = adj.begin();
+            tie(first, ignore) = adj.emplace(e.first, unordered_set<VertexType>());
+            (*first).second.insert(e.second);
+
+            auto second = adj.begin();
+            tie(second, ignore) = adj.emplace(e.second, unordered_set<VertexType>());
+            (*second).second.insert(e.first);
+        }
+        auto avg = std::accumulate(adj.begin(), adj.end(), 0.0, [&](const number_t &sum, const auto &current) {
+            return sum + current.second.size();
+        }) / number_t(adj.size());
+
+        return avg;
+    }
 
     template<typename Triangulation>
     size_t degree(const Triangulation &T) {
@@ -77,11 +104,18 @@ using namespace std;
         return degree(edges.begin(), edges.end());
     }
 
-    template<typename RandomAccessIterator>
-    number_t weight(RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd) {
+    template< class VertexIterator, class EdgeIterator>
+    number_t weight( VertexIterator pointsBegin,
+                     VertexIterator pointsEnd,
+                     EdgeIterator edgesBegin,
+                     EdgeIterator edgesEnd ) {
+        vector<Point> P(pointsBegin,pointsEnd);
+
         number_t w = 0;
+        index_t p,q;
         for (auto e = edgesBegin; e != edgesEnd; ++e) {
-            w += getDistance(e->first, e->second);
+            tie(p,q) = *e;
+            w += getDistance(P[p],P[q]);
         }
         return w;
     }
@@ -297,66 +331,48 @@ using namespace std;
         return t_max;
     }
 
-    template<typename RandomAccessIterator, typename OutputIterator>
-    number_t SFWorstPath(RandomAccessIterator edgesBegin,
-                         RandomAccessIterator edgesEnd,
+    template<typename VertexIterator, typename EdgeIterator, typename OutputIterator>
+    number_t SFWorstPath(VertexIterator pointsBegin,
+                         VertexIterator pointsEnd,
+                         EdgeIterator edgesBegin,
+                         EdgeIterator edgesEnd,
                          std::optional<OutputIterator> out = std::nullopt) {
-        typedef typename RandomAccessIterator::value_type EdgeType;
-        typedef typename EdgeType::first_type VertexType;
+        typedef typename VertexIterator::value_type Point_2;
 
-        vector<VertexType> V; // container for vertices
-        unordered_map<VertexType, index_t, PointHasher<VertexType> > vMap; // map point to index in V
-        unordered_map<index_t, unordered_set<index_t> > G; // adjacency list
-        index_t index = 0;
+        const vector<Point_2> V(pointsBegin, pointsEnd); // container for vertices
+        const size_t n = V.size();
+
+        vector<unordered_set<size_t> > G(n, unordered_set<size_t>()); // adjacency list
 
         // Create list of vertices, map to their indices, and adjacency list
         for (auto eit = edgesBegin; eit != edgesEnd; ++eit) {
-            // If vMap doesn't contain p, put it in V
-            VertexType p = eit->first;
-            index_t i_p = index;
-            bool inserted = false;
-            auto vMapIt = vMap.begin();
-            tie(vMapIt, inserted) = vMap.emplace(p, i_p); // map for reverse lookup
-            if (inserted) {
-                V.push_back(p);
-                ++index;
-            }
-            i_p = vMapIt->second;
+            auto p = eit->first,
+                    q = eit->second;
 
-            // If vMap doesn't contain q, put it in V
-            VertexType q = eit->second;
-            index_t i_q = index;
-            tie(vMapIt, inserted) = vMap.emplace(q, i_q); // map for reverse lookup
-            if (inserted) {
-                V.push_back(q);
-                ++index;
-            }
-            i_q = vMapIt->second;
-
-            G[i_p].insert(i_q); // add edge to adjacency list
+            G[p].insert(q);
+            G[q].insert(p);
         }
-        index_t n = V.size();
         //vector<double> T( n, INF );
-        number_t t_max = 0.0;
+        double t_max = 0.0;
+
         vector<index_t> MaxParents;
         index_t i_max = 0, j_max = 1;
 
         // calculate euclidean getDistance between all pairs
-        //#pragma omp parallel for reduction( max: t_max )
-        for (index_t i = 0; i < n; ++i) {
+        for (size_t i = 0; i < n; ++i) {
             // Euclidean distances
             vector<number_t> D(n, INF);
-            for (index_t j = 0; j < n; ++j) {
+            for (size_t j = 0; j < n; ++j) {
                 D.at(j) =
                         i == j ? 0 : getDistance(V.at(i), V.at(j));
             }
             // Shortest paths
             vector<number_t> ShortestPaths(n, INF);
-            vector<index_t> Parents(n);
+            vector<size_t> Parents(n);
             Dijkstra(i, V, G, ShortestPaths, Parents);
 
-            // Divide each shortest path distance by the euclidean getDistance between the vertices.
-            for (index_t j = 0; j < n; ++j) {
+            // Divide each shortest path getDistance by the euclidean distance between the vertices.
+            for (size_t j = 0; j < n; ++j) {
                 ShortestPaths.at(j) = ( // avoid /0
                         i == j ? 0 : ShortestPaths.at(j) / D.at(j)
                 );
@@ -368,7 +384,7 @@ using namespace std;
             );
             if (*t_local > t_max) {
                 t_max = *t_local;
-                // remove the following for parallel reduction function
+
                 if (out) {
                     std::swap(Parents, MaxParents);
                     i_max = i;
@@ -376,10 +392,11 @@ using namespace std;
                 }
             }
         }
+
         if (out) {
             size_t walk = j_max;
             do {
-                *(*out)++ = make_pair(V.at(walk), V.at(MaxParents.at(walk)));
+                *(*out)++ = make_pair(walk, MaxParents.at(walk));
                 walk = MaxParents.at(walk);
             } while (walk != i_max);
         }
@@ -702,6 +719,60 @@ void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_pr
 
     return;
 }*/
+    template< class VertexIterator, class EdgeIterator, class EdgeOutputIterator >
+    void getMST( VertexIterator pointsBegin,
+                     VertexIterator pointsEnd,
+                     EdgeIterator edgesBegin,
+                     EdgeIterator edgesEnd,
+                     EdgeOutputIterator out)
+    {
+
+        using namespace boost;
+        typedef adjacency_list<vecS, vecS, undirectedS,
+            Point,
+            property<edge_weight_t,number_t>
+            > Graph;
+
+        Graph G;
+
+        for( auto pit=pointsBegin; pit!=pointsEnd; ++pit ) {
+            auto v = add_vertex( *pit, G );
+        }
+
+        index_t p, q;
+        for( auto eit=edgesBegin; eit!=edgesEnd; ++eit ) {
+            tie( p, q ) = *eit;
+            number_t wt = getDistance( G[p], G[q] );
+            auto e = add_edge( p, q, wt, G );
+        }
+
+        typedef Graph::vertex_descriptor VertexDescriptor;
+        typedef Graph::edge_descriptor EdgeDescriptor;
+
+        std::list<EdgeDescriptor> mst;
+        boost::kruskal_minimum_spanning_tree(G,std::back_inserter(mst));
+
+        for(auto it = mst.begin(); it != mst.end(); ++it){
+            EdgeDescriptor ed = *it;
+            VertexDescriptor p = source(ed, G),
+                             q = target(ed, G);
+            *out = make_pair(p,q);
+        }
+    }
+    template< class VertexIterator, class EdgeIterator>
+    number_t getLightness( VertexIterator pointsBegin,
+                           VertexIterator pointsEnd,
+                           EdgeIterator edgesBegin,
+                           EdgeIterator edgesEnd ) {
+        vector<Point> P(pointsBegin,pointsEnd);
+        vector<Edge> E(edgesBegin,edgesEnd);
+        list<Edge> MST;
+        getMST( P.begin(), P.end(), E.begin(), E.end(), back_inserter(MST) );
+        number_t weightOfMST = weight(P.begin(), P.end(), MST.begin(), MST.end() ),
+                 weightOfG   = weight(P.begin(), P.end(), E.begin(), E.end() ),
+                 lightness = weightOfG / weightOfMST;
+        return lightness;
+    }
 
     class Timer {
     public:

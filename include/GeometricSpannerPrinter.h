@@ -16,6 +16,8 @@
 #include <boost/algorithm/string.hpp>
 
 #include "DelaunayGraph.h"
+#include "names.h"
+#include "utilities.h"
 
 namespace unf_planespanners {
 
@@ -34,21 +36,14 @@ class GraphPrinter {
     string inactiveVertexColor = "f7b267";
     string backgroundColor =     "FEFEF6";
     string textColor =           "111116";
-    double vertexRadius = 17;
+    double vertexRadius = 4.0;
     //double vertexBorderWidth = 0.63;
-    double activeEdgeWidth = 2.0;
+    double activeEdgeWidth =0.6;
     double inactiveEdgeWidth = 1.0;
 
     explicit GraphPrinter( double scale = 1.0 )
       : _scaleFactor(scale), _resizeFactor(1) {
-        // define colors in the document
-        defineColor(activeEdgeColor);
-        defineColor(inactiveEdgeColor);
-        defineColor(worstPathEdgeColor);
-        defineColor(activeVertexColor);
-        defineColor(inactiveVertexColor);
-        defineColor(backgroundColor);
-        defineColor(textColor);
+
     }
     // begin and end are iterators over the point set that will be printed
     // this is for proper scaling of the points to work with the latex document
@@ -119,6 +114,14 @@ class GraphPrinter {
     void drawVertices( const T &Triangulation, const OptionsList& options = {}, const OptionsList& borderOptions = {} ) {
         for( typename T::Finite_vertices_iterator it = Triangulation.finite_vertices_begin(); it != Triangulation.finite_vertices_end(); ++it )
             drawVertexWithLabel( it->point().x(), it->point().y(), "", options, borderOptions );
+        _document += "\n";
+    }
+
+    template< typename InputIterator >
+    void drawVertices( const InputIterator &pointsStart, const InputIterator &pointsEnd, const OptionsList& options = {}, const OptionsList& borderOptions = {} ) {
+        size_t id = 0;
+        for( auto it=pointsStart; it!=pointsEnd; ++it )
+            drawVertexWithLabel( it->x(), it->y(), "", options, borderOptions );
         _document += "\n";
     }
 
@@ -220,18 +223,20 @@ class GraphPrinter {
             + to_string(x1*_scaleFactor) + "," + to_string(y1*_scaleFactor) + ") -- ("
             + to_string(x2*_scaleFactor) + "," + to_string(y2*_scaleFactor) + ");\n";
     }
-    void defineColor( const string& hex ) {
+    string defineColor( const string& hex ) {
         // parse the hex value
         vector<size_t> color = parseHexRGB( hex );
         // add color to document
-        _document += "\\definecolor{"
-                  +  hex + "}{RGB}{ "
-                      +  to_string(color.at(0)) + ", "
-                      +  to_string(color.at(1)) + ", "
-                      +  to_string(color.at(2))
-                  + " }\n";
+        string definition = string("")
+                    + "\\definecolor{"
+                    +  hex + "}{RGB}{ "
+                        +  to_string(color.at(0)) + ", "
+                        +  to_string(color.at(1)) + ", "
+                        +  to_string(color.at(2))
+                    + " }\n";
         // add color to colormap
         _colors.insert( hex );
+        return definition;
     }
 
     static string expandOptions( const OptionsList& options ) {
@@ -254,53 +259,132 @@ class GraphPrinter {
         }
         return rgb;
     }
+    void addLatexComment( const string& comment ) {
+        _document += "% " + comment + "\n";
+    }
     void print( string fName ) {
         fName = _outputFilePrefix + fName;
+        string texFilename = fName + ".tex",
+               pdfFilename = fName + ".pdf",
+               captionFilename = _outputFilePrefix + "captions.txt"
+                                         "";
         boost::erase_all(fName, ".");
-        FILE *fp = fopen( fName.c_str(), "w" );
 
-        fprintf( fp, "%s", _header.c_str() );
+        FILE *fp = fopen( texFilename.c_str(), "w" );
+
+        fprintf( fp, "%s", getDocumentHeader().c_str() );
         fprintf( fp, "%s", _document.c_str() );
-        fprintf( fp, "%s", _footer.c_str() );
+        fprintf( fp, "%s", getDocumentFooter().c_str() );
+
+        fclose(fp);
+
+        fp = fopen( captionFilename.c_str(), "a" );
+
+        auto captionWithNewLine = _caption + "\n";
+        fprintf( fp, "%s", captionWithNewLine.c_str() );
 
         fclose(fp);
         //cout<<fName<<endl;
         //cout<< _header<<_document<<_footer;
 
 //        cout << "\nOutput PDF generation started...\n";
-        string command = "pdflatex " + fName + " > /dev/null";
+        string command = "pdflatex " + texFilename + " > /dev/null";
         ignore = system(command.c_str());
 //        cout << "PDF generation terminated...\n";
 
-        command = "evince " + fName + ".pdf &";
+        command = "evince " + pdfFilename + " &";
         ignore = system(command.c_str());
     }
+    void clearCaptionFile() {
+        string captionFilename = _outputFilePrefix + "captions.txt";
 
-  private:
+        FILE *fp = fopen( captionFilename.c_str(), "w" );
+        fprintf( fp, "%s", "" );
+        fclose(fp);
+    }
+    void setCaption(const string& caption ) {
+        _caption = caption;
+        addLatexComment(caption);
+    }
+    void setCaption( const Result& result ) {
+        string caption = string("\\textsc{")
+                  + Names.at(result.algorithm)
+                  + "}: "
+                  + "$\\Delta = "
+                  + to_string(result.degree);
+
+        if( result.t ) {
+            caption += ",\\ t = "
+                      + to_string(*result.t);
+        }
+
+        caption +="$";
+        setCaption(caption);
+    }
+    string getDocumentHeader() {
+        string documentHeader = string("")
+                                 + "\\documentclass{standalone}\n"
+                                 + "\\usepackage{tikz}\n"
+                                 //+ "\\usetikzlibrary{backgrounds}\n\n"
+                                 + "\\usetikzlibrary{shapes}\n\n";
+
+        // define colors in the document
+        string colors = defineColor(activeEdgeColor)
+            + defineColor(inactiveEdgeColor)
+            + defineColor(worstPathEdgeColor)
+            + defineColor(activeVertexColor)
+            + defineColor(inactiveVertexColor)
+            + defineColor(backgroundColor)
+            + defineColor(textColor);
+
+        documentHeader += colors
+                + "\\begin{document}\n\n";
+
+        return documentHeader;
+    }
+    string getDocumentFooter() {
+        string footer = "\\end{document}";
+        return footer;
+    }
+    string getFigureFooter() {
+        string footer = string("")
+                        + "\n\n\\end{tikzpicture}\n";
+                        //+ "}\n\n";
+        //footer += string("")
+                 // + "\\caption{"
+                 // + _caption
+                 // +"}\n";
+                 // + "\\end{figure}\n\n";
+        return footer;
+    }
+    void beginFigure() {
+        _document += _figureHeader;
+    }
+    void endFigure() {
+        _document += getFigureFooter();
+    }
+
+
+private:
+    //Result _result;
     double _scaleFactor;
     double _resizeFactor;
-    string _outputFilePrefix = "out-";
+    string _caption;
+    string _outputFilePrefix = "Demo-";
     string _document;
-    string _header = string("")
-        + "\\documentclass[margin=3mm]{standalone} \n"
-        + "\\usepackage{tikz}  \n "
-        //+ "\\usetikzlibrary{backgrounds}\n\n"
-        + "\\usetikzlibrary{fit}\n\n"
-        + "\\begin{document}\n\n"
-        + "\\resizebox{\\textwidth}{!}{"
-        + "\\begin{tikzpicture}[ "
-        //+ "background rectangle/.style={fill="
-        //    + backgroundColor
-        //+ "}, show background rectangle, "
-        + "vertex/.style = {circle, fill, minimum size=#1, inner sep=0pt, outer sep=0pt}, "
-        + "vertex/.default = 6pt, "
-        + "border/.style = {circle, draw, minimum size=#1, inner sep=0pt, outer sep=0pt}, "
-        + "border/.default = 6pt ]\n\n"
-        + "\tiny\n\n";
-    string _footer = string("")
-        + "\n\n\\end{tikzpicture}\n"
-        + "}\n\n"
-        + "\\end{document}";
+    string _figureHeader = string("")
+                           //+ "\\begin{figure}\n\n"
+                           //+ "\\resizebox{\\textwidth}{!}{\n"
+                           + "\\begin{tikzpicture}[ "
+                           //+ "background rectangle/.style={fill="
+                           //    + backgroundColor
+                           //+ "}, show background rectangle, "
+                           + "vertex/.style = {fill, minimum size=#1, inner sep=0pt, outer sep=0pt}, "
+                           + "vertex/.default = 6pt, "
+                           + "border/.style = {draw, minimum size=#1, inner sep=0pt, outer sep=0pt}, "
+                           + "border/.default = 6pt ]\n\n"
+                           + "\\draw[step=1.0,black,thin,dotted] (-5.5,-5.5) grid (5.5,5.5);\n\n"
+                           + "\\tiny\n\n";
 
 }; // class GraphPrinter
 

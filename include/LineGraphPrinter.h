@@ -7,6 +7,7 @@
 #include <optional>
 #include <vector>
 
+#include "names.h"
 #include "utilities.h"
 
 namespace unf_planespanners {
@@ -30,23 +31,9 @@ namespace unf_planespanners {
                 "43aa8b","4d908e","577590",
                 "277da1","360568"
         };
-        vector<string> Names = {
-                "BGS2005",
-                "LW2004",
-                "BSX2009",
-                "KPX2010",
-                "KX2012",
-                "BCC2012-7",
-                "BCC2012-6",
-                "BHS2017",
-                "BGHP2010",
-                "KPT2017",
-                "BKPX2015"
-        };
 
 
-        LineGraphPrinter() {
-        }
+        LineGraphPrinter() = default;
 
         void clear() { _document = ""; }
 
@@ -95,9 +82,12 @@ namespace unf_planespanners {
                 std::cout<<"Error opening file!"<<std::endl;
                 return;
             }
-            fprintf( fp, "%s", getHeader().c_str() );
-            fprintf( fp, "%s", getBody().c_str() );
-            fprintf( fp, "%s", _footer.c_str() );
+            string text = getHeader();
+            text += getBody();
+            text += getLegend();
+            text += _footer;
+
+            fprintf( fp, "%s", text.c_str() );
 
             fclose(fp);
             //cout<<fName<<endl;
@@ -140,11 +130,21 @@ namespace unf_planespanners {
             }
             return header;
         }
+        string getLegendAxisAttributes() {
+            string legend = string("legend columns=1,\n")
+                + "legend to name=planespannerlegend\n";
+
+            return legend;
+        }
+        string getLegend() {
+            return "\\ref{planespannerlegend}\n\n";
+        }
         string getBody() {
+            bool addLegend = true;
             const double scale = 1;
             string plotHeader = string("")
                     + "\\begin{tikzpicture}\n\n"
-                    + "\\begin{axis}[legend pos=north west,xlabel=$n$, "
+                    + "\\begin{axis}[grid=major,xlabel=$n$, "
                     + "xtick={";
 
             string xTicks("");
@@ -155,15 +155,25 @@ namespace unf_planespanners {
             xTicks = xTicks.substr( 0, xTicks.size()-1 );
 
             plotHeader += xTicks
-                      + "\n}, ylabel near ticks,ylabel={IV}]\n\n";
+                      + "\n}, ylabel near ticks,ylabel={IV}";
+
 
             vector<string> body(3, plotHeader);
             size_t colorIndex = 0;
+
+            body[0] += string(",") + getLegendAxisAttributes();
+
+            for( auto& graph : body ) {
+                graph += "]";
+            }
+
             for( auto alg : _results ) {
                 for( auto& graph : body) {
-                    graph += "\\addplot[thick,color="
+                    graph += "\n\n\\addplot";
+                    graph += "[thick,color="
                             + Colors[colorIndex]
-                            + ",mark=*] coordinates {\n";
+                            + ",mark=*]";
+                    graph += " coordinates {\n";
                 }
                 for( auto level : alg.second ) {
                     double averageRuntime = std::accumulate(level.second.begin(), level.second.end(), 0.0,[&]( const auto& a, const auto& b ) {
@@ -184,7 +194,8 @@ namespace unf_planespanners {
                                + to_string(averageDegree)
                                + ")\n";
 
-                    if(level.second.front().t) {
+                    if(!level.second.empty()
+                     && level.second.front().t) {
                         double averageT = std::accumulate(level.second.begin(), level.second.end(), 0.0,[]( const auto& a, const auto& b ) {
                             return a + *b.t;
                         } ) / double(level.second.size());
@@ -194,21 +205,24 @@ namespace unf_planespanners {
                                    + to_string(averageT)
                                    + ")\n";
                     }
+
                 }
                 for( auto& graph : body ) {
-                    graph += string("}node [pos=1.15, above left] {};\n")
-                            + "\\addlegendentry{\\textsc{\\tiny "
-                            + Names.at(alg.first)
-                            + "}};"
-                            + "\n\n";
+                    graph += string("}node [pos=1.15, above left] {};\n\n");
                 }
+                body[0] += "\\addlegendentry{\\textsc{\\tiny{"
+                    + Names[alg.first]
+                    + "}}}";
                 ++colorIndex;
             }
             for( auto& graph : body ) {
-                graph += string("\n\n\\end{axis}\n\n")
-                    + "\\end{tikzpicture}\n\n";
+                graph += string("\n\n\\end{axis}\n\n");
+                graph += "\\end{tikzpicture}\n\n";
             }
-            return std::accumulate( body.begin(), body.end(), string("") );
+            string bodyText = std::accumulate( body.begin(), body.end(), string("") );
+//                    + "\\end{tikzpicture}\n\n";
+
+            return bodyText;
         }
 
     private:

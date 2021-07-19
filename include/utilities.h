@@ -100,6 +100,10 @@ namespace unf_planespanners {
                 CGAL::max(i, j)
         );
     }
+    template< class T >
+    inline std::pair<T, T> normalize_pair( const pair<T,T>& toNormalize ) {
+        return makeNormalizedPair( toNormalize.first, toNormalize.second );
+    }
 
     template<typename Point_2>
     inline number_t getDistance(const Point_2 &p, const Point_2 &q) {
@@ -152,10 +156,26 @@ namespace unf_planespanners {
         size_t n;
         size_t runtime;
         size_t degree;
-        std::optional<double> t;
+        number_t degreeAvg;
+        number_t lightness;
+        std::optional<number_t> t;
 
-        Result(Algorithm algorithm, size_t n, size_t runtime, size_t degree, std::optional<double> t = nullopt)
-                : algorithm(algorithm), n(n), runtime(runtime), degree(degree), t(t) {}
+        Result() = default;
+
+        Result(const Algorithm algorithm,
+               const size_t n,
+               const size_t runtime,
+               const size_t degree,
+               const number_t degreeAvg,
+               const number_t lightness,
+               const std::optional<number_t> t = nullopt)
+                : algorithm(algorithm),
+                  n(n),
+                  runtime(runtime),
+                  degree(degree),
+                  degreeAvg(degreeAvg),
+                  lightness(lightness),
+                  t(t) {}
 
         friend ostream &operator<<(ostream &os, const Result &result);
     };
@@ -164,7 +184,9 @@ namespace unf_planespanners {
         os << result.n << ","
            << result.algorithm << ","
            << result.runtime << ","
-           << result.degree << ",";
+           << result.degree << ","
+           << result.degreeAvg << ","
+           << result.lightness << ",";
 
         if(result.t)
             os << *(result.t);
@@ -206,14 +228,14 @@ namespace unf_planespanners {
 
         std::set<Point> points;
 
-        std::copy_n( g2, n/9, inserter(points) );
-        std::copy_n( g3, n/9, inserter(points) );
-        std::copy_n( g4, n/9, inserter(points) );
-
-        std::copy_n( g1s, n/9, inserter(points) );
-        std::copy_n( g2s, n*2/9, inserter(points) );
-        std::copy_n( g3s, n/9, inserter(points) );
-        std::copy_n( g4s, n/18, inserter(points) );
+//        std::copy_n( g2, n/9, inserter(points) );
+//        std::copy_n( g3, n/9, inserter(points) );
+//        std::copy_n( g4, n/9, inserter(points) );
+//
+//        std::copy_n( g1s, n/9, inserter(points) );
+//        std::copy_n( g2s, n*2/9, inserter(points) );
+//        std::copy_n( g3s, n/9, inserter(points) );
+//        std::copy_n( g4s, n/18, inserter(points) );
 
         int remaining;
         while( (remaining = long(n)-long(points.size())) > 0) {

@@ -9,19 +9,20 @@
 #include <CGAL/point_generators_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
-#include "BCC2012.h"
-#include "BGHP2010.h"
-#include "BGS2005.h"
-#include "BHS2017.h"
-#include "BKPX2015.h"
-#include "BSX2009.h"
-#include "KPT2017.h"
-#include "KPX2010.h"
+//#include "BCC2012.h"
+//#include "BGHP2010.h"
+//#include "BGS2005.h"
+//#include "BHS2017.h"
+//#include "BKPX2015.h"
+//#include "BSX2009.h"
+//#include "KPT2017.h"
+//#include "KPX2010.h"
 #include "KX2012.h"
-#include "LW2004.h"
+//#include "LW2004.h"
 
 #include "Experiment.h"
 #include "GeometricSpannerPrinter.h"
+#include "LatexPrinter.h"
 #include "LineGraphPrinter.h"
 #include "metrics.h"
 #include "utilities.h"
@@ -64,11 +65,8 @@ int main(int argc, char *argv[]) {
                    experimentParameters[1],
                    experimentParameters[2],
                    experimentParameters[3]);
-    //scratch(N);
 
-    //   singleRun( 0, 0, "BKPXTestResult", "positive_points.txt", true, true );
-
-    lineGraph.print("testgraph");
+    latex.display();
 
     return 0;
 }
@@ -83,7 +81,7 @@ void scratch(size_t n) {
     string filename = "data-89_4716.990566x4716.990566.txt";
     //readPointsFromFile( back_inserter( points ), filename );
 
-    double width = 5;
+    double width = 10;
     generateRandomPoints(n, width / 2, back_inserter(points));
 
     /////////////////////////////////////////////////////////
@@ -129,34 +127,40 @@ void scratch(size_t n) {
 
     // PRODUCE A LaTeX / TiKz DOCUMENT AND DISPLAY
 
-    GraphPrinter printer;
+    TikzPrinter tikz("temp-tikz");
 
-    double documentSizeInCm = 20;
-
-    printer.autoscale(points.begin(), points.end(), documentSizeInCm);
-    GraphPrinter::OptionsList options;
+    tikz.autoscale(points.begin(), points.end());
+    LatexPrinter::OptionsList options;
 
     options = { // active edge options
-            {"color",      printer.activeEdgeColor},
-            {"line width", to_string(printer.activeEdgeWidth)}
+            {"color",      tikz.activeEdgeColor},
+            {"line width", to_string(tikz.activeEdgeWidth)}
     };
 
-    printer.drawEdges(result.begin(), result.end(), points, options);
+    tikz.drawEdges(result.begin(), result.end(), points, options);
 
     options = {
-            {"vertex",     make_optional(to_string(printer.vertexRadius))}, // vertex width
-            {"color",      make_optional(printer.backgroundColor)}, // text color
-            {"fill",       make_optional(printer.activeVertexColor)}, // vertex color
-            {"line width", make_optional(to_string(0))} // vertex border (same color as text)
+            {"vertex",     to_string(tikz.vertexRadius)}, // vertex width
+            {"color",      tikz.backgroundColor}, // text color
+            {"fill",       (tikz.activeVertexColor)}, // vertex color
+            {"line width", (to_string(0))} // vertex border (same color as text)
     };
-    GraphPrinter::OptionsList borderOptions = {
-            {"border",     make_optional(to_string(printer.vertexRadius))}, // choose shape of vertex
-            {"color",      printer.activeEdgeColor}, // additional border color
-            {"line width", to_string(printer.inactiveEdgeWidth)}, // additional border width
+    LatexPrinter::OptionsList borderOptions = {
+            {"border",     to_string(tikz.vertexRadius)}, // choose shape of vertex
+            {"color",      tikz.activeEdgeColor}, // additional border color
+            {"line width", to_string(tikz.inactiveEdgeWidth)} // additional border width
     };
-    printer.drawVerticesWithInfo(points.begin(), points.end(), options, borderOptions);
+    tikz.drawVerticesWithInfo(points.begin(), points.end(), options, borderOptions);
 
-    printer.print("test");
+
+    LatexPrinter latex("temp-latex");
+
+    latex.addToDocument(tikz);
+
+    latex.display();
+
+
+//    tikz.print("test");
     cout << "\n";
 
 }

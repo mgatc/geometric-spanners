@@ -26,7 +26,7 @@ add_executable(geometric_spanners
         include/metrics.h
         include/TDDelaunay.h
         include/utilities.h
-        main.cpp include/Experiment.h include/LineGraphPrinter.h include/names.h)
+        main.cpp include/Experiment.h include/LineGraphPrinter.h include/names.h include/LatexPrinter.h)
 
 target_link_libraries(geometric_spanners gmp)
 target_link_libraries(geometric_spanners mpfr)

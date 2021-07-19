@@ -1,28 +1,22 @@
-#ifndef GEOMETRIC_SPANNERS_LINEGRAPHPRINTER_H
-#define GEOMETRIC_SPANNERS_LINEGRAPHPRINTER_H
-
+#ifndef GEOMETRIC_SPANNERS_PGFPLOTSPRINTER_H
+#define GEOMETRIC_SPANNERS_PGFPLOTSPRINTER_H
 
 #include <map>
 #include <iostream>
 #include <optional>
 #include <vector>
 
+#include "GeometricSpannerPrinter.h"
 #include "names.h"
 #include "utilities.h"
 
 namespace unf_planespanners {
 
-
-
     using namespace std;
 
-    class LineGraphPrinter {
+    class PgfplotsPrinter : public TikzPrinter {
     public:
         typedef map< Algorithm, map< size_t, vector<Result>>> ResultMap;
-        typedef pair<string,optional<string>> Option;
-        typedef vector<Option> OptionsList;
-
-        unordered_set<string> _colors;
 
         // Palette generated using https://coolors.co/
         vector<string> Colors = {
@@ -33,74 +27,11 @@ namespace unf_planespanners {
         };
 
 
-        LineGraphPrinter() = default;
-
-        void clear() { _document = ""; }
-
-
-        string defineColor( const string& hex ) {
-            // parse the hex value
-            vector<size_t> color = parseHexRGB( hex );
-            // add color to document
-            string def("\\definecolor{"
-                         +  hex + "}{RGB}{ "
-                         +  to_string(color.at(0)) + ", "
-                         +  to_string(color.at(1)) + ", "
-                         +  to_string(color.at(2))
-                         + " }\n");
-            // add color to colormap
-            _colors.insert( hex );
-            return def;
+        PgfplotsPrinter(string filename, string documentType = "standalone")
+                : TikzPrinter(filename,documentType){
+            
         }
 
-        static string expandOptions( const OptionsList& options ) {
-            string optionsString;
-            for( auto& o : options ) {
-                optionsString += o.first
-                                 + ( o.second?("=" + *o.second):"") // include second param if given
-                                 + ",";
-            }
-            // remove trailing comma
-            return optionsString.substr( 0, optionsString.size()-1 );
-        }
-        static vector<size_t> parseHexRGB( const string& hex_str ) {
-            // the hex string should contain 6 digits
-            // three 2-digit hex numbers
-            vector<size_t> rgb(3, 0);
-            // parse each 2-digit number and convert to base 10
-            for( size_t i=0; i<3&&i<hex_str.size()/2; ++i ) {
-                rgb[i] = stoi( hex_str.substr(2*i, 2), 0, 16 );
-            }
-            return rgb;
-        }
-        void print( string fName ) {
-            fName = _outputFilePrefix + fName;
-            boost::erase_all(fName, ".");
-            FILE *fp = fopen( fName.c_str(), "w" );
-            std::cout<<"Opening file...\n\n";
-            if(!fp) {
-                std::cout<<"Error opening file!"<<std::endl;
-                return;
-            }
-            string text = getHeader();
-            text += getBody();
-            text += getLegend();
-            text += _footer;
-
-            fprintf( fp, "%s", text.c_str() );
-
-            fclose(fp);
-            //cout<<fName<<endl;
-            //cout<< _header<<_document<<_footer;
-
-//        cout << "\nOutput PDF generation started...\n";
-            string command = "pdflatex " + fName + " > /dev/null";
-            ignore = system(command.c_str());
-//        cout << "PDF generation terminated...\n";
-
-            command = "evince " + fName + ".pdf &";
-            ignore = system(command.c_str());
-        }
 
         void registerResult(const Result& result ) {
             auto el1 = _results.begin();
@@ -116,20 +47,6 @@ namespace unf_planespanners {
             }
         }
 
-        string getHeader() {
-
-            string header = string("")
-                         + "\\documentclass[tikz]{standalone}\n"
-                         + "\\usepackage{pgfplots}\n"
-                         + "\\pgfplotsset{compat=1.15}\n\n"
-                         + "\\begin{document}\n\n";
-
-            // define colors in the document
-            for( const auto& color : Colors ) {
-                header += defineColor(color);
-            }
-            return header;
-        }
         string getLegendAxisAttributes() {
             string legend = string("legend columns=1,\n")
                 + "legend to name=planespannerlegend\n";
@@ -227,17 +144,14 @@ namespace unf_planespanners {
 
     private:
         ResultMap _results;
-        string _outputFilePrefix = "result-";
         string _document;
-        string _footer = string("")
-                         + "\\end{document}\n";
 
-    }; // class LineGraphPrinter
+    }; // class PgfplotsPrinter
 
 
-    LineGraphPrinter lineGraph;
+    //PgfplotsPrinter lineGraph;
 
 } // namespace unf_planespanners
 
 
-#endif //GEOMETRIC_SPANNERS_LINEGRAPHPRINTER_H
+#endif //GEOMETRIC_SPANNERS_PGFPLOTSPRINTER_H

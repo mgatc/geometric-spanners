@@ -389,43 +389,43 @@ namespace unf_planespanners {
 
 
             // START PRINTER NONSENSE
-            if (printLog) {
-                vector<pair<Point, Point>> edgeList;
-
-                GraphPrinter printer;
-                printer.autoscale(P.begin(), P.end(), 20);
-
-                GraphPrinter::OptionsList options;
-
-                options = {
-                        {"color",      printer.inactiveEdgeColor},
-                        {"line width", to_string(printer.inactiveEdgeWidth)}
-                };
-                printer.drawEdgesOfHalfTheta(D, options);
-
-                options = { // active edge options
-                        {"color",      printer.activeEdgeColor},
-                        {"line width", to_string(printer.activeEdgeWidth)}
-                };
-
-                printer.drawEdges(E.begin(), E.end(), P, options);
-
-                options = {
-                        {"vertex",     make_optional(to_string(printer.vertexRadius))}, // vertex width
-                        {"color",      make_optional(printer.backgroundColor)}, // text color
-                        {"fill",       make_optional(printer.activeVertexColor)}, // vertex color
-                        {"line width", make_optional(to_string(0))} // vertex border (same color as text)
-                };
-                GraphPrinter::OptionsList borderOptions = {
-                        {"border",     make_optional(to_string(printer.vertexRadius))}, // choose shape of vertex
-                        {"color",      printer.activeEdgeColor}, // additional border color
-                        {"line width", to_string(printer.inactiveEdgeWidth)}, // additional border width
-                };
-                printer.drawVerticesWithInfo(D.points_begin(), D.points_end(), options, borderOptions);
-
-                printer.print("BGHP2010");
-                cout << "\n";
-            }
+//            if (printLog) {
+//                vector<pair<Point, Point>> edgeList;
+//
+//                TikzPrinter printer("BGHP2010");
+//                printer.autoscale(P.begin(), P.end(), 20);
+//
+//                TikzPrinter::OptionsList options;
+//
+//                options = {
+//                        {"color",      printer.inactiveEdgeColor},
+//                        {"line width", to_string(printer.inactiveEdgeWidth)}
+//                };
+//                printer.drawEdgesOfHalfTheta(D, options);
+//
+//                options = { // active edge options
+//                        {"color",      printer.activeEdgeColor},
+//                        {"line width", to_string(printer.activeEdgeWidth)}
+//                };
+//
+//                printer.drawEdges(E.begin(), E.end(), P, options);
+//
+//                options = {
+//                        {"vertex",     (to_string(printer.vertexRadius))}, // vertex width
+//                        {"color",      (printer.backgroundColor)}, // text color
+//                        {"fill",       (printer.activeVertexColor)}, // vertex color
+//                        {"line width", (to_string(0))} // vertex border (same color as text)
+//                };
+//                TikzPrinter::OptionsList borderOptions = {
+//                        {"border",     (to_string(printer.vertexRadius))}, // choose shape of vertex
+//                        {"color",      printer.activeEdgeColor}, // additional border color
+//                        {"line width", to_string(printer.inactiveEdgeWidth)}, // additional border width
+//                };
+//                printer.drawVerticesWithInfo(D.points_begin(), D.points_end(), options, borderOptions);
+//
+//                printer.display();
+//                cout << "\n";
+//            }
             // END PRINTER NONSENSE
         }
     } // function BGHP2010

@@ -6,42 +6,56 @@
 #include <optional>
 #include <utility>
 
+#include "LatexPrinter.h"
 #include "LineGraphPrinter.h"
 #include "metrics.h"
 #include "names.h"
 #include "utilities.h"
 
+
+#include "BCC2012.h"
+#include "BGHP2010.h"
+#include "BGS2005.h"
+#include "BHS2017.h"
+#include "BKPX2015.h"
+#include "BSX2009.h"
+#include "KPT2017.h"
+#include "KPX2010.h"
+#include "KX2012.h"
+#include "LW2004.h"
+
 namespace unf_planespanners {
 
-    GraphPrinter dookie;
+    LatexPrinter latex("testlatex");
+    TikzPrinter tikz("temptikz");
 
-    GraphPrinter::OptionsList activeEdgeOptions = { // active edge options
-            {"color",      dookie.activeEdgeColor},
-            {"line width", to_string(dookie.activeEdgeWidth)}
+    TikzPrinter::OptionsList activeEdgeOptions = { // active edge options
+            {"color",      tikz.activeEdgeColor},
+            {"line width", to_string(tikz.activeEdgeWidth)}
     },
     highlightEdgeOptions = { // active edge options
-            {"densely dashed",        nullopt},
-            {"color",      dookie.worstPathEdgeColor},
-            {"line width", to_string(dookie.activeEdgeWidth)}
+            {"densely dashed", ""},
+            {"color",          tikz.worstPathEdgeColor},
+            {"line width",     to_string(tikz.activeEdgeWidth)}
     },
     highlightVertexOptions = {
-            {"diamond",    nullopt},
-            {"vertex",     make_optional(to_string(dookie.vertexRadius*1.61))}, // vertex width
-            {"color",      make_optional(dookie.worstPathEdgeColor)}, // text color
-            {"fill",       make_optional(dookie.worstPathEdgeColor)}, // vertex color
-            {"line width", make_optional(to_string(0))} // vertex border (same color as text)
+            {"diamond",    ""},
+            {"vertex",     (to_string(tikz.vertexRadius * 1.61))}, // vertex width
+            {"color",      (tikz.worstPathEdgeColor)}, // text color
+            {"fill",       (tikz.worstPathEdgeColor)}, // vertex color
+            {"line width", (to_string(0))} // vertex border (same color as text)
     },
     activeVertexOptions = {
-            {"circle",     nullopt},
-            {"vertex",     make_optional(to_string(dookie.vertexRadius))}, // vertex width
-            {"color",      make_optional(dookie.backgroundColor)}, // text color
-            {"fill",       make_optional(dookie.activeVertexColor)}, // vertex color
-            {"line width", make_optional(to_string(0))} // vertex border (same color as text)
+            {"circle",     ""},
+            {"vertex",     (to_string(tikz.vertexRadius))}, // vertex width
+            {"color",      (tikz.backgroundColor)}, // text color
+            {"fill",       (tikz.activeVertexColor)}, // vertex color
+            {"line width", (to_string(0))} // vertex border (same color as text)
     },
     borderOptions = {
-            {"border",     make_optional(to_string(dookie.vertexRadius))}, // choose shape of vertex
-            {"color",      dookie.activeEdgeColor}, // additional border color
-            {"line width", to_string(dookie.inactiveEdgeWidth)}, // additional border width
+            {"border",     (to_string(tikz.vertexRadius))}, // choose shape of vertex
+            {"color",      tikz.activeEdgeColor}, // additional border color
+            {"line width", to_string(tikz.inactiveEdgeWidth)}, // additional border width
     };
     template<class Container>
     void PlaneSpannerExperiment(const Container &points,
@@ -106,18 +120,21 @@ namespace unf_planespanners {
                      make_optional(inserter(WorstPath,WorstPath.begin())) );
 
         Result result( algorithm, n, runtime, deg, degAvg, lightness, t );
-        lineGraph.registerResult(result);
+        //lineGraph.registerResult(result);
         cout << result << endl;
 
 
 
-
-        GraphPrinter printer;
+        string outputname = string("RPIS-")
+                            + to_string(n)
+                            + "-"
+                            + Names.at(algorithm);
+        TikzPrinter printer(outputname);
         double documentSizeInCm = 10;
 
         printer.autoscale( points.begin(), points.end(), documentSizeInCm);
 
-        printer.beginFigure();
+        //printer.beginFigure();
         printer.setCaption(result);
 
         // remove worst path edges from spanner edges
@@ -141,14 +158,12 @@ namespace unf_planespanners {
         vector<Point> worstPair = { points[WorstPath.front().first], points[WorstPath.back().second] };
         printer.drawVertices( worstPair.begin(), worstPair.end(), highlightVertexOptions);
 
-        printer.endFigure();
+        //printer.endFigure();
+
+        latex.addToDocumentAsFigure(printer);
 
 
-        string outputname = string("RPIS-")
-                + to_string(n)
-                + "-"
-                + Names.at(algorithm);
-        printer.print(outputname);
+        //printer.display(outputname);
     }
 
     bool singleRun( size_t n, double width, string resultFilename, optional<string> filename, bool forcePrint, bool printLog )
@@ -165,13 +180,14 @@ namespace unf_planespanners {
         else
             generatedFile = make_optional( generateRandomPoints( n, size, back_inserter(points) ) );
 
-        GraphPrinter printer;
+        string outputname = string("RPIS-") + to_string(n);
+        TikzPrinter printer(outputname);
         double documentSizeInCm = 10;
         printer.autoscale(points.begin(), points.end(), documentSizeInCm);
         printer.clearCaptionFile();
 
         // draw point set
-        printer.beginFigure();
+        //printer.beginFigure();
         string caption = string("$N=")
                         + to_string(n)
                         + "$";
@@ -179,9 +195,9 @@ namespace unf_planespanners {
 
         printer.drawVertices(points.begin(), points.end(), activeVertexOptions);
 
-        printer.endFigure();
-        string outputname = string("RPIS-") + to_string(n);
-        printer.print(outputname);
+        //printer.endFigure();
+        //printer.display();
+        latex.addToDocumentAsFigure(printer);
 
         for( int alg=Algorithm::First;
              alg!=Algorithm::Last; ++alg )

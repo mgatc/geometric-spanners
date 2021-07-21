@@ -19,7 +19,7 @@
 #include "utilities.h"
 
 
-namespace unf_planespanners {
+namespace unf_spanners {
 
     using namespace std;
 
@@ -520,6 +520,6 @@ namespace unf_planespanners {
         }
     } // function KPT2017
 
-} // namespace unf_planespanners
+} // namespace unf_spanners
 
 #endif // GSNUNF_KPT2017_H

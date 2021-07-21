@@ -30,7 +30,7 @@
 #include "FloydWarshall.h"
 #include "utilities.h"
 
-namespace unf_planespanners {
+namespace unf_spanners {
 
 using namespace std;
 
@@ -803,7 +803,7 @@ void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_pr
         std::string m_delimiter;
     };
 
-} // namespace unf_planespanners
+} // namespace unf_spanners
 
 
 #endif // GSNUNF_METRICS_H

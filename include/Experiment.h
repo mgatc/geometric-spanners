@@ -24,38 +24,38 @@
 #include "KX2012.h"
 #include "LW2004.h"
 
-namespace unf_planespanners {
+namespace unf_spanners {
 
     LatexPrinter latex("testlatex");
-    TikzPrinter tikz("temptikz");
+    GraphPrinter graph("temptikz");
 
-    TikzPrinter::OptionsList activeEdgeOptions = { // active edge options
-            {"color",      tikz.activeEdgeColor},
-            {"line width", to_string(tikz.activeEdgeWidth)}
+    GraphPrinter::OptionsList activeEdgeOptions = { // active edge options
+            {"color",      graph.activeEdgeColor},
+            {"line width", to_string(graph.activeEdgeWidth)}
     },
     highlightEdgeOptions = { // active edge options
             {"densely dashed", ""},
-            {"color",          tikz.worstPathEdgeColor},
-            {"line width",     to_string(tikz.activeEdgeWidth)}
+            {"color",          graph.worstPathEdgeColor},
+            {"line width",     to_string(graph.activeEdgeWidth)}
     },
     highlightVertexOptions = {
             {"diamond",    ""},
-            {"vertex",     (to_string(tikz.vertexRadius * 1.61))}, // vertex width
-            {"color",      (tikz.worstPathEdgeColor)}, // text color
-            {"fill",       (tikz.worstPathEdgeColor)}, // vertex color
+            {"vertex",     (to_string(graph.vertexRadius * 1.61))}, // vertex width
+            {"color",      (graph.worstPathEdgeColor)}, // text color
+            {"fill",       (graph.worstPathEdgeColor)}, // vertex color
             {"line width", (to_string(0))} // vertex border (same color as text)
     },
     activeVertexOptions = {
             {"circle",     ""},
-            {"vertex",     (to_string(tikz.vertexRadius))}, // vertex width
-            {"color",      (tikz.backgroundColor)}, // text color
-            {"fill",       (tikz.activeVertexColor)}, // vertex color
+            {"vertex",     (to_string(graph.vertexRadius))}, // vertex width
+            {"color",      (graph.backgroundColor)}, // text color
+            {"fill",       (graph.activeVertexColor)}, // vertex color
             {"line width", (to_string(0))} // vertex border (same color as text)
     },
     borderOptions = {
-            {"border",     (to_string(tikz.vertexRadius))}, // choose shape of vertex
-            {"color",      tikz.activeEdgeColor}, // additional border color
-            {"line width", to_string(tikz.inactiveEdgeWidth)}, // additional border width
+            {"border",     (to_string(graph.vertexRadius))}, // choose shape of vertex
+            {"color",      graph.activeEdgeColor}, // additional border color
+            {"line width", to_string(graph.inactiveEdgeWidth)}, // additional border width
     };
     template<class Container>
     void PlaneSpannerExperiment(const Container &points,
@@ -119,7 +119,7 @@ namespace unf_planespanners {
         SFWorstPath( points.begin(), points.end(), spanner.begin(), spanner.end(),
                      make_optional(inserter(WorstPath,WorstPath.begin())) );
 
-        Result result( algorithm, n, runtime, deg, degAvg, lightness, t );
+        BoundedDegreeSpannerResult result(algorithm, n, runtime, deg, degAvg, lightness, t );
         //lineGraph.registerResult(result);
         cout << result << endl;
 
@@ -129,7 +129,7 @@ namespace unf_planespanners {
                             + to_string(n)
                             + "-"
                             + Names.at(algorithm);
-        TikzPrinter printer(outputname);
+        GraphPrinter printer(outputname);
         double documentSizeInCm = 10;
 
         printer.autoscale( points.begin(), points.end(), documentSizeInCm);
@@ -181,7 +181,7 @@ namespace unf_planespanners {
             generatedFile = make_optional( generateRandomPoints( n, size, back_inserter(points) ) );
 
         string outputname = string("RPIS-") + to_string(n);
-        TikzPrinter printer(outputname);
+        GraphPrinter printer(outputname);
         double documentSizeInCm = 10;
         printer.autoscale(points.begin(), points.end(), documentSizeInCm);
         printer.clearCaptionFile();
@@ -259,6 +259,6 @@ namespace unf_planespanners {
 
 
 
-} // unf_planespanners
+} // unf_spanners
 
 #endif //GEOMETRIC_SPANNERS_EXPERIMENT_H

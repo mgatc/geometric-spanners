@@ -16,7 +16,7 @@
 #include "GeometricSpannerPrinter.h"
 #include "metrics.h"
 
-namespace unf_planespanners {
+namespace unf_spanners {
 
 namespace bgs2005 {
 
@@ -687,6 +687,6 @@ void BGS2005( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     }
 }
 
-} // namespace unf_planespanners
+} // namespace unf_spanners
 
 #endif // GSNUNF_BGS2005_H

@@ -19,7 +19,7 @@
 #include "utilities.h"
 
 
-namespace unf_planespanners {
+namespace unf_spanners {
 
     using namespace std;
 
@@ -573,7 +573,7 @@ namespace unf_planespanners {
 
 
 
-} // namespace unf_planespanners
+} // namespace unf_spanners
 
 #endif // GSNUNF_BCC2012_H
 

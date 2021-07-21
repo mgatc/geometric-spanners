@@ -20,43 +20,18 @@
 #include "names.h"
 #include "utilities.h"
 
-namespace unf_planespanners {
+namespace unf_spanners {
 
 using namespace std;
 
 class TikzPrinter : public LatexPrinter {
   public:
-    string activeEdgeColor =     "000000";
-    string inactiveEdgeColor =   "bbbbbb";
-    string worstPathEdgeColor =  "ff0000";
-    string activeVertexColor =   "0000ff";
-    string inactiveVertexColor = "f7b267";
-    string backgroundColor =     "FEFEF6";
-    string textColor =           "111116";
-    double vertexRadius = 0.3;
-    double activeEdgeWidth =0.6;
-    double inactiveEdgeWidth = 1.0;
-
-    TikzPrinter(string filename, string documentType = "standalone")
+    explicit TikzPrinter(string filename, string documentType = "standalone")
         : LatexPrinter(filename,documentType){
 
-        // setup tikz environment
-        string tikzOptions = getTikzOptions();
-        m_body = Body{getTikzHeader(tikzOptions), "", getTikzFooter()};
-
-        // define colors
-        defineColor(activeEdgeColor);
-        defineColor(inactiveEdgeColor);
-        defineColor(worstPathEdgeColor);
-        defineColor(activeVertexColor);
-        defineColor(inactiveVertexColor);
-        defineColor(backgroundColor);
-    }
-    string getTikzOptions() {
-        return string("vertex/.style = {circle,fill, minimum size=")
-            + to_string(vertexRadius)
-            + "cm, inner sep=0pt, outer sep=0pt}, "
-            + "vertex/.default = 6pt, font=\\tiny";
+        // setup graph environment
+        //string tikzOptions = getTikzOptions();
+        m_body = Body{getTikzHeader(), "poop", getTikzFooter()};
     }
 
     // begin and end are iterators over the point set that will be printed
@@ -83,10 +58,66 @@ class TikzPrinter : public LatexPrinter {
                delta  = CGAL::max( deltaX, deltaY );
 
         _scaleFactor = documentSize / delta;
-        vertexRadius = documentSize * m_autoscaleVertexSizeFactor;
-        m_body.header = getTikzHeader(getTikzOptions());
+        //vertexRadius = documentSize * m_autoscaleVertexSizeFactor;
+        //m_body.header = getTikzHeader();//getTikzOptions());
     }
 
+    // Tikz getters
+    string getTikzHeader(string options = "") const {
+        string header = "\\begin{tikzpicture}";
+        if(!options.empty()){
+            header += "[" + options + "]";
+        }
+        header += "\n\n";
+        return header;
+    }
+    string getTikzFooter() const {
+        return "\\end{tikzpicture}\n\n";
+    }
+protected:
+    double _scaleFactor = 1;
+    double _resizeFactor = 1;
+}; // class TikzPrinter
+
+class GraphPrinter : public TikzPrinter {
+public:
+    string activeEdgeColor =     "000000";
+    string inactiveEdgeColor =   "bbbbbb";
+    string worstPathEdgeColor =  "ff0000";
+    string activeVertexColor =   "0000ff";
+    string inactiveVertexColor = "f7b267";
+    string backgroundColor =     "FEFEF6";
+    string textColor =           "111116";
+    double vertexRadius = 0.3;
+    double activeEdgeWidth =0.6;
+    double inactiveEdgeWidth = 1.0;
+
+    explicit GraphPrinter(string filename, string documentType = "standalone")
+            : TikzPrinter(filename,documentType){
+
+        // setup graph environment
+        string tikzOptions = getTikzOptions();
+        cout<<tikzOptions<<endl;
+        string tikzHeader = getTikzHeader(tikzOptions);
+        cout<<tikzHeader<<endl;
+        m_body = Body{ tikzHeader,
+                      getTikzGrid() + "\n\n",
+                      getTikzFooter()};
+
+        // define colors
+        defineColor(activeEdgeColor);
+        defineColor(inactiveEdgeColor);
+        defineColor(worstPathEdgeColor);
+        defineColor(activeVertexColor);
+        defineColor(inactiveVertexColor);
+        defineColor(backgroundColor);
+    }
+    string getTikzOptions() {
+        return string("vertex/.style = {circle,fill, minimum size=")
+               + to_string(vertexRadius)
+               + "cm, inner sep=0pt, outer sep=0pt}, "
+               + "vertex/.default = 6pt, font=\\tiny";
+    }
 
     template< typename RandomAccessIterator, typename PointContainer >
     void drawEdges( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd, const PointContainer &P, const OptionsList& options = {} ) {
@@ -181,13 +212,13 @@ class TikzPrinter : public LatexPrinter {
             //label = stream.str();
         }
         m_body.content += "\\node (vertex" + label + ") [fill,"
-                  + expandOptions( options )
-                  + "] at ("
-                  + to_string( x*_scaleFactor ) + ","
-                  + to_string( y*_scaleFactor )
-                  + ") {"
-                  + label
-                  + "};\n";
+                          + expandOptions( options )
+                          + "] at ("
+                          + to_string( x*_scaleFactor ) + ","
+                          + to_string( y*_scaleFactor )
+                          + ") {"
+                          + label
+                          + "};\n";
     }
 
     void drawEdges( const DelaunayGraph& DG, const OptionsList& options = {} ) {
@@ -206,14 +237,14 @@ class TikzPrinter : public LatexPrinter {
 
     template< typename Triangulation >
     void drawEdgesOfHalfTheta( const Triangulation& T, const OptionsList& options = {} ) {
-                using CGAL::to_double;
+        using CGAL::to_double;
         //typedef typename Triangulation::VertexHandle VertexHandle;
         for( auto eit = T.edges_begin(); eit != T.edges_end(); ++eit ) {
             auto e = *eit;
 
             typename Triangulation::Point_2
-                vp = T._G[source(e,T._G)],
-                vq = T._G[target(e,T._G)];
+                    vp = T._G[source(e,T._G)],
+                    vq = T._G[target(e,T._G)];
 
             double x1 = to_double(vp.x());
             double y1 = to_double(vp.y());
@@ -226,35 +257,16 @@ class TikzPrinter : public LatexPrinter {
 
     void drawLine( double x1, double y1, double x2, double y2, const OptionsList& options = {} ) {
         m_body.content += "\\draw [" + expandOptions(options ) + "] ("
-                  + to_string(x1*_scaleFactor) + "," + to_string(y1*_scaleFactor) + ") -- ("
-                  + to_string(x2*_scaleFactor) + "," + to_string(y2*_scaleFactor) + ");\n";
-    }
-    // Tikz getters
-    string getTikzHeader(string options = "") const {
-        string header = "\\begin{tikzpicture}";
-        if(!options.empty()){
-            header += "[" + options + "]";
-        }
-        header += "\n";
-        header += getTikzGrid();
-        header += "\n\n";
-        return header;
-    }
-    string getTikzFooter() const {
-        return "\\end{tikzpicture}\n\n";
+                          + to_string(x1*_scaleFactor) + "," + to_string(y1*_scaleFactor) + ") -- ("
+                          + to_string(x2*_scaleFactor) + "," + to_string(y2*_scaleFactor) + ");\n";
     }
     string getTikzGrid() const {
         return "\\draw[step=1.0,black,thin,dotted] (-5.5,-5.5) grid (5.5,5.5);";
     }
 private:
-    //Result _result;
     double m_autoscaleVertexSizeFactor = 0.02;
-    double _scaleFactor = 1;
-    double _resizeFactor = 1;
-    string _caption;
-    string _outputFilePrefix = "Demo-";
-}; // class TikzPrinter
+}; // class GraphPrinter
 
-} // namespace unf_planespanners
+} // namespace unf_spanners
 
 #endif // GSNUNF_TIKZPRINTER_H

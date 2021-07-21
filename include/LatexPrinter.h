@@ -9,10 +9,11 @@
 #include <iostream>
 #include <string>
 #include <unordered_set>
+#include <utility>
 
 #include "names.h"
 
-namespace unf_planespanners {
+namespace unf_spanners {
 
     using namespace std;
 
@@ -21,8 +22,8 @@ namespace unf_planespanners {
         typedef pair<string,string> Option;
         typedef vector<Option> OptionsList;
 
-        LatexPrinter(string filename, string documentType = "article")
-            : m_filename(filename), m_documentType(documentType) {}
+        explicit LatexPrinter(string filename, string documentType = "article")
+            : m_filename(std::move(filename)), m_documentType(documentType) {}
 
         // Document-level getters
         string getName() const {
@@ -141,37 +142,37 @@ namespace unf_planespanners {
 
         void save() const {
             string texFilename = getTexFilename();
-            cout<<"Saving file "<<texFilename<<"...";
+            cout<<"Saving file "<<texFilename<<"..."<<flush;
 
             FILE *fileOut = fopen(texFilename.c_str(), "w");
 
             fprintf(fileOut, "%s", getFullDocumentText().c_str());
 
             fclose(fileOut);
-            cout<<"done.\n";
+            cout<<"done."<<endl;
         }
         void saveBody() const {
             string texFilename = getTexFilenameForBody();
-            cout<<"Saving file "<<texFilename<<"...";
+            cout<<"Saving file "<<texFilename<<"..."<<flush;
             FILE *fileOut = fopen(texFilename.c_str(), "w");
 
             fprintf(fileOut, "%s", getBodyText().c_str());
 
             fclose(fileOut);
-            cout<<"done.\n";
+            cout<<"done."<<endl;
         }
         void compile() const {
             save();
 
-            cout<<"Compiling "<< getTexFilename()<<"...";
+            cout<<"Compiling "<< getTexFilename()<<"..."<<flush;
             string command = "pdflatex " + getTexFilename() + " > /dev/null";
             ignore = system(command.c_str());
-            cout<<"done.\n";
+            cout<<"done."<<endl;
         }
         void display() const {
             compile();
 
-            cout<<"Opening "<<getPdfFilename()<<" for viewing.\n";
+            cout<<"Opening "<<getPdfFilename()<<" for viewing."<<endl;
             string command = "evince " + getPdfFilename() + " &";
             ignore = system(command.c_str());
         }
@@ -242,6 +243,6 @@ namespace unf_planespanners {
         }
     };
 
-} // unf_planespanners
+} // unf_spanners
 
 #endif //GEOMETRIC_SPANNERS_LATEXPRINTER_H

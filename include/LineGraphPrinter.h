@@ -15,15 +15,16 @@
 
 #include "GeometricSpannerPrinter.h"
 #include "names.h"
+#include "Result.h"
 #include "utilities.h"
 
-namespace unf_planespanners {
+namespace unf_spanners {
 
     using namespace std;
 
     class PgfplotsPrinter : public TikzPrinter {
     public:
-        typedef map< Algorithm, map< size_t, vector<Result>>> ResultMap;
+        typedef map< Algorithm, map< size_t, vector<BoundedDegreeSpannerResult>>> ResultMap;
 
         // Palette generated using https://coolors.co/
         vector<string> Colors = {
@@ -40,19 +41,6 @@ namespace unf_planespanners {
         }
 
 
-        void registerResult(const Result& result ) {
-            auto el1 = _results.begin();
-            bool inserted = false;
-            tie(el1, inserted) = _results.emplace(result.algorithm,map<size_t, vector<Result>>());
-
-            auto el2 = el1->second.begin();
-            tie(el2, inserted) = el1->second.emplace(result.n, vector<Result>());
-
-            // Skip first run
-            if(!inserted) {
-                el2->second.push_back(result);
-            }
-        }
 
         string getLegendAxisAttributes() {
             string legend = string("legend columns=1,\n")
@@ -158,7 +146,7 @@ namespace unf_planespanners {
 
     //PgfplotsPrinter lineGraph;
 
-} // namespace unf_planespanners
+} // namespace unf_spanners
 
 
 #endif //GEOMETRIC_SPANNERS_PGFPLOTSPRINTER_H

@@ -11,7 +11,7 @@
 #include "utilities.h"
 
 
-namespace unf_planespanners {
+namespace unf_spanners {
 
 using namespace std;
 
@@ -106,7 +106,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
         do { // Find closest unprocessed neighbor, also count processed neighbors and neighbors in ePrime
             if( !T.is_infinite(N) ) {
-                if( unf_planespanners::contains(ePrime, makeNormalizedPair(u, N->info() ) ) )
+                if( unf_spanners::contains(ePrime, makeNormalizedPair(u, N->info() ) ) )
                     ++degree;
 
                 if( isProcessed.at( N->info() ) )
@@ -247,6 +247,6 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
 } // function BSX2009
 
-} // namespace unf_planespanners
+} // namespace unf_spanners
 
 #endif // GSNUNF_BSX2009_H

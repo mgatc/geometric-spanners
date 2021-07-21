@@ -17,7 +17,7 @@
 
 #include "utilities.h"
 
-namespace unf_planespanners {
+namespace unf_spanners {
 
 using namespace std;
 
@@ -161,6 +161,6 @@ class DelaunayGraph {
 
 }; // class DelaunayGraph
 
-} // namespace unf_planespanners
+} // namespace unf_spanners
 
 #endif // GSNUNF_DELAUNAYGRAPH_H

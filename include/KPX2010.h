@@ -15,7 +15,7 @@
 #include "utilities.h"
 
 
-namespace unf_planespanners {
+namespace unf_spanners {
 
 using namespace std;
 
@@ -300,6 +300,6 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
 } // function KPX2010
 
-} // namespace unf_planespanners
+} // namespace unf_spanners
 
 #endif // GSNUNF_KPX2010_H

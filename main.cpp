@@ -28,7 +28,7 @@
 #include "utilities.h"
 
 
-using namespace unf_planespanners;
+using namespace unf_spanners;
 
 void scratch(size_t n1);
 
@@ -127,7 +127,7 @@ void scratch(size_t n) {
 
     // PRODUCE A LaTeX / TiKz DOCUMENT AND DISPLAY
 
-    TikzPrinter tikz("temp-tikz");
+    GraphPrinter tikz("temp-graph");
 
     tikz.autoscale(points.begin(), points.end());
     LatexPrinter::OptionsList options;
@@ -160,7 +160,7 @@ void scratch(size_t n) {
     latex.display();
 
 
-//    tikz.print("test");
+//    graph.print("test");
     cout << "\n";
 
 }

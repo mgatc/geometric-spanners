@@ -19,7 +19,7 @@
 #include <CGAL/Spatial_sort_traits_adapter_2.h>
 
 
-namespace unf_planespanners {
+namespace unf_spanners {
 
     using namespace std;
 
@@ -151,50 +151,6 @@ namespace unf_planespanners {
         Last
     };
 
-    struct Result {
-        Algorithm algorithm;
-        size_t n;
-        size_t runtime;
-        size_t degree;
-        number_t degreeAvg;
-        number_t lightness;
-        std::optional<number_t> t;
-
-        Result() = default;
-
-        Result(const Algorithm algorithm,
-               const size_t n,
-               const size_t runtime,
-               const size_t degree,
-               const number_t degreeAvg,
-               const number_t lightness,
-               const std::optional<number_t> t = nullopt)
-                : algorithm(algorithm),
-                  n(n),
-                  runtime(runtime),
-                  degree(degree),
-                  degreeAvg(degreeAvg),
-                  lightness(lightness),
-                  t(t) {}
-
-        friend ostream &operator<<(ostream &os, const Result &result);
-    };
-
-    ostream &operator<<(ostream &os, const Result &result) {
-        os << result.n << ","
-           << result.algorithm << ","
-           << result.runtime << ","
-           << result.degree << ","
-           << result.degreeAvg << ","
-           << result.lightness << ",";
-
-        if(result.t)
-            os << *(result.t);
-
-        os << ",\n";
-
-        return os;
-    }
 
     template< class OutputIterator >
     void readPointsFromFile( OutputIterator out, const string outputFileName, const size_t n=SIZE_T_MAX ) {
@@ -525,6 +481,6 @@ namespace unf_planespanners {
     }
 
 
-} // namespace unf_planespanners
+} // namespace unf_spanners
 
 #endif // GSNUNF_UTILITIES_H

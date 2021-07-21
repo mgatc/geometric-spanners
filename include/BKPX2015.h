@@ -28,7 +28,7 @@
 #include "GeometricSpannerPrinter.h"
 #include "metrics.h"
 
-namespace unf_planespanners {
+namespace unf_spanners {
 
     using namespace std;
 

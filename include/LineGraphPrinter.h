@@ -24,7 +24,7 @@ namespace unf_spanners {
 
     class PgfplotsPrinter : public TikzPrinter {
     public:
-        typedef map< Algorithm, map< size_t, vector<BoundedDegreeSpannerResult>>> ResultMap;
+        //typedef map< Algorithm, map< size_t, vector<BoundedDegreeSpannerResult>>> ResultMap;
 
         // Palette generated using https://coolors.co/
         vector<string> Colors = {
@@ -37,8 +37,9 @@ namespace unf_spanners {
 
         PgfplotsPrinter(string filename, string documentType = "standalone")
                 : TikzPrinter(filename,documentType){
-
+            m_body = Body(getTikzHeader(), "", getTikzFooter());
         }
+
 
 
 
@@ -51,7 +52,7 @@ namespace unf_spanners {
         string getLegend() {
             return "\\ref{planespannerlegend}\n\n";
         }
-        string getBody() {
+        void plotResults(const BoundedDegreeSpannerResultSet::ReducedResultMap &results) {
             bool addLegend = true;
             const double scale = 1;
             string plotHeader = string("")
@@ -60,7 +61,7 @@ namespace unf_spanners {
                     + "xtick={";
 
             string xTicks("");
-            for( const auto& level : _results.begin()->second ){
+            for( const auto& level : results.begin()->second ){
                 xTicks += to_string(level.first);
                 xTicks += ",";
             }
@@ -79,7 +80,7 @@ namespace unf_spanners {
                 graph += "]";
             }
 
-            for( auto alg : _results ) {
+            for( auto alg : results ) {
                 for( auto& graph : body) {
                     graph += "\n\n\\addplot";
                     graph += "[thick,color="
@@ -88,18 +89,12 @@ namespace unf_spanners {
                     graph += " coordinates {\n";
                 }
                 for( auto level : alg.second ) {
-                    double averageRuntime = std::accumulate(level.second.begin(), level.second.end(), 0.0,[&]( const auto& a, const auto& b ) {
-                        return a + double(b.runtime) / scale;
-                    } ) / level.second.size();
                     body[0] += "("
                               + to_string(level.first)
                               + ","
-                              + to_string(averageRuntime)
+                              + to_string(level.second.runtime)
                               + ")\n";
 
-                    double averageDegree = std::accumulate(level.second.begin(), level.second.end(), 0,[]( const auto& a, const auto& b ) {
-                        return a + b.degree;
-                    } ) / double(level.second.size());
                     body[1] += "("
                                + to_string(level.first)
                                + ","
@@ -131,20 +126,16 @@ namespace unf_spanners {
                 graph += string("\n\n\\end{axis}\n\n");
                 graph += "\\end{tikzpicture}\n\n";
             }
-            string bodyText = std::accumulate( body.begin(), body.end(), string("") );
-//                    + "\\end{tikzpicture}\n\n";
+            m_body.content += std::accumulate( body.begin(), body.end(), string("") );
 
-            return bodyText;
         }
 
     private:
-        ResultMap _results;
-        string _document;
+        //ResultMap _results;
 
     }; // class PgfplotsPrinter
 
 
-    //PgfplotsPrinter lineGraph;
 
 } // namespace unf_spanners
 

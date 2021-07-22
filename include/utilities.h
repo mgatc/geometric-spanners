@@ -7,6 +7,7 @@
 #include <limits>
 #include <string>
 #include <unordered_set>
+#include <variant>
 #include <vector>
 
 #include <boost/functional/hash.hpp> // hashing pairs
@@ -32,6 +33,7 @@ namespace unf_spanners {
     typedef K::FT number_t;
     typedef size_t index_t;
     typedef size_t cone_t;
+    typedef variant<index_t,number_t> mixed_t;
 
     typedef pair<index_t, index_t> index_tPair;
     typedef index_tPair Edge;
@@ -133,7 +135,19 @@ namespace unf_spanners {
     inline number_t getAngle(const index_t p, const index_t q, const index_t r, const Points &P) {
         return getAngle(P[p], P[q], P[r]);
     }
-
+    string to_string(mixed_t value) {
+        return visit( [](mixed_t &&var) {
+            using std::to_string;
+            if (holds_alternative<index_t>(var))
+                return to_string(get<index_t>(var));
+            else if (holds_alternative<number_t>(var))
+                return to_string(get<number_t>(var));
+        }, value);
+    }
+    ostream& operator<<(ostream &os, mixed_t value) {
+        os << unf_spanners::to_string(value);
+        return os;
+    }
 
     enum Algorithm {
         First=0,

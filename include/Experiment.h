@@ -10,6 +10,7 @@
 #include "LineGraphPrinter.h"
 #include "metrics.h"
 #include "names.h"
+#include "Result.h"
 #include "utilities.h"
 
 
@@ -26,8 +27,13 @@
 
 namespace unf_spanners {
 
-    LatexPrinter latex("testlatex");
-    GraphPrinter graph("temptikz");
+    using std::to_string;
+
+    BoundedDegreeSpannerResultSet RESULTS;
+
+    LatexPrinter latex("templatex");
+    GraphPrinter graph("tempgraph");
+    PgfplotsPrinter pgfplots("temppgfplots");
 
     GraphPrinter::OptionsList activeEdgeOptions = { // active edge options
             {"color",      graph.activeEdgeColor},
@@ -120,22 +126,20 @@ namespace unf_spanners {
                      make_optional(inserter(WorstPath,WorstPath.begin())) );
 
         BoundedDegreeSpannerResult result(algorithm, n, runtime, deg, degAvg, lightness, t );
-        //lineGraph.registerResult(result);
+
+        RESULTS.registerResult(result);
         cout << result << endl;
-
-
 
         string outputname = string("RPIS-")
                             + to_string(n)
                             + "-"
                             + Names.at(algorithm);
         GraphPrinter printer(outputname);
-        double documentSizeInCm = 10;
 
+        double documentSizeInCm = 10;
         printer.autoscale( points.begin(), points.end(), documentSizeInCm);
 
-        //printer.beginFigure();
-        printer.setCaption(result);
+        result.setCaption(printer);
 
         // remove worst path edges from spanner edges
         spanner.erase( remove_if( spanner.begin(), spanner.end(), [&]( const Edge& edge ){

@@ -23,7 +23,7 @@ namespace unf_spanners {
         typedef vector<Option> OptionsList;
 
         explicit LatexPrinter(string filename, string documentType = "article")
-            : m_filename(std::move(filename)), m_documentType(documentType) {}
+            : m_filename(std::move(filename)), m_documentType(std::move(documentType)) {}
 
         // Document-level getters
         string getName() const {
@@ -49,11 +49,11 @@ namespace unf_spanners {
                     + "\\begin{document}\n\n";
             return header;
         }
-        string getDocumentFooter() const {
+        static string getDocumentFooter() {
             return "\\end{document}";
         }
         // Figure getters
-        string getFigureHeader(string options = "") const {
+        static string getFigureHeader(string options = "") {
             string header = "\\begin{figure}";
             if(!options.empty()){
                 header += "[" + options + "]";
@@ -82,22 +82,11 @@ namespace unf_spanners {
             m_caption = caption;
             addLatexComment(caption);
         }
-        void setCaption( const Result& result ) {
-            string caption = string("\\textsc{")
-                             + Names.at(result.algorithm)
-                             + "}: "
-                             + "$\\Delta = "
-                             + to_string(result.degree);
-
-            if( result.t ) {
-                caption += ",\\ t = "
-                           + to_string(*result.t);
-            }
-
-            caption +="$";
-            setCaption(caption);
+        template<class T>
+        void setCaption(const T& setter) {
+            setter.setCaption(this);
         }
-        void clearCaptionFile() const {
+        static void clearCaptionFile() {
             string captionFilename = "captions.txt";
 
             FILE *fp = fopen(captionFilename.c_str(), "w");
@@ -110,7 +99,7 @@ namespace unf_spanners {
             printer.saveBody();
             addInput(printer.getName());
 
-            for( auto hex : printer.m_colors ) {
+            for( const auto& hex : printer.m_colors ) {
                 defineColor(hex);
             }
         }
@@ -130,7 +119,7 @@ namespace unf_spanners {
 
             addRawText(getFigureFooter());
         }
-        void addInput(string name) {
+        void addInput(const string& name) {
             m_body.content += "\\input{" + name + "}\n\n";
         }
         void addRawText(const string& text) {
@@ -217,7 +206,7 @@ namespace unf_spanners {
 
         string getColorDefinitions() const {
             string definitions;
-            for( auto hex : m_colors ) {
+            for( const auto& hex : m_colors ) {
                 // parse the hex value
                 vector<size_t> color = parseHexRGB( hex );
                 // add color to document

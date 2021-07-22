@@ -97,9 +97,9 @@ public:
 
         // setup graph environment
         string tikzOptions = getTikzOptions();
-        cout<<tikzOptions<<endl;
+        //cout<<tikzOptions<<endl;
         string tikzHeader = getTikzHeader(tikzOptions);
-        cout<<tikzHeader<<endl;
+        //cout<<tikzHeader<<endl;
         m_body = Body{ tikzHeader,
                       getTikzGrid() + "\n\n",
                       getTikzFooter()};

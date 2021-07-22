@@ -182,21 +182,21 @@
 ////    // Change status of vertex v
 ////    void addToEventQueue( VertexHandle v, bool status ) {
 ////        VertexStatusEvent<T> add( v, status );
-////        _vertexStatusEvents.push_back( add ); // put the event in a container that won't slice it
+////        _vertexStatusEvents.push_back( add ); // put the event in a container that won'stretchFactor slice it
 ////        _eventQueue.push( &_vertexStatusEvents.back() );           // put the event's address in the event queue
 ////    }
 ////
 ////    // Change focus[level] to highlight vertex v
 ////    void addToEventQueue( VertexHandle v, int level ) {
 ////        VertexFocusEvent<T> add( v, level );
-////        _focusEvents.push_back( add ); // put the event in a container that won't slice it
+////        _focusEvents.push_back( add ); // put the event in a container that won'stretchFactor slice it
 ////        _eventQueue.push( &_focusEvents.back() );          // put the event's address in the event queue
 ////    }
 ////
 ////    // Change status of edge e
 ////    void addToEventQueue( std::pair<VertexHandle,VertexHandle> e, bool status ) {
 ////        EdgeStatusEvent<T> add( e, status );
-////        _edgeStatusEvents.push_back( add ); // put the event in a container that won't slice it
+////        _edgeStatusEvents.push_back( add ); // put the event in a container that won'stretchFactor slice it
 ////        _eventQueue.push( &_edgeStatusEvents.back() );           // put the event's address in the event queue
 ////    }
 ////

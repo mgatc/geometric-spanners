@@ -39,7 +39,7 @@ namespace unf_spanners {
 
         // Functors that define how to merge color info when a site (either
         // point or segment) corresponds to point(s) on plane belonging to
-        // more than one input site. We don't use these, but still need to
+        // more than one input site. We don'stretchFactor use these, but still need to
         // provide the functors as CGAL expects them.
         template<typename T>
         struct InfoConvert {

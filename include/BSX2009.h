@@ -166,7 +166,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
             --N; // Increment first, then check validity
             if( !( T.is_infinite(N) || isProcessed.at(N->info()) ) ) {
                 if( !( T.is_infinite(lastN) || isProcessed.at(lastN->info()) ) ) {
-                    // don't add to degree for cross edges, they are not incident on u!
+                    // don'stretchFactor add to degree for cross edges, they are not incident on u!
                     //if( printLog ) cout<<"cross_";
                     createNewEdge( T, handles, ePrime, lastN->info(), N->info(), n, printLog );
                 }

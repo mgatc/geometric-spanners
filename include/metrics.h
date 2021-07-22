@@ -327,7 +327,7 @@ using namespace std;
                 t_max = *t_local;
             }
         }
-        // Find the big mac daddy t aka big money
+        // Find the big mac daddy stretchFactor aka big money
         return t_max;
     }
 
@@ -400,7 +400,7 @@ using namespace std;
                 walk = MaxParents.at(walk);
             } while (walk != i_max);
         }
-        // Find the big mac daddy t aka big money
+        // Find the big mac daddy stretchFactor aka big money
         return t_max;
     }
 
@@ -699,9 +699,9 @@ void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_pr
                 f[neighbor] = g.at(neighbor) + h(neighborPoint);
                 DistanceIndexPair q = make_pair( f.at(neighbor), neighbor );
 
-                // calculate the new path's t
+                // calculate the new path's stretchFactor
                 t_new = newScore / EuclideanDistances.at(i).at(u_index);
-                // update t_upper in t-Heap
+                // update t_upper in stretchFactor-Heap
                 auto tValue = make_pair( t_new, make_pair(i,u_index) );
                 H tHandle = upperBoundHandles.at(i).at(u_index);
 

@@ -19,8 +19,6 @@
 namespace unf_spanners {
     using namespace std;
 
-    vector<string> IV_NAMES = {"runtime", "degree", "degreeAvg", "lightness", "t"};
-
     struct BoundedDegreeSpannerResult {
 
         Algorithm algorithm;
@@ -29,7 +27,7 @@ namespace unf_spanners {
         mixed_t degree;
         number_t degreeAvg;
         number_t lightness;
-        std::optional <number_t> t;
+        std::optional <number_t> stretchFactor;
         index_t numberOfIVs = 4;
         map<string,mixed_t> IV;
 
@@ -39,34 +37,34 @@ namespace unf_spanners {
                                    mixed_t degree,
                                    const number_t degreeAvg,
                                    const number_t lightness,
-                                   std::optional<number_t>  t = nullopt)
+                                   std::optional<number_t> stretchFactor = nullopt)
                 : algorithm(algorithm),
                   n(n),
                   runtime(std::move(runtime)),
                   degree(std::move(degree)),
                   degreeAvg(degreeAvg),
                   lightness(lightness),
-                  t(std::move(t)),
-                  numberOfIVs(numberOfIVs + int(bool(t))) {
+                  stretchFactor(std::move(stretchFactor)),
+                  numberOfIVs(numberOfIVs + int(bool(stretchFactor))) {
             unsigned i=0;
             IV.emplace(IV_NAMES[i++], runtime);
             IV.emplace(IV_NAMES[i++], degree);
             IV.emplace(IV_NAMES[i++], degreeAvg);
             IV.emplace(IV_NAMES[i++], lightness);
-            if(t) IV.emplace(IV_NAMES[i++], *t);
+            if(stretchFactor) IV.emplace(IV_NAMES[i++], *stretchFactor);
         }
 
         template<class Printer>
         void setCaption( Printer& printer ) {
             string caption = string("\\textsc{")
-                             + Names.at(algorithm)
+                             + ALGORITHM_NAMES.at(algorithm)
                              + "}: "
                              + "$\\Delta = "
                              + unf_spanners::to_string(degree);
 
-            if( t ) {
-                caption += ",\\ t = "
-                           + to_string(*t);
+            if( stretchFactor ) {
+                caption += ",\\ stretchFactor = "
+                           + to_string(*stretchFactor);
             }
 
             caption +="$";
@@ -75,14 +73,14 @@ namespace unf_spanners {
         //friend ostream& operator<<(ostream &os, const BoundedDegreeSpannerResult &result);
         friend ostream& operator<<(ostream &os, const BoundedDegreeSpannerResult &result) {
             os << result.n << ","
-               << Names[result.algorithm] << ","
+               << ALGORITHM_NAMES[result.algorithm] << ","
                << result.runtime << ","
                << result.degree << ","
                << result.degreeAvg << ","
                << result.lightness << ",";
 
-            if (result.t)
-                os << *(result.t);
+            if (result.stretchFactor)
+                os << *(result.stretchFactor);
 
             os << ",\n";
 
@@ -93,37 +91,49 @@ namespace unf_spanners {
     class BoundedDegreeSpannerResultSet {
     public:
         template<typename T>
-        using ResultMap = map< Algorithm, map<size_t, T>>;
+        using AlgorithmMap = map<Algorithm,T>;
+        template<typename T>
+        using LevelMap = map<size_t, T>;
+        template<typename T>
+        using ResultMap = AlgorithmMap<LevelMap<T>>;
 
         typedef vector<BoundedDegreeSpannerResult> IndividualResults;
         typedef ResultMap<IndividualResults> IndividualResultMap;
-        typedef ResultMap<BoundedDegreeSpannerResult> ReducedResultMap;
+        typedef ResultMap<BoundedDegreeSpannerResult> ReducedSamplesResultMap;
+        typedef AlgorithmMap<BoundedDegreeSpannerResult> ReducedLevelsResultMap;
+
+        IndividualResultMap m_results;
+        ReducedSamplesResultMap m_reducedSamples;
+        ReducedLevelsResultMap m_reducedLevels;
 
         void registerResult(const BoundedDegreeSpannerResult& result ) {
             m_results[result.algorithm][result.n].push_back(result);
         }
+//        const ReducedSamplesResultMap& getReducedResults() const {
+//            return m_reducedSamples;
+//        }
         void computeStatistics() {
             for( const auto& alg : m_results ) {
                 for( auto level : alg.second ) {
-                    auto numSamples = static_cast<double>(level.second.size());
+                    auto numSamples = level.second.size();
                     // Calculate averages
                     auto canonicalEnd = level.second.end();
                     auto canonicalBegin = level.second.begin();
-                    if( numSamples > 1 )
-                        next(canonicalBegin);
+                    next(canonicalBegin); // skip first run
+
                     // cast the result of accumulate for integral types to floating-point
                     auto runtime = static_cast<number_t>(std::accumulate(canonicalBegin,
                                                           canonicalEnd,
                                                           0,
                                                           [&]( const auto& a, const auto& b ) {
-                                                              return a + get<index_t>(b.runtime);
+                                                              return a + static_cast<number_t>(get<index_t>(b.runtime));
                                                           })) / numSamples;
-                    auto degree = static_cast<number_t>(std::accumulate(canonicalBegin,
-                                                         canonicalEnd,
-                                                         0,
-                                                         []( const auto& a, const auto& b ) {
-                                                             return a + get<index_t>(b.degree);
-                                                         })) / numSamples;
+                    number_t degree = static_cast<number_t>(std::accumulate(canonicalBegin,
+                                                                        canonicalEnd,
+                                                                        0,
+                          []( const auto& a, const auto& b ) -> index_t {
+                              return a + get<index_t>(b.degree);
+                          })) / numSamples;
                     // already a floating point, so no need to cast
                     number_t degreeAvg = std::accumulate(canonicalBegin,
                                                        canonicalEnd,
@@ -138,23 +148,68 @@ namespace unf_spanners {
                                                            return a + b.lightness;
                                                        }) / numSamples;
 
-                    optional<number_t> t = nullopt;
-                    if(!level.second.empty() && level.second.front().t) {
-                        t = make_optional(std::accumulate(canonicalBegin,
+                    optional<number_t> stretchFactor = nullopt;
+                    if(!level.second.empty() && level.second.front().stretchFactor) {
+                        stretchFactor = make_optional(std::accumulate(canonicalBegin,
                                                           canonicalEnd,
                                                           0.0,
                                                           []( const auto& a, const auto& b ) {
-                                                              return a + *b.t;
+                                                              return a + *b.stretchFactor;
                                                           }) / numSamples );
                     }
-                    BoundedDegreeSpannerResult result(alg.first, level.first, runtime, degree, degreeAvg, lightness, t);
-                    m_reduced[alg.first].emplace(level.first,result);
+                    BoundedDegreeSpannerResult result(alg.first,
+                                                      level.first,
+                                                      runtime,
+                                                      degree,
+                                                      degreeAvg, lightness, stretchFactor);
+                    m_reducedSamples[alg.first].emplace(level.first, result);
                 }
             }
+
+            for(auto alg : m_reducedSamples) {
+                unsigned numSamples = alg.second.size();
+                auto canonicalBegin = alg.second.begin(),
+                    canonicalEnd = alg.second.end();
+                auto runtime = static_cast<number_t>(std::accumulate(canonicalBegin,
+                                                                     canonicalEnd,
+                                                                     0.0,
+                                                                     [&]( const auto& a, const auto& b ) {
+                                                                         return a + get<number_t>(b.second.runtime);
+                                                                     })) / numSamples;
+                auto degree = static_cast<number_t>(std::accumulate(canonicalBegin,
+                                                                    canonicalEnd,
+                                                                    0.0,
+                                                                    []( const auto& a, const auto& b ) {
+                                                                        return a + get<number_t>(b.second.degree);
+                                                                    })) / numSamples;
+                // already a floating point, so no need to cast
+                number_t degreeAvg = std::accumulate(canonicalBegin,
+                                                     canonicalEnd,
+                                                     0.0,
+                                                     [&]( const auto& a, const auto& b ) {
+                                                         return a + b.second.degreeAvg;
+                                                     }) / numSamples;
+                number_t lightness = std::accumulate(canonicalBegin,
+                                                     canonicalEnd,
+                                                     0.0,
+                                                     [&]( const auto& a, const auto& b ) {
+                                                         return a + b.second.lightness;
+                                                     }) / numSamples;
+
+                optional<number_t> stretchFactor = nullopt;
+                if(!alg.second.empty() && alg.second.begin()->second.stretchFactor) {
+                    stretchFactor = make_optional(std::accumulate(canonicalBegin,
+                                                                  canonicalEnd,
+                                                                  0.0,
+                                                                  []( const auto& a, const auto& b ) {
+                                                                      return a + *b.second.stretchFactor;
+                                                                  }) / numSamples );
+                }
+                BoundedDegreeSpannerResult result(alg.first, 0, runtime, degree, degreeAvg, lightness, stretchFactor);
+                m_reducedLevels.emplace(alg.first, result);
+            }
+
         }
-            private:
-        IndividualResultMap m_results;
-        ReducedResultMap m_reduced;
     };
 }
 

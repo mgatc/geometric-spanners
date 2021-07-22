@@ -11,6 +11,7 @@
 #include "metrics.h"
 #include "names.h"
 #include "Result.h"
+#include "TablePrinter.h"
 #include "utilities.h"
 
 
@@ -29,11 +30,18 @@ namespace unf_spanners {
 
     using std::to_string;
 
+    const bool PRINT_GEOMETRY = false;
+    const bool PRINT_PGFPLOTS = true;
+    const bool PRINT_TABLES = true;
+
+    const bool USE_EXACT_STRETCH_FACTOR = true;
+
     BoundedDegreeSpannerResultSet RESULTS;
 
     LatexPrinter latex("templatex");
     GraphPrinter graph("tempgraph");
     PgfplotsPrinter pgfplots("temppgfplots");
+    TablePrinter table("temptable");
 
     GraphPrinter::OptionsList activeEdgeOptions = { // active edge options
             {"color",      graph.activeEdgeColor},
@@ -118,8 +126,9 @@ namespace unf_spanners {
         size_t deg = degree( spanner.begin(), spanner.end() );
         number_t degAvg = degreeAvg( spanner.begin(), spanner.end() );
         number_t lightness = getLightness( points.begin(), points.end(), spanner.begin(), spanner.end() );
-        number_t t = StretchFactorDijkstraReduction( points.begin(), points.end(), spanner.begin(), spanner.end() );
-//        number_t t = StretchFactorUsingHeuristic( points.begin(), points.end(), spanner.begin(), spanner.end() );
+        number_t t = USE_EXACT_STRETCH_FACTOR ?
+            StretchFactorDijkstraReduction( points.begin(), points.end(), spanner.begin(), spanner.end() )
+            : StretchFactorUsingHeuristic( points.begin(), points.end(), spanner.begin(), spanner.end() );
 
         list<Edge> WorstPath;
         SFWorstPath( points.begin(), points.end(), spanner.begin(), spanner.end(),
@@ -129,45 +138,41 @@ namespace unf_spanners {
 
         RESULTS.registerResult(result);
         cout << result << endl;
+        if(PRINT_GEOMETRY){
+            string outputname = string("RPIS-")
+                                + to_string(n)
+                                + "-"
+                                + ALGORITHM_NAMES.at(algorithm);
+            GraphPrinter printer(outputname);
 
-        string outputname = string("RPIS-")
-                            + to_string(n)
-                            + "-"
-                            + Names.at(algorithm);
-        GraphPrinter printer(outputname);
+            double documentSizeInCm = 10;
+            printer.autoscale( points.begin(), points.end(), documentSizeInCm);
 
-        double documentSizeInCm = 10;
-        printer.autoscale( points.begin(), points.end(), documentSizeInCm);
+            result.setCaption(printer);
 
-        result.setCaption(printer);
+            // remove worst path edges from spanner edges
+            spanner.erase( remove_if( spanner.begin(), spanner.end(), [&]( const Edge& edge ){
+                auto spannerEdge = normalize_pair(edge);
+                return find_if(WorstPath.begin(), WorstPath.end(), [&] ( const Edge& wpEdge ) {
+                    return spannerEdge == normalize_pair(wpEdge);
+                }) != WorstPath.end();
+            }), spanner.end());
 
-        // remove worst path edges from spanner edges
-        spanner.erase( remove_if( spanner.begin(), spanner.end(), [&]( const Edge& edge ){
-            auto spannerEdge = normalize_pair(edge);
-            return find_if(WorstPath.begin(), WorstPath.end(), [&] ( const Edge& wpEdge ) {
-                return spannerEdge == normalize_pair(wpEdge);
-            }) != WorstPath.end();
-        }), spanner.end());
+            printer.addLatexComment("spanner edges (except for worst path)");
+            printer.drawEdges( spanner.begin(), spanner.end(), points, activeEdgeOptions);
 
-        printer.addLatexComment("spanner edges (except for worst path)");
-        printer.drawEdges( spanner.begin(), spanner.end(), points, activeEdgeOptions);
+            printer.addLatexComment("worst path edges");
+            printer.drawEdges(WorstPath.begin(),WorstPath.end(), points, highlightEdgeOptions);
 
-        printer.addLatexComment("worst path edges");
-        printer.drawEdges(WorstPath.begin(),WorstPath.end(), points, highlightEdgeOptions);
+            printer.addLatexComment("vertices");
+            printer.drawVertices( points.begin(), points.end(), activeVertexOptions);
 
-        printer.addLatexComment("vertices");
-        printer.drawVertices( points.begin(), points.end(), activeVertexOptions);
+            printer.addLatexComment("worst pair vertices");
+            vector<Point> worstPair = { points[WorstPath.front().first], points[WorstPath.back().second] };
+            printer.drawVertices( worstPair.begin(), worstPair.end(), highlightVertexOptions);
 
-        printer.addLatexComment("worst pair vertices");
-        vector<Point> worstPair = { points[WorstPath.front().first], points[WorstPath.back().second] };
-        printer.drawVertices( worstPair.begin(), worstPair.end(), highlightVertexOptions);
-
-        //printer.endFigure();
-
-        latex.addToDocumentAsFigure(printer);
-
-
-        //printer.display(outputname);
+            latex.addToDocumentAsFigure(printer);
+        }
     }
 
     bool singleRun( size_t n, double width, string resultFilename, optional<string> filename, bool forcePrint, bool printLog )
@@ -177,32 +182,30 @@ namespace unf_spanners {
         // SET POINT SET
         vector<Point> points;
         optional<string> generatedFile = nullopt;
-        filename = make_optional("data-150_61.237244x61.237244.txt");
+        //filename = make_optional("data-150_61.237244x61.237244.txt");
 
         if( filename )
             readPointsFromFile( back_inserter( points ), *filename );
         else
             generatedFile = make_optional( generateRandomPoints( n, size, back_inserter(points) ) );
 
-        string outputname = string("RPIS-") + to_string(n);
-        GraphPrinter printer(outputname);
-        double documentSizeInCm = 10;
-        printer.autoscale(points.begin(), points.end(), documentSizeInCm);
-        printer.clearCaptionFile();
+        if(PRINT_GEOMETRY) {
+            string outputname = string("RPIS-") + to_string(n);
+            GraphPrinter printer(outputname);
+            double documentSizeInCm = 10;
+            printer.autoscale(points.begin(), points.end(), documentSizeInCm);
+            printer.clearCaptionFile();
 
-        // draw point set
-        //printer.beginFigure();
-        string caption = string("$N=")
-                        + to_string(n)
-                        + "$";
-        printer.setCaption(caption);
+            // draw point set
+            string caption = string("$N=")
+                             + to_string(n)
+                             + "$";
+            printer.setCaption(caption);
 
-        printer.drawVertices(points.begin(), points.end(), activeVertexOptions);
+            printer.drawVertices(points.begin(), points.end(), activeVertexOptions);
 
-        //printer.endFigure();
-        //printer.display();
-        latex.addToDocumentAsFigure(printer);
-
+            latex.addToDocumentAsFigure(printer);
+        }
         for( int alg=Algorithm::First;
              alg!=Algorithm::Last; ++alg )
         {
@@ -211,7 +214,7 @@ namespace unf_spanners {
 
 
 
-//    if( deg > 11 || t > 7 || forcePrint ) {
+//    if( deg > 11 || stretchFactor > 7 || forcePrint ) {
 //
 //       string resultFileName = ( filename ? *filename : *generatedFile );
 //       // strip file extension
@@ -246,15 +249,30 @@ namespace unf_spanners {
         size_t invalid = 0;
         size_t trialNum = 1;
 
-        for( size_t trial=0; trial<trials; ++trial ) {
+        for( size_t trial=0; trial<=trials; ++trial ) {
             for( size_t n=n_start; n<=n_end; n+=increment ) {
                 trialNum++;
-                if( !singleRun( n, width*sqrt(n), "output", nullopt, false, false ) ) {
+                if( !singleRun( n, width, "output", nullopt, false, false ) ) {
                     ++invalid;
                     return false;
                 }
             }
         }
+
+        RESULTS.computeStatistics();
+
+        if(PRINT_PGFPLOTS) {
+            plotResults(RESULTS, &latex, PGFPLOT_NAMES);
+        }
+
+        if(PRINT_TABLES) {
+            table.tabulateResults(RESULTS);
+            latex.addToDocumentAsFigure(table);
+        }
+
+        if(PRINT_GEOMETRY || PRINT_PGFPLOTS || PRINT_TABLES)
+            latex.display();
+
         //cout<<"\nTesting Complete. "<< invalid << " of "<<(trials*(n_end-n_start))<<" invalid results.\n\n";
         return invalid == 0;
     }

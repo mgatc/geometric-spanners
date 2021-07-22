@@ -85,8 +85,8 @@ void scratch(size_t n) {
 
     cout << degree(result.begin(), result.end()) << endl;
     // cout<<",";
-    // double t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-    // cout<< t;
+    // double stretchFactor = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+    // cout<< stretchFactor;
     // cout<<",";
 
 

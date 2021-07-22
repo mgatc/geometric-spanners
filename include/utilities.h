@@ -15,6 +15,7 @@
 
 #include <CGAL/boost/iterator/counting_iterator.hpp>
 #include <CGAL/Kernel/global_functions.h>
+#include <CGAL/point_generators_2.h>
 #include <CGAL/Vector_2.h>
 #include <CGAL/spatial_sort.h>
 #include <CGAL/Spatial_sort_traits_adapter_2.h>
@@ -135,14 +136,22 @@ namespace unf_spanners {
     inline number_t getAngle(const index_t p, const index_t q, const index_t r, const Points &P) {
         return getAngle(P[p], P[q], P[r]);
     }
+    // FROM https://www.bfilipek.com/2018/06/variant.html#overload
+    template<class... Ts> struct overload : Ts... { using Ts::operator()...; };
+    template<class... Ts> overload(Ts...) -> overload<Ts...>;
+    // END
     string to_string(mixed_t value) {
-        return visit( [](mixed_t &&var) {
-            using std::to_string;
-            if (holds_alternative<index_t>(var))
-                return to_string(get<index_t>(var));
-            else if (holds_alternative<number_t>(var))
-                return to_string(get<number_t>(var));
-        }, value);
+        using std::to_string;
+        return visit( overload{
+            []( index_t& val ){ return to_string(val); },
+            []( number_t& val ){ return to_string(val); }
+        }, value );
+//        [](mixed_t &&var) {
+//            if (holds_alternative<index_t>(var))
+//                return to_string(get<index_t>(var));
+//            else if (holds_alternative<number_t>(var))
+//                return to_string(get<number_t>(var));
+//        }, value);
     }
     ostream& operator<<(ostream &os, mixed_t value) {
         os << unf_spanners::to_string(value);
@@ -435,7 +444,7 @@ namespace unf_spanners {
      */
     template< class DelaunayTriangulation, typename OutputIterator >
     void canonicalOrder( const DelaunayTriangulation& DT, OutputIterator out ) {
-        //Timer t(",");
+        //Timer stretchFactor(",");
         typedef typename DelaunayTriangulation::Vertex_handle VertexHandle;
         typedef typename DelaunayTriangulation::Vertex_circulator VertexCirculator;
         typedef unordered_set<VertexHandle> VertexHash;

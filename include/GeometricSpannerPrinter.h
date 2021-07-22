@@ -31,7 +31,7 @@ class TikzPrinter : public LatexPrinter {
 
         // setup graph environment
         //string tikzOptions = getTikzOptions();
-        m_body = Body{getTikzHeader(), "poop", getTikzFooter()};
+        m_body = Body{getTikzHeader(), "", getTikzFooter()};
     }
 
     // begin and end are iterators over the point set that will be printed

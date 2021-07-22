@@ -312,7 +312,7 @@ namespace unf_spanners {
 
 
         {
-            //Timer t;
+            //Timer stretchFactor;
 
             for (auto e = DT.finite_edges_begin(); e != DT.finite_edges_end(); ++e) {
                 auto edge = make_pair(
@@ -324,7 +324,7 @@ namespace unf_spanners {
                 L.emplace_back(edge, length);
                 B.emplace(edge, length);
             }
-            //Timer t;
+            //Timer stretchFactor;
             //Step 2: Edges in the set L are sorted by their bisector length in non-decreasing order.
             sort(L.begin(), L.end(), [&](const auto &lhs, const auto &rhs) {
                 return lhs.second < rhs.second;
@@ -344,7 +344,7 @@ namespace unf_spanners {
 
         //Step 3
         {
-            //Timer t;
+            //Timer stretchFactor;
             addIncident(E_A, AL_E_A, handles, L);
         }
 
@@ -354,7 +354,7 @@ namespace unf_spanners {
         //Step 4
         {
 
-            //Timer t;
+            //Timer stretchFactor;
             for (auto e : E_A) {
                 addCanonical(E_CAN, e.first, e.second, DT, handles, B, AL_E_A, printLog);
                 addCanonical(E_CAN, e.second, e.first, DT, handles, B, AL_E_A, printLog);
@@ -363,7 +363,7 @@ namespace unf_spanners {
 
 
         {
-            //Timer t;
+            //Timer stretchFactor;
             //Union of sets E_A and E_CAN for final edge set removes duplicates.
             E_A.insert(E_A.end(), E_CAN.begin(), E_CAN.end());
             sort(E_A.begin(), E_A.end(), [](const auto &l, const auto &r) {

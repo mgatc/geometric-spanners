@@ -444,7 +444,7 @@ namespace unf_spanners {
 //        if(printLog) cout<<"  p_filled:"<<filled.at(p)<<"\n";
 //        if(printLog) cout<<"  q_filled:"<<filled.at(q)<<"\n";
 
-            // If either p or q's cone is filled, don't even bother
+            // If either p or q's cone is filled, don'stretchFactor even bother
             if (filled.at(p).count() == NUM_CONES || filled.at(q).count() == NUM_CONES)
                 continue;
 

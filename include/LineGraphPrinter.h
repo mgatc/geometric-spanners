@@ -1,13 +1,6 @@
 #ifndef GEOMETRIC_SPANNERS_PGFPLOTSPRINTER_H
 #define GEOMETRIC_SPANNERS_PGFPLOTSPRINTER_H
 
-/*
- * TODO: Separate statistics calculations into a separate
- *  class that will be accepted by PgfplotsPrinter and
- *  TablePrinter to print appropriate results without the
- *  need to perform redundant measurements on the data
- */
-
 #include <map>
 #include <iostream>
 #include <optional>
@@ -22,6 +15,8 @@ namespace unf_spanners {
 
     using namespace std;
 
+    void plotResults(const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter);
+
     class PgfplotsPrinter : public TikzPrinter {
     public:
         // Palette generated using https://coolors.co/
@@ -35,85 +30,154 @@ namespace unf_spanners {
 
         PgfplotsPrinter(string filename, string documentType = "standalone")
                 : TikzPrinter(filename,documentType){
-            m_body = Body{getTikzHeader(), "", getTikzFooter()};
+            m_body = Body{getTikzHeader(),
+                          "",
+                          getTikzFooter() };
+            for(auto color : Colors){
+                defineColor(color);
+            }
         }
 
 
 
 
-        string getLegendAxisAttributes() {
-            string legend = string("legend columns=1,\n")
-                + "legend to name=planespannerlegend\n";
+//        string getLegendAxisAttributes() {
+////            string legend = string(",\nlegend columns=3,\n")
+////                + "legend to name=planespannerlegend\n";
+//
+//            return legend;
+//        }
+//        string getLegend() {
+//            TikzPrinter tikz("templegend");
+//            string legend = "\\begin{axis}[%\n"
+//                            "            hide axis,\n"
+//                            "                    xmin=10,\n"
+//                            "                    xmax=50,\n"
+//                            "                    ymin=0,\n"
+//                            "                    ymax=0.4,\n"
+//                            "                    legend style={draw=white!15!black,legend cell align=left},\n"
+//                            "                    legend columns=3\n"
+//                            "            ]\n\n";
+//            for(string name : ALGORITHM_NAMES) {
+//                legend += "\\addlegendentry{"
+//                        + name
+//                        +  "}";
+//            }
+//            legend += "\\end{axis}";
+//
+//            tikz.addRawText(legend);
+//
+//        }
+        void plotAxis(unsigned iv, const BoundedDegreeSpannerResultSet &results) {
+
+            // build axis header
+            string allPlotsOfAxis = getAxisHeader(iv, results);
+
+            for( const auto& alg : results.m_reducedSamples ) {
+                // build the plot
+                string plot = getPlotHeader(alg.first);
+
+                for( const auto& level : alg.second ) {
+                    // add the level, measurement pair
+                    string entry = "("
+                                   + std::to_string(level.first)
+                                   + ","
+                                   + unf_spanners::to_string(level.second.IV.at(IV_NAMES[iv]))
+                                   + ")\n";
+                    plot += entry;
+                }
+                plot += getPlotFooter(iv);
+
+//                if(includeLegend)
+//                    plot += addLegendEntry(alg.first);
+
+                allPlotsOfAxis += plot;
+            }
+            allPlotsOfAxis += getAxisFooter();
+
+            m_body.content = allPlotsOfAxis;
+        }
+        void plotResults(const BoundedDegreeSpannerResultSet &results) {
+            unf_spanners::plotResults(results,this);
+        }
+//        string addLegendEntry(Algorithm alg) {
+//            string legendEntry = "\\addlegendentry{\\textsc{\\tiny{"
+//                                 + ALGORITHM_NAMES[alg]
+//                                 + "}}}";
+//            return legendEntry;
+//        }
+        string getLegendText( const vector<string>& names) {
+            //TikzPrinter tikz("templegend");
+            string legend = string("")
+                            +"$\\matrix[\n"
+                            +"matrix of nodes,\n"
+                            +"draw,\n"
+                            +"anchor=north,\n"
+                            +"column 1/.style={nodes={anchor=center}},\n"
+                            +"column 2/.style={nodes={anchor=west}}\n"
+                            +"] at([yshift=-2.5em]current axis.south)\n"
+                            +"{\n\n";
+            for(auto name : names) {
+                legend += "\\ref{plots:"
+                          + name
+                          + "} & $\\textbf{"
+                          + name
+                          + "}\\\\\n";
+            }
+            //    +"\\ref{plots:gamma}&$\\textbf{Gamma}~\\alpha=1.7435~ \\beta=21.263$\\\\"
+            legend += "}$";
 
             return legend;
         }
-        string getLegend() {
-            return "\\ref{planespannerlegend}\n\n";
+        void addLegend() {
+            m_body.footer += getLegendText(ALGORITHM_NAMES);
         }
-        /*
-         * TODO: plotResults is not in a working state. For each IV, we need to build the
-         *  entire axis header and for each algorithm, add a plot with the stored values
-         *  for the current IV.
-         */
-        void plotResults(const BoundedDegreeSpannerResultSet::ReducedResultMap &results) {
-            bool addLegend = true;
-            const double scale = 1;
-            string plotHeader = string("")
-                    + "\\begin{axis}[grid=major,xlabel=$n$, "
-                    + "xtick={";
-
-            string xTicks("");
-            for( const auto& level : results.begin()->second ){
-                xTicks += to_string(level.first);
+        string getPlotHeader(Algorithm alg) {
+            string plotHeader = "\n\n\\addplot";
+            plotHeader += "[thick,color="
+                    + Colors[alg]
+                    + ",mark=*]";
+            plotHeader += " coordinates {\n";
+            return plotHeader;
+        }
+        string getPlotFooter(unsigned iv) {
+            string plotFooter("}node [pos=1.15, above left] {};\n\n");
+            plotFooter += "\\label{plots:"
+                        + ALGORITHM_NAMES[iv]
+                        + "}";
+            return plotFooter;
+        }
+        string getAxisHeader(unsigned iv,
+                             const BoundedDegreeSpannerResultSet &results) {
+            string axisHeader = string("")
+                                + "\\begin{axis}["
+                                + "title={"
+                                + PGFPLOT_NAMES[iv]
+                                + "},"
+                                + "grid=major,xlabel=$n$, "
+                                + "xtick={";
+            string xTicks;
+            assert(!results.m_reducedSamples.empty());
+            for( auto level : results.m_reducedSamples.begin()->second ){
+                xTicks += std::to_string(level.first);
                 xTicks += ",";
             }
             xTicks = xTicks.substr( 0, xTicks.size()-1 );
 
-            plotHeader += xTicks
-                      + "\n}, ylabel near ticks,ylabel={IV}";
+            axisHeader += xTicks
+                          + "\n}, ylabel near ticks,ylabel={"
+                          + IV_NICE_NAMES.at(iv)
+                          + "}";
 
+//            if(first)
+//                axisHeader += getLegendAxisAttributes();
 
-            vector<string> body(3, plotHeader);
-            size_t colorIndex = 0;
-
-            body[0] += string(",") + getLegendAxisAttributes();
-
-            for( auto& graph : body ) {
-                graph += "]";
-            }
-
-            for( auto alg : results ) {
-                for( auto& graph : body) {
-                    graph += "\n\n\\addplot";
-                    graph += "[thick,color="
-                            + Colors[colorIndex]
-                            + ",mark=*]";
-                    graph += " coordinates {\n";
-                }
-                for( auto level : alg.second ) {
-                    for(auto iv : level.second.IV) {
-                        string entry = "("
-                                   + to_string(level.first)
-                                   + ","
-                                   + to_string(iv.second)
-                                   + ")\n";
-                        body.push_back(entry);
-                    }
-                }
-                for( auto& graph : body ) {
-                    graph += string("}node [pos=1.15, above left] {};\n\n");
-                }
-                body[0] += "\\addlegendentry{\\textsc{\\tiny{"
-                    + Names[alg.first]
-                    + "}}}";
-                ++colorIndex;
-            }
-            for( auto& graph : body ) {
-                graph += string("\n\n\\end{axis}\n\n");
-                graph += "\\end{tikzpicture}\n\n";
-            }
-            m_body.content += std::accumulate( body.begin(), body.end(), string("") );
-
+            axisHeader += "]"; // close axis environment attributes
+            return axisHeader;
+        }
+        string getAxisFooter() {
+            string axisFooter("\n\n\\end{axis}\n\n");
+            return axisFooter;
         }
 
     private:
@@ -121,6 +185,28 @@ namespace unf_spanners {
     }; // class PgfplotsPrinter
 
 
+
+
+    void plotResults(const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter, vector<string> plotNames = {}) {
+
+
+        const double scale = 1;
+        auto plotNameIt = plotNames.begin();
+        bool first = false;
+        for( unsigned iv=0;iv<IV_NAMES.size();++iv) {
+        //for( const auto& iv : IV_NAMES ) {
+            assert(plotNameIt != plotNames.end());
+            string outputname = string("RPIS-")
+                                + IV_NAMES[iv];
+            PgfplotsPrinter singlePlotter(outputname);
+            singlePlotter.plotAxis(iv,results);
+            singlePlotter.setCaption(*plotNameIt++);
+            if(first)singlePlotter.addLegend();
+            first = false;
+
+            addToPrinter->addToDocument(singlePlotter);
+        }
+    }
 
 } // namespace unf_spanners
 

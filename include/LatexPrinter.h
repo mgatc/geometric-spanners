@@ -54,7 +54,7 @@ namespace unf_spanners {
         }
         // Figure getters
         static string getFigureHeader(string options = "") {
-            string header = "\\begin{figure}";
+            string header = "\\begin{figure}[h]";
             if(!options.empty()){
                 header += "[" + options + "]";
             }

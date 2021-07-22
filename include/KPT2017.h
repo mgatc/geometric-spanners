@@ -434,7 +434,7 @@ namespace unf_spanners {
             // Step 3.
             typedef map<index_t, set<index_t>> AdjacencyListMap;
             AdjacencyListMap S_not_A;
-            // Add to S every canonical edge in negative blue cones (cone 1) if the edge isn't in A
+            // Add to S every canonical edge in negative blue cones (cone 1) if the edge isn'stretchFactor in A
             addBlueCanonicalEdges(D, A, Anchors[Blue], S_not_A);
 
             //Step 4.
@@ -449,7 +449,7 @@ namespace unf_spanners {
 
 
 
-            // Since we didn't set S to A in step 3, we need to combine them now
+            // Since we didn'stretchFactor set S to A in step 3, we need to combine them now
             set<Edge> S(A.begin(), A.end());
 
             //cout<<"Adding S_not_A to S...\n";

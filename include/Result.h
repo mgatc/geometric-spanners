@@ -19,81 +19,8 @@
 namespace unf_spanners {
     using namespace std;
 
-//    template<class ResultSet>
-//    struct AverageMetric {
-//        typedef typename ResultSet::BoundedDegreeSpannerResult BoundedDegreeSpannerResult;
-//        typedef map< Algorithm, map<size_t,double>> ResultMap;
-//
-//        ResultMap sum;
-//
-//        ResultMap& operator()(const ResultSet& resultSet) {
-//            size_t count = 0;
-//            auto firstResult = resultSet.front();
-//            auto countReference = make_pair(firstResult.algorithm, firstResult.n);
-//
-//            for( auto result : resultSet ) {
-//                auto el1 = resultSet.begin();
-//                bool inserted = false;
-//                tie(el1, inserted) = sum.emplace(result.algorithm,map<size_t, double>());
-//
-//                auto el2 = el1->second.begin();
-//                tie(el2, inserted) = el1->second.emplace(result.n, 0.0);
-//
-//                // Skip first run
-//                if(!inserted) {
-//                    el2->second += result.metric;
-//                }
-//                count += int(make_pair(result.algorithm,result.n) == countReference);
-//            }
-//            for( auto& result : sum ) {
-//                for( auto& level : result.second ) {
-//                    level.second /= count;
-//                }
-//            }
-//            return sum;
-//        }
-//    };
-//
-//    template<class ResultSet>
-//    struct AverageRuntime {
-//        typedef typename ResultSet::BoundedDegreeSpannerResult BoundedDegreeSpannerResult;
-//        typedef map< Algorithm, map<size_t,size_t>> InputMap;
-//        typedef map< Algorithm, map<size_t,double>> ResultMap;
-//
-//        InputMap sum;
-//        ResultMap avg;
-//
-//        ResultMap& operator()(const ResultSet& resultSet) {
-//            size_t count = 0;
-//            auto firstResult = resultSet.front();
-//            auto countReference = make_pair(firstResult.algorithm, firstResult.n);
-//
-//            for( auto result : resultSet ) {
-//                auto el1 = resultSet.begin();
-//                bool inserted = false;
-//                tie(el1, inserted) = sum.emplace(result.algorithm,map<size_t, size_t>());
-//
-//                auto el2 = el1->second.begin();
-//                tie(el2, inserted) = el1->second.emplace(result.n, 0.0);
-//
-//                // Skip first run
-//                if(!inserted) {
-//                    el2->second += result.metric;
-//                }
-//                count += int(make_pair(result.algorithm,result.n) == countReference);
-//            }
-//            for( auto result : sum ) {
-//                auto el1 = avg.begin();
-//                el1 = avg.emplace(result.first,map<size_t,double>()).first;
-//                for( auto level : result.second ) {
-//                    el1->second.emplace( double(level.second) / count );
-//                }
-//            }
-//            return avg;
-//        }
-//    };
-//    template<class BoundedDegreeSpannerResult>
-//    class ResultSet;
+    vector<string> IV_NAMES = {"runtime", "degree", "degreeAvg", "lightness", "t"};
+
     struct BoundedDegreeSpannerResult {
 
         Algorithm algorithm;
@@ -103,7 +30,8 @@ namespace unf_spanners {
         number_t degreeAvg;
         number_t lightness;
         std::optional <number_t> t;
-        index_t numberOfIVs = 5;
+        index_t numberOfIVs = 4;
+        map<string,mixed_t> IV;
 
         BoundedDegreeSpannerResult(const Algorithm algorithm,
                                    const index_t n,
@@ -111,7 +39,7 @@ namespace unf_spanners {
                                    mixed_t degree,
                                    const number_t degreeAvg,
                                    const number_t lightness,
-                                   std::optional <number_t>  t = nullopt)
+                                   std::optional<number_t>  t = nullopt)
                 : algorithm(algorithm),
                   n(n),
                   runtime(std::move(runtime)),
@@ -119,7 +47,13 @@ namespace unf_spanners {
                   degreeAvg(degreeAvg),
                   lightness(lightness),
                   t(std::move(t)),
-                  numberOfIVs(numberOfIVs - int(!t)) {
+                  numberOfIVs(numberOfIVs + int(bool(t))) {
+            unsigned i=0;
+            IV.emplace(IV_NAMES[i++], runtime);
+            IV.emplace(IV_NAMES[i++], degree);
+            IV.emplace(IV_NAMES[i++], degreeAvg);
+            IV.emplace(IV_NAMES[i++], lightness);
+            if(t) IV.emplace(IV_NAMES[i++], *t);
         }
 
         template<class Printer>
@@ -223,5 +157,82 @@ namespace unf_spanners {
         ReducedResultMap m_reduced;
     };
 }
+
+
+//    template<class ResultSet>
+//    struct AverageMetric {
+//        typedef typename ResultSet::BoundedDegreeSpannerResult BoundedDegreeSpannerResult;
+//        typedef map< Algorithm, map<size_t,double>> ResultMap;
+//
+//        ResultMap sum;
+//
+//        ResultMap& operator()(const ResultSet& resultSet) {
+//            size_t count = 0;
+//            auto firstResult = resultSet.front();
+//            auto countReference = make_pair(firstResult.algorithm, firstResult.n);
+//
+//            for( auto result : resultSet ) {
+//                auto el1 = resultSet.begin();
+//                bool inserted = false;
+//                tie(el1, inserted) = sum.emplace(result.algorithm,map<size_t, double>());
+//
+//                auto el2 = el1->second.begin();
+//                tie(el2, inserted) = el1->second.emplace(result.n, 0.0);
+//
+//                // Skip first run
+//                if(!inserted) {
+//                    el2->second += result.metric;
+//                }
+//                count += int(make_pair(result.algorithm,result.n) == countReference);
+//            }
+//            for( auto& result : sum ) {
+//                for( auto& level : result.second ) {
+//                    level.second /= count;
+//                }
+//            }
+//            return sum;
+//        }
+//    };
+//
+//    template<class ResultSet>
+//    struct AverageRuntime {
+//        typedef typename ResultSet::BoundedDegreeSpannerResult BoundedDegreeSpannerResult;
+//        typedef map< Algorithm, map<size_t,size_t>> InputMap;
+//        typedef map< Algorithm, map<size_t,double>> ResultMap;
+//
+//        InputMap sum;
+//        ResultMap avg;
+//
+//        ResultMap& operator()(const ResultSet& resultSet) {
+//            size_t count = 0;
+//            auto firstResult = resultSet.front();
+//            auto countReference = make_pair(firstResult.algorithm, firstResult.n);
+//
+//            for( auto result : resultSet ) {
+//                auto el1 = resultSet.begin();
+//                bool inserted = false;
+//                tie(el1, inserted) = sum.emplace(result.algorithm,map<size_t, size_t>());
+//
+//                auto el2 = el1->second.begin();
+//                tie(el2, inserted) = el1->second.emplace(result.n, 0.0);
+//
+//                // Skip first run
+//                if(!inserted) {
+//                    el2->second += result.metric;
+//                }
+//                count += int(make_pair(result.algorithm,result.n) == countReference);
+//            }
+//            for( auto result : sum ) {
+//                auto el1 = avg.begin();
+//                el1 = avg.emplace(result.first,map<size_t,double>()).first;
+//                for( auto level : result.second ) {
+//                    el1->second.emplace( double(level.second) / count );
+//                }
+//            }
+//            return avg;
+//        }
+//    };
+//    template<class BoundedDegreeSpannerResult>
+//    class ResultSet;
 
 #endif //GEOMETRIC_SPANNERS_RESULT_H

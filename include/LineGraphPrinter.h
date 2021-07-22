@@ -24,8 +24,6 @@ namespace unf_spanners {
 
     class PgfplotsPrinter : public TikzPrinter {
     public:
-        //typedef map< Algorithm, map< size_t, vector<BoundedDegreeSpannerResult>>> ResultMap;
-
         // Palette generated using https://coolors.co/
         vector<string> Colors = {
                 "f94144","f3722c","f8961e",
@@ -37,7 +35,7 @@ namespace unf_spanners {
 
         PgfplotsPrinter(string filename, string documentType = "standalone")
                 : TikzPrinter(filename,documentType){
-            m_body = Body(getTikzHeader(), "", getTikzFooter());
+            m_body = Body{getTikzHeader(), "", getTikzFooter()};
         }
 
 
@@ -52,11 +50,15 @@ namespace unf_spanners {
         string getLegend() {
             return "\\ref{planespannerlegend}\n\n";
         }
+        /*
+         * TODO: plotResults is not in a working state. For each IV, we need to build the
+         *  entire axis header and for each algorithm, add a plot with the stored values
+         *  for the current IV.
+         */
         void plotResults(const BoundedDegreeSpannerResultSet::ReducedResultMap &results) {
             bool addLegend = true;
             const double scale = 1;
             string plotHeader = string("")
-                    + "\\begin{tikzpicture}\n\n"
                     + "\\begin{axis}[grid=major,xlabel=$n$, "
                     + "xtick={";
 
@@ -89,30 +91,14 @@ namespace unf_spanners {
                     graph += " coordinates {\n";
                 }
                 for( auto level : alg.second ) {
-                    body[0] += "("
-                              + to_string(level.first)
-                              + ","
-                              + to_string(level.second.runtime)
-                              + ")\n";
-
-                    body[1] += "("
-                               + to_string(level.first)
-                               + ","
-                               + to_string(averageDegree)
-                               + ")\n";
-
-                    if(!level.second.empty()
-                     && level.second.front().t) {
-                        double averageT = std::accumulate(level.second.begin(), level.second.end(), 0.0,[]( const auto& a, const auto& b ) {
-                            return a + *b.t;
-                        } ) / double(level.second.size());
-                        body[2] += "("
+                    for(auto iv : level.second.IV) {
+                        string entry = "("
                                    + to_string(level.first)
                                    + ","
-                                   + to_string(averageT)
+                                   + to_string(iv.second)
                                    + ")\n";
+                        body.push_back(entry);
                     }
-
                 }
                 for( auto& graph : body ) {
                     graph += string("}node [pos=1.15, above left] {};\n\n");
@@ -131,7 +117,6 @@ namespace unf_spanners {
         }
 
     private:
-        //ResultMap _results;
 
     }; // class PgfplotsPrinter
 

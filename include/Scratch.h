@@ -43,7 +43,7 @@ void scratch(size_t n) {
 
     /////////// GET POINTS SOMEHOW //////////////////////////
 
-    string filename = "data-89_4716.990566x4716.990566.txt";
+    string filename = "data-bkpx-breaker.txt";
     //readPointsFromFile( back_inserter( points ), filename );
 
     double width = 10;
@@ -66,9 +66,9 @@ void scratch(size_t n) {
         //BCC2012<7>( points.begin(), points.end(), back_inserter(result) );
         //BHS2017(points.begin(), points.end(), back_inserter(result) );
         //KPT2017(points.begin(), points.end(), back_inserter(result), true );
-        //BKPX2015(points.begin(), points.end(), back_inserter(result), true );
+        BKPX2015(points.begin(), points.end(), back_inserter(result), false );
         //  BGHP2010(points.begin(), points.end(), back_inserter(result), true );
-        KX2012(points.begin(), points.end(), back_inserter(result), true);
+        //KX2012(points.begin(), points.end(), back_inserter(result), true);
         //delaunay_testing( points.begin(), points.end(), back_inserter(result) );
     }
 
@@ -84,10 +84,10 @@ void scratch(size_t n) {
 
 
     cout << degree(result.begin(), result.end()) << endl;
-    // cout<<",";
-    // double stretchFactor = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-    // cout<< stretchFactor;
-    // cout<<",";
+     cout<<",";
+     double stretchFactor = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+     cout<< stretchFactor;
+     cout<<",";
 
 
     // PRODUCE A LaTeX / TiKz DOCUMENT AND DISPLAY

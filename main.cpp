@@ -36,9 +36,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if(!MEASURE_STRETCH_FACTOR) {
-        IV_NAMES.erase(remove(IV_NAMES.begin(),IV_NAMES.end(),"stretchFactor"));
-    }
 
     size_t N = experimentParameters.empty() ? 50 : experimentParameters[0];
 

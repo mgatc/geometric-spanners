@@ -14,6 +14,9 @@
 namespace unf_spanners {
 
     using namespace std;
+    std::vector<std::string> MARKS = {
+        "*"
+    };
 
     void plotResults(const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter);
 
@@ -136,7 +139,9 @@ namespace unf_spanners {
             string plotHeader = "\n\n\\addplot";
             plotHeader += "[thick,color="
                     + Colors[alg]
-                    + ",mark=*]";
+                    + ",mark="
+                    + MARKS[alg % MARKS.size()]
+                    +"]";
             plotHeader += " coordinates {\n";
             return plotHeader;
         }
@@ -166,8 +171,13 @@ namespace unf_spanners {
 
             axisHeader += xTicks
                           + "\n}, ylabel near ticks,ylabel={"
-                          + IV_NICE_NAMES.at(iv)
-                          + "}";
+                          + IV_SYMBOLS.at(iv);
+            if(!IV_UNITS.at(iv).empty())
+                axisHeader += " ("
+                          + IV_UNITS.at(iv)
+                          + ")";
+
+            axisHeader += "}";
 
 //            if(first)
 //                axisHeader += getLegendAxisAttributes();

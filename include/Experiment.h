@@ -266,6 +266,9 @@ namespace unf_spanners {
         }
 
         if(PRINT_TABLES) {
+            table.ignoreIV(0); // ignore runtime
+            table.addColumn(DEGREE_BOUND_SYMBOL, DEGREE_BOUND_PER_ALGORITHM);
+            table.addColumn(STRETCH_FACTOR_BOUND_SYMBOL, STRETCH_FACTOR_BOUND_PER_ALGORITHM);
             table.tabulateResults(RESULTS);
             latex.addToDocumentAsFigure(table);
         }

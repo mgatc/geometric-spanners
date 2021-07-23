@@ -14,6 +14,7 @@
 #include <boost/heap/fibonacci_heap.hpp> // ordering
 
 #include <CGAL/boost/iterator/counting_iterator.hpp>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Kernel/global_functions.h>
 #include <CGAL/point_generators_2.h>
 #include <CGAL/Vector_2.h>
@@ -136,43 +137,25 @@ namespace unf_spanners {
     inline number_t getAngle(const index_t p, const index_t q, const index_t r, const Points &P) {
         return getAngle(P[p], P[q], P[r]);
     }
+
     // FROM https://www.bfilipek.com/2018/06/variant.html#overload
     template<class... Ts> struct overload : Ts... { using Ts::operator()...; };
     template<class... Ts> overload(Ts...) -> overload<Ts...>;
     // END
-    string to_string(mixed_t value) {
-        using std::to_string;
-        return visit( overload{
-            []( index_t& val ){ return to_string(val); },
-            []( number_t& val ){ return to_string(val); }
-        }, value );
-//        [](mixed_t &&var) {
-//            if (holds_alternative<index_t>(var))
-//                return to_string(get<index_t>(var));
-//            else if (holds_alternative<number_t>(var))
-//                return to_string(get<number_t>(var));
-//        }, value);
-    }
+
     ostream& operator<<(ostream &os, mixed_t value) {
-        os << unf_spanners::to_string(value);
+        visit( overload{
+                [&](index_t& val ){ os<<val; },
+                [&](number_t& val ){ os<<val; }
+        }, value );
         return os;
     }
+    string to_string(mixed_t value) {
+        ostringstream oss;
+        oss<<value;
+        return oss.str();
+    }
 
-    enum Algorithm {
-        First=0,
-        Bgs2005 = First,
-        Lw2004,
-        Bsx2009,
-        Kpx2010,
-        Kx2012,
-        Bcc2012_7,
-        Bcc2012_6,
-        Bhs2017,
-        Bghp2010,
-        Kpt2017,
-        Bkpx2015,
-        Last
-    };
 
 
     template< class OutputIterator >

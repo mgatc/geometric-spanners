@@ -22,6 +22,7 @@
 #include <CGAL/Convex_hull_traits_adapter_2.h>
 #include <CGAL/number_utils.h>
 #include <CGAL/property_map.h>
+#include <CGAL/Real_timer.h>
 #include <CGAL/squared_distance_2.h> //for 2D functions
 
 #include <omp.h>
@@ -776,31 +777,34 @@ void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_pr
 
     class Timer {
     public:
-        explicit Timer(std::string delimiter = ",") : running(true), m_delimiter(std::move(delimiter)) {
-            m_startTime = std::chrono::high_resolution_clock::now();
+        explicit Timer(std::string delimiter = ",") : m_delimiter(std::move(delimiter)) {
+            //m_startTime = std::chrono::high_resolution_clock::now();
+            m_clock.start();
         }
 
         ~Timer() {
-            if( running ) {
+            if( m_clock.is_running() ) {
                 std::cout << stop() << m_delimiter;
             }
         }
 
-        size_t stop() {
-            auto endTime = std::chrono::high_resolution_clock::now();
-            auto start = std::chrono::time_point_cast<std::chrono::microseconds>(
-                    m_startTime).time_since_epoch().count();
-            auto end = std::chrono::time_point_cast<std::chrono::microseconds>(endTime).time_since_epoch().count();
-            auto duration = end - start;
-            running = false;
+        double stop() {
+//            auto endTime = std::chrono::high_resolution_clock::now();
+//            auto start = std::chrono::time_point_cast<std::chrono::microseconds>(
+//                    m_startTime).time_since_epoch().count();
+//            auto end = std::chrono::time_point_cast<std::chrono::microseconds>(endTime).time_since_epoch().count();
+//            auto duration = end - start;
+            m_clock.stop();
+            //running = false;
 
-            return duration;
+            return m_clock.time();
         }
 
     private:
-        bool running;
-        std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
+        //bool running;
+        //std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
         std::string m_delimiter;
+        CGAL::Real_timer m_clock;
     };
 
 } // namespace unf_spanners

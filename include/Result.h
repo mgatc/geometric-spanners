@@ -23,7 +23,7 @@ namespace unf_spanners {
 
         Algorithm algorithm;
         index_t n;
-        mixed_t runtime;
+        number_t runtime;
         mixed_t degree;
         number_t degreeAvg;
         number_t lightness;
@@ -33,14 +33,14 @@ namespace unf_spanners {
 
         BoundedDegreeSpannerResult(const Algorithm algorithm,
                                    const index_t n,
-                                   mixed_t runtime,
+                                   number_t runtime,
                                    mixed_t degree,
                                    const number_t degreeAvg,
                                    const number_t lightness,
                                    std::optional<number_t> stretchFactor = nullopt)
                 : algorithm(algorithm),
                   n(n),
-                  runtime(std::move(runtime)),
+                  runtime(runtime),
                   degree(std::move(degree)),
                   degreeAvg(degreeAvg),
                   lightness(lightness),
@@ -121,13 +121,13 @@ namespace unf_spanners {
                     auto canonicalBegin = level.second.begin();
                     next(canonicalBegin); // skip first run
 
+                    auto runtime = std::accumulate(canonicalBegin,
+                                                   canonicalEnd,
+                                                   0.0,
+                                                  [&]( const auto& a, const auto& b ) {
+                                                      return a + b.runtime;
+                                                  }) / numSamples;
                     // cast the result of accumulate for integral types to floating-point
-                    auto runtime = static_cast<number_t>(std::accumulate(canonicalBegin,
-                                                          canonicalEnd,
-                                                          0,
-                                                          [&]( const auto& a, const auto& b ) {
-                                                              return a + static_cast<number_t>(get<index_t>(b.runtime));
-                                                          })) / numSamples;
                     number_t degree = static_cast<number_t>(std::accumulate(canonicalBegin,
                                                                         canonicalEnd,
                                                                         0,
@@ -170,12 +170,12 @@ namespace unf_spanners {
                 unsigned numSamples = alg.second.size();
                 auto canonicalBegin = alg.second.begin(),
                     canonicalEnd = alg.second.end();
-                auto runtime = static_cast<number_t>(std::accumulate(canonicalBegin,
-                                                                     canonicalEnd,
-                                                                     0.0,
-                                                                     [&]( const auto& a, const auto& b ) {
-                                                                         return a + get<number_t>(b.second.runtime);
-                                                                     })) / numSamples;
+                auto runtime = std::accumulate( canonicalBegin,
+                                                canonicalEnd,
+                                                0.0,
+                                                [&]( const auto& a, const auto& b ) {
+                                                    return a + b.second.runtime;
+                                                }) / numSamples;
                 auto degree = static_cast<number_t>(std::accumulate(canonicalBegin,
                                                                     canonicalEnd,
                                                                     0.0,

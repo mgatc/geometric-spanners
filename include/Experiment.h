@@ -121,7 +121,7 @@ namespace unf_spanners {
                 assert(false);
         }
 
-        size_t runtime = tim.stop();
+        number_t runtime = tim.stop();
         size_t n = points.size();
         size_t deg = degree( spanner.begin(), spanner.end() );
         number_t degAvg = degreeAvg( spanner.begin(), spanner.end() );

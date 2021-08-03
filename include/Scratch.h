@@ -54,8 +54,8 @@ namespace unf_spanners {
             //BCC2012<6>( points.begin(), points.end(), back_inserter(result) );
             //BCC2012<7>( points.begin(), points.end(), back_inserter(result) );
             //BHS2017(points.begin(), points.end(), back_inserter(result) );
-            KPT2017(points.begin(), points.end(), back_inserter(result), true );
-            //BKPX2015(points.begin(), points.end(), back_inserter(result), false );
+//            KPT2017(points.begin(), points.end(), back_inserter(result), true );
+            BKPX2015(points.begin(), points.end(), back_inserter(result), false );
             //  BGHP2010(points.begin(), points.end(), back_inserter(result), true );
             //KX2012(points.begin(), points.end(), back_inserter(result), true);
             //delaunay_testing( points.begin(), points.end(), back_inserter(result) );

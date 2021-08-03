@@ -191,9 +191,9 @@ namespace unf_spanners {
                     }
 
                 } while (++circ != endpoint); // finished determining the Yao edges + how many points are in fan of u's cone i
-            }
-
-            for (const auto &point : handles) {
+//            }
+//
+//            for (const auto &point : handles) {
 
                 for (cone_t otherCone = 0; otherCone < 4; otherCone++) {
 
@@ -268,8 +268,7 @@ namespace unf_spanners {
 
                         bool cwCanonical = (!ccwCanonical && lcount <= (numNeighbors - 1) &&
                                             !(DT.is_infinite(vhigher)) &&
-                                            (yaoEdges[vhigher->storage_site().info()][getCone(vhigher, v)].first ==
-                                             v) &&
+                                            (yaoEdges[vhigher->storage_site().info()][getCone(vhigher, v)].first == v) &&
                                             yaoEdges[v->storage_site().info()][getCone(v, vhigher)].first != vhigher);
 
                         bool inCanonical = ccwCanonical || cwCanonical;
@@ -369,6 +368,11 @@ namespace unf_spanners {
                         bool inChain = true;
 
                         do {
+
+                            visited.push_back(previous);
+                            previous = current;
+                            previous_id = previous->storage_site().info();
+
                             currentCone = (visited.size() % 2) ? localCone : cone;
 
                             inChain = !(anchorEdges[previous_id][currentCone].second == Strong || anchorEdges[previous_id][currentCone].second == StrongSelected);

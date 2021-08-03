@@ -12,9 +12,32 @@ namespace unf_spanners {
 
     using namespace std;
 
+    enum DistributionType {
+        DistributionTypeFirst=0,
+        UniformInsideSquare = DistributionTypeFirst,
+        UniformInsideDisc,
+        NormalInsideSquare,
+        NormalClustersInsideSquare,
+        ContiguousGrid,
+        UniformRandomGrid,
+  //      UniformInsideAnnulus,
+  //      Real,
+        DistributionTypeLast
+    };
+    vector<string> DISTRIBUTION_NAMES = {
+        "Uniform Inside Square",
+        "Uniform Inside Disc",
+        "Normal Inside Square",
+        "Normal Inside Square with Clusters",
+        "Contiguous Grid",
+        "Uniform Random Grid",
+        "Uniform Inside Annulus",
+        "Real-world"
+    };
+
     enum Algorithm {
-        First=0,
-        Bgs2005 = First,
+        AlgorithmFirst=0,
+        Bgs2005 = AlgorithmFirst,
         Lw2004,
         Bsx2009,
         Kpx2010,
@@ -25,7 +48,7 @@ namespace unf_spanners {
         Bghp2010,
         Kpt2017,
         Bkpx2015,
-        Last
+        AlgorithmLast
     };
     const vector<string> ALGORITHM_NAMES = {
         "BGS2005",
@@ -82,11 +105,11 @@ namespace unf_spanners {
         2,2,2,2,2
     };
     const vector<string> PGFPLOT_NAMES = {
-        "Mean " + IV_NICE_NAMES[0] + " of resultant spanners",
-        "Mean maximum " + IV_NICE_NAMES[1] + " of resultant spanners",
-        "Mean " + IV_NICE_NAMES[2] + " of resultant spanners",
-        "Mean " + IV_NICE_NAMES[3] + " of resultant spanners",
-        "Mean " + IV_NICE_NAMES[4] + " of resultant spanners"
+        "Mean " + IV_NICE_NAMES[0],
+        "Mean maximum " + IV_NICE_NAMES[1],
+        "Mean " + IV_NICE_NAMES[2],
+        "Mean " + IV_NICE_NAMES[3],
+        "Mean " + IV_NICE_NAMES[4]
     };
 
 } // unf_spanners

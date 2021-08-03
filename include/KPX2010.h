@@ -22,7 +22,7 @@ using namespace std;
 namespace kpx2010 {
 
 bool selectEdge(const DelaunayTriangulation& T, index_tPairMap &E, const VertexHandle& i, const VertexHandle& j ) {
-    assert( T.is_edge( i, j ) );
+    //assert( T.is_edge( i, j ) );
     //if( printLog ) cout<<"add:("<<i->info()<<","<<j->info()<<") ";
 
     auto existing = E.begin();

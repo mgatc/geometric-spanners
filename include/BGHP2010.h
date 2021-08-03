@@ -52,8 +52,8 @@ namespace unf_spanners {
         inline number_t bisectorLength(const Edge &e, const vector<Point> &H) {
             cone_t cone = getCone(e.first, e.second, H);
 
-//    assert(cone<6);
-//    assert(e.first<H.size());
+//    //assert(cone<6);
+//    //assert(e.first<H.size());
 
             number_t xCord = H[e.first].x() - orthBisectorSlopes[cone];
             number_t yCord = H[e.first].y() + 1;
@@ -197,7 +197,7 @@ namespace unf_spanners {
             const index_t n = P.size();
 
             // Add first and last in each negative cone if it is (i+1)-relevant
-            if (printLog) cout << "\nFirst and Last\n";
+            if (printLog) cout << "\nFirst and AlgorithmLast\n";
             for (index_t u = 0; u < n; ++u) {
                 // get edges from positive cones
                 for (auto it = D.positive_cone_edges_begin(u);
@@ -251,7 +251,7 @@ namespace unf_spanners {
                     auto thetaNext = getCanonicalAngle(w, u, next, P),
                             thetaPrev = getCanonicalAngle(w, u, prev, P);
                     auto remove = make_pair(w, thetaNext > thetaPrev ? next : prev);
-                    assert(contains(E, remove));
+                    //assert(contains(E, remove));
                     E.erase(remove);
 
                     // update charges
@@ -289,7 +289,7 @@ namespace unf_spanners {
 
                     auto remove = make_pair(w, w == KeyEdges[LAST][w_parent][i] ? prev : next);
 
-                    assert(contains(E, remove));
+                    //assert(contains(E, remove));
 
                     if (printLog) cout << "Edge " << remove.first << "-" << remove.second << " ";
                     if (printLog && !contains(E, remove)) cout << "not ";
@@ -351,7 +351,7 @@ namespace unf_spanners {
                              || (cone % 2 == 0 && charge.second <= 2) ? "OK" : "FAIL")
                          << "\n";
                 else
-                    assert(charge.second <= 2 - (cone % 2));
+                    //assert(charge.second <= 2 - (cone % 2));
 
             }
 

@@ -59,7 +59,7 @@ namespace unf_spanners {
                                        cone_t &conePrev,
                                        bool &qOnBoundary) {
 
-            if (closest.at(p) == SIZE_T_MAX) { // First, make sure the closest vertex is set
+            if (closest.at(p) == SIZE_T_MAX) { // AlgorithmFirst, make sure the closest vertex is set
                 closest.at(p) = q;
                 qOnBoundary = true; // the only vertex that falls on a boundary should be the closest
             }
@@ -107,7 +107,7 @@ namespace unf_spanners {
                           const WedgeParameters &params,
                           vector<Edge> &addToE_star,
                           const VertexCirculator &q_i) {
-            assert(DEGREE == 6 || DEGREE == 7);
+            //assert(DEGREE == 6 || DEGREE == 7);
         }
 
         template<>
@@ -194,7 +194,7 @@ namespace unf_spanners {
                        || N_p->info() == q)) { // handles the case where q is on a boundary
                 Q.push_back(N_p->info());
             }
-            assert(!Q.empty());
+            //assert(!Q.empty());
 
             // Line 3: Build Q'
             unordered_set<index_t> Q_prime; // select elements from Q (line 3)
@@ -386,7 +386,7 @@ namespace unf_spanners {
                  bool printLog = false) {
         using namespace bcc2012;
 
-        assert(DEGREE == 7 || DEGREE == 6);
+        //assert(DEGREE == 7 || DEGREE == 6);
 
 //    if(printLog) cout<<"\nnumCones:"<<NUM_CONES<<"\n";
 //    if(printLog) cout<<"ALPHA:"<<ALPHA<<"\n";

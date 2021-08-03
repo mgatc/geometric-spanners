@@ -186,7 +186,7 @@ class HalfThetaTriangulation {
         sort( fan.begin(), fan.end(),
             [&] ( const auto &lhs, const auto &rhs )
             {
-                assert( target(lhs) == target(rhs) );
+                //assert( target(lhs) == target(rhs) );
                 const Point_2 refPoint( _P[target(lhs)].x()-TAN30,
                                         _P[target(lhs)].y()+1 );
                 return getAngle(refPoint,

@@ -157,12 +157,12 @@ namespace unf_spanners {
             string axisHeader = string("")
                                 + "\\begin{axis}["
                                 + "title={"
-                                + PGFPLOT_NAMES[iv]
+                                + (m_caption.empty() ? PGFPLOT_NAMES[iv] : m_caption)
                                 + "},"
                                 + "grid=major,xlabel=$n$, "
                                 + "xtick={";
             string xTicks;
-            assert(!results.m_reducedSamples.empty());
+            //assert(!results.m_reducedSamples.empty());
             for( auto level : results.m_reducedSamples.begin()->second ){
                 xTicks += std::to_string(level.first);
                 xTicks += ",";
@@ -205,12 +205,14 @@ namespace unf_spanners {
         bool first = false;
         for( unsigned iv=0;iv<IV_NAMES.size();++iv) {
         //for( const auto& iv : IV_NAMES ) {
-            assert(plotNameIt != plotNames.end());
-            string outputname = string("RPIS-")
-                                + IV_NAMES[iv];
-            PgfplotsPrinter singlePlotter(outputname);
+            //assert(plotNameIt != plotNames.end());
+            string caption = *plotNameIt++;
+            string filename = string("output-plot-") + caption;
+            boost::erase_all(filename, " ");
+
+            PgfplotsPrinter singlePlotter(filename);
+            singlePlotter.setCaption(caption);
             singlePlotter.plotAxis(iv,results);
-            singlePlotter.setCaption(*plotNameIt++);
             if(first)singlePlotter.addLegend();
             first = false;
 

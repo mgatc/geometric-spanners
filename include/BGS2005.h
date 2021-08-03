@@ -132,7 +132,7 @@ inline void addEdge(const DelaunayGraph& SG,
                     SplitVertexEdgeMap& E,
                     const SplitVertex& a,
                     const SplitVertex& b ) {
-    assert( SG.m_DT.is_edge( a.v, b.v ) );
+    //assert( SG.m_DT.is_edge( a.v, b.v ) );
 
     addHalfEdge(E, b, a);
     addHalfEdge(E, a, b);
@@ -279,7 +279,7 @@ void SpanningGraph( DelaunayGraph& G ) {
 
     // Test assumption
     for( auto it=G.m_E.begin(); it!=G.m_E.end(); ++it ) { // for all v_i, 1<=i<=n
-        assert( it->second.size() <= 3 );                 // |v_i| <= 3
+        //assert( it->second.size() <= 3 );                 // |v_i| <= 3
     }
 }
 
@@ -338,7 +338,7 @@ void TransformPolygon( const DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEd
             v_i = V.at(addVertex(V, N, s_1) );
         }
 
-        assert( !SG.m_DT.is_infinite(N) );
+        //assert( !SG.m_DT.is_infinite(N) );
         addEdge(SG, P, v_i, s_1);
 
     } while( v_i != v_1 );
@@ -387,7 +387,7 @@ void forEachNeighbor(const DelaunayGraph& SG,
                      const SplitVertexEdgeMap& E,
                      const SplitVertex& v_i,
                      F foreach ) {
-    assert( !SG.m_DT.is_infinite( v_i.v ) );
+    //assert( !SG.m_DT.is_infinite( v_i.v ) );
     /*
      *    The circulator provided by SG._DT will provide the correct ordering.
      * However, the vertices provided by the circulator are not split. Aside
@@ -448,8 +448,8 @@ inline void addPolygonSpannerEdge(const DelaunayGraph& SG,
                                   SplitVertex& a,
                                   SplitVertex& b,
                                   const VertexStatusMap& status ) {
-    assert( !contains( status, a.key ) || status.at(a.key) != Complete );
-    assert( !contains( status, b.key ) || status.at(b.key) != Complete );
+    //assert( !contains( status, a.key ) || status.at(a.key) != Complete );
+    //assert( !contains( status, b.key ) || status.at(b.key) != Complete );
     return addEdge(SG, E, a, b);
 }
 
@@ -549,7 +549,7 @@ inline void addPolygonSpannerEdges(const DelaunayGraph& SG,
                                    SplitVertex& q,
                                    SplitVertex& r,
                                    const VertexStatusMap& status ) {
-    assert( !SG.m_DT.is_infinite(p.v) && !SG.m_DT.is_infinite(q.v) && !SG.m_DT.is_infinite(r.v) );
+    //assert( !SG.m_DT.is_infinite(p.v) && !SG.m_DT.is_infinite(q.v) && !SG.m_DT.is_infinite(r.v) );
     if( p == r ) return;
 
     //cout<< " adding forward edges...\n";
@@ -582,7 +582,7 @@ void processVertex(const DelaunayGraph& SG,
             if (!s_j_key) s_j_key = {v_n.key};
             s_k_key = v_n.key;
         });
-        assert(s_j_key);
+        //assert(s_j_key);
         s_j =  V.at(*s_j_key );
         s_k =  V.at( s_k_key );
 //            cout<< " s_j:" << s_j << " s_k:" << s_k <<"\n";
@@ -619,7 +619,7 @@ void PolygonSpanner( DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEdgeMap& E
 //        //SG.addToEventQueue( v_i, 0 ); // focus0 on v_i
 //        cout<<"\nprocessing "<<v_i<<"\n";
 
-        if( !E_P.empty() ) assert( E_P.at( v_i.key ).size() <= 5 );
+        if( !E_P.empty() ) //assert( E_P.at( v_i.key ).size() <= 5 );
 
         processVertex(SG, V, E, E_P, v_i, status);
 
@@ -649,11 +649,11 @@ void PolygonSpanner( DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEdgeMap& E
     }
     // Lemma 3.4   ((PI+1)*(2*PI/(3*cos(PI/6)))) = 10.01602416
     // CAUTION: StretchFactor(SG) takes O(n^3)!
-    //assert( StretchFactor(SG) <= ((PI+1)*(2*PI/(3*cos(PI/6)))) );
+    ////assert( StretchFactor(SG) <= ((PI+1)*(2*PI/(3*cos(PI/6)))) );
 
     // Test degree assumption given after lemma 3.4
     for( auto it=SG.m_E.begin(); it!=SG.m_E.end(); ++it ) {
-        assert( it->second.size() <= 27 );
+        //assert( it->second.size() <= 27 );
     }
 
     swap( E, E_P );

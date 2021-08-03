@@ -21,8 +21,8 @@ inline bool createNewEdge(const DelaunayTriangulation& T,
                           const vector<VertexHandle>& handles,
                           index_tPairSet &E,
                           const index_t i, const index_t j, const index_t n, bool printLog = false ) {
-    assert( std::max(i,j) < n );
-    assert( T.is_edge( handles.at(i), handles.at(j) ) );
+    //assert( std::max(i,j) < n );
+    //assert( T.is_edge( handles.at(i), handles.at(j) ) );
     //if( printLog ) cout<<"add:("<<i<<","<<j<<") ";
 
     bool inserted = false;
@@ -39,7 +39,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     // ensure valid alpha
     alpha = CGAL::max( EPSILON, CGAL::min( alpha, 2*PI/3 ) );
     auto numCones = cone_t( rint( ceil( 2*PI / alpha ) ) );
-    assert( numCones > 0 ); // guard against /0
+    //assert( numCones > 0 ); // guard against /0
     auto alphaReal =2*PI / number_t(numCones);
     cone_t FINAL_DEGREE_BOUND = 14 + numCones;
 
@@ -85,7 +85,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     // Iterate through vertices
     for( index_t u : ordering ) {
         VertexHandle u_handle = handles.at(u);
-        assert( !T.is_infinite(u_handle) );
+        //assert( !T.is_infinite(u_handle) );
         Point u_point = u_handle->point();
         isProcessed[u] = true;
         //if( printLog ) cout<<"\nu:"<<u<<" ";
@@ -117,8 +117,8 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         } while( --N != done );
 
         //if( printLog ) cout<<"degree:"<<degree<<",";
-        assert( processedNeighbors <= 5 ); // Lemma 1, proof for Lemma 3
-        assert( degree <= 15 ); // Proof for Lemma 3
+        //assert( processedNeighbors <= 5 ); // Lemma 1, proof for Lemma 3
+        //assert( degree <= 15 ); // Proof for Lemma 3
 
         // We will add a max of numCones-1 since we are guaranteed to add the closest
         // but cannot add to the two cones touching closest.
@@ -174,7 +174,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
             lastN = N->handle();
         } while( N != closest );
 
-        assert( degree <= FINAL_DEGREE_BOUND ); // Lemma 3
+        //assert( degree <= FINAL_DEGREE_BOUND ); // Lemma 3
 
     } // END OF STEP 3 LOOP
 

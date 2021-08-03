@@ -32,7 +32,7 @@ namespace unf_spanners {
                    index_tPairMap &E,
                    const VertexHandle& i,
                    const VertexHandle& j) {
-            assert(T.is_edge(i, j));
+            //assert(T.is_edge(i, j));
             //if( printLog ) cout<<"add:("<<i->info()<<","<<j->info()<<") ";
             auto edge_j_i = make_pair(j->info(), i->info());
             auto existing = E.begin();
@@ -207,7 +207,7 @@ namespace unf_spanners {
                             auto currentCone = cone_t(floor(conalAngle / PI_OVER_FIVE));
                             int conalDifference = int(currentCone) - int(previousPoint.first);
 
-                            for (int conalEdgesToAdd = min(conalDifference - 1, 2);
+                            for (int conalEdgesToAdd = std::min(conalDifference - 1, 2);
                                  conalEdgesToAdd > 0; conalEdgesToAdd--) {
                                 //Determine if one of the edges adjacent to the empty cone is selected already
                                 bool containsPreviousPoint = unf_spanners::contains(E,
@@ -215,8 +215,8 @@ namespace unf_spanners {
                                                                                         previousPoint.second->info()));
                                 bool containsN = unf_spanners::contains(E,
                                                                         make_pair(currentPointIndex, N->info()));
-                                assert(previousPoint.second != v_inf);
-                                assert(N->handle() != v_inf);
+                                //assert(previousPoint.second != v_inf);
+                                //assert(N->handle() != v_inf);
                                 if (containsPreviousPoint && !containsN) {
                                     selectEdge(T, E, m, previousPoint.second);
                                 } else if (!containsPreviousPoint && containsN) {

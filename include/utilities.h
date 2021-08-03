@@ -381,8 +381,8 @@ namespace unf_spanners {
             index_tPair p = H.top();
             H.pop();
             // make sure our math is correct, e.g., degree from heap key matches neighbor container size
-            assert(p.first == currentNeighbors.at(p.second).size());
-            assert(0 <= p.first && p.first <= 5); // Lemma 1
+            //assert(p.first == currentNeighbors.at(p.second).size());
+            //assert(0 <= p.first && p.first <= 5); // Lemma 1
 
             // Erase this vertex from incidence list of neighbors and update the neighbors' key in the heap
             for (index_t neighbor : currentNeighbors.at(p.second)) {
@@ -416,7 +416,7 @@ namespace unf_spanners {
         } while( ++N != done );
         // v_k is guaranteed to be incident to two vertices in onOuterFace, its neighbors.
         // Anything >2 is a chord
-        assert( c >= 2 );
+        //assert( c >= 2 );
         return (c - 2);
     }
 

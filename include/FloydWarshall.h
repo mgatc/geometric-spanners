@@ -48,7 +48,7 @@ void FloydWarshall( const DelaunayGraph& G,
     for( size_t i=0; i<N; ++i )
         dist.at(i).at(i) = make_optional( number_t(0) );
 
-    assert( index.size() == N );
+    //assert( index.size() == N );
 
     // Add getDistance of each edge (u,v) in G._E to dist[u][v]
     // using indices of u and v mapped in index

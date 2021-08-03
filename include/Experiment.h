@@ -10,6 +10,7 @@
 #include "LineGraphPrinter.h"
 #include "metrics.h"
 #include "names.h"
+#include "PointGenerators.h"
 #include "Result.h"
 #include "TablePrinter.h"
 #include "utilities.h"
@@ -36,12 +37,11 @@ namespace unf_spanners {
 
     const bool USE_EXACT_STRETCH_FACTOR = true;
 
-    BoundedDegreeSpannerResultSet RESULTS;
+    vector<BoundedDegreeSpannerResultSet> RESULTS(DistributionTypeLast);
 
-    LatexPrinter latex("templatex");
-    GraphPrinter graph("tempgraph");
-    PgfplotsPrinter pgfplots("temppgfplots");
-    TablePrinter table("temptable");
+    LatexPrinter latex("output-main");
+    GraphPrinter graph("output-vis");
+    PgfplotsPrinter pgfplots("output-plots");
 
     GraphPrinter::OptionsList activeEdgeOptions = { // active edge options
             {"color",      graph.activeEdgeColor},
@@ -73,6 +73,7 @@ namespace unf_spanners {
     };
     template<class Container>
     void PlaneSpannerExperiment(const Container &points,
+                                const DistributionType dist,
                                 const Algorithm algorithm ) {
         using namespace std;
 
@@ -117,8 +118,8 @@ namespace unf_spanners {
             case Algorithm::Bkpx2015:
                 BKPX2015(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
-            case Algorithm::Last:
-                assert(false);
+            case Algorithm::AlgorithmLast:
+                //assert(false);
         }
 
         number_t runtime = tim.stop();
@@ -136,7 +137,7 @@ namespace unf_spanners {
 
         BoundedDegreeSpannerResult result(algorithm, n, runtime, deg, degAvg, lightness, t );
 
-        RESULTS.registerResult(result);
+        RESULTS.at(dist).registerResult(result);
         cout << result << endl;
         if(PRINT_GEOMETRY){
             string outputname = string("RPIS-")
@@ -175,26 +176,45 @@ namespace unf_spanners {
         }
     }
 
-    bool singleRun( size_t n, double width, string resultFilename, optional<string> filename, bool forcePrint, bool printLog )
-    {
-        double size = width/2; // cgal's generators produce width 2x given value
+    bool singleRun( const size_t n, DistributionType dist, const double width ){ //}, string resultFilename, optional<string> filename, bool forcePrint, bool printLog )
 
         // SET POINT SET
         vector<Point> points;
-        optional<string> generatedFile = nullopt;
-        //filename = make_optional("data-150_61.237244x61.237244.txt");
 
-        if( filename )
-            readPointsFromFile( back_inserter( points ), *filename );
-        else
-            generatedFile = make_optional( generateRandomPoints( n, size, back_inserter(points) ) );
+        switch(dist) {
+        case UniformInsideSquare:
+            generatePointsInsideASquare(n,width,points);
+            break;
+        case UniformInsideDisc:
+            generatePointsInsideADisc(n,width/2,points);
+            break;
+        case NormalInsideSquare:
+            generatePointsInsideASquareNormal(n,1,points);
+            break;
+        case NormalClustersInsideSquare:
+            generatePointsInsideASquareNormal(ceil(sqrt(n)),floor(sqrt(n)),points);
+            break;
+        case ContiguousGrid:
+            generateContiguousPointsOnAGrid(n, width, points);
+            break;
+        case UniformRandomGrid:
+            generateRandomPointsOnAGrid(n,width, points);
+            break;
+//        case UniformInsideAnnulus:
+//            generateRandomInsideAnnulus(n, width, width*0.63, points);
+//            break;
+//        case Real:
+//            generatePointsFromFile(n, points);
+//            break;
+
+        }
 
         if(PRINT_GEOMETRY) {
             string outputname = string("RPIS-") + to_string(n);
             GraphPrinter printer(outputname);
             double documentSizeInCm = 10;
             printer.autoscale(points.begin(), points.end(), documentSizeInCm);
-            printer.clearCaptionFile();
+            GraphPrinter::clearCaptionFile();
 
             // draw point set
             string caption = string("$N=")
@@ -206,37 +226,11 @@ namespace unf_spanners {
 
             latex.addToDocumentAsFigure(printer);
         }
-        for( int alg=Algorithm::First;
-             alg!=Algorithm::Last; ++alg )
+        for(int alg=Algorithm::AlgorithmFirst;
+             alg!=Algorithm::AlgorithmLast; ++alg )
         {
-            PlaneSpannerExperiment( points, static_cast<Algorithm>(alg) );
+            PlaneSpannerExperiment( points, dist, static_cast<Algorithm>(alg) );
         }
-
-
-
-//    if( deg > 11 || stretchFactor > 7 || forcePrint ) {
-//
-//       string resultFileName = ( filename ? *filename : *generatedFile );
-//       // strip file extension
-//       const std::string ext(".txt");
-//       if ( resultFileName != ext &&
-//            resultFileName.size() > ext.size() &&
-//            resultFileName.substr(resultFileName.size() - ext.size()) == ext )
-//       {
-//          // if so then strip them off
-//          resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
-//       }
-//       resultFileName += "_result-";
-//       resultFileName += ( filename ? "redo" : "orig" );
-//
-//       cout << "DEGREE ERROR!!! DEGREE:" << deg << "\n"<<endl;
-//       cout << *generatedFile <<endl;
-//
-//       if( generatedFile )
-//           singleRun( n, width, resultFileName, *generatedFile, true, true );
-//
-//       return false;
-//    }
 
         cout<<endl;
 
@@ -249,31 +243,43 @@ namespace unf_spanners {
         size_t invalid = 0;
         size_t trialNum = 1;
 
-        for( size_t trial=0; trial<=trials; ++trial ) {
-            for( size_t n=n_start; n<=n_end; n+=increment ) {
-                trialNum++;
-                if( !singleRun( n, width, "output", nullopt, false, false ) ) {
-                    ++invalid;
-                    return false;
+        for( int dist=DistributionTypeFirst; dist!=DistributionTypeLast; ++dist ) {
+            auto& result = RESULTS.at(dist);
+            for (size_t trial = 0; trial <= trials; ++trial) {
+                for (size_t n = n_start; n <= n_end; n += increment) {
+                    trialNum++;
+                    singleRun(n, static_cast<DistributionType>(dist), width);//, "output", nullopt, false, false ) )
                 }
             }
+            result.computeStatistics();
+
+            if (PRINT_PGFPLOTS) {
+                // Create plot names
+                vector<string> plotNames;
+                transform(PGFPLOT_NAMES.begin(),
+                          PGFPLOT_NAMES.end(),
+                          back_inserter(plotNames),
+                          [&dist](const string& str) {
+                              string plotName = str + " (" + DISTRIBUTION_NAMES.at(dist) + ")";
+                              //cout<<plotName;
+                              return plotName;
+                          });
+                plotResults(result, &latex, plotNames);
+            }
+            string tableFilename = string("output-table")
+                    + DISTRIBUTION_NAMES.at(dist);
+            TablePrinter table(tableFilename);
+            if (PRINT_TABLES) {
+                table.ignoreIV(0); // ignore runtime
+                table.addColumn(DEGREE_BOUND_SYMBOL, DEGREE_BOUND_PER_ALGORITHM);
+                table.addColumn(STRETCH_FACTOR_BOUND_SYMBOL, STRETCH_FACTOR_BOUND_PER_ALGORITHM);
+                table.tabulateResults(result);
+                latex.addToDocumentAsFigure(table);
+            }
+
         }
 
-        RESULTS.computeStatistics();
-
-        if(PRINT_PGFPLOTS) {
-            plotResults(RESULTS, &latex, PGFPLOT_NAMES);
-        }
-
-        if(PRINT_TABLES) {
-            table.ignoreIV(0); // ignore runtime
-            table.addColumn(DEGREE_BOUND_SYMBOL, DEGREE_BOUND_PER_ALGORITHM);
-            table.addColumn(STRETCH_FACTOR_BOUND_SYMBOL, STRETCH_FACTOR_BOUND_PER_ALGORITHM);
-            table.tabulateResults(RESULTS);
-            latex.addToDocumentAsFigure(table);
-        }
-
-        if(PRINT_GEOMETRY || PRINT_PGFPLOTS || PRINT_TABLES)
+        if (PRINT_GEOMETRY || PRINT_PGFPLOTS || PRINT_TABLES)
             latex.display();
 
         //cout<<"\nTesting Complete. "<< invalid << " of "<<(trials*(n_end-n_start))<<" invalid results.\n\n";

@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
     };
 
     for (size_t arg = 1;
-         arg < min(size_t(argc), experimentParameters.size() + 1);
+         arg < std::min(size_t(argc), experimentParameters.size() + 1);
          ++arg) {
         try {
             experimentParameters[arg - 1] = stoul(argv[arg]);
@@ -40,7 +40,9 @@ int main(int argc, char *argv[]) {
     size_t N = experimentParameters.empty() ? 50 : experimentParameters[0];
 
     if (argc == 2)
-        scratch(N);
+        //scratch(N);
+
+        scratch("data-70_5x5.txt");
     else
         experiment(experimentParameters[0],
                    experimentParameters[1],

@@ -298,7 +298,7 @@ namespace unf_spanners {
 
                             }
 
-                            assert(yaoEdges[u_id][cone].first == crown ||
+                            //assert(yaoEdges[u_id][cone].first == crown ||
                                    yaoEdges[crown->storage_site().info()][(cone + 2) % 4].first == u);
 
                             anchorEdges[u_id][cone].first = crown;

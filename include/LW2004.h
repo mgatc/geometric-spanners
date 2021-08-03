@@ -33,8 +33,8 @@ inline void createNewEdge(const DelaunayTriangulation& T,
                           const index_t n,
                           bool printLog = false )
 {
-    assert( std::max(i,j) < n );
-    assert( T.is_edge( handles.at(i), handles.at(j) ) );
+    //assert( std::max(i,j) < n );
+    //assert( T.is_edge( handles.at(i), handles.at(j) ) );
     //if( printLog ) cout<<"add:("<<i<<","<<j<<") ";
     E.insert( createEdge( i, j ) );
 }
@@ -101,7 +101,7 @@ void LW2004( RandomAccessIterator pointsBegin,
     // Iterate through vertices by pi ordering
     for( size_t u : ordering ) {
         u_handle = handles.at(u);
-        assert( !T.is_infinite(u_handle) );
+        //assert( !T.is_infinite(u_handle) );
         isProcessed[u] = true;
         //if( printLog ) cout<<"\nu:"<<u<<" ";
 
@@ -122,7 +122,7 @@ void LW2004( RandomAccessIterator pointsBegin,
                 ++processedNeighbors;
             }
         }
-        assert( processedNeighbors <= 5 );
+        //assert( processedNeighbors <= 5 );
 
 
         // Now, compute the angles of the sectors, the number of cones in each sector,
@@ -138,7 +138,7 @@ void LW2004( RandomAccessIterator pointsBegin,
             );
             if( sectorAngle < EPSILON ) sectorAngle = 360.0;
             auto numCones = cone_t(rint( ceil( sectorAngle / alpha ) ));
-            assert( numCones > 0 ); // guard against /0
+            //assert( numCones > 0 ); // guard against /0
             alphaReal[i] = sectorAngle / number_t(numCones);
             closest.at(i).resize( numCones, v_inf );
         }
@@ -155,7 +155,7 @@ void LW2004( RandomAccessIterator pointsBegin,
                 // It is possible for a sectorBoundary to be not processed,
                 // in the case of no processed neighbors.
                 if( !isProcessed.at( N->info() ) ) {
-                    assert( sector < sectorBoundaries.size() );
+                    //assert( sector < sectorBoundaries.size() );
                     // evaluate possible forward edges
                     number_t theta = angle(
                             sectorBoundaries.at(sector)->point(),

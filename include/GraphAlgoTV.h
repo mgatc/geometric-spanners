@@ -15,7 +15,7 @@
 //
 //enum EventType { Symbol=0, Focus, Label, TextOut, EVENT_TYPE_SIZE };
 //
-//enum FocusLevel { First=1, Second, Third, FOCUS_LEVEL_MAX=Third };
+//enum FocusLevel { AlgorithmFirst=1, Second, Third, FOCUS_LEVEL_MAX=Third };
 //
 //template< typename T >
 //struct TV_Event {
@@ -39,7 +39,7 @@
 //};
 //
 //struct TV_FocusEvent : public TV_ItemEvent<FocusLevel> {
-//    TV_FocusEvent( size_t id, FocusLevel level = First )
+//    TV_FocusEvent( size_t id, FocusLevel level = AlgorithmFirst )
 //      : TV_ItemEvent( EventType::Focus, level, ItemType::Vertex, id ) {}
 //};
 //

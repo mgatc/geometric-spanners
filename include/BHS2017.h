@@ -61,8 +61,8 @@ namespace unf_spanners {
         inline number_t bisectorLength(const Edge &e, const vector<VertexHandle> &H) {
 
             cone_t cone = getCone(e.first, e.second, H);
-            assert(cone < 6);
-            assert(e.first < H.size());
+            //assert(cone < 6);
+            //assert(e.first < H.size());
 
             number_t xCord = H[e.first]->point().x() - orthBisectorSlopes.at(cone);
             number_t yCord = H[e.first]->point().y() + 1;
@@ -179,7 +179,7 @@ namespace unf_spanners {
             vector<index_t> canNeighbors;
 
             canonicalNeighborhood(canNeighbors, p, r, p_cone, DT, H, B);
-            assert(!canNeighbors.empty());
+            //assert(!canNeighbors.empty());
 
             //Number of edges in the neighborhood.
             size_t canEdges = canNeighbors.size() - 1;
@@ -189,7 +189,7 @@ namespace unf_spanners {
                 //Add inner edges if total neighborhood edges is 3 or more. (4.2)
                 for (index_t i = 1; i < canEdges - 1; i++) {
                     E_CAN.emplace_back(canNeighbors.at(i), canNeighbors.at(i + 1));
-                    assert(DT.is_edge(H.at(canNeighbors.at(i)), H.at(canNeighbors.at(i + 1))));
+                    //assert(DT.is_edge(H.at(canNeighbors.at(i)), H.at(canNeighbors.at(i + 1))));
                 }
 
                 //End edges in the canonical neighborhood.
@@ -202,11 +202,11 @@ namespace unf_spanners {
                 for (auto edge : canExtrema) {
                     if (edge.second == r && canEdges > 1) {
                         E_CAN.push_back(edge);
-                        assert(DT.is_edge(H.at(edge.first), H.at(edge.second)));
+                        //assert(DT.is_edge(H.at(edge.first), H.at(edge.second)));
                     }
                 }
 
-                //First and last edges in the canonical neighborhood are considered and added by 3 criteria. (4.4)
+                //AlgorithmFirst and last edges in the canonical neighborhood are considered and added by 3 criteria. (4.4)
                 vector<cone_t> cone(6);
                 for (cone_t i = 0; i < 6; ++i) {
                     cone[i] = (p_cone + i) % 6;
@@ -220,7 +220,7 @@ namespace unf_spanners {
                         E_CAN.push_back(edge);
                         if (printLog) cout << edge.first << "-" << edge.second << "[" << i << "]\\" << cone[z_cone] << "/,";
 
-                        assert(DT.is_edge(H.at(edge.second), H.at(edge.first)));
+                        //assert(DT.is_edge(H.at(edge.second), H.at(edge.first)));
                     }
                 }
 
@@ -237,7 +237,7 @@ namespace unf_spanners {
                     if (endpointZ[i] == blank && getCone(edge.second, edge.first, H) == cone[z_cone]) {
                         E_CAN.push_back(edge);
 
-                        assert(DT.is_edge(H.at(edge.first), H.at(edge.second)));
+                        //assert(DT.is_edge(H.at(edge.first), H.at(edge.second)));
                     }
                 }
 
@@ -260,9 +260,9 @@ namespace unf_spanners {
                         w += int(y == zCanNeighbors.begin());
                         w -= int(y == zCanNeighbors.end() - 1);
 
-                        assert(y != zCanNeighbors.end());
-                        assert(y != w);
-                        assert(DT.is_edge(H.at(*w), H.at(*y)));
+                        //assert(y != zCanNeighbors.end());
+                        //assert(y != w);
+                        //assert(DT.is_edge(H.at(*w), H.at(*y)));
                         E_CAN.emplace_back(*w, *y);
                     }
                 }
@@ -367,7 +367,7 @@ namespace unf_spanners {
             //Union of sets E_A and E_CAN for final edge set removes duplicates.
             E_A.insert(E_A.end(), E_CAN.begin(), E_CAN.end());
             sort(E_A.begin(), E_A.end(), [](const auto &l, const auto &r) {
-                return (min(l.first, l.second) < min(r.first, r.second)
+                return (CGAL::min(l.first, l.second) < min(r.first, r.second)
                         || (min(l.first, l.second) == min(r.first, r.second) &&
                             max(l.first, l.second) < max(r.first, r.second)));
             });

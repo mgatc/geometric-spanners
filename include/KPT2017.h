@@ -53,8 +53,8 @@ namespace unf_spanners {
 //Finds the bisector length of a given edge.
         inline number_t bisectorLength(const Edge &e, const vector<Point> &H) {
             cone_t cone = getCone(e.first, e.second, H);
-            assert(cone < 6);
-            assert(e.first < H.size());
+            //assert(cone < 6);
+            //assert(e.first < H.size());
 
             number_t xCord = H[e.first].x() - orthBisectorSlopes.at(cone);
             number_t yCord = H[e.first].y() + 1;
@@ -282,8 +282,9 @@ namespace unf_spanners {
 //            cout<< "    Blue shortcut edge "<<*v.second.begin()
 //                <<"-"<<v.first<<"-"<<*(--v.second.end())<< " --> "
 //                <<*v.second.begin()<<"-"<<*(--v.second.end())<<"\n";
-
-                    assert(D.edgeExists(make_pair(p, q)) && D.edgeExists(make_pair(r, q)));
+                    if(!(D.edgeExists(make_pair(p, q)) && D.edgeExists(make_pair(r, q))))
+                        cout<<p<<" "<<q<<" "<<r<<"\n";
+                    //assert(D.edgeExists(make_pair(p, q)) && D.edgeExists(make_pair(r, q)));
                     createShortcut(p, q, r, S_not_A);
                 }
             }

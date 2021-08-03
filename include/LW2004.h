@@ -6,24 +6,13 @@
 #include <unordered_set> // hashed adjacency list
 #include <vector> // vertex containers
 
-#include <boost/functional/hash.hpp> // hashing pairs
-#include <boost/heap/fibonacci_heap.hpp> // ordering
-
-//#include <CGAL/algorithm.h>
-#include <CGAL/circulator.h>
-#include <CGAL/Delaunay_triangulation_2.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Triangulation_vertex_base_with_info_2.h>
-#include <CGAL/utils.h> // min, max
-#include <CGAL/Vector_2.h>
-
+#include "DelaunayGraph.h"
 #include "GeometricSpannerPrinter.h"
-//#include "GraphAlgoTV.h"
 #include "utilities.h"
 #include "metrics.h"
 
 
-namespace gsnunf {
+namespace unf_spanners {
 
 using namespace std;
 
@@ -31,39 +20,21 @@ namespace lw2004 {
 
 using namespace CGAL;
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel         K;
-typedef CGAL::Triangulation_vertex_base_with_info_2<size_t, K>    Vb;
-typedef CGAL::Triangulation_face_base_2<K>                          Fb;
-typedef CGAL::Triangulation_data_structure_2<Vb, Fb>                Tds;
-typedef CGAL::Delaunay_triangulation_2<K, Tds>                      Delaunay;
-typedef CGAL::Aff_transformation_2<K>                               Transformation;
-typedef Delaunay::Vertex_handle                                     Vertex_handle;
-typedef Delaunay::Vertex_circulator                                 Vertex_circulator;
-typedef CGAL::Vector_2<K>                                           Vector_2;
-typedef Delaunay::Point                                             Point;
-typedef Delaunay::Finite_vertices_iterator                          Finite_vertices_iterator;
-typedef Delaunay::Finite_edges_iterator                             Finite_edges_iterator;
-
-typedef pair<size_t,size_t>                                         size_tPair;
-typedef boost::hash<size_tPair>                                     size_tPairHash;
-typedef unordered_set<size_tPair,size_tPairHash>                    size_tPairSet;
-
-struct comparatorForMinHeap {
-    bool operator()(const size_tPair &n1, const size_tPair &n2) const {
-        return (n1.first > n2.first) || ((n1.first == n2.first) && (n1.second > n2.second));
-    }
-};
-
-typedef boost::heap::fibonacci_heap<size_tPair,boost::heap::compare<comparatorForMinHeap>> Heap;
-typedef Heap::handle_type handle;
-
-inline size_tPair createEdge( const size_t i, const size_t j ) {
+inline Edge createEdge(const size_t i, const size_t j )
+{
     return make_pair( std::min(i,j), std::max(i,j) );
 }
 
-inline void createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_handle>& handles, size_tPairSet &E, const size_t i, const size_t j, const size_t n, bool printLog = false ) {
-    assert( std::max(i,j) < n );
-    assert( T.is_edge( handles.at(i), handles.at(j) ) );
+inline void createNewEdge(const DelaunayTriangulation& T,
+                          const vector<VertexHandle>& handles,
+                          index_tPairSet &E,
+                          const index_t i,
+                          const index_t j,
+                          const index_t n,
+                          bool printLog = false )
+{
+    //assert( std::max(i,j) < n );
+    //assert( T.is_edge( handles.at(i), handles.at(j) ) );
     //if( printLog ) cout<<"add:("<<i<<","<<j<<") ";
     E.insert( createEdge( i, j ) );
 }
@@ -72,29 +43,33 @@ inline void createNewEdge( const Delaunay& T, const vector<Delaunay::Vertex_hand
 
 // alpha is set to pi/2
 template< typename RandomAccessIterator, typename OutputIterator >
-void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, double alpha = PI/2 ) {
+void LW2004( RandomAccessIterator pointsBegin,
+             RandomAccessIterator pointsEnd,
+             OutputIterator result,
+             number_t alpha = PI/2 )
+{
     using namespace lw2004;
 
     // ensure valid alpha
     alpha = CGAL::max( EPSILON, CGAL::min( alpha, PI/2 ) );
 
     vector<Point> P(pointsBegin, pointsEnd);
-    vector<size_t> index;
+    vector<index_t> index;
     spatialSort<K>(P, index);
 
     //Step 1: Construct Delaunay triangulation
-    lw2004::Delaunay T;
+    DelaunayTriangulation T;
 
     //N is the number of vertices in the delaunay triangulation.
-    size_t n = P.size();
+    const index_t n = P.size();
     if(n > SIZE_T_MAX - 1) return;
 
     //Stores all the vertex handles (CGAL's representation of a vertex, its properties, and data).
-    vector<lw2004::Vertex_handle> handles(n);
+    vector<VertexHandle> handles(n);
 
     /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
       (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
-    Delaunay::Face_handle hint;
+    FaceHandle hint;
     for(size_t entry : index) {
         auto vh = T.insert(P[entry], hint);
         hint = vh->face();
@@ -103,139 +78,72 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
     }
 
 
-    Vertex_handle v_inf = T.infinite_vertex();
+    VertexHandle v_inf = T.infinite_vertex();
 
     //cout << "Step 1 is over...\n";
     // TriangulationPrinter tp(T);
     // tp.draw("del");
     //************* Step 2 ****************//
 
-    Heap H;
-    vector<handle> handleToHeap(n);
-    vector<size_t> piIndexedByV(n), piIndexedByPiU(n);
-    vector<unordered_set<size_t>> currentNeighbours(n);
+    vector<size_t> ordering;
+    ordering.reserve(n);
+    reverseLowDegreeOrdering(T,back_inserter(ordering));
 
-   // size_t maxDegree = 0;
-    // Initialize the vector currentNeighbours with appropriate neighbours for every vertex
-    for( size_t it = 0; it < n; it++ ) {
-        Vertex_circulator N = T.incident_vertices( handles.at(it) ),
-            done(N);
-        //if (vc != 0) {
-        do {
-            if( !T.is_infinite(N) ) {
-                //degree++;
-                currentNeighbours.at(it).insert( N->info() );
-            }
-        } while( ++N != done );
-        //}
-       // if(degree > maxDegree)
-        //    maxDegree = degree;
-
-        size_t degree = currentNeighbours.at(it).size();
-        handleToHeap[it] = H.emplace( degree,it );
-    }
-
-    //cout << "Maximum degree in the Delaunay Triangulation: " << maxDegree << endl;
-    // Use a heap to walk through G_0 to G_{n-1} and set up the Pi for every vertex
-    size_t i = n-1; // start at the last valid index
-    while(!H.empty()) {
-        size_tPair p = H.top();
-        H.pop();
-        // make sure our math is correct, e.g., degree from heap key matches neighbor container size
-        assert( p.first == currentNeighbours.at( p.second ).size() );
-        // make sure our assumptions about the graph G_i are correct (see p. 5 in LW2004)
-        assert( 0 <= p.first && p.first <= 5 );
-
-        for( size_t neighbour : currentNeighbours.at( p.second ) ) {
-            currentNeighbours.at(neighbour).erase(p.second);
-            handle h = handleToHeap.at(neighbour);
-            size_tPair q = make_pair( currentNeighbours.at( neighbour ).size(), neighbour );
-            H.update(h,q);
-            H.update(h);
-        }
-        currentNeighbours.at(p.second).clear();
-        piIndexedByV[p.second] = i;
-        piIndexedByPiU[i] = p.second;
-        --i;
-    }
-
-    handleToHeap.clear();
-    H.clear();
-    currentNeighbours.clear();
-    //cout << "Step 2 is over...\n";
 
 
 
     //************* Step 3 ****************//
     // In this step we assume alpha = pi/2 in order to minimize the degree
-    size_tPairSet ePrime; // without set duplicate edges could be inserted (use the example down below)
+    index_tPairSet ePrime; // without set duplicate edges could be inserted (use the example down below)
     vector<bool> isProcessed(n, false);
-    Delaunay::Vertex_handle u_handle = v_inf;
+    VertexHandle u_handle = v_inf;
 
     // Iterate through vertices by pi ordering
-    for( size_t u : piIndexedByPiU ) {
+    for( size_t u : ordering ) {
         u_handle = handles.at(u);
-        assert( !T.is_infinite(u_handle) );
+        //assert( !T.is_infinite(u_handle) );
         isProcessed[u] = true;
         //if( printLog ) cout<<"\nu:"<<u<<" ";
 
         // Get neighbors of u
-        Vertex_circulator N = T.incident_vertices( u_handle );
+        VertexCirculator N = T.incident_vertices(u_handle );
         //if( printLog ) cout<<"N_init:"<<(T.is_infinite(N)?size_t(numeric_limits<size_t>::max):size_t(N->info()))<<" ";
         // find a processed neighbor if it exists or we reach the start again
         while( T.is_infinite(--N) );
-        Vertex_circulator done(N); // set done to a vertex that is not infinite
+        VertexCirculator done(N); // set done to a vertex that is not infinite
         while( ( T.is_infinite(--N) || !isProcessed.at(N->info()) ) && N!=done );
-        done = N; // update N
-//        // Rotate N until reaching an infinite vertex (check first) or the original vertex
-//        while( !T.is_infinite(--N) && N != done ); //
-//        if( T.is_infinite(N) ) --N; // if we stopped on an infinite vertex, move to its successor
-        //if( printLog ) cout<<"N_ready:"<<N->info()<<" ";
 
         // Find and store sector boundaries, start with N
         size_t processedNeighbors = isProcessed.at( N->info() ) ? 1 : 0;
-        vector<Vertex_handle> sectorBoundaries{ N->handle() };
+        vector<VertexHandle> sectorBoundaries{N->handle() };
         while( --N != sectorBoundaries.front() ) {
             if( ( !T.is_infinite(N) && isProcessed.at( N->info() ) ) ) { // check for v_inf first or isProcessed will be out of range
                 sectorBoundaries.push_back( N->handle() );
                 ++processedNeighbors;
             }
-//            else if( T.is_infinite(N) ) {
-//                ++N; // move to predecessor
-//                // Add predecessor if not already added.
-//                if( N->handle() != sectorBoundaries.back() )
-//                    sectorBoundaries.push_back( N->handle() );
-//                // Note, if we've reached this branch, we know that
-//                // v_inf's successor is sectorBoundaries.front()
-//                --N; // move back to N (infinite vertex) to naturally exit the loop
-//            }
         }
-        assert( processedNeighbors <= 5 );
+        //assert( processedNeighbors <= 5 );
 
-        // for debugging, print sector boundaries
-//        if( printLog ) for ( size_t i=0; i<sectorBoundaries.size(); ++i ) {
-//            cout<<"v"<<i<<":"<<sectorBoundaries.at(i)->info()<<" ";
-//        }
 
         // Now, compute the angles of the sectors, the number of cones in each sector,
         // and the actual angles
-        vector<double> alphaReal( sectorBoundaries.size() );
-        vector< vector<Vertex_handle> > closest( sectorBoundaries.size() );
+        vector<number_t> alphaReal( sectorBoundaries.size() );
+        vector< vector<VertexHandle> > closest(sectorBoundaries.size() );
 
         for( size_t i=0; i<sectorBoundaries.size(); ++i ) {
-            double sectorAngle = get_angle<K>(
-                sectorBoundaries.at(i)->point(),
-                u_handle->point(),
-                sectorBoundaries.at( (i+1)%sectorBoundaries.size() )->point()
+            number_t sectorAngle = angle(
+                    sectorBoundaries.at(i)->point(),
+                    u_handle->point(),
+                    sectorBoundaries.at((i + 1) % sectorBoundaries.size())->point()
             );
             if( sectorAngle < EPSILON ) sectorAngle = 360.0;
-            size_t numCones = rint( ceil( sectorAngle / alpha ) );
-            assert( numCones > 0 ); // guard against /0
-            alphaReal[i] = sectorAngle / numCones;
+            auto numCones = cone_t(rint( ceil( sectorAngle / alpha ) ));
+            //assert( numCones > 0 ); // guard against /0
+            alphaReal[i] = sectorAngle / number_t(numCones);
             closest.at(i).resize( numCones, v_inf );
         }
 
-        Vertex_handle lastN = v_inf;
+        VertexHandle lastN = v_inf;
         //if( isProcessed.at( N->info() ) ) --N; // if N is processed, step
         size_t sector = -1; // The first sector boundary will increment sector, which should be 0 for the first sector
 
@@ -247,15 +155,15 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
                 // It is possible for a sectorBoundary to be not processed,
                 // in the case of no processed neighbors.
                 if( !isProcessed.at( N->info() ) ) {
-                    assert( sector < sectorBoundaries.size() );
+                    //assert( sector < sectorBoundaries.size() );
                     // evaluate possible forward edges
-                    double theta = get_angle<K>(
-                        sectorBoundaries.at(sector)->point(),
-                        u_handle->point(),
-                        N->point()
+                    number_t theta = angle(
+                            sectorBoundaries.at(sector)->point(),
+                            u_handle->point(),
+                            N->point()
                     );
-                    // get angle will return 360 for any angle(vuv) (we want it to be 0 here)
-                    size_t cone = size_t( (theta-EPSILON) / alphaReal.at(sector) );
+                    // get getAngle will return 360 for any getAngle(vuv) (we want it to be 0 here)
+                    auto cone = cone_t( (theta-EPSILON) / alphaReal.at(sector) );
                     if( cone >= closest.at(sector).size() )
                         cone = 0;
                     // Store value until after all neighbors are processed, then add
@@ -284,8 +192,8 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
         }
 
         // Add edges in closest
-        for( auto segment : closest )
-            for( auto v : segment )
+        for( const auto& segment : closest )
+            for( const auto& v : segment )
                 if( !T.is_infinite(v) ) {
 //                    if( printLog ) cout<<"forward_";
                     createNewEdge( T, handles, ePrime, u, v->info(), n, false );
@@ -297,12 +205,13 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 //    edgeList.reserve( ePrime.size() );
 
     // Send resultant graph to output iterator
-    for( size_tPair e : ePrime ) {
-        //edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
-
-        *result = e;
-        ++result;
-    }
+    std::copy( ePrime.begin(), ePrime.end(), result );
+//    for( index_tPair e : ePrime ) {
+//        //edgeList.emplace_back( handles.at(e.first)->point(), handles.at(e.second)->point() );
+//
+//        *result = e;
+//        ++result;
+//    }
 
 
     //
@@ -357,6 +266,6 @@ void LW2004( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, O
 
 } // function LW2004
 
-} // namespace gsnunf
+} // namespace unf_spanners
 
 #endif // GSNUNF_LW2004_H

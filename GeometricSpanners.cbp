@@ -11,15 +11,9 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="10000 100 1000 10" />
+				<Option parameters="10 10 100 10" />
 				<Compiler>
-					<Add option="-O3" />
-					<Add option="-Wextra" />
-					<Add option="-Wall" />
-					<Add option="-std=c++17" />
 					<Add option="-g" />
-					<Add option="-frounding-math" />
-					<Add option="-fexceptions" />
 					<Add directory="include" />
 				</Compiler>
 			</Target>
@@ -31,9 +25,6 @@
 				<Option parameters="10 100 1000 100" />
 				<Compiler>
 					<Add option="-O3" />
-					<Add option="-std=c++17" />
-					<Add option="-frounding-math" />
-					<Add option="-fexceptions" />
 					<Add directory="include" />
 				</Compiler>
 				<Linker>
@@ -48,6 +39,7 @@
 			<Add option="-frounding-math" />
 			<Add option="-fexceptions" />
 			<Add option="-fopenmp" />
+			<Add option="-Wno-unused" />
 			<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include" />
 		</Compiler>
 		<Linker>
@@ -57,6 +49,7 @@
 			<Add library="boost_system" />
 			<Add library="boost_thread" />
 			<Add library="-I/usr/include/CGAL" />
+			<Add library="CGAL" />
 			<Add directory="/usr/include/CGAL" />
 			<Add directory="/usr/include/" />
 		</Linker>
@@ -70,18 +63,21 @@
 			<Option target="Release" />
 		</Unit>
 		<Unit filename="include/BCC2012.h" />
+		<Unit filename="include/BGHP2010.h" />
 		<Unit filename="include/BGS2005.h" />
 		<Unit filename="include/BHS2017.h" />
 		<Unit filename="include/BKPX2015.h" />
 		<Unit filename="include/BSX2009.h" />
 		<Unit filename="include/CGALComponents.h" />
 		<Unit filename="include/DelaunayGraph.h" />
+		<Unit filename="include/Experiment.h" />
 		<Unit filename="include/FloydWarshall.h" />
 		<Unit filename="include/GeometricSpannerPrinter.h" />
-		<Unit filename="include/GraphAlgoTV.h" />
 		<Unit filename="include/KPT2017.h" />
 		<Unit filename="include/KPX2010.h" />
 		<Unit filename="include/LW2004.h" />
+		<Unit filename="include/PointGenerators.h" />
+		<Unit filename="include/Scratch.h" />
 		<Unit filename="include/TDDelaunay.h" />
 		<Unit filename="include/degree_iii.h" />
 		<Unit filename="include/metrics.h" />

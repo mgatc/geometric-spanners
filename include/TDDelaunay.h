@@ -13,75 +13,38 @@
 
 #include "utilities.h"
 
-//namespace std {
-//    template < class Gt >
-//    struct hash<Vertex_base<Gt>> {
-//        size_t operator()(const Vertex_base<Gt>& v) const {
-//            size_t seed = 0;
-//
-//            boost::hash_combine(seed, boost::hash_value(v->point()));
-//
-//            return seed;
-//        }
-//    };
-//}
 
-namespace gsnunf {
 
-//template< class Gt >
-//class Vertex_base {
-//  public:
-//    typedef typename Gt::Point_2 Point_2;
-//    Vertex_base() {}
-//    Vertex_base(const Point_2& p) : _p(p) {}
-//    void set_point(const Point_2& p) { _p = p; }
-//    const Point_2&  point() const { return _p; }
-//    friend bool operator<(const Vertex_base<Gt>& l, const Vertex_base<Gt>& r ) {
-//        return l->point() < r->point();
-//    }
-//    bool operator==(const Vertex_base<Gt>& other) const {
-//        return _p == other->point();
-//    }
-//  private:
-//    Point_2 _p;
-//};
-//class Vertex_circulator {
-//
-//};
+namespace unf_spanners {
+
 //Cone angles.
-const double tan30 = TAN30;
-const double cot30 = 1 / tan30;
-
-const double alpha = PI/3;
+const number_t alpha = PI/3;
 
 //Slopes of the cone boundary lines.
-const vector<double> bisectorSlopes{ INF, tan30, -1*tan30, INF, tan30, -1*tan30 };
-const vector<double> orthBisectorSlopes{ 0, -1*cot30, cot30, 0, -1*cot30, cot30 };
+//const vector<number_t> bisectorSlopes{ INF, tan30, -1*tan30, INF, tan30, -1*tan30 };
+const vector<number_t> orthBisectorSlopes{ 0, -1*COT30, COT30, 0, -1*COT30, COT30 };
 
-//Finds the cone of p containing vertex q, for this algorithm all vertices have 6 cones (0-5) with an angle of (PI/3).
+//Finds the cone of p containing vertex q, for this algorithm all vertices have 6 cones (0-5) with an getAngle of (PI/3).
 template<class Point_2>
-inline size_t getSingleCone(const size_t p, const size_t q, const vector<Point_2> &h)
+inline cone_t getSingleCone(const index_t p, const index_t q, const vector<Point_2> &H)
 {
-    if( CGAL::compare_y(h[p], h[q]) == CGAL::EQUAL ) {
-        return 1 + 3*int(CGAL::compare_x(h[p], h[q]) == CGAL::LARGER);
+    if(CGAL::compare_y(H[p], H[q]) == CGAL::EQUAL ) {
+        return 1 + 3*int(CGAL::compare_x(H[p], H[q]) == CGAL::LARGER);
     }
-    const Point_2 refPoint( h.at(p).x() - tan30, h[p].y() + 1 );
-    //Point refPoint(h[p]->point().x(), h[p] ->point().y() + 1);
-
-    double theta = get_angle(refPoint, h[p], h.at(q));
-
-    size_t cone = (theta / alpha);
+    const Point_2 refPoint(H.at(p).x() - TAN30, H[p].y() + 1 );
+    const number_t theta = getAngle(refPoint, H[p], H.at(q));
+    const cone_t cone = (theta / alpha);
 
     return cone;
 }
 
 //Compute max of getCone(p,q) and (getCone(q,p)+3)%6, is used to make sure cones are calculated correctly.
-template<class Point_2>
-inline size_t getCone( const size_t p, const size_t q, const vector<Point_2> &h )
+template<class Point>
+inline size_t getCone( const size_t p, const size_t q, const vector<Point> &H )
 {
     return p < q ?
-        getSingleCone(p,q,h)
-        : ( getSingleCone(q,p,h)+3 ) % 6;
+        getSingleCone(p, q, H)
+        : (getSingleCone(q, p, H) + 3 ) % 6;
 }
 
 template< class Gt >
@@ -92,9 +55,9 @@ class HalfThetaTriangulation {
     typedef Gt                                              Geom_traits;
     typedef typename Geom_traits::Point_2                   Point_2;
     typedef typename Geom_traits::Direction_2               Direction_2;
-   // typedef Vertex_base<Geom_traits>                        Vertex_handle;
+   // typedef Vertex_base<Geom_traits>                        VertexHandle;
     typedef typename std::vector<Point_2>::iterator         Point_iterator;
-    //typedef typename std::vector<Vertex_handle>::iterator   Vertex_iterator;
+    //typedef typename std::vector<VertexHandle>::iterator   Vertex_iterator;
     typedef boost::adjacency_list<boost::vecS,
                               boost::vecS,
                               boost::bidirectionalS,
@@ -105,7 +68,7 @@ class HalfThetaTriangulation {
     typedef typename boost::graph_traits<Graph>::out_edge_iterator Out_edge_iterator;
     typedef typename boost::graph_traits<Graph>::edge_descriptor   Edge_descriptor;
     typedef typename boost::graph_traits<Graph>::vertex_iterator   Vertex_iterator;
-    typedef typename boost::graph_traits<Graph>::vertex_descriptor Vertex_descriptor;
+    typedef typename boost::graph_traits<Graph>::vertex_descriptor VertexDescriptor;
 
     // define the Graph
 
@@ -174,29 +137,29 @@ class HalfThetaTriangulation {
         return _G[index];
     }
     // get negative cone edges
-    In_edge_iterator negative_cone_edges_begin(const Vertex_descriptor& u) const {
+    In_edge_iterator negative_cone_edges_begin(const VertexDescriptor& u) const {
         return in_edges(u, _G).first;
     }
-    In_edge_iterator negative_cone_edges_end(const Vertex_descriptor& u) const {
+    In_edge_iterator negative_cone_edges_end(const VertexDescriptor& u) const {
         return in_edges(u, _G).second;
     }
     // get positive cone edges
-    Out_edge_iterator positive_cone_edges_begin(const Vertex_descriptor& u) const {
+    Out_edge_iterator positive_cone_edges_begin(const VertexDescriptor& u) const {
         return out_edges(u, _G).first;
     }
-    Out_edge_iterator positive_cone_edges_end(const Vertex_descriptor& u) const {
+    Out_edge_iterator positive_cone_edges_end(const VertexDescriptor& u) const {
         return out_edges(u, _G).second;
     }
 
     //Compute max of getCone(p,q) and (getCone(q,p)+3)%6, is used to make sure cones are calculated correctly.
-    inline size_t getCone( const Vertex_descriptor &p, const Vertex_descriptor &q ) const {
-        return gsnunf::getCone(p,q,_P);
+    inline size_t getCone(const VertexDescriptor &p, const VertexDescriptor &q ) const {
+        return unf_spanners::getCone(p, q, _P);
     }
-    inline bool edgeExists(const pair<Vertex_descriptor,Vertex_descriptor>& e) const {
+    inline bool edgeExists(const pair<VertexDescriptor,VertexDescriptor>& e) const {
         return boost::edge(e.first, e.second,_G).second;
     }
-    inline pair<pair<Vertex_descriptor,Vertex_descriptor>, bool>
-    eitherEdge(const Vertex_descriptor& u, const Vertex_descriptor& v) const
+    inline pair<pair<VertexDescriptor,VertexDescriptor>, bool>
+    eitherEdge(const VertexDescriptor& u, const VertexDescriptor& v) const
     {
         auto orientedEdge = make_pair(u,v),
              reversedEdge = reverse_pair(orientedEdge);
@@ -207,7 +170,7 @@ class HalfThetaTriangulation {
         );
     }
     template< class EdgeList >
-    void fan_of_cone(const Vertex_descriptor& v, const size_t cone, EdgeList &fan) const
+    void fanOfCone(const VertexDescriptor& v, const size_t cone, EdgeList &fan) const
     {
         // get in_edges of v
         for( auto neit=negative_cone_edges_begin(v);
@@ -223,13 +186,13 @@ class HalfThetaTriangulation {
         sort( fan.begin(), fan.end(),
             [&] ( const auto &lhs, const auto &rhs )
             {
-                assert( target(lhs) == target(rhs) );
+                //assert( target(lhs) == target(rhs) );
                 const Point_2 refPoint( _P[target(lhs)].x()-TAN30,
                                         _P[target(lhs)].y()+1 );
-                return get_angle( refPoint,
-                                  _P[target(lhs)],
-                                  _P[source(lhs)])
-                     > get_angle( refPoint,
+                return getAngle(refPoint,
+                                _P[target(lhs)],
+                                _P[source(lhs)])
+                       > getAngle(refPoint,
                                   _P[target(rhs)],
                                   _P[source(rhs)]);
             }
@@ -241,17 +204,17 @@ class HalfThetaTriangulation {
 //        }
 //        cout<<"\n";
     }
-    Vertex_descriptor source( const Edge_descriptor& e ) const {
+    VertexDescriptor source(const Edge_descriptor& e ) const {
         return boost::source(e,_G);
     }
-    Vertex_descriptor target( const Edge_descriptor& e ) const {
+    VertexDescriptor target(const Edge_descriptor& e ) const {
         return boost::target(e,_G);
     }
-    Vertex_descriptor parent( const Vertex_descriptor child, const size_t i ) const {
+    VertexDescriptor parent(const VertexDescriptor child, const size_t i ) const {
         for( auto it=positive_cone_edges_begin(child);
              it!=positive_cone_edges_end(child); ++it )
         {
-            Vertex_descriptor v = target(*it);
+            VertexDescriptor v = target(*it);
             if( getCone(child,v) == i )
                 return v;
         }
@@ -261,9 +224,9 @@ class HalfThetaTriangulation {
 
   protected:
     Geom_traits _gt;
-    //Vertex_handle _infinite_vertex;
+    //VertexHandle _infinite_vertex;
     std::vector<Point_2> _P;
-    std::vector<Vertex_descriptor> _V;
+    std::vector<VertexDescriptor> _V;
     std::map<Point_iterator,size_t> info;
 
   private:

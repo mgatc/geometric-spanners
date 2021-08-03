@@ -7,45 +7,22 @@
 #include <unordered_map> // G_prime
 #include <vector>        // handles
 
-#include <boost/functional/hash.hpp> // size_t pair hash
-
-#include <CGAL/algorithm.h> //
-#include <CGAL/circulator.h>
-#include <CGAL/Delaunay_triangulation_2.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/algorithm.h>
 
 //#include "GeometricSpannerPrinter.h"
-//#include "GraphAlgoTV.h"
+#include "DelaunayGraph.h"
 #include "metrics.h"
 #include "utilities.h"
 
 
-namespace gsnunf {
+namespace unf_spanners {
 
 using namespace std;
 
 namespace kpx2010 {
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel         K;
-typedef CGAL::Triangulation_vertex_base_with_info_2<size_t, K>      Vb;
-typedef CGAL::Triangulation_face_base_2<K>                          Fb;
-typedef CGAL::Triangulation_data_structure_2<Vb, Fb>                Tds;
-typedef CGAL::Delaunay_triangulation_2<K, Tds>                      Delaunay;
-typedef CGAL::Aff_transformation_2<K>                               Transformation;
-typedef Delaunay::Vertex_handle                                     Vertex_handle;
-typedef Delaunay::Vertex_circulator                                 Vertex_circulator;
-typedef CGAL::Vector_2<K>                                           Vector_2;
-typedef Delaunay::Point                                             Point;
-typedef Delaunay::Finite_vertices_iterator                          Finite_vertices_iterator;
-typedef Delaunay::Finite_edges_iterator                             Finite_edges_iterator;
-
-typedef pair<size_t,size_t>                                         size_tPair;
-typedef boost::hash<size_tPair>                                     size_tPairHash;
-typedef unordered_map<size_tPair,bool,size_tPairHash>               size_tPairMap;
-
-bool selectEdge( const Delaunay& T, size_tPairMap &E, const Vertex_handle i, const Vertex_handle j ) {
-    assert( T.is_edge( i, j ) );
+bool selectEdge(const DelaunayTriangulation& T, index_tPairMap &E, const VertexHandle& i, const VertexHandle& j ) {
+    //assert( T.is_edge( i, j ) );
     //if( printLog ) cout<<"add:("<<i->info()<<","<<j->info()<<") ";
 
     auto existing = E.begin();
@@ -59,34 +36,34 @@ bool selectEdge( const Delaunay& T, size_tPairMap &E, const Vertex_handle i, con
 } // namespace kpx2010
 
 template< typename RandomAccessIterator, typename OutputIterator >
-void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, size_t k, bool printLog = false ) {
+void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, cone_t k=14, bool printLog = false ) {
     using namespace kpx2010;
 
     // ensure k >= 14
     k = std::max( k, size_t(14) );
-    const double alpha = 2*PI / k;
+    const number_t alpha = 2*PI / number_t(k);
 
     //if(printLog) cout<<"alpha:"<<alpha<<",";
 
     // Construct Delaunay triangulation
 
     vector<Point> P(pointsBegin, pointsEnd);
-    vector<size_t> index;
+    vector<index_t> index;
     spatialSort<K>(P, index);
 
     //Step 1: Construct Delaunay triangulation
-    kpx2010::Delaunay T;
+    DelaunayTriangulation T;
 
     //N is the number of vertices in the delaunay triangulation.
     size_t n = P.size();
     if(n > SIZE_T_MAX - 1) return;
 
     //Stores all the vertex handles (CGAL's representation of a vertex, its properties, and data).
-    vector<kpx2010::Vertex_handle> handles(n);
+    vector<VertexHandle> handles(n);
 
     /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
       (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
-    Delaunay::Face_handle hint;
+    FaceHandle hint;
     for(size_t entry : index) {
         auto vh = T.insert(P[entry], hint);
         hint = vh->face();
@@ -96,39 +73,39 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
 
 
-    kpx2010::Vertex_handle v_inf = T.infinite_vertex();
-    size_tPairMap G_prime; // list of potential edges, value must be true for insertion to result
+    VertexHandle v_inf = T.infinite_vertex();
+    index_tPairMap G_prime; // list of potential edges, value must be true for insertion to result
 
     // Iterate through vertices in T
     for( auto m=T.finite_vertices_begin(); m!=T.finite_vertices_end(); ++m ) {
         //if( printLog ) cout<<"\n\nm:"<<m->info()<<" ";
 
         // Get neighbors of m
-        kpx2010::Vertex_circulator N = T.incident_vertices(m);
+        VertexCirculator N = T.incident_vertices(m);
         //if( printLog ) cout<<"N_init:"<<(T.is_infinite(N)?size_t(numeric_limits<size_t>::max):size_t(N->info()))<<" ";
         if( T.is_infinite(N) ) --N;
 
-        kpx2010::Vertex_circulator done(N);
+        VertexCirculator done(N);
         //if(printLog) cout<<"done:"<<done->info()<<",";
 
         // closest vertex in each cone
-        vector<kpx2010::Vertex_handle> closestInCones( k, v_inf );
+        vector<VertexHandle> closestInCones(k, v_inf );
         // Now, let's put the neighbors found so far into a hashed set for quick lookup
-        unordered_set<kpx2010::Vertex_handle> selected(k);
+        unordered_set<VertexHandle> selected(k);
 
         do { // Loop through neighbors and consider forward edges
             if( !T.is_infinite(N) ) {
                 // evaluate possible forward edges
-                double theta = get_angle<kpx2010::K>(
-                    done->point(),
-                    m->point(),
-                    N->point()
+                number_t theta = getAngle(
+                        done->point(),
+                        m->point(),
+                        N->point()
                 );
-                size_t cone = size_t( theta / alpha );
+                auto cone = cone_t( theta / alpha );
                 //if(printLog) cout<<"N:"<<N->info()<<",theta:"<<theta<<",cone:"<<cone<<",";
 
-                if( T.is_infinite( closestInCones.at(cone) )
-                    || distance(m->point(),N->point()) < distance(m->point(),closestInCones.at(cone)->point()) )
+                if(T.is_infinite( closestInCones.at(cone) )
+                   || getDistance(m->point(), N->point()) < getDistance(m->point(), closestInCones.at(cone)->point()) )
                 {   // If we made it through all that, it's the current closestInCone!
                     closestInCones[cone] = N;
                     //if( printLog ) cout<<"s_closest["<<cone<<"]:"<<N->info()<<",";
@@ -176,19 +153,19 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 //        }
         // loop through starts of maximal sequences and add edges for them
         for( auto start : startOfMaximalSequences ) {
-            double startAngle = start*alpha;
+            number_t startAngle = number_t(start)*alpha;
 //            if( printLog ) cout << "startOfMaximalSeq:"<< start<<",";
 //            if( printLog ) cout << "startAngle:"<< startAngle<<",";
 
             while( --N != done ); // point N to reference point
             // point N to first neighbor past the empty sequence, if it exists
             while( --N != done
-              && ( T.is_infinite(N)
-                || get_angle<K>( done->point(), m->point(), N->point() ) < startAngle )
+              && (T.is_infinite(N)
+                  || getAngle(done->point(), m->point(), N->point()) < startAngle )
             );
 
-            kpx2010::Vertex_circulator afterSequence(N),
-                                      beforeSequence(N);
+            VertexCirculator afterSequence(N),
+                              beforeSequence(N);
             while( T.is_infinite(++beforeSequence) ); // move once CCW, if it's infinite move again
 
 //            if( printLog ) cout << "beforeSeq:"<< beforeSequence->info() <<",";
@@ -197,7 +174,7 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
             //return;
             if( l > 1 ) {
                 // select the first ceil(l/2) unselected edges CCW
-                size_t remainingToAdd = size_t(rint(ceil(l/2.0)));
+                auto remainingToAdd = size_t(rint(ceil(number_t(l)/2.0)));
                 //if( printLog ) cout << "CCWadds:"<< remainingToAdd<<",";
 
                 while( remainingToAdd > 0 && ++N != afterSequence ) {
@@ -209,7 +186,7 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                 }
 
                 // select the first floor(l/2) unselected edges CW
-                remainingToAdd = size_t(rint(floor(l/2.0)));
+                remainingToAdd = size_t(rint(floor(number_t(l)/2.0)));
                 N = beforeSequence; // move N to the neighbor before the sequence
                 //if( printLog ) cout << "CWadds:"<< remainingToAdd<<",";
 
@@ -222,7 +199,7 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                 }
             } else if( l == 1 ) {
                 //if( printLog ) cout << "addOne,";
-                kpx2010::Vertex_handle singleSelection = v_inf;
+                VertexHandle singleSelection = v_inf;
 
                 // consider the first CW and CCW edges (held in beforeSequence and afterSequence)
                 // if one is selected already, add the other
@@ -244,12 +221,12 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
             }
         }
 
-        bool inserted = false;
+        //bool inserted = false;
         // now add edges from each to the current vertex (u)
-        for( auto v : selected ) {
+        for( const auto& v : selected ) {
             if( !T.is_infinite(v) ) {
                 //if( printLog ) cout<<"forward_";
-                inserted = selectEdge( T, G_prime, m, v );
+                selectEdge( T, G_prime, m, v );
             }
         }
 
@@ -323,6 +300,6 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
 } // function KPX2010
 
-} // namespace gsnunf
+} // namespace unf_spanners
 
 #endif // GSNUNF_KPX2010_H

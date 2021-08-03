@@ -43,6 +43,8 @@ namespace gsnunf {
 
     // CGAL objects
 
+    const double PERTURBATION_VALUE = 0.0001;
+
     typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
     typedef CGAL::Segment_Delaunay_graph_Linf_filtered_traits_2<K,CGAL::Field_with_sqrt_tag>  Gt;
     typedef size_t id_type;
@@ -109,12 +111,11 @@ namespace gsnunf {
     // inline functions required for bkpx2015
 
     inline size_t getSingleCone( const Vertex_handle &u, const Vertex_handle &v) {
-//       bool X = (v->site().point().x()- u->site().point().x()) > 0;
-//       bool Y = (v->site().point().y()- u->site().point().y()) > 0;
+//       bool X = (v.x()- u.x()) > 0;
+//       bool Y = (v.y()- u.y()) > 0;
 //       return !Y*2 + (!X*Y+X*!Y)*1;
         const double alpha = PI/2;
         const Point_2 refPoint( u->site().point().x(), u->site().point().y() + 1 );
-        //Point refPoint(h[p]->point().x(), h[p] ->point().y() + 1);
 
         double theta = get_angle(refPoint, u->site().point(), v->site().point());
 
@@ -127,13 +128,13 @@ namespace gsnunf {
     // get the cone of v wrt u (where u is at the center)
     inline size_t getCone( const Vertex_handle &u, const Vertex_handle &v) {
 
-        if (u > v) {
+        if (u>v) {
             return getSingleCone(u, v);
         }
-
         else {
-            return (getSingleCone(v, u) + 2) % 4;
+            return ((getSingleCone(v, u) + 2) % 4);
         }
+
 
     }
 
@@ -187,19 +188,29 @@ namespace gsnunf {
                     fans[cone].second = Circ;
                     previousCone = cone;
 
-
-            //        double proposedDistance = std::max(std::abs(point->site().point().x() - Circ->site().point().x()), std::abs(point->site().point().y() - Circ->site().point().y()));
-
                     double proposedDistance = CGAL::l_infinity_distance(point->site().point(), Circ->site().point());
 
-//                    if (proposedDistance == distances[cone]) {
-//                        cout << point->storage_site().info() << " " << Circ->storage_site().info() << " tied with " << point->storage_site().info() << " " << edges[cone].first->storage_site().info() << endl;
-//                    }
+                    bool tie = false;
+                    if (abs(proposedDistance - distances[cone]) < EPSILON) {
+                        tie = true;
+                        auto v = edges[cone].first;
+                        size_t v_id = v->storage_site().info();
+                        size_t Circ_id = Circ->storage_site().info();
+//                        cout << "tie spotted!" << endl;
 
-                    if (proposedDistance < distances[cone]) {
+                        if (Circ_id < v_id) {
+//                            cout << "    tie broken --> (" << point_id << ", " << v_id << ") replaced with (" << point_id << ", " << Circ_id << ") " << endl;
+                            distances[cone] = proposedDistance;
+                            edges[cone].first = Circ;
+                        }
+                    }
+
+                    if (proposedDistance < distances[cone] && !tie) {
                         distances[cone] = proposedDistance;
                         edges[cone].first = Circ;
                     }
+
+
 
                 }
 
@@ -220,44 +231,6 @@ namespace gsnunf {
 
         } // finished moving through points
 
-//        // account for how many yao edges are incident upon each vertex u in cone i
-//        for (auto point : handles) {
-//
-//            Circ = sdg.incident_vertices(point);
-//            index = point->storage_site().info();
-//            numYaoEdges &yaos = yaoEdgeCount[index];
-//
-//            for (size_t cone = 0; cone < 4; cone++) {
-//
-//                if (yaoEdges[index][cone].second == 0) {
-//                    continue;
-//                }
-//
-//                auto v1 = (pointFans[index][cone]).first;
-//                auto vk = (pointFans[index][cone]).second;
-//
-//                while (Circ != v1) {
-//                    ++Circ;
-//                }
-//
-//                size_t position = 1;
-//                size_t total = yaoEdges[index][cone].second;
-//
-//                while (position < (total+1)) {
-//
-//                    if (yaoEdges[index][cone].first == Circ || yaoEdges[Circ->storage_site().info()][(cone+2)%4].first == point) {
-//                        ++(yaos[cone]);
-//                    }
-//
-//                    ++Circ;
-//                    ++position;
-//
-//                }
-//
-//            }
-//
-//        } // finished determining incident yao edges in cone i of vertex u
-
     } // yaoEdges are added
 
 
@@ -272,16 +245,11 @@ namespace gsnunf {
 
             anchorCones &anchors = anchorEdges[u_id];
 
-//            for (size_t i = 0; i < 4; i++) {
-//                anchors[i].second = None;
-//            }
-
             for (size_t cone = 0; cone < 4; cone++) {
 
                 // no neighbors in cone
-                if (yaoEdges[u_id][cone].second == 0) {
+                if (yaoEdgeCount[u_id][cone] == 0)
                     continue;
-                }
 
                 auto v = yaoEdges[u_id][cone].first;
 
@@ -350,18 +318,11 @@ namespace gsnunf {
 
                         }
 
-//                        if (yaoEdges[u_id][cone].first != previous && yaoEdges[previous->storage_site().info()][(cone+2)%4].first != u) {
-//                            cout << endl << u_id << " and " << previous->storage_site().info() << " are connected via Yao Edge " << endl;
-//                        }
-
                         assert(yaoEdges[u_id][cone].first == crown || yaoEdges[crown->storage_site().info()][(cone+2)%4].first == u);
-
-                       // if (yaoEdges[u_id][cone].first == current || yaoEdges[current->storage_site().info()][(cone+2)%4].first == u) {
 
                         anchorEdges[u_id][cone].first = crown;
                         anchorEdges[u_id][cone].second = Weak;
 
-                       // }
                         }
 
                     else {
@@ -374,17 +335,6 @@ namespace gsnunf {
             }
 
         }
-
-//        for (auto u : handles) {
-//
-//            for (size_t cone = 0; cone < 4; cone++) {
-//                if (sdg.is_infinite(anchorEdges[u->storage_site().info()][cone].first)) {cout << "x";}
-//                else {cout << (anchorEdges[u->storage_site().info()][cone].first)->storage_site().info();}
-//                cout << " ";
-//            }
-//
-//            cout << endl;
-//        }
 
         for (auto u : handles) {
 //
@@ -401,39 +351,6 @@ namespace gsnunf {
             }
 
         } // strong anchors are identified
-
-//        cout << endl << endl << "weak anchors" << endl;
-//
-//        size_t totalWeak = 0;
-//
-//        for (auto u : handles) {
-//
-//            size_t u_id = u->storage_site().info();
-//
-//            cout << u_id << "] ";
-//
-//            for (size_t cone = 0; cone < 4; cone++) {
-//
-//                if (anchorEdges[u_id][cone].second == Weak)
-//                {
-//                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-//                    ++totalWeak;
-//                }
-//                else
-//                {
-//                    cout << "x ";
-//                }
-//                  // num edges in that cone
-//
-//                if (cone == 3) {
-//                    cout << endl;
-//                }
-//
-//            }
-//
-//        }
-//
-//        cout << endl << "Weak Anchors Total: " << totalWeak << endl << endl;
 
         // now it is time to select anchors
         for (auto u : handles) {
@@ -468,14 +385,16 @@ namespace gsnunf {
 
                     if (found) {continue;}
 
-//                    cout << endl << endl << u_id << " is the beginning of the weak anchor chain. " << endl;
-
                     vector<Vertex_handle> visited;
                     auto previous = u;
                     auto current = anchorEdges[u_id][cone].first;
                     size_t previous_id = u_id;
                     size_t currentCone = cone;
                     size_t localCone = (cone+2)%4;
+
+                    bool inChain = true;
+
+//                    cout << endl;
 
                     do {
 
@@ -485,9 +404,19 @@ namespace gsnunf {
                         previous_id = previous->storage_site().info();
 
                         currentCone = (visited.size() % 2) ? localCone : cone;
+
+                        inChain = !(anchorEdges[previous_id][currentCone].second == Strong || anchorEdges[previous_id][currentCone].second == StrongSelected);
+
+                        if (!inChain)
+                            break;
+
                         current = anchorEdges[previous_id][currentCone].first;
 
-                    } while (anchorEdges[previous_id][currentCone].second == Weak);
+                        assert(!sdg.is_infinite(current));
+
+                    } while (inChain);
+
+                    assert(anchorEdges[previous_id][currentCone].second == Strong || anchorEdges[previous_id][currentCone].second == StrongSelected);
 
                     bool oddChain = (visited.size() % 2);
 
@@ -530,7 +459,6 @@ namespace gsnunf {
         return false;
 
     }
-
 
   inline void degreeEightSpanner(vector<spannerCones> &H8,
                             vector<anchorCones> &anchorEdges,
@@ -755,60 +683,6 @@ namespace gsnunf {
             }
         }
 
-//        for (auto u : handles) {
-//
-//            size_t u_id = u->storage_site().info();
-//
-//            for (size_t cone = 0; cone < 4; cone++) {
-//
-//                if (H8[u_id][cone].size() == 2) {
-//
-//                    vector<Vertex_handle> vertices;
-//
-//                    for (auto edge : H8[u_id][cone]) {
-//
-//                        auto source = (edge.first == u) ? edge.second : edge.first;
-//                        vertices.push_back(source);
-//
-//                    }
-//
-//                    for (auto source : vertices) {
-//
-//                        size_t source_id = source->storage_site().info();
-//                        size_t currentCone = getCone(source, u);
-//                        spannerEdge edge = std::make_pair(source, u);
-//
-//                        cout << endl << endl << "erasing <" << source_id << ", " << u_id << "> " << endl;
-//
-//                        H8[source_id][currentCone].erase(find(H8[source_id][currentCone].begin(), H8[source_id][currentCone].end(), edge));
-//                        H8[u_id][cone].erase(find(H8[u_id][cone].begin(), H8[u_id][cone].end(), edge));
-//
-//                    }
-//
-//                    auto first = vertices.at(0);
-//                    auto second = vertices.at(1);
-//
-//                    size_t first_id = first->storage_site().info();
-//                    size_t second_id = second->storage_site().info();
-//
-//                    cout << "shortcut: <" << first_id << ", " << second_id << "> " << endl << endl;
-//
-//                    size_t newCone = getCone(first, second);
-//
-//                    spannerEdge shortcut = std::make_pair(first, second);
-//
-//                    cout << "pushing shortcut to first" << endl;
-//                    H8[first_id][newCone].push_back(shortcut);
-//                    cout << "pushing shortcut to second" << endl;
-//                    H8[second_id][(newCone+2)%4].push_back(shortcut);
-//                    cout << "SUCCESS!" << endl << endl;
-//
-//                }
-//
-//            }
-//
-//        }
-
         for (auto u : handles) {
 
             size_t u_id = u->storage_site().info();
@@ -854,13 +728,9 @@ namespace gsnunf {
 
                             if (edgePair) {
 
-                            //                        cout << endl << "removing <" << previous_id << ", " << middle_id << "> and <" << next_id << ", " << middle_id << "> " << endl;
-                            //                        cout << "adding <" << previous_id << ", " << next_id << "> " << endl;
-
                             spannerEdge previousEdge = std::make_pair(previous, middle);
                             spannerEdge nextEdge = std::make_pair(next, middle);
 
-                            //                         remove previousEdge
                             while (inEdgeList(H8[previous_id][previousCone], previous, middle)) {
                                 H8[previous_id][previousCone].erase(find(H8[previous_id][previousCone].begin(), H8[previous_id][previousCone].end(), previousEdge));
                             }
@@ -869,8 +739,6 @@ namespace gsnunf {
                                 H8[middle_id][(cone+2)%4].erase(find(H8[middle_id][(cone+2)%4].begin(), H8[middle_id][(cone+2)%4].end(), previousEdge));
                             }
 
-
-                            // remove nextEdge
                             while (inEdgeList(H8[next_id][nextCone], next, middle)) {
                                 H8[next_id][nextCone].erase(find(H8[next_id][nextCone].begin(), H8[next_id][nextCone].end(), nextEdge));
                             }
@@ -878,8 +746,6 @@ namespace gsnunf {
                             while (inEdgeList(H8[middle_id][(cone+2)%4], next, middle)) {
                                 H8[middle_id][(cone+2)%4].erase(find(H8[middle_id][(cone+2)%4].begin(), H8[middle_id][(cone+2)%4].end(), nextEdge));
                             }
-
-                            //                        cout << "adding shortcut: <" << previous_id << ", " << next_id << "> " << endl;
 
                             spannerEdge shortcut = std::make_pair(previous, next);
                             H8[previous_id][previousCone].push_back(shortcut);
@@ -895,24 +761,6 @@ namespace gsnunf {
                 }
             }
         }
-
-//        vector<size_t> degree(handles.size(), 0);
-
-//        for (auto u : handles) {
-//            size_t u_id = u->storage_site().info();
-//            for (size_t cone = 0; cone < 4; cone++) {
-//
-//                for (auto edge : H8[u_id][cone]) {
-//
-//                    ++degree.at(u_id);
-//                    assert(u == edge.first || u == edge.second);
-//                    assert(edge.first != edge.second);
-//                }
-//
-//            }
-//        //    assert(degree.at(u_id) <= 4);
-//        }
-
     }
 }
 
@@ -1045,245 +893,245 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
     addYaoEdges(yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
 
-    if (printLog) {
-
-        cout << "yao edge terminals directed from u" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (yaoEdges[u_id][cone].second == 0) {
-                    cout << "x ";
-                }
-                else {
-                  //  size_t neighbor_id = yaoEdges[u_id][cone].first
-                    cout << (yaoEdges[u_id][cone].first)->storage_site().info() << " ";
-                }
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-        cout << endl << endl;
-
-        cout << "number of edges in cones" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                  // num edges in that cone
-                cout << yaoEdges[u_id][cone].second << " ";
-
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-        cout << endl << endl;
-
-        cout << "number of YAO EDGES in cones" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                  // num edges in that cone
-                cout << yaoEdgeCount[u_id][cone] << " ";
-
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-        cout << endl << endl;
-
-        cout << "fans of the cones" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (yaoEdges[u_id][cone].second == 0) {
-                    cout << "< x, x > ";
-                }
-                else {
-                    cout << "< " << pointFans[u_id][cone].first->storage_site().info() << ", " << pointFans[u_id][cone].second->storage_site().info() << " > ";
-                }
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-    }
+//    if (printLog) {
+//
+//        cout << "yao edge terminals directed from u" << endl;
+//
+//        for (auto u : handles) {
+//
+//            size_t u_id = u->storage_site().info();
+//
+//            cout << u_id << "] ";
+//
+//            for (size_t cone = 0; cone < 4; cone++) {
+//
+//                if (yaoEdges[u_id][cone].second == 0) {
+//                    cout << "x ";
+//                }
+//                else {
+//                  //  size_t neighbor_id = yaoEdges[u_id][cone].first
+//                    cout << (yaoEdges[u_id][cone].first)->storage_site().info() << " ";
+//                }
+//
+//                if (cone == 3) {
+//                    cout << endl;
+//                }
+//
+//            }
+//
+//        }
+//
+//        cout << endl << endl;
+//
+////        cout << "number of edges in cones" << endl;
+////
+////        for (auto u : handles) {
+////
+////            size_t u_id = u->storage_site().info();
+////
+////            cout << u_id << "] ";
+////
+////            for (size_t cone = 0; cone < 4; cone++) {
+////
+////                  // num edges in that cone
+////                cout << yaoEdges[u_id][cone].second << " ";
+////
+////
+////                if (cone == 3) {
+////                    cout << endl;
+////                }
+////
+////            }
+////
+////        }
+////
+////        cout << endl << endl;
+//
+//        cout << "number of YAO EDGES in cones" << endl;
+//
+//        for (auto u : handles) {
+//
+//            size_t u_id = u->storage_site().info();
+//
+//            cout << u_id << "] ";
+//
+//            for (size_t cone = 0; cone < 4; cone++) {
+//
+//                  // num edges in that cone
+//                cout << yaoEdgeCount[u_id][cone] << " ";
+//
+//
+//                if (cone == 3) {
+//                    cout << endl;
+//                }
+//
+//            }
+//
+//        }
+//
+//        cout << endl << endl;
+//
+//        cout << "fans of the cones" << endl;
+//
+//        for (auto u : handles) {
+//
+//            size_t u_id = u->storage_site().info();
+//
+//            cout << u_id << "] ";
+//
+//            for (size_t cone = 0; cone < 4; cone++) {
+//
+//                if (yaoEdges[u_id][cone].second == 0) {
+//                    cout << "< x, x > ";
+//                }
+//                else {
+//                    cout << "< " << pointFans[u_id][cone].first->storage_site().info() << ", " << pointFans[u_id][cone].second->storage_site().info() << " > ";
+//                }
+//
+//                if (cone == 3) {
+//                    cout << endl;
+//                }
+//
+//            }
+//
+//        }
+//
+//    }
 
     // identify the anchors
     vector<anchorCones> anchorEdges(n, anchorCones(4, std::make_pair(sdg.infinite_vertex(), None)));
 
     determineAnchors(anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, sdg);
 
-    if (printLog) {
-
-        cout << endl << "anchors" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (sdg.is_infinite(anchorEdges[u_id][cone].first))
-                {
-                    cout << "x ";
-                }
-                else
-                {
-                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-                }
-                  // num edges in that cone
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-    }
-
-    if (printLog) {
-
-        cout << endl << endl << "strong anchors" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (anchorEdges[u_id][cone].second == Strong || anchorEdges[u_id][cone].second == StrongSelected)
-                {
-                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-                }
-                else
-                {
-                    cout << "x ";
-                }
-                  // num edges in that cone
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-    }
-
-    if (printLog) {
-
-        cout << endl << endl << "selected anchors" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (anchorEdges[u_id][cone].second == StrongSelected || anchorEdges[u_id][cone].second == WeakSelected)
-                {
-                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-                }
-                else
-                {
-                    cout << "x ";
-                }
-                  // num edges in that cone
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-    }
-
-    if (printLog) {
-
-        cout << endl << endl << "start of odd chain" << endl;
-
-        for (auto u : handles) {
-
-            size_t u_id = u->storage_site().info();
-
-            cout << u_id << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (anchorEdges[u_id][cone].second == StartOddChain)
-                {
-                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
-                }
-                else
-                {
-                    cout << "x ";
-                }
-                  // num edges in that cone
-
-                if (cone == 3) {
-                    cout << endl;
-                }
-
-            }
-
-        }
-
-        cout << endl << endl;
-
-    }
+//    if (printLog) {
+//
+//        cout << endl << "anchors" << endl;
+//
+//        for (auto u : handles) {
+//
+//            size_t u_id = u->storage_site().info();
+//
+//            cout << u_id << "] ";
+//
+//            for (size_t cone = 0; cone < 4; cone++) {
+//
+//                if (sdg.is_infinite(anchorEdges[u_id][cone].first))
+//                {
+//                    cout << "x ";
+//                }
+//                else
+//                {
+//                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
+//                }
+//                  // num edges in that cone
+//
+//                if (cone == 3) {
+//                    cout << endl;
+//                }
+//
+//            }
+//
+//        }
+//
+//    }
+//
+//    if (printLog) {
+//
+//        cout << endl << endl << "strong anchors" << endl;
+//
+//        for (auto u : handles) {
+//
+//            size_t u_id = u->storage_site().info();
+//
+//            cout << u_id << "] ";
+//
+//            for (size_t cone = 0; cone < 4; cone++) {
+//
+//                if (anchorEdges[u_id][cone].second == Strong || anchorEdges[u_id][cone].second == StrongSelected)
+//                {
+//                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
+//                }
+//                else
+//                {
+//                    cout << "x ";
+//                }
+//                  // num edges in that cone
+//
+//                if (cone == 3) {
+//                    cout << endl;
+//                }
+//
+//            }
+//
+//        }
+//
+//    }
+//
+//    if (printLog) {
+//
+//        cout << endl << endl << "selected anchors" << endl;
+//
+//        for (auto u : handles) {
+//
+//            size_t u_id = u->storage_site().info();
+//
+//            cout << u_id << "] ";
+//
+//            for (size_t cone = 0; cone < 4; cone++) {
+//
+//                if (anchorEdges[u_id][cone].second == StrongSelected || anchorEdges[u_id][cone].second == WeakSelected)
+//                {
+//                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
+//                }
+//                else
+//                {
+//                    cout << "x ";
+//                }
+//                  // num edges in that cone
+//
+//                if (cone == 3) {
+//                    cout << endl;
+//                }
+//
+//            }
+//
+//        }
+//
+//    }
+//
+//    if (printLog) {
+//
+//        cout << endl << endl << "start of odd chain" << endl;
+//
+//        for (auto u : handles) {
+//
+//            size_t u_id = u->storage_site().info();
+//
+//            cout << u_id << "] ";
+//
+//            for (size_t cone = 0; cone < 4; cone++) {
+//
+//                if (anchorEdges[u_id][cone].second == StartOddChain)
+//                {
+//                    cout << (anchorEdges[u_id][cone].first)->storage_site().info() << " ";
+//                }
+//                else
+//                {
+//                    cout << "x ";
+//                }
+//                  // num edges in that cone
+//
+//                if (cone == 3) {
+//                    cout << endl;
+//                }
+//
+//            }
+//
+//        }
+//
+//        cout << endl << endl;
+//
+//    }
 
    // construct H8 --> degree 8 spanner
     vector<spannerCones> H8(n, spannerCones(4));
@@ -1378,27 +1226,29 @@ void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         }
     }
 
-  if (printLog) {
-
-      cout << "degree 4 spanner edges" << endl;
-
-      for (auto u : handles) {
-
-            cout << u->storage_site().info() << "] ";
-
-            for (size_t cone = 0; cone < 4; cone++) {
-
-                if (H8[u->storage_site().info()][cone].size() == 0) {
-                 //   cout << "(cone " << cone << " has no edge)";
-                }
-                else {
-                    for (auto edge : H8[u->storage_site().info()][cone]) {
-                        cout << "(" << (edge.first)->storage_site().info() << "," << (edge.second)->storage_site().info() <<") ";
-                    }
-                }
-            }
-        }
-    }
+//  if (printLog) {
+//
+//      cout << "degree 4 spanner edges" << endl;
+//
+//      for (auto u : handles) {
+//
+//            cout << u->storage_site().info() << "] ";
+//
+//            for (size_t cone = 0; cone < 4; cone++) {
+//
+//                if (H8[u->storage_site().info()][cone].size() == 0) {
+//                 //   cout << "(cone " << cone << " has no edge)";
+//                }
+//                else {
+//                    for (auto edge : H8[u->storage_site().info()][cone]) {
+//                        cout << "(" << (edge.first)->storage_site().info() << "," << (edge.second)->storage_site().info() <<") ";
+//                    }
+//                }
+//            }
+//
+//            cout << endl;
+//        }
+//    }
 
     // Send resultant graph to output iterator
     for(auto e : edgeList) {

@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="1 10000 100000 10000" />
+				<Option parameters="10000 100 1000 10" />
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-Wextra" />
@@ -74,6 +74,7 @@
 		<Unit filename="include/BHS2017.h" />
 		<Unit filename="include/BKPX2015.h" />
 		<Unit filename="include/BSX2009.h" />
+		<Unit filename="include/CGALComponents.h" />
 		<Unit filename="include/DelaunayGraph.h" />
 		<Unit filename="include/FloydWarshall.h" />
 		<Unit filename="include/GeometricSpannerPrinter.h" />
@@ -82,6 +83,7 @@
 		<Unit filename="include/KPX2010.h" />
 		<Unit filename="include/LW2004.h" />
 		<Unit filename="include/TDDelaunay.h" />
+		<Unit filename="include/degree_iii.h" />
 		<Unit filename="include/metrics.h" />
 		<Unit filename="include/utilities.h" />
 		<Unit filename="main.cpp" />

@@ -13,6 +13,7 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
+//#include "CGALComponents.h"
 //#include "FloydWarshall.h"
 //#include "GeometricSpannerPrinter.h"
 ////#include "GraphAlgoTV.h"
@@ -24,15 +25,17 @@
 #include "BHS2017.h"
 #include "KPT2017.h"
 #include "BKPX2015.h"
+#include "degree_iii.h"
 #include "BGHP2010.h"
 #include "metrics.h"
+#include "CGALComponents.h"
 //#include "delaunay.h"
 #include "utilities.h"
 
 
 using namespace gsnunf;
-typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef K::Point_2 Point;
+//typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+//typedef K::Point_2 Point;
 typedef CGAL::Creator_uniform_2<double,Point> Creator;
 
 bool experiment(size_t,size_t,size_t,size_t=1);
@@ -163,7 +166,7 @@ int main( int argc, char *argv[] ) {
     };
 
     for( size_t arg=1;
-         arg < min(size_t(argc),experimentParameters.size()+1);
+         arg < std::min(size_t(argc),experimentParameters.size()+1);
          ++arg )
     {
         try {
@@ -176,8 +179,8 @@ int main( int argc, char *argv[] ) {
         }
     }
 
-    experiment( experimentParameters[0],experimentParameters[1],experimentParameters[2],experimentParameters[3] );
-//    scratch();
+//    experiment( experimentParameters[0],experimentParameters[1],experimentParameters[2],experimentParameters[3] );
+    scratch();
 
  //   singleRun( 0, 0, "BKPXTestResult", "positive_points.txt", true, true );
 
@@ -189,13 +192,35 @@ void scratch() {
     using namespace std;
 
         vector<Point> points;
+//
+//        string filename = "examine_set.txt";
+//        readPointsFromFile( back_inserter( points ), filename );
 
-        string filename = "data-89_4716.990566x4716.990566.txt";
-        //readPointsFromFile( back_inserter( points ), filename );
 
-        size_t n = 1000;
-        double width = 50;
-        generateRandomPoints( n, width/2, back_inserter(points) );
+//        // inside a square
+        size_t n = 200;
+        double width = 40;
+//        generateRandomPoints( n, width/2, back_inserter(points) );
+
+        // disc
+//        double radiusOfDisk = 8;
+
+        // clusters
+        size_t numClusters = 1;
+        size_t n_cluster = 500;
+
+        // annulus
+        size_t r1 = 15;
+        size_t r2 = 20;
+//
+//        generatePointsInsideASquare(n, width, points);
+//        generatePointsInsideADisc(n, radiusOfDisk, points);
+//        generatePointsInsideASquareNormal(n_cluster, numClusters, points);
+//        generateContiguousPointsOnAGrid(n, points);
+//        generateRandomPointsOnAGrid(n, points);
+        generateRandomInsideAnAnnulus(n, r2, r1, points);
+
+//        CGAL::perturb_points_2( points.begin(), points.end(), 0.0001);
 
         cout<< points.size();
         cout<< "\n";
@@ -229,7 +254,8 @@ void scratch() {
             //BCC2012<7>( points.begin(), points.end(), back_inserter(result) );
             //BHS2017(points.begin(), points.end(), back_inserter(result) );
             //KPT2017(points.begin(), points.end(), back_inserter(result), true );
-            BKPX2015(points.begin(), points.end(), back_inserter(result), true );
+//            BKPX2015(points.begin(), points.end(), back_inserter(result), true );
+            deg3spanner(points.begin(), points.end(), back_inserter(result), true);
           //  BGHP2010(points.begin(), points.end(), back_inserter(result), true );
             //delaunay_testing( points.begin(), points.end(), back_inserter(result) );
         //}
@@ -244,11 +270,11 @@ void scratch() {
 //                     make_optional(inserter(WorstPath,WorstPath.begin())) );
 
 
-        cout << degree( result.begin(), result.end() );
-        cout<<",";
+        cout << endl <<"degree: " << degree( result.begin(), result.end() );
+//        cout << ","
         double t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout<< t;
-        cout<<",";
+        cout<< endl << "stretch factor: " << t;
+//        cout<<",";
 
 //        cout << weight( result.begin(), result.end() )/2;
 //        cout <<",";
@@ -303,7 +329,7 @@ bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment )
     for( size_t trial=0; trial<trials; ++trial ) {
         for( size_t n=n_start; n<=n_end; n+=increment ) {
             trialNum++;
-            if( !singleRun( n, width*sqrt(n), "output", nullopt, false, false ) ) {
+            if( !singleRun( n, width*std::sqrt(n), "output", nullopt, false, false ) ) {
                 ++invalid;
                 return false;
             }
@@ -326,7 +352,20 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
     else
         generatedFile = make_optional( generateRandomPoints( n, size, back_inserter(points) ) );
 
-    bool measureStretchFactor = false;
+    CGAL::perturb_points_2( points.begin(), points.end(), 0.0001);
+
+    remove("examine_set.txt");
+
+    ofstream myFile;
+    myFile.open("examine_set.txt");
+
+    for (auto point : points) {
+        myFile << point.x() << " " << point.y() << endl;
+    }
+
+    myFile.close();
+
+    bool measureStretchFactor = true;
 
 //    list< pair< Point, Point > > result;
     list< pair< size_t, size_t > > result;
@@ -364,76 +403,76 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout <<"\n";
 //
 //    result.clear();
-
-    cout << "LW2004,   ";
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-
-    {
-        Timer tim;
-        LW2004( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-
-    result.clear();
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "BSX2009,";
-    {
-        Timer tim;
-        BSX2009( points.begin(), points.end(), back_inserter(result) );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-
-    result.clear();
-
-
-
-    cout << "KPX2010,  ";
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "KPX2010,";
-    const size_t k = 14; // the max degree of the spanner such that k>=14
-    {
-        Timer tim;
-        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
-    }
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-
-    result.clear();
+//
+//    cout << "LW2004,   ";
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//
+//    {
+//        Timer tim;
+//        LW2004( points.begin(), points.end(), back_inserter(result) );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//
+//    cout <<",";
+//
+//    if(measureStretchFactor){
+//        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+//        cout << t;
+//    }
+//    cout <<"\n";
+//
+//    result.clear();
+//
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    cout<< "BSX2009,";
+//    {
+//        Timer tim;
+//        BSX2009( points.begin(), points.end(), back_inserter(result) );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//    if(measureStretchFactor){
+//        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+//        cout << t;
+//    }
+//    cout <<"\n";
+//
+//    result.clear();
+//
+//
+//
+//    cout << "KPX2010,  ";
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    cout<< "KPX2010,";
+//    const size_t k = 14; // the max degree of the spanner such that k>=14
+//    {
+//        Timer tim;
+//        KPX2010( points.begin(), points.end(), back_inserter(result), k, printLog );
+//    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//
+//    cout <<",";
+//
+//    if(measureStretchFactor){
+//        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+//        cout << t;
+//    }
+//    cout <<"\n";
+//
+//    result.clear();
 
 
 
@@ -456,48 +495,69 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 //    cout <<"\n";
 //
 //    result.clear();
-    cout << "BKPX2015, ";
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "BCC2012-7,";
-    {
-        Timer tim;
-        BKPX2015( points.begin(), points.end(), back_inserter(result), printLog );
-    }
+//    cout << "BKPX2015, ";
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+////    {
+////        Timer tim;
+//        BKPX2015( points.begin(), points.end(), back_inserter(result), printLog );
+////    }
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//
+//    if(measureStretchFactor){
+//        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+//        cout << t;
+//    }
+//    cout <<"\n";
+////
+//    result.clear();
+
+    cout << "degree III --> ";
+    cout << points.size();
+    cout << ",";
+    cout << size;
+//    {
+//        Timer tim;
+        deg3spanner(points.begin(), points.end(), back_inserter(result), printLog);
+//    }
+
     deg = degree( result.begin(), result.end() );
     cout << deg;
-    cout <<",";
+//    cout <<",";
+//
+//    if(measureStretchFactor){
+//        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+//        cout << t;
+//    }
 
 
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
     cout <<"\n";
 
     result.clear();
 
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "BCC2012-6,";
-    {
-        Timer tim;
-        BCC2012<6>( points.begin(), points.end(), back_inserter(result), printLog );
-    }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    cout<< "BCC2012-6,";
+//    {
+//        Timer tim;
+//        BCC2012<6>( points.begin(), points.end(), back_inserter(result), printLog );
+//    }
+//
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//    if(measureStretchFactor){
+//        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+//        cout << t;
+//    }
+//    cout <<"\n";
 
 //    cout<< points.size();
 //    cout<< ",";
@@ -520,107 +580,107 @@ bool singleRun( size_t n, double width, string resultFilename, optional<string> 
 
 
 
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "BHS2017,";
-    {
-        Timer tim;
-        BHS2017( points.begin(), points.end(), back_inserter(result), printLog );
-    }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-
-    result.clear();
-
-
-
-
-
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "KPT2017,";
-    {
-        Timer tim;
-        KPT2017( points.begin(), points.end(), back_inserter(result), printLog );
-    }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-
-
-
-
-
-    result.clear();
-
-    cout<< points.size();
-    cout<< ",";
-    cout<< size;
-    cout<< ",";
-    cout<< "BGHP2010,";
-    {
-        Timer tim;
-        BGHP2010( points.begin(), points.end(), back_inserter(result), printLog );
-    }
-
-    deg = degree( result.begin(), result.end() );
-    cout << deg;
-    cout <<",";
-
-    if(measureStretchFactor){
-        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
-        cout << t;
-    }
-    cout <<"\n";
-
-    result.clear();
-
-
-
-
-//    if( deg > 6 || t > 6 || forcePrint ) {
-//
-//        string resultFileName = ( filename ? *filename : *generatedFile );
-//        // strip file extension
-//        const std::string ext(".txt");
-//        if ( resultFileName != ext &&
-//             resultFileName.size() > ext.size() &&
-//             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
-//        {
-//           // if so then strip them off
-//           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
-//        }
-//        resultFileName += "_result-";
-//        resultFileName += ( filename ? "redo" : "orig" );
-//
-//        cout << "DEGREE ERROR!!! DEGREE:" << deg << "\n"<<endl;
-//        cout << *generatedFile <<endl;
-//
-//        if( generatedFile )
-//            singleRun( n, width, resultFileName, *generatedFile, true, true );
-//
-//        return false;
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    cout<< "BHS2017,";
+//    {
+//        Timer tim;
+//        BHS2017( points.begin(), points.end(), back_inserter(result), printLog );
 //    }
+//
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//    if(measureStretchFactor){
+//        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+//        cout << t;
+//    }
+//    cout <<"\n";
+//
+//    result.clear();
+
+
+
+
+
+
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    cout<< "KPT2017,";
+//    {
+//        Timer tim;
+//        KPT2017( points.begin(), points.end(), back_inserter(result), printLog );
+//    }
+//
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//    if(measureStretchFactor){
+//        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+//        cout << t;
+//    }
+//    cout <<"\n";
+
+
+
+
+
+//    result.clear();
+//
+//    cout<< points.size();
+//    cout<< ",";
+//    cout<< size;
+//    cout<< ",";
+//    cout<< "BGHP2010,";
+//    {
+//        Timer tim;
+//        BGHP2010( points.begin(), points.end(), back_inserter(result), printLog );
+//    }
+//
+//    deg = degree( result.begin(), result.end() );
+//    cout << deg;
+//    cout <<",";
+//
+//    if(measureStretchFactor){
+//        t = StretchFactorDijkstraReduction( points.begin(), points.end(), result.begin(), result.end() );
+//        cout << t;
+//    }
+//    cout <<"\n";
+//
+//    result.clear();
+
+
+
+
+    if( deg > 3) {
+
+        string resultFileName = ( filename ? *filename : *generatedFile );
+        // strip file extension
+        const std::string ext(".txt");
+        if ( resultFileName != ext &&
+             resultFileName.size() > ext.size() &&
+             resultFileName.substr(resultFileName.size() - ext.size()) == ext )
+        {
+           // if so then strip them off
+           resultFileName = resultFileName.substr(0, resultFileName.size() - ext.size());
+        }
+        resultFileName += "_result-";
+        resultFileName += ( filename ? "redo" : "orig" );
+
+        cout << "DEGREE ERROR!!! DEGREE:" << deg << "\n"<<endl;
+        cout << *generatedFile <<endl;
+
+        if( generatedFile )
+            singleRun( n, width, resultFileName, *generatedFile, true, true );
+
+        return false;
+    }
 
     result.clear();
 

@@ -934,7 +934,7 @@ double StretchFactorExperimental( RandomAccessIterator edgesBegin, RandomAccessI
                     }
                 }
             }
-            t_local = max( t_local, current.first / D.at(current.second) );
+            t_local = std::max( t_local, current.first / D.at(current.second) );
             t_lower = T.empty() ? 0 : T.top().first;
             // Make sure we have a value for every vertex before checking t
         } while( ( count < n || ( t_lower > t_local && t_lower > t_max ) ) && !open.empty() );

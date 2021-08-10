@@ -1,5 +1,5 @@
-#ifndef GSNUNF_BCC2012_H
-#define GSNUNF_BCC2012_H
+#ifndef SPANNERS_BCC2012_H
+#define SPANNERS_BCC2012_H
 
 #include <bitset>
 #include <cmath>         // ceil, floor, isinf
@@ -18,7 +18,7 @@
 #include "tools/Utilities.h"
 
 
-namespace planespanners {
+namespace spanners {
 
     using namespace std;
 
@@ -572,7 +572,7 @@ namespace planespanners {
 
 
 
-} // namespace planespanners
+} // namespace spanners
 
-#endif // GSNUNF_BCC2012_H
+#endif // SPANNERS_BCC2012_H
 

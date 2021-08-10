@@ -1,5 +1,5 @@
-#ifndef GSNUNF_DELAUNAYGRAPH_H
-#define GSNUNF_DELAUNAYGRAPH_H
+#ifndef SPANNERS_DELAUNAYGRAPH_H
+#define SPANNERS_DELAUNAYGRAPH_H
 
 #include <iostream>
 #include <queue>
@@ -17,7 +17,7 @@
 
 #include "tools/Utilities.h"
 
-namespace planespanners {
+namespace spanners {
 
 using namespace std;
 
@@ -160,6 +160,6 @@ class DelaunayGraph {
 
 }; // class DelaunayGraph
 
-} // namespace planespanners
+} // namespace spanners
 
-#endif // GSNUNF_DELAUNAYGRAPH_H
+#endif // SPANNERS_DELAUNAYGRAPH_H

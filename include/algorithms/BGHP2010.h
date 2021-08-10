@@ -1,6 +1,6 @@
 //Needs optimizing currently testing.
-#ifndef GSNUNF_BGHP2010_H
-#define GSNUNF_BGHP2010_H
+#ifndef SPANNERS_BGHP2010_H
+#define SPANNERS_BGHP2010_H
 
 //Base libraries.
 #include <cmath>         // ceil, floor, isinf
@@ -28,7 +28,7 @@
 #include "tools/Utilities.h"
 
 
-namespace planespanners {
+namespace spanners {
 
     using namespace std;
 
@@ -431,6 +431,6 @@ namespace planespanners {
         }
     } // function BGHP2010
 
-} // namespace planespanners
+} // namespace spanners
 
-#endif // GSNUNF_BGHP2010_H
+#endif // SPANNERS_BGHP2010_H

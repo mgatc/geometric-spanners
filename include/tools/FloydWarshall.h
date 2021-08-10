@@ -1,5 +1,5 @@
-#ifndef GSNUNF_FLOYDWARSHALL_H
-#define GSNUNF_FLOYDWARSHALL_H
+#ifndef SPANNERS_FLOYDWARSHALL_H
+#define SPANNERS_FLOYDWARSHALL_H
 
 #include <algorithm> // swap
 #include <iostream>
@@ -13,7 +13,7 @@
 
 #include "tools/DelaunayGraph.h"
 
-namespace planespanners {
+namespace spanners {
 
 using namespace std;
 
@@ -72,7 +72,7 @@ void FloydWarshall( const DelaunayGraph& G,
     swap( dist, distances );
 }
 
-} // namespace planespanners
+} // namespace spanners
 
 
-#endif // GSNUNF_FLOYDWARSHALL_H
+#endif // SPANNERS_FLOYDWARSHALL_H

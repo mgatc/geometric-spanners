@@ -1,6 +1,6 @@
 //Needs optimizing currently testing.
-#ifndef GSNUNF_KPT2017_H
-#define GSNUNF_KPT2017_H
+#ifndef SPANNERS_KPT2017_H
+#define SPANNERS_KPT2017_H
 
 //Base libraries.
 #include <cmath>         // ceil, floor, isinf
@@ -19,7 +19,7 @@
 #include "tools/Utilities.h"
 
 
-namespace planespanners {
+namespace spanners {
 
     using namespace std;
 
@@ -521,6 +521,6 @@ namespace planespanners {
         }
     } // function KPT2017
 
-} // namespace planespanners
+} // namespace spanners
 
-#endif // GSNUNF_KPT2017_H
+#endif // SPANNERS_KPT2017_H

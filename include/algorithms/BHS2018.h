@@ -1,6 +1,6 @@
 //Needs optimizing currently testing.
-#ifndef GSNUNF_BHS2017_H
-#define GSNUNF_BHS2017_H
+#ifndef SPANNERS_BHS2017_H
+#define SPANNERS_BHS2017_H
 
 //Base libraries.
 #include <cmath>         // ceil, floor, isinf
@@ -20,7 +20,7 @@
 #include "tools/Utilities.h"
 
 
-namespace planespanners {
+namespace spanners {
 
     using namespace std;
 
@@ -428,6 +428,6 @@ namespace planespanners {
 
     } // function BHS2018
 
-} // namespace planespanners
+} // namespace spanners
 
-#endif // GSNUNF_BHS2017_H
+#endif // SPANNERS_BHS2017_H

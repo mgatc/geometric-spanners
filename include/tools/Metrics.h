@@ -31,7 +31,7 @@
 #include "tools/FloydWarshall.h"
 #include "tools/Utilities.h"
 
-namespace planespanners {
+namespace spanners {
 
 using namespace std;
 
@@ -1255,7 +1255,7 @@ void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_pr
         CGAL::Real_timer m_clock;
     };
 
-} // namespace planespanners
+} // namespace spanners
 
 
 #endif // UNF_SPANNERS_METRICS_H

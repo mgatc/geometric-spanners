@@ -1,6 +1,6 @@
 
-#ifndef GSNUNF_KX2012_H
-#define GSNUNF_KX2012_H
+#ifndef SPANNERS_KX2012_H
+#define SPANNERS_KX2012_H
 
 #include <cmath>         // ceil, floor
 #include <unordered_set> // selected
@@ -21,7 +21,7 @@
 #include "tools/Utilities.h"
 
 
-namespace planespanners {
+namespace spanners {
 
     using namespace std;
 
@@ -38,7 +38,7 @@ namespace planespanners {
             auto existing = E.begin();
             bool inserted = false;
             tie(existing, inserted) = E.try_emplace(make_pair(i->info(), j->info()), false);
-            if (planespanners::contains(E, edge_j_i)) { E[edge_j_i] = true; }
+            if (spanners::contains(E, edge_j_i)) { E[edge_j_i] = true; }
 
             return inserted;
         }
@@ -49,7 +49,7 @@ namespace planespanners {
     void KX2012(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result,
                 bool printLog = false) {
         using namespace kx2012;
-        using planespanners::contains;
+        using spanners::contains;
 
         //if(printLog) cout<<"alpha:"<<alpha<<",";
 
@@ -157,7 +157,7 @@ namespace planespanners {
 
                 do {
                     if (!T.is_infinite(N)) {
-                        if (planespanners::contains(wideVertices, N)) {
+                        if (spanners::contains(wideVertices, N)) {
                             if (!closestVertexInCone.empty()) {
                                 coneReferencePoint = N->point();
                                 for (const auto &v : closestVertexInCone) {
@@ -171,7 +171,7 @@ namespace planespanners {
                             cone_t currentCone = floor(conalAngle / PI_OVER_FIVE);
                             number_t currentDistance = getDistance(p, N->point());
 
-                            if (!planespanners::contains(closestPointDistanceInCone, currentCone) ||
+                            if (!spanners::contains(closestPointDistanceInCone, currentCone) ||
                                 (currentDistance < closestPointDistanceInCone[currentCone])) {
                                 closestVertexInCone[currentCone] = N;
                                 closestPointDistanceInCone[currentCone] = currentDistance;
@@ -188,13 +188,13 @@ namespace planespanners {
             {
 //            cout<<"c:";
 //            Timer tim;
-                while (!planespanners::contains(wideVertices, N) && ++N != done);
+                while (!spanners::contains(wideVertices, N) && ++N != done);
                 done = N;
                 pair<int, VertexHandle> previousPoint(-1, v_inf);
                 do {
                     if (!T.is_infinite(N)) {
 
-                        if (planespanners::contains(wideVertices, N)) {
+                        if (spanners::contains(wideVertices, N)) {
                             coneReferencePoint = N->point();
                             previousPoint.second = N;
                             previousPoint.first = -1;
@@ -207,11 +207,11 @@ namespace planespanners {
                             for (int conalEdgesToAdd = std::min(conalDifference - 1, 2);
                                  conalEdgesToAdd > 0; conalEdgesToAdd--) {
                                 //Determine if one of the edges adjacent to the empty cone is selected already
-                                bool containsPreviousPoint = planespanners::contains(E,
-                                                                                     make_pair(currentPointIndex,
+                                bool containsPreviousPoint = spanners::contains(E,
+                                                                                make_pair(currentPointIndex,
                                                                                         previousPoint.second->info()));
-                                bool containsN = planespanners::contains(E,
-                                                                         make_pair(currentPointIndex, N->info()));
+                                bool containsN = spanners::contains(E,
+                                                                    make_pair(currentPointIndex, N->info()));
                                 //assert(previousPoint.second != v_inf);
                                 //assert(N->handle() != v_inf);
                                 if (containsPreviousPoint && !containsN) {
@@ -303,6 +303,6 @@ namespace planespanners {
 
     } // function KX2012
 
-} // namespace planespanners
+} // namespace spanners
 
-#endif // GSNUNF_KX2012_H
+#endif // SPANNERS_KX2012_H

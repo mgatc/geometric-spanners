@@ -1,11 +1,12 @@
-#ifndef PLANESPANNERS_EXPERIMENT_H
-#define PLANESPANNERS_EXPERIMENT_H
+#ifndef SPANNERS_EXPERIMENT_H
+#define SPANNERS_EXPERIMENT_H
 
 #include <iostream>
 #include <list>
 #include <optional>
 #include <utility>
 
+#include "algorithms/Degree3.h"
 
 #include "algorithms/BCC2012.h"
 #include "algorithms/BGHP2010.h"
@@ -30,7 +31,7 @@
 #include "tools/Utilities.h"
 
 
-namespace planespanners {
+namespace spanners {
 
     using std::to_string;
 
@@ -142,11 +143,14 @@ namespace planespanners {
             case Algorithm::Bghp2010:
                 BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
+            case Algorithm::Bkpx2015:
+                BKPX2015(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
             case Algorithm::Kpt2017:
                 KPT2017(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
-            case Algorithm::Bkpx2015:
-                BKPX2015(pointsBegin, pointsEnd, back_inserter(spanner));
+            case Algorithm::Degree3:
+                DEG3(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
             case Algorithm::AlgorithmLast:
                 assert(false);
@@ -329,6 +333,6 @@ namespace planespanners {
 
 
 
-} // planespanners
+} // spanners
 
-#endif //PLANESPANNERS_EXPERIMENT_H
+#endif //SPANNERS_EXPERIMENT_H

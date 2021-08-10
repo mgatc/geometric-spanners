@@ -9,6 +9,9 @@ include_directories(include)
 include_directories(/usr/lib/gcc/x86_64-linux-gnu/7/include)
 
 add_executable(geometric_spanners
+
+        include/algorithms/Degree3.h
+
         include/algorithms/BCC2012.h
         include/algorithms/BGHP2010.h
         include/algorithms/BGS2005.h
@@ -38,7 +41,7 @@ add_executable(geometric_spanners
         include/Scratch.h
 
         main.cpp
-        )
+        include/algorithms/Degree3.h)
 
 target_link_libraries(geometric_spanners gmp)
 target_link_libraries(geometric_spanners mpfr)

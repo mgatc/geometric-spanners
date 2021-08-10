@@ -1,5 +1,5 @@
-#ifndef GSNUNF_GRAPHPRINTER_H
-#define GSNUNF_GRAPHPRINTER_H
+#ifndef SPANNERS_GRAPHPRINTER_H
+#define SPANNERS_GRAPHPRINTER_H
 
 
 #include <cctype>
@@ -20,7 +20,7 @@
 #include "tools/DelaunayGraph.h"
 #include "tools/Utilities.h"
 
-namespace planespanners {
+namespace spanners {
 
 using namespace std;
 
@@ -303,6 +303,6 @@ private:
 }; // class GraphPrinter
 
 
-} // namespace planespanners
+} // namespace spanners
 
-#endif // GSNUNF_TIKZPRINTER_H
+#endif // SPANNERS_GRAPHPRINTER_H

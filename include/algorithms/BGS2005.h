@@ -1,5 +1,5 @@
-#ifndef GSNUNF_BGS2005_H
-#define GSNUNF_BGS2005_H
+#ifndef SPANNERS_BGS2005_H
+#define SPANNERS_BGS2005_H
 
 #include <algorithm> // min, swap
 #include <functional> // hash
@@ -16,7 +16,7 @@
 #include "tools/DelaunayGraph.h"
 #include "tools/Metrics.h"
 
-namespace planespanners {
+namespace spanners {
 
 namespace bgs2005 {
 
@@ -676,6 +676,6 @@ void BGS2005( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     }
 }
 
-} // namespace planespanners
+} // namespace spanners
 
-#endif // GSNUNF_BGS2005_H
+#endif // SPANNERS_BGS2005_H

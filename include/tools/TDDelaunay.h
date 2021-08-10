@@ -15,7 +15,7 @@
 
 
 
-namespace planespanners {
+namespace spanners {
 
 //Cone angles.
 const number_t alpha = PI/3;
@@ -146,7 +146,7 @@ class HalfThetaTriangulation {
 
     //Compute max of getCone(p,q) and (getCone(q,p)+3)%6, is used to make sure cones are calculated correctly.
     inline size_t getCone(const VertexDescriptor &p, const VertexDescriptor &q ) const {
-        return planespanners::getCone(p, q, _P);
+        return spanners::getCone(p, q, _P);
     }
     inline bool edgeExists(const pair<VertexDescriptor,VertexDescriptor>& e) const {
         return boost::edge(e.first, e.second,_G).second;

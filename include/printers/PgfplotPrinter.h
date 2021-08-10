@@ -1,5 +1,5 @@
-#ifndef PLANESPANNERS_PGFPLOTSPRINTER_H
-#define PLANESPANNERS_PGFPLOTSPRINTER_H
+#ifndef SPANNERS_PGFPLOTSPRINTER_H
+#define SPANNERS_PGFPLOTSPRINTER_H
 
 #include <map>
 #include <iostream>
@@ -11,7 +11,7 @@
 #include "tools/Results.h"
 #include "tools/Utilities.h"
 
-namespace planespanners {
+namespace spanners {
 
     using namespace std;
 
@@ -62,7 +62,7 @@ namespace planespanners {
                     string entry = "("
                                    + std::to_string(static_cast<double>(level.first) / SCALING_FACTOR)
                                    + ","
-                                   + planespanners::to_string(level.second.IV.at(IV_NAMES[iv]))
+                                   + spanners::to_string(level.second.IV.at(IV_NAMES[iv]))
                                    + ")\n";
                     plot += entry;
                 }
@@ -81,7 +81,7 @@ namespace planespanners {
             m_body.content = allPlotsOfAxis;
         }
         void plotResults(const BoundedDegreeSpannerResultSet &results) {
-            planespanners::plotResults(results, this);
+            spanners::plotResults(results, this);
         }
 //        string addLegendEntry(Algorithm alg) {
 //            string legendEntry = "\\addlegendentry{\\textsc{\\tiny{"
@@ -226,7 +226,7 @@ namespace planespanners {
         }
     }
 
-} // namespace planespanners
+} // namespace spanners
 
 
-#endif //PLANESPANNERS_PGFPLOTSPRINTER_H
+#endif //SPANNERS_PGFPLOTSPRINTER_H

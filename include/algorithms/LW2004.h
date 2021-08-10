@@ -1,5 +1,5 @@
-#ifndef GSNUNF_LW2004_H
-#define GSNUNF_LW2004_H
+#ifndef SPANNERS_LW2004_H
+#define SPANNERS_LW2004_H
 
 #include <algorithm> // min, max
 #include <cmath> // ceil
@@ -12,7 +12,7 @@
 #include "tools/Metrics.h"
 
 
-namespace planespanners {
+namespace spanners {
 
 using namespace std;
 
@@ -266,6 +266,6 @@ void LW2004( RandomAccessIterator pointsBegin,
 
 } // function LW2004
 
-} // namespace planespanners
+} // namespace spanners
 
-#endif // GSNUNF_LW2004_H
+#endif // SPANNERS_LW2004_H

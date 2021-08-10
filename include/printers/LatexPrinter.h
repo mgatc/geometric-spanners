@@ -2,8 +2,8 @@
 // Created by matt on 7/19/21.
 //
 
-#ifndef PLANESPANNERS_LATEXPRINTER_H
-#define PLANESPANNERS_LATEXPRINTER_H
+#ifndef SPANNERS_LATEXPRINTER_H
+#define SPANNERS_LATEXPRINTER_H
 
 #include <fstream>
 #include <iostream>
@@ -13,7 +13,7 @@
 
 #include "Names.h"
 
-namespace planespanners {
+namespace spanners {
 
     const bool PRECOMPILE_SUBDOCUMENTS = true;
 
@@ -253,6 +253,6 @@ namespace planespanners {
         }
     };
 
-} // planespanners
+} // spanners
 
-#endif //PLANESPANNERS_LATEXPRINTER_H
+#endif //SPANNERS_LATEXPRINTER_H

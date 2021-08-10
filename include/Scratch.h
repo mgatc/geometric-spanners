@@ -1,5 +1,5 @@
-#ifndef PLANESPANNERS_SCRATCH_H
-#define PLANESPANNERS_SCRATCH_H
+#ifndef SPANNERS_SCRATCH_H
+#define SPANNERS_SCRATCH_H
 
 
 
@@ -35,7 +35,7 @@
 #include "tools/Results.h"
 #include "tools/Utilities.h"
 
-namespace planespanners {
+namespace spanners {
 
 
     void scratch(const vector<Point>& points) {
@@ -137,6 +137,6 @@ namespace planespanners {
         scratch(points);
     }
 
-} // planespanners
+} // spanners
 
-#endif //PLANESPANNERS_SCRATCH_H
+#endif //SPANNERS_SCRATCH_H

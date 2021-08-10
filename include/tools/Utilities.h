@@ -23,7 +23,7 @@
 #include <CGAL/Spatial_sort_traits_adapter_2.h>
 
 
-namespace planespanners {
+namespace spanners {
 
     using namespace std;
 
@@ -488,6 +488,6 @@ namespace planespanners {
     }
 
 
-} // namespace planespanners
+} // namespace spanners
 
 #endif // UNF_SPANNERS_UTILITIES_H

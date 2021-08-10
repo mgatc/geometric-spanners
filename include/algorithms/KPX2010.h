@@ -1,6 +1,6 @@
 
-#ifndef GSNUNF_KPX2010_H
-#define GSNUNF_KPX2010_H
+#ifndef SPANNERS_KPX2010_H
+#define SPANNERS_KPX2010_H
 
 #include <cmath>         // ceil, floor
 #include <unordered_set> // selected
@@ -15,7 +15,7 @@
 #include "tools/Utilities.h"
 
 
-namespace planespanners {
+namespace spanners {
 
 using namespace std;
 
@@ -242,6 +242,6 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
 } // function KPX2010
 
-} // namespace planespanners
+} // namespace spanners
 
-#endif // GSNUNF_KPX2010_H
+#endif // SPANNERS_KPX2010_H

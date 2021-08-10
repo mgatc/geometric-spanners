@@ -1,9 +1,9 @@
-//Needs optimizing currently testing.
-#ifndef UNF_SPANNERS_BKPX2015_H
-#define UNF_SPANNERS_BKPX2015_H
+#ifndef SPANNERS_DEGREE3_H
+#define SPANNERS_DEGREE3_H
 
 #include <array>
 #include <iostream>
+#include <fstream>
 #include <list>
 #include <cassert>
 #include <string>
@@ -12,74 +12,87 @@
 #include <unordered_set> // selected
 #include <unordered_map> // G_prime
 #include <vector>        // handles
+#include <optional>
 #include <boost/functional/hash.hpp> // size_t pair hash : used in Yao_inf_4
-
-#include <CGAL/algorithm.h> //
-#include <CGAL/boost/iterator/counting_iterator.hpp>
-#include <CGAL/circulator.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Segment_Delaunay_graph_Linf_2.h>
+#include <CGAL/algorithm.h> //
+#include <CGAL/circulator.h>
+#include <CGAL/squared_distance_2.h>
+//#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+
+// typedefs for the traits and the algorithm
 #include <CGAL/Segment_Delaunay_graph_Linf_filtered_traits_2.h>
+#include <CGAL/Segment_Delaunay_graph_Linf_2.h>
 #include <CGAL/Segment_Delaunay_graph_storage_traits_with_info_2.h>
 
-//#include "printers/GraphPrinter.h"
-//#include "tools/Metrics.h"
+// includes for spatial sorting
+#include <CGAL/spatial_sort.h>
+#include <CGAL/Spatial_sort_traits_adapter_2.h>
+#include <CGAL/boost/iterator/counting_iterator.hpp>
+
+
+#include "tools/Metrics.h"
 #include "tools/Utilities.h"
 
 namespace spanners {
 
+
+
     using namespace std;
 
-    namespace bkpx2015 {
+    namespace degree3 {
 
-        /*
-         * CGAL Objects
-         *
-         * CGAL::Segment_Delaunay_graph_storage_traits_with_info_2
-         * requires these functors, in their current form, although
-         * our use of SDG does not result in these functors actually
-         * being used by the SDG.
-         *
-         * They will cause "unused" warnings, but these are safe to
-         * ignore.
-         */
+        const number_t MAX_STRETCH_CONSTRAINT = 1000.0;
+
+        typedef size_t id_type;
 
         template<typename T>
-        struct InfoConvert {
+        struct InfoConvert
+        {
             typedef T Info;
-            typedef const Info &result_type;
+            typedef const Info& result_type;
 
-            inline const Info &operator()(const Info &info0, bool) const {
-                return info0; // just return the info of the supporting segment
+            inline const Info& operator()(const Info& info0, bool) const {
+                // just return the info of the supporting segment
+                return info0;
             }
-
-            inline const Info &operator()(const Info &info0, const Info &, bool) const {
-                return info0; // just return the info of the supporting segment
+            inline const Info& operator()(const Info& info0, const Info& , bool) const {
+                // just return the info of the supporting segment
+                return info0;
             }
         };
-
+        // functor that defines how to merge color info when a site (either
+        // point or segment) corresponds to point(s) on plane belonging to
+        // more than one input site
         template<typename T>
-        struct InfoMerge {
-            typedef T Info;
+        struct InfoMerge
+        {
+            typedef T    Info;
             typedef Info result_type;
 
-            inline Info operator()(const Info &info0, const Info &info1) const {
-                return info0; // just return the info of the supporting segment
+            inline Info operator()(const Info& info0, const Info& info1) const {
+                // just return the info of the supporting segment
+                return info0;
             }
         };
 
-        typedef CGAL::Segment_Delaunay_graph_Linf_filtered_traits_2<K, CGAL::Field_with_sqrt_tag> Gt;
+        typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+        typedef CGAL::Segment_Delaunay_graph_Linf_filtered_traits_2<K,CGAL::Field_with_sqrt_tag>  Gt;
         typedef CGAL::Segment_Delaunay_graph_storage_traits_with_info_2<Gt,
                 index_t,
                 InfoConvert<index_t>,
                 InfoMerge<index_t>> StorageTraits;
         typedef CGAL::Segment_Delaunay_graph_Linf_2<Gt, StorageTraits> LinfDelaunayGraph;
         typedef LinfDelaunayGraph::Site_2 Site;
-        //typedef Site::Point_2 Point;
+        typedef Site::Point_2 Point;
         typedef LinfDelaunayGraph::Vertex_circulator VertexCirculator;
         //typedef LinfDelaunayGraph::Edge LinfEdge;
         typedef LinfDelaunayGraph::Vertex_handle VertexHandle;
         typedef LinfDelaunayGraph::Face_handle FaceHandle;
+
+        typedef CGAL::Spatial_sort_traits_adapter_2<K,
+                CGAL::Pointer_property_map<Point>::type> SearchTraits;
+
 
         enum AnchorType {
             None, Weak, Strong, StrongSelected, WeakSelected, StartOddChain
@@ -164,8 +177,7 @@ namespace spanners {
                         fans[cone].second = circ;
                         previousCone = cone;
 
-                        number_t proposedDistance = CGAL::l_infinity_distance(point->site().point(),
-                                                                              circ->site().point());
+                        number_t proposedDistance = CGAL::l_infinity_distance(point->site().point(), circ->site().point());
 
                         bool tie = false;
                         if (abs(proposedDistance - distances[cone]) < EPSILON) {
@@ -186,8 +198,7 @@ namespace spanners {
                         }
                     }
 
-                } while (++circ !=
-                         endpoint); // finished determining the Yao edges + how many points are in fan of u's cone i
+                } while (++circ != endpoint); // finished determining the Yao edges + how many points are in fan of u's cone i
 //            }
 //
 //            for (const auto &point : handles) {
@@ -265,8 +276,7 @@ namespace spanners {
 
                         bool cwCanonical = (!ccwCanonical && lcount <= (numNeighbors - 1) &&
                                             !(DT.is_infinite(vhigher)) &&
-                                            (yaoEdges[vhigher->storage_site().info()][getCone(vhigher, v)].first ==
-                                             v) &&
+                                            (yaoEdges[vhigher->storage_site().info()][getCone(vhigher, v)].first == v) &&
                                             yaoEdges[v->storage_site().info()][getCone(v, vhigher)].first != vhigher);
 
                         bool inCanonical = ccwCanonical || cwCanonical;
@@ -290,26 +300,20 @@ namespace spanners {
                                 bool inFan = !((ccwCanonical && position < 1) ||
                                                (cwCanonical && position > numNeighbors));
                                 bool unidirectional = (!(DT.is_infinite(current)) &&
-                                                       yaoEdges[current->storage_site().info()][getCone(current,
-                                                                                                        previous)].first ==
-                                                       previous &&
-                                                       yaoEdges[previous->storage_site().info()][getCone(previous,
-                                                                                                         current)].first !=
-                                                       current);
+                                                       yaoEdges[current->storage_site().info()][getCone(current,previous)].first == previous &&
+                                                       yaoEdges[previous->storage_site().info()][getCone(previous,current)].first != current);
 
                                 inCanonical = inFan && unidirectional;
 
                                 bool yaoConnected = inCanonical && (yaoEdges[u_id][cone].first == current ||
-                                                                    yaoEdges[current->storage_site().info()][
-                                                                            (cone + 2) % 4].first == u);
+                                                                    yaoEdges[current->storage_site().info()][(cone + 2) % 4].first == u);
 
                                 if (yaoConnected)
                                     crown = current;
 
                             }
 
-                            assert(yaoEdges[u_id][cone].first == crown ||
-                                   yaoEdges[crown->storage_site().info()][(cone + 2) % 4].first == u);
+                            assert(yaoEdges[u_id][cone].first == crown || yaoEdges[crown->storage_site().info()][(cone + 2) % 4].first == u);
 
                             anchorEdges[u_id][cone].first = crown;
                             anchorEdges[u_id][cone].second = Weak;
@@ -328,8 +332,7 @@ namespace spanners {
                     VertexHandle v = anchorEdges[u_id][cone].first;
 
                     if (!DT.is_infinite(v) && (anchorEdges[v->storage_site().info()][(cone + 2) % 4].first == u
-                                               || DT.is_infinite(
-                            anchorEdges[v->storage_site().info()][(cone + 2) % 4].first))) {
+                                               || DT.is_infinite(anchorEdges[v->storage_site().info()][(cone + 2) % 4].first))) {
                         anchorEdges[u_id][cone].second = Strong;
                     }
                 }
@@ -380,8 +383,7 @@ namespace spanners {
 
                             currentCone = (visited.size() % 2) ? localCone : cone;
 
-                            inChain = !(anchorEdges[previous_id][currentCone].second == Strong ||
-                                        anchorEdges[previous_id][currentCone].second == StrongSelected);
+                            inChain = !(anchorEdges[previous_id][currentCone].second == Strong || anchorEdges[previous_id][currentCone].second == StrongSelected);
 
                             if (!inChain)
                                 break;
@@ -392,8 +394,7 @@ namespace spanners {
 
                         } while (inChain);
 
-                        assert(anchorEdges[previous_id][currentCone].second == Strong ||
-                               anchorEdges[previous_id][currentCone].second == StrongSelected);
+                        assert(anchorEdges[previous_id][currentCone].second == Strong || anchorEdges[previous_id][currentCone].second == StrongSelected);
 
                         bool oddChain = (visited.size() % 2);
 
@@ -756,15 +757,485 @@ namespace spanners {
                 }
             }
         }
+
+//    bool BFS(vector<spannerCones> &H8, const Vertex_handle u, const Vertex_handle v) {
+//
+//        unordered_set<Vertex_handle> visited;
+//        queue<Vertex_handle> next;
+//
+//        auto goal = v;
+//        size_t waveTotal = 1;
+//        size_t depth = 0;
+//        next.push(u);
+//
+//        while (depth <= 50) { // depth limited BFS
+//
+//            size_t waveCount = 0;
+//            size_t nextTotal = 0;
+//
+//            // process each wave
+//            while (waveCount < waveTotal) {
+//
+//                Vertex_handle current = next.front();
+//                next.pop();
+//                size_t current_id = current->storage_site().info();
+//
+//                // if current has been visited continue
+//                if (visited.count(current)) {
+//                    waveCount++;
+//                    continue;
+//                }
+//
+//                visited.insert(current);
+//
+//                // add all unvisited vertices neighboring current in this wave to next
+//                for (size_t cone = 0; cone < 4; cone++) {
+//
+//                    for (auto edge : H8[current_id][cone]) {
+//
+//                        auto neighbor = (edge.first == current) ? edge.second : edge.first;
+//
+//                        if (neighbor == goal)
+//                            return true;
+//
+//                        if (visited.count(neighbor))
+//                            continue;
+//
+//                        nextTotal++;
+//                        next.push(neighbor);
+//                    }
+//                }
+//
+//                waveCount++;
+//            }
+//
+//            waveTotal = nextTotal;
+//            ++depth;
+//
+//        }
+//
+//        return false;
+//
+//    }
+
+        template< typename Point >
+        struct EuclideanDistanceToPoint {
+            Point goal;
+            EuclideanDistanceToPoint(const Point& p) : goal(p) {}
+            number_t operator()( Point p ) {
+                return (number_t) sqrt(CGAL::squared_distance(p,goal));
+            }
+        };
+
+        template<typename T>
+        struct MinHeapCompare {
+            bool operator()( const T &n1, const T &n2 ) const {
+                return (n1.first > n2.first) || ((n1.first == n2.first) && (n1.second > n2.second));
+            }
+        };
+
+        template<typename T>
+        struct MaxHeapCompare {
+            bool operator()( const T &n1, const T &n2 ) const {
+                return (n1.first < n2.first) || ((n1.first == n2.first) && (n1.second < n2.second));
+            }
+        };
+
+        template< typename VertexContainer >
+        optional<number_t> AStar( VertexContainer V, vector<SpannerCones> &H8, index_t start, index_t goal, number_t stretchBound ) {
+
+            typedef pair<number_t,index_t>
+                    DistanceIndexPair;
+            typedef boost::heap::fibonacci_heap< DistanceIndexPair,boost::heap::compare<MinHeapCompare<DistanceIndexPair>>>
+                    Heap;
+            typedef Heap::handle_type
+                    HeapHandle;
+
+            size_t n = V.size();
+            auto startPoint = V.at(start)->site().point();
+            auto goalPoint = V.at(goal)->site().point();
+            EuclideanDistanceToPoint h ( goalPoint ); // initialize heuristic functor
+
+            Heap open;
+            unordered_map<index_t,HeapHandle> handleToHeap(n);
+            handleToHeap[start] = open.emplace( h( startPoint ), start );
+
+            //unordered_set<size_t> closed(n);
+            vector<index_t> parents(n);
+
+            vector<number_t> g( n, INF );
+            g[start] = 0;
+
+            vector<number_t> f( n, INF );
+            f[start] = h( startPoint );
+
+            number_t baseEuclidean = f[start];
+
+            DistanceIndexPair current = open.top(); // initialize current vertex to start
+            index_t u_index = current.second;
+            auto currentPoint = startPoint;
+            auto neighborPoint = currentPoint;
+
+            do {
+                current = open.top();
+                open.pop();
+
+                u_index = current.second;
+                currentPoint = V.at(u_index)->site().point();
+
+                number_t currentStretch = f.at(u_index) / baseEuclidean;
+
+                if (currentStretch > stretchBound)
+                    return nullopt;
+
+
+                if( u_index == goal ) return make_optional( g.at(goal) / baseEuclidean);
+
+                for(auto cone : H8[u_index]) {
+
+                    if (!cone.empty()) {
+
+                        auto e = cone.front();
+
+                        auto neighbor = (e.first == V.at(u_index)) ? e.second->storage_site().info() : e.first->storage_site().info();
+                        neighborPoint = V.at(neighbor)->site().point();
+
+                        if (u_index == start && neighbor == goal)
+                            continue;
+
+                        number_t newScore = g.at(u_index)
+                                            + sqrt(CGAL::squared_distance( currentPoint, neighborPoint ));
+
+                        if( newScore < g.at( neighbor ) ) {
+                            parents[neighbor] = u_index;
+                            g[neighbor] = newScore;
+                            f[neighbor] = g.at(neighbor) + h(neighborPoint);
+                            DistanceIndexPair q = make_pair( f.at(neighbor), neighbor );
+
+                            if( contains( handleToHeap, neighbor ) ) {
+                                HeapHandle neighborHandle = handleToHeap.at(neighbor);
+                                open.update(neighborHandle,q);
+                                open.update(neighborHandle);
+                            } else {
+                                handleToHeap[neighbor] = open.push(q);
+                            }
+                        }
+                    }
+                }
+
+            } while( !open.empty() );
+
+            return nullopt;
+        }
+
+        void degree3fromH4(vector<SpannerCones> &H8,
+                     const vector<AnchorCones> &anchorEdges,
+                     const vector<YaoCones> &yaoEdges, const vector<FanCones> &pointFans,
+                     const vector<NumYaoEdges> &yaoEdgeCount, const vector<VertexHandle> &handles,
+                     const LinfDelaunayGraph &DT) {
+
+            for (const auto &u : handles) {
+
+                index_t u_id = u->storage_site().info();
+                size_t degree = accumulate(H8[u_id].begin(), H8[u_id].end(), 0, [](size_t sum, auto value) {
+                    return sum + value.size(); });
+
+                if (degree > 3) {
+
+                    number_t stretchBound = MAX_STRETCH_CONSTRAINT;
+                    optional<SpannerEdge> candidateRemove = nullopt;
+
+                    for (cone_t cone = 0; cone < 4; cone++) {
+
+                        if (H8[u_id][cone].size() == 0)
+                            continue;
+
+                        SpannerEdge e = H8[u_id][cone].front();
+
+                        auto goal = (e.first == u) ? e.second->storage_site().info() : e.first->storage_site().info();
+
+                        auto stretch = AStar(handles, H8, u_id, goal, stretchBound);
+
+                        if (stretch) {
+
+                            if (*stretch < stretchBound) {
+                                stretchBound = *stretch;
+                                candidateRemove = make_optional(e);
+                            }
+                        }
+                    }
+
+                    if (candidateRemove) {
+
+                        auto p = (*candidateRemove).first;
+                        auto q = (*candidateRemove).second;
+
+                        index_t p_id = p->storage_site().info();
+                        index_t q_id = q->storage_site().info();
+
+                        SpannerEdge proposed = std::make_pair(p, q);
+                        SpannerEdge reversed = std::make_pair(q, p);
+
+
+                        for (auto &edges : H8[p_id]) {
+                            edges.erase(remove(edges.begin(), edges.end(), proposed), edges.end());
+                            edges.erase(remove(edges.begin(), edges.end(), reversed), edges.end());
+                        }
+
+                        for (auto &edges : H8[q_id]) {
+                            edges.erase(remove(edges.begin(), edges.end(), proposed), edges.end());
+                            edges.erase(remove(edges.begin(), edges.end(), reversed), edges.end());
+                        }
+
+                    }
+
+                    else {
+
+                        optional<SpannerEdge> candidateAdd = nullopt;
+                        number_t stretchBound = MAX_STRETCH_CONSTRAINT;
+
+                        for (auto cone : H8[u_id]) {
+
+                            auto e = cone.front();
+                            index_t goal = (e.first == u) ? e.second->storage_site().info() : e.first->storage_site().info();
+
+                            auto q = (e.first == u) ? e.second : e.first;
+                            SpannerEdge edge = std::make_pair(u, q);
+
+                            index_t q_id = q->storage_site().info();
+
+                            VertexCirculator middle = DT.incident_vertices(q);
+
+                            if (DT.is_infinite(middle)) {++middle;}
+                            auto endpt = middle;
+
+                            optional<number_t> stretch = nullopt;
+
+                            do {
+
+                                if (DT.is_infinite(middle)) {continue;}
+
+                                index_t middle_id = middle->storage_site().info();
+                                size_t currentCone = getCone(q, middle);
+
+                                bool actualEdge = inEdgeList(H8[q_id][currentCone], q, middle) || inEdgeList(H8[middle_id][(currentCone+2)%4], q, middle);
+                                size_t neighborDegree = accumulate(H8[middle_id].begin(), H8[middle_id].end(), 0, [](size_t sum, auto value) {
+                                    return sum + value.size(); });
+
+                                bool possible = !actualEdge && neighborDegree < 3;
+
+                                if (possible) {
+
+                                    SpannerEdge proposed = std::make_pair(q, middle);
+
+                                    if (middle != pointFans[q_id][currentCone].first && middle != pointFans[q_id][currentCone].second) {
+
+                                        auto previous = middle,
+                                                next = middle;
+                                        --previous;
+                                        ++next;
+
+                                        index_t previous_id = previous->storage_site().info();
+                                        index_t next_id = next->storage_site().info();
+
+                                        size_t previousCone = getCone(previous, middle);
+                                        size_t nextCone = getCone(next, middle);
+
+                                        bool edgePair = (yaoEdges[previous_id][previousCone].first == middle && yaoEdges[middle_id][(previousCone+2)%4].first != previous
+                                                         && anchorEdges[previous_id][previousCone].first != middle && anchorEdges[middle_id][(previousCone+2)%4].first != previous)
+                                                        && (yaoEdges[next_id][nextCone].first == middle && yaoEdges[middle_id][(nextCone+2)%4].first != next
+                                                            && anchorEdges[next_id][nextCone].first != middle && anchorEdges[middle_id][(nextCone+2)%4].first != next);
+
+                                        possible &= !edgePair;
+
+                                    }
+
+                                    if (possible) {
+
+                                        H8[q_id][currentCone].push_back(proposed);
+                                        H8[middle_id][(currentCone+2)%4].push_back(proposed);
+
+                                        stretch = AStar(handles, H8, u_id, goal, stretchBound);
+
+                                        if (stretch) {
+
+                                            if (*stretch < stretchBound) {
+                                                stretchBound = *stretch;
+                                                candidateRemove = make_optional(edge);
+                                                candidateAdd = make_optional(proposed);
+                                            }
+                                        }
+
+                                        SpannerEdge reversed = std::make_pair(proposed.second, proposed.first);
+
+                                        for (auto &edges : H8[q_id]) {
+                                            edges.erase(remove(edges.begin(), edges.end(), proposed), edges.end());
+                                            edges.erase(remove(edges.begin(), edges.end(), reversed), edges.end());
+                                        }
+
+                                        for (auto &edges : H8[middle_id]) {
+                                            edges.erase(remove(edges.begin(), edges.end(), proposed), edges.end());
+                                            edges.erase(remove(edges.begin(), edges.end(), reversed), edges.end());
+                                        }
+                                    }
+                                }
+
+                            } while (++middle != endpt && !stretch);
+
+                        }
+
+                        if (candidateRemove) {
+
+                            auto p = (*candidateRemove).first;
+                            auto q = (*candidateRemove).second;
+
+                            index_t p_id = p->storage_site().info();
+                            index_t q_id = q->storage_site().info();
+
+                            SpannerEdge standardRemove = std::make_pair(p, q);
+                            SpannerEdge reversedRemove = std::make_pair(q, p);
+
+                            for (auto &edges : H8[p_id]) {
+                                edges.erase(remove(edges.begin(), edges.end(), standardRemove), edges.end());
+                                edges.erase(remove(edges.begin(), edges.end(), reversedRemove), edges.end());
+                            }
+
+                            for (auto &edges : H8[q_id]) {
+                                edges.erase(remove(edges.begin(), edges.end(), standardRemove), edges.end());
+                                edges.erase(remove(edges.begin(), edges.end(), reversedRemove), edges.end());
+                            }
+
+                            auto v = ((*candidateAdd).first == q) ? (*candidateAdd).second : (*candidateAdd).first;
+                            index_t v_id = v->storage_site().info();
+
+                            size_t addedCone = getCone(q, v);
+
+                            H8[q_id][addedCone].push_back(*candidateAdd);
+                            H8[v_id][(addedCone+2)%4].push_back(*candidateAdd);
+
+                        }
+                    }
+                }
+            }
+
+            for (auto u : handles) {
+
+                index_t u_id = u->storage_site().info();
+                size_t degree = accumulate(H8[u_id].begin(), H8[u_id].end(), 0, [](size_t sum, auto value) {
+                    return sum + value.size(); });
+
+                bool found = true;
+                bool addEdges = degree < 3;
+
+                while (addEdges) {
+
+                    found = false;
+
+                    VertexCirculator v = DT.incident_vertices(u);
+                    if (DT.is_infinite(v))
+                        ++v;
+
+                    index_t v_id = v->storage_site().info();
+                    number_t min_distance = INF;
+
+                    optional<VertexHandle> optimal = nullopt;
+
+                    bool found = false;
+                    auto endpt = v;
+
+                    do {
+
+                        if (DT.is_infinite(v))
+                            continue;
+
+                        v_id = v->storage_site().info();
+                        size_t v_degree = accumulate(H8[v_id].begin(), H8[v_id].end(), 0, [](size_t sum, auto value) {
+                            return sum + value.size(); });
+
+                        size_t currentCone = getCone(u,v);
+
+                        bool alreadyEdge = inEdgeList(H8[u_id][currentCone], u, v) || inEdgeList(H8[v_id][(currentCone+2)%4], u, v);
+                        bool possible = !alreadyEdge && (v_degree < 3);
+
+                        if (possible) {
+
+                            bool shortcut = false;
+                            auto fan = pointFans[u_id][currentCone];
+
+                            if (v != fan.first && v != fan.second) {
+
+                                auto previous = v,
+                                        middle = v,
+                                        next = v;
+
+                                --previous;
+                                ++next;
+
+                                index_t previous_id = previous->storage_site().info();
+                                index_t next_id = next->storage_site().info();
+                                index_t middle_id = middle->storage_site().info();
+
+                                size_t previousCone = getCone(previous, middle);
+                                size_t nextCone = getCone(next, middle);
+
+                                bool shortcut  = (yaoEdges[previous_id][previousCone].first == middle && yaoEdges[middle_id][(previousCone+2)%4].first != previous
+                                                  && anchorEdges[previous_id][previousCone].first != middle && anchorEdges[middle_id][(previousCone+2)%4].first != previous)
+                                                 && (yaoEdges[next_id][nextCone].first == middle && yaoEdges[middle_id][(nextCone+2)%4].first != next
+                                                     && anchorEdges[next_id][nextCone].first != middle && anchorEdges[middle_id][(nextCone+2)%4].first != next);
+
+                            }
+
+                            if (!shortcut) {
+
+                                CGAL::Point_2 u_point = u->site().point();
+                                CGAL::Point_2 v_point = v->site().point();
+
+                                auto v_distance = (number_t) sqrt(CGAL::squared_distance(u_point, v_point));
+
+                                if (v_distance < min_distance) {
+
+                                    index_t v_id = v->storage_site().info();
+
+                                    found = true;
+                                    min_distance = v_distance;
+                                    optimal = make_optional(v);
+
+                                }
+                            }
+                        }
+
+                    } while (++v != endpt);
+
+                    if (found) {
+
+                        cone_t newCone = getCone(u, *optimal);
+                        SpannerEdge newEdge = std::make_pair(u, *optimal);
+
+                        index_t optimal_id = (*optimal)->storage_site().info();
+
+                        H8[u_id][newCone].push_back(newEdge);
+                        H8[optimal_id][(newCone+2)%4].push_back(newEdge);
+
+                    }
+
+                    degree = accumulate(H8[u_id].begin(), H8[u_id].end(), 0, [](size_t sum, auto value) {
+                        return sum + value.size(); });
+
+                    addEdges = (degree < 3) && found;
+                }
+            }
+        }
     }
 
 
+
+
     template<typename RandomAccessIterator, typename OutputIterator>
-    void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result) {
+    void DEG3(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false) {
 
-        using namespace bkpx2015;
+        using namespace degree3;
 
-        using bkpx2015::VertexHandle, bkpx2015::VertexCirculator, bkpx2015::FaceHandle;
+        using degree3::VertexHandle, degree3::VertexCirculator, degree3::FaceHandle;
 
         // construct Linf Delaunay triangulation
         vector<Point> P(pointsBegin, pointsEnd);
@@ -801,7 +1272,11 @@ namespace spanners {
         vector<SpannerCones> H8(n, SpannerCones(4));
         degreeEightSpanner(H8, anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, DT);
 
+        // prune edges from H8 to produce H4 --> degree 4 spanner
         processSpanner(H8, anchorEdges, yaoEdges, pointFans, handles, DT);
+
+        // produce degree 3 spanner from H4
+        degree3fromH4(H8, anchorEdges, yaoEdges, pointFans, yaoEdgeCount, handles, DT);
 
         vector<index_tPair> edgeList;
 
@@ -816,59 +1291,9 @@ namespace spanners {
 
         // Send resultant graph to output iterator
         for (auto e : edgeList) {
-            // Edge list is only needed for printing. Remove for production.
-            //edgeList.emplace_back(handles.at(e.first)->point(), handles.at(e.second)->point());
-
             *result = e;
             ++result;
         }
-
-        // START PRINTER NONSENSE
-//    if(printLog) {
-//        GraphPrinter printer(1.25); // argument number is scaling factor --> manipulate based on size of point set
-//        GraphPrinter::OptionsList options;
-//
-//        options = {
-//            {"color", printer.inactiveEdgeColor},
-//            {"line width", to_string(printer.inactiveEdgeWidth)}
-//        };
-////        printer.drawEdgesOfSDG(DT, options);
-//
-//        options = { // active edge options
-//            {"color", printer.activeEdgeColor},
-//            {"line width", to_string(printer.activeEdgeWidth)}
-//        };
-//
-//        vector<pair<Point, Point>> pointEdgeList;
-//        pointEdgeList.reserve(edgeList.size());
-//
-//        for (auto e : edgeList) {
-//
-//            pointEdgeList.emplace_back(P.at(e.first), P.at(e.second));
-//
-//        }
-//
-//        printer.drawEdges(edgeList.begin(), edgeList.end(), P, options);
-//
-//
-//        options = {
-//            {"vertex", make_optional(to_string(printer.vertexRadius))}, // vertex width
-//            {"color", make_optional(printer.backgroundColor)}, // text color
-//            {"fill", make_optional(printer.activeVertexColor)}, // vertex color
-//            {"line width", make_optional(to_string(0))} // vertex border (same color as text)
-//        };
-//        GraphPrinter::OptionsList borderOptions = {
-//            {"border", make_optional(to_string(printer.vertexRadius))}, // choose shape of vertex
-//            {"color", printer.activeEdgeColor}, // additional border color
-//            {"line width", to_string(printer.inactiveEdgeWidth)}, // additional border width
-//        };
-//        printer.drawVerticesWithInfoSDG(DT, options, borderOptions);
-//
-//        printer.print("BKPX2015");
-//        cout << "\n";
-//    }
-        // END PRINTER NONSENSE
-
 
     }
 
@@ -876,4 +1301,5 @@ namespace spanners {
 }
 
 
-#endif // UNF_SPANNERS_BKPX2015_H
+
+#endif //SPANNERS_DEGREE3_H

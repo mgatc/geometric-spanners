@@ -2,13 +2,13 @@
 // Created by matt on 7/16/21.
 //
 
-#ifndef PLANESPANNERS_NAMES_H
-#define PLANESPANNERS_NAMES_H
+#ifndef SPANNERS_NAMES_H
+#define SPANNERS_NAMES_H
 
 #include <string>
 #include <vector>
 
-namespace planespanners {
+namespace spanners {
 
     using namespace std;
 
@@ -48,8 +48,9 @@ namespace planespanners {
         Bcc2012_7,
         Bcc2012_6,
         Bghp2010,
-        Kpt2017,
         Bkpx2015,
+        Kpt2017,
+        Degree3,
         AlgorithmLast
     };
     const string ALGORITHM_SYMBOL = "Algorithm";
@@ -64,15 +65,16 @@ namespace planespanners {
         "\\texttt{BCC2012-6}",
         "\\texttt{BGHP2010}",
         "\\texttt{BKPX2015}",
-        "\\texttt{KPT2017}"
+        "\\texttt{KPT2017}",
+        "\\texttt{Degree3}"
     };
     const string DEGREE_BOUND_SYMBOL = "$\\Delta_{\\mathrm{u.b.}}$";
     const vector<string> DEGREE_BOUND_PER_ALGORITHM = {
-        "27","23","17","14","11","8","7","6","6","4","4"
+        "27","23","17","14","11","8","7","6","6","4","4","3"
     };
     const string STRETCH_FACTOR_BOUND_SYMBOL = "$t_{\\mathrm{u.b.}}$";
     const vector<string> STRETCH_FACTOR_BOUND_PER_ALGORITHM = {
-        "8.27","6.44","23.6","2.92","2.86","4.41","11.7","81.7","6","157","20"
+        "8.27","6.44","23.6","2.92","2.86","4.41","11.7","81.7","6","157","20","INF"
     };
 
     const vector<string> IV_NAMES = {
@@ -115,6 +117,6 @@ namespace planespanners {
         "Mean " + IV_NICE_NAMES[4]
     };
 
-} // planespanners
+} // spanners
 
-#endif //PLANESPANNERS_NAMES_H
+#endif //SPANNERS_NAMES_H

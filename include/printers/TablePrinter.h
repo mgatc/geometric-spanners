@@ -1,5 +1,5 @@
-#ifndef PLANESPANNERS_TABLEPRINTER_H
-#define PLANESPANNERS_TABLEPRINTER_H
+#ifndef SPANNERS_TABLEPRINTER_H
+#define SPANNERS_TABLEPRINTER_H
 
 #include <iomanip>
 #include <sstream>
@@ -8,7 +8,7 @@
 #include "printers/LatexPrinter.h"
 #include "tools/Utilities.h"
 
-namespace planespanners {
+namespace spanners {
 
     const string TABLE_COLOR_1 = "ffffff";
     const string TABLE_COLOR_2 = "cccccc";
@@ -232,4 +232,4 @@ namespace planespanners {
 
 }
 
-#endif //PLANESPANNERS_TABLEPRINTER_H
+#endif //SPANNERS_TABLEPRINTER_H

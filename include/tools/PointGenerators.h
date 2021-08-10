@@ -2,8 +2,8 @@
 // Created by matt on 7/27/21.
 //
 
-#ifndef PLANESPANNERS_POINTGENERATORS_H
-#define PLANESPANNERS_POINTGENERATORS_H
+#ifndef SPANNERS_POINTGENERATORS_H
+#define SPANNERS_POINTGENERATORS_H
 
 
 #include <iostream>
@@ -30,7 +30,7 @@
 
 #include "tools/Utilities.h"
 
-namespace planespanners {
+namespace spanners {
 
     using namespace std;
 
@@ -192,5 +192,5 @@ namespace planespanners {
 
     }
 
-} // planespanners
-#endif //PLANESPANNERS_POINTGENERATORS_H
+} // spanners
+#endif //SPANNERS_POINTGENERATORS_H

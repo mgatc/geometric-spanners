@@ -2,8 +2,8 @@
 // Created by matt on 7/20/21.
 //
 
-#ifndef PLANESPANNERS_RESULT_H
-#define PLANESPANNERS_RESULT_H
+#ifndef SPANNERS_RESULT_H
+#define SPANNERS_RESULT_H
 
 #include <iostream>
 #include <iterator>
@@ -18,7 +18,7 @@
 #include "tools/Metrics.h"
 #include "tools/Utilities.h"
 
-namespace planespanners {
+namespace spanners {
     using namespace std;
 
     const bool USE_EXACT_STRETCH_FACTOR = false;
@@ -43,14 +43,14 @@ namespace planespanners {
                                    EdgeIterator edgesBegin,
                                    EdgeIterator edgesEnd )
             : BoundedDegreeSpannerResult(algorithm,
-              std::distance(pointsBegin,pointsEnd),
-              runtime,
-              planespanners::degree( edgesBegin, edgesEnd ),
-              planespanners::degreeAvg( edgesBegin, edgesEnd ),
-              (USE_EXACT_STRETCH_FACTOR ?
+                                         std::distance(pointsBegin,pointsEnd),
+                                         runtime,
+                                         spanners::degree(edgesBegin, edgesEnd ),
+                                         spanners::degreeAvg(edgesBegin, edgesEnd ),
+                                         (USE_EXACT_STRETCH_FACTOR ?
                 StretchFactorDijkstraReduction( pointsBegin, pointsEnd, edgesBegin, edgesEnd )
                 : StretchFactorUsingHeuristic2( pointsBegin, pointsEnd, edgesBegin, edgesEnd )),
-              getLightness( pointsBegin, pointsEnd, edgesBegin, edgesEnd ) ) {}
+                                         getLightness( pointsBegin, pointsEnd, edgesBegin, edgesEnd ) ) {}
 
         BoundedDegreeSpannerResult(const Algorithm algorithm,
                                    const index_t n,
@@ -80,7 +80,7 @@ namespace planespanners {
                              + ALGORITHM_NAMES.at(algorithm)
                              + "}: "
                              + "$\\Delta = "
-                             + planespanners::to_string(degree);
+                             + spanners::to_string(degree);
 
             caption += ",\\ stretchFactor = "
                        + to_string(stretchFactor);
@@ -301,4 +301,4 @@ namespace planespanners {
 //    template<class BoundedDegreeSpannerResult>
 //    class ResultSet;
 
-#endif //PLANESPANNERS_RESULT_H
+#endif //SPANNERS_RESULT_H

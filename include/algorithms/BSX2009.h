@@ -1,5 +1,5 @@
-#ifndef GSNUNF_BSX2009_H
-#define GSNUNF_BSX2009_H
+#ifndef SPANNERS_BSX2009_H
+#define SPANNERS_BSX2009_H
 
 //#include <algorithm> // min, max
 #include <cmath> // ceil
@@ -11,7 +11,7 @@
 #include "tools/Utilities.h"
 
 
-namespace planespanners {
+namespace spanners {
 
 using namespace std;
 
@@ -110,7 +110,7 @@ void BSX2009( RandomAccessIterator pointsBegin,
 
         do { // Find closest unprocessed neighbor, also count processed neighbors and neighbors in ePrime
             if( !T.is_infinite(N) ) {
-                if( planespanners::contains(ePrime, makeNormalizedPair(u, N->info() ) ) )
+                if( spanners::contains(ePrime, makeNormalizedPair(u, N->info() ) ) )
                     ++degree;
 
                 if( isProcessed.at( N->info() ) )
@@ -251,6 +251,6 @@ void BSX2009( RandomAccessIterator pointsBegin,
 
 } // function BSX2009
 
-} // namespace planespanners
+} // namespace spanners
 
-#endif // GSNUNF_BSX2009_H
+#endif // SPANNERS_BSX2009_H

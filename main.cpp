@@ -7,7 +7,7 @@
 
 const bool MEASURE_STRETCH_FACTOR = true;
 
-using namespace planespanners;
+using namespace std;
 
 int main(int argc, char *argv[]) {
 
@@ -37,10 +37,10 @@ int main(int argc, char *argv[]) {
 
     if (argc == 2) {
         ignore = system("rm ./output/scratch-*");
-        scratch(N);
+        spanners::scratch(N);
     } else {
         ignore = system("rm ./output/exp-*");
-        experiment(experimentParameters[0],
+        spanners::experiment(experimentParameters[0],
                    experimentParameters[1],
                    experimentParameters[2],
                    experimentParameters[3]);

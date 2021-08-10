@@ -6,8 +6,7 @@
 #include <QWidget>
 
 #include "graphscene.h"
-#include "DelaunayGraph.h"
-#include "GraphAlgorithmEvent.h"
+#include "tools/DelaunayGraph.h"#include "GraphAlgorithmEvent.h"
 
 
 

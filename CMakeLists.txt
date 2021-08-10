@@ -2,38 +2,42 @@ cmake_minimum_required(VERSION 3.19)
 project(geometric_spanners)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-O3 -fopenmp -fexceptions -frounding-math -Wall -Wextra -Wno-unused")
+set(CMAKE_CXX_FLAGS "-fopenmp -fexceptions -frounding-math -Wall -Wextra -Wno-unused")
 
 include_directories(/usr/include)
 include_directories(include)
 include_directories(/usr/lib/gcc/x86_64-linux-gnu/7/include)
 
 add_executable(geometric_spanners
-        include/BCC2012.h
-        include/BGHP2010.h
-        include/BGS2005.h
-        include/BHS2018.h
-        include/BKPX2015.h
-        include/BSX2009.h
-        include/DelaunayGraph.h
-        include/FloydWarshall.h
-        include/GeometricSpannerPrinter.h
-        include/KPT2017.h
-        include/KPX2010.h
-        include/KX2012.h
-        include/LW2004.h
-        include/metrics.h
-        include/TDDelaunay.h
-        include/utilities.h
-        main.cpp
+        include/algorithms/BCC2012.h
+        include/algorithms/BGHP2010.h
+        include/algorithms/BGS2005.h
+        include/algorithms/BHS2018.h
+        include/algorithms/BKPX2015.h
+        include/algorithms/BSX2009.h
+        include/algorithms/KPT2017.h
+        include/algorithms/KPX2010.h
+        include/algorithms/KX2012.h
+        include/algorithms/LW2004.h
+
+        include/printers/GraphPrinter.h
+        include/printers/PgfplotPrinter.h
+        include/printers/LatexPrinter.h
+        include/printers/TablePrinter.h
+
+        include/tools/DelaunayGraph.h
+        include/tools/FloydWarshall.h
+        include/tools/Metrics.h
+        include/tools/PointGenerators.h
+        include/tools/Results.h
+        include/tools/TDDelaunay.h
+        include/tools/Utilities.h
+
         include/Experiment.h
-        include/LineGraphPrinter.h
-        include/names.h
-        include/LatexPrinter.h
-        include/Result.h
+        include/Names.h
         include/Scratch.h
-        include/TablePrinter.h
-        include/PointGenerators.h
+
+        main.cpp
         )
 
 target_link_libraries(geometric_spanners gmp)

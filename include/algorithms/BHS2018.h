@@ -14,10 +14,10 @@
 #include <CGAL/Line_2.h>
 
 //Project library
-#include "DelaunayGraph.h"
-#include "GeometricSpannerPrinter.h"
-#include "metrics.h"
-#include "utilities.h"
+#include "tools/DelaunayGraph.h"
+#include "printers/GraphPrinter.h"
+#include "tools/Metrics.h"
+#include "tools/Utilities.h"
 
 
 namespace planespanners {

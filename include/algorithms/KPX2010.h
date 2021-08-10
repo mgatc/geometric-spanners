@@ -9,10 +9,10 @@
 
 #include <CGAL/algorithm.h>
 
-//#include "GeometricSpannerPrinter.h"
-#include "DelaunayGraph.h"
-#include "metrics.h"
-#include "utilities.h"
+//#include "printers/GraphPrinter.h"
+#include "tools/DelaunayGraph.h"
+#include "tools/Metrics.h"
+#include "tools/Utilities.h"
 
 
 namespace planespanners {

@@ -28,7 +28,7 @@
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 #include <CGAL/Search_traits_2.h>
 
-#include "utilities.h"
+#include "tools/Utilities.h"
 
 namespace planespanners {
 

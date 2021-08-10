@@ -15,10 +15,10 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
-#include "DelaunayGraph.h"
-#include "GeometricSpannerPrinter.h"
-#include "metrics.h"
-#include "utilities.h"
+#include "printers/GraphPrinter.h"
+#include "tools/DelaunayGraph.h"
+#include "tools/Metrics.h"
+#include "tools/Utilities.h"
 
 
 namespace planespanners {

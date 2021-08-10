@@ -15,10 +15,10 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "DelaunayGraph.h"
-#include "LatexPrinter.h"
-#include "names.h"
-#include "utilities.h"
+#include "Names.h"
+#include "printers/LatexPrinter.h"
+#include "tools/DelaunayGraph.h"
+#include "tools/Utilities.h"
 
 namespace planespanners {
 

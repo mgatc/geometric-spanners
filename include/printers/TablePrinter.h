@@ -5,8 +5,8 @@
 #include <sstream>
 #include <string>
 
-#include "LatexPrinter.h"
-#include "utilities.h"
+#include "printers/LatexPrinter.h"
+#include "tools/Utilities.h"
 
 namespace planespanners {
 
@@ -50,32 +50,35 @@ namespace planespanners {
 
             string table;
             size_t numRows = m_added.begin()->second.second.size();
-            optional<size_t> highlightRow, highlightCol;
-            optional<vector<string>> highlightCols;
+
+            vector<string> highlightCols;
             if(highlightStyle==CellHighlightStyle::MaxInColumn) {
-                transform(m_added.begin(),m_added.end(),back_inserter(*highlightCols),
-                    [](const auto& column) {
-                        return *min_element(column.second.second.begin(),column.second.second.end(),
-                            []( const auto& lhs, const auto& rhs ) {
-                                return stod(lhs) < stod(lhs);
+                // first column has algorithm names, skip
+                transform(next(m_added.begin()),m_added.end(),back_inserter(highlightCols),
+                    [](const auto& column) -> string {
+
+                        return *min_element(column.second.second.cbegin(),column.second.second.cend(),
+                            []( const auto& lhs, const auto& rhs ) -> bool {
+                                return stod(lhs) < stod(rhs);
                         });
                 });
             }
             for(size_t row=0; row<numRows; ++row) {
                 optional<string> highlightValue;
                 if(highlightStyle==CellHighlightStyle::MaxInRow) {
+                    // first column has n levels, skip
                     highlightValue = make_optional(min_element(next(m_added.begin()),m_added.end(),
                   [row](auto &column1, auto &column2){
                             return stod(column1.second.second.at(row)) < stod(column2.second.second.at(row));
                         })->second.second.at(row));
                 }
-                size_t columnNum = 0;
+                int columnNum = -1; // 0 is the first index of the column highlight-data but we want to skip the first col (names)
                 for(const auto& cell : m_added ) { //auto attr : colHeaders )
                     string cellValue = cell.second.second.at(row);
                     string prefix = "$";
                     string suffix = "$ &";
                     if( (highlightValue && *highlightValue == cellValue )
-                      ||(highlightCols && (*highlightCols)[columnNum] == cellValue )) {
+                      ||(!highlightCols.empty() && highlightCols[columnNum] == cellValue )) {
                         prefix += "\\textbf{";
                         suffix = "}" + suffix;
                     }

@@ -12,9 +12,9 @@
 #include <utility>
 #include <vector>
 
-#include "DelaunayGraph.h"
-#include "GeometricSpannerPrinter.h"
-#include "metrics.h"
+#include "printers/GraphPrinter.h"
+#include "tools/DelaunayGraph.h"
+#include "tools/Metrics.h"
 
 namespace planespanners {
 

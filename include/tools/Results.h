@@ -15,8 +15,8 @@
 #include <variant>
 #include <vector>
 
-#include "metrics.h"
-#include "utilities.h"
+#include "tools/Metrics.h"
+#include "tools/Utilities.h"
 
 namespace planespanners {
     using namespace std;

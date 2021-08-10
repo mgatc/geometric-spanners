@@ -10,8 +10,7 @@
 
 #include "graphscene.h"
 #include "graphview.h"
-#include "DelaunayGraph.h"
-#include "PlanarSpanner.h"
+#include "tools/DelaunayGraph.h"#include "PlanarSpanner.h"
 #include "playbackparameters.h"
 
 

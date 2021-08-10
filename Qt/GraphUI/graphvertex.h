@@ -3,8 +3,7 @@
 
 #include "graphitem.h"
 
-#include "DelaunayGraph.h"
-
+#include "tools/DelaunayGraph.h"
 class GraphVertex : public GraphItem
 {
     Q_OBJECT

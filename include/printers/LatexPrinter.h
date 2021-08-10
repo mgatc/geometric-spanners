@@ -11,7 +11,7 @@
 #include <unordered_set>
 #include <utility>
 
-#include "names.h"
+#include "Names.h"
 
 namespace planespanners {
 

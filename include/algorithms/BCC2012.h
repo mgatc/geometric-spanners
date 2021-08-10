@@ -9,14 +9,13 @@
 #include <unordered_map> // G_prime
 #include <vector>        // handles
 
-
 #include <CGAL/algorithm.h> //
 #include <CGAL/circulator.h>
 
-#include "DelaunayGraph.h"
-#include "GeometricSpannerPrinter.h"
-#include "metrics.h"
-#include "utilities.h"
+#include "printers/GraphPrinter.h"
+#include "tools/DelaunayGraph.h"
+#include "tools/Metrics.h"
+#include "tools/Utilities.h"
 
 
 namespace planespanners {

@@ -9,8 +9,7 @@
 #include <QPen>
 #include <QWidget>
 
-#include "DelaunayGraph.h"
-#include "GraphAlgorithmEvent.h"
+#include "tools/DelaunayGraph.h"#include "GraphAlgorithmEvent.h"
 
 
 

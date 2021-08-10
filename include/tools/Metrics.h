@@ -27,9 +27,9 @@
 
 #include <omp.h>
 
-#include "DelaunayGraph.h"
-#include "FloydWarshall.h"
-#include "utilities.h"
+#include "tools/DelaunayGraph.h"
+#include "tools/FloydWarshall.h"
+#include "tools/Utilities.h"
 
 namespace planespanners {
 

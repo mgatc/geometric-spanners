@@ -6,10 +6,10 @@
 #include <unordered_set> // hashed adjacency list
 #include <vector> // vertex containers
 
-#include "DelaunayGraph.h"
-#include "GeometricSpannerPrinter.h"
-#include "utilities.h"
-#include "metrics.h"
+#include "printers/GraphPrinter.h"
+#include "tools/DelaunayGraph.h"
+#include "tools/Utilities.h"
+#include "tools/Metrics.h"
 
 
 namespace planespanners {

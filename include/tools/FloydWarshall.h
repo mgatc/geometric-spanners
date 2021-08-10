@@ -11,7 +11,7 @@
 #include <CGAL/squared_distance_2.h>
 #include <CGAL/utils.h>
 
-#include "DelaunayGraph.h"
+#include "tools/DelaunayGraph.h"
 
 namespace planespanners {
 

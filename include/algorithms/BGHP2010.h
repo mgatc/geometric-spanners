@@ -22,10 +22,10 @@
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
 //Project library
-#include "GeometricSpannerPrinter.h"
-#include "metrics.h"
-#include "TDDelaunay.h"
-#include "utilities.h"
+#include "printers/GraphPrinter.h"
+#include "tools/Metrics.h"
+#include "tools/TDDelaunay.h"
+#include "tools/Utilities.h"
 
 
 namespace planespanners {

@@ -6,10 +6,10 @@
 #include <optional>
 #include <vector>
 
-#include "GeometricSpannerPrinter.h"
-#include "names.h"
-#include "Result.h"
-#include "utilities.h"
+#include "printers/GraphPrinter.h"
+#include "Names.h"
+#include "tools/Results.h"
+#include "tools/Utilities.h"
 
 namespace planespanners {
 
@@ -19,7 +19,7 @@ namespace planespanners {
 
     void plotResults(const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter);
 
-    class PgfplotsPrinter : public TikzPrinter {
+    class PgfplotPrinter : public TikzPrinter {
     public:
         // Palette generated using https://coolors.co/
         vector<string> Colors = {
@@ -34,7 +34,7 @@ namespace planespanners {
                 "*", "triangle*", "square*",  "pentagon*", "diamond*"
         };
 
-        PgfplotsPrinter(string filename, string documentType = "standalone")
+        PgfplotPrinter(string filename, string documentType = "standalone")
                 : TikzPrinter(filename,documentType){
             m_body = Body{getTikzHeader(),
                           "",
@@ -217,7 +217,7 @@ namespace planespanners {
             boost::erase_all(filename, ")");
             boost::erase_all(filename, "(");
 
-            PgfplotsPrinter singlePlotter(filename);
+            PgfplotPrinter singlePlotter(filename);
             //singlePlotter.setCaption(caption);
             singlePlotter.plotAxis(iv,results,first);
             first = false;

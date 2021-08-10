@@ -22,9 +22,9 @@
 #include <CGAL/Segment_Delaunay_graph_Linf_filtered_traits_2.h>
 #include <CGAL/Segment_Delaunay_graph_storage_traits_with_info_2.h>
 
-//#include "GeometricSpannerPrinter.h"
-//#include "metrics.h"
-#include "utilities.h"
+//#include "printers/GraphPrinter.h"
+//#include "tools/Metrics.h"
+#include "tools/Utilities.h"
 
 namespace planespanners {
 

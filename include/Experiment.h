@@ -6,26 +6,29 @@
 #include <optional>
 #include <utility>
 
-#include "LatexPrinter.h"
-#include "LineGraphPrinter.h"
-#include "metrics.h"
-#include "names.h"
-#include "PointGenerators.h"
-#include "Result.h"
-#include "TablePrinter.h"
-#include "utilities.h"
 
+#include "algorithms/BCC2012.h"
+#include "algorithms/BGHP2010.h"
+#include "algorithms/BGS2005.h"
+#include "algorithms/BHS2018.h"
+#include "algorithms/BKPX2015.h"
+#include "algorithms/BSX2009.h"
+#include "algorithms/KPT2017.h"
+#include "algorithms/KPX2010.h"
+#include "algorithms/KX2012.h"
+#include "algorithms/LW2004.h"
 
-#include "BCC2012.h"
-#include "BGHP2010.h"
-#include "BGS2005.h"
-#include "BHS2018.h"
-#include "BKPX2015.h"
-#include "BSX2009.h"
-#include "KPT2017.h"
-#include "KPX2010.h"
-#include "KX2012.h"
-#include "LW2004.h"
+#include "Names.h"
+
+#include "printers/LatexPrinter.h"
+#include "printers/PgfplotPrinter.h"
+#include "printers/TablePrinter.h"
+
+#include "tools/Metrics.h"
+#include "tools/PointGenerators.h"
+#include "tools/Results.h"
+#include "tools/Utilities.h"
+
 
 namespace planespanners {
 
@@ -44,7 +47,7 @@ namespace planespanners {
 
     LatexPrinter latex("exp-main");
     GraphPrinter graph("exp-vis");
-    PgfplotsPrinter pgfplots("exp-plots");
+    PgfplotPrinter pgfplots("exp-plots");
 
     vector<BoundedDegreeSpannerResultSet> RESULTS(DistributionTypeLast);
 

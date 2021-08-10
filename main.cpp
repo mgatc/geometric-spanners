@@ -4,7 +4,6 @@
 
 #include "Experiment.h"
 #include "Scratch.h"
-#include "utilities.h"
 
 const bool MEASURE_STRETCH_FACTOR = true;
 
@@ -12,12 +11,12 @@ using namespace planespanners;
 
 int main(int argc, char *argv[]) {
 
-    const index_t runs = 100;
-    const index_t n_begin = 5000;
-    const index_t n_end = 10000;
-    const index_t increment = 1000;
+    const size_t runs = 100;
+    const size_t n_begin = 5000;
+    const size_t n_end = 10000;
+    const size_t increment = 1000;
 
-    vector<index_t> experimentParameters = {
+    vector<size_t> experimentParameters = {
             runs, n_begin, n_end, increment
     };
 
@@ -41,7 +40,10 @@ int main(int argc, char *argv[]) {
         scratch(N);
     } else {
         ignore = system("rm ./output/exp-*");
-        experiment(experimentParameters[0], experimentParameters[1], experimentParameters[2], experimentParameters[3]);
+        experiment(experimentParameters[0],
+                   experimentParameters[1],
+                   experimentParameters[2],
+                   experimentParameters[3]);
     }
     return 0;
 }

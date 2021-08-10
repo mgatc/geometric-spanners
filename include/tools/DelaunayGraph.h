@@ -15,7 +15,7 @@
 #include <CGAL/Vector_2.h>
 #include <CGAL/utils.h> // min, max
 
-#include "utilities.h"
+#include "tools/Utilities.h"
 
 namespace planespanners {
 

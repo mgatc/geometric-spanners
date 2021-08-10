@@ -20,7 +20,7 @@
 #include "utilities.h"
 
 
-namespace unf_spanners {
+namespace planespanners {
 
     using namespace std;
 
@@ -33,7 +33,7 @@ namespace unf_spanners {
 
         //Slopes of the cone boundry lines.
         //const vector<number_t> bisectorSlopes{INF, tan30, -1 * tan30, INF, tan30, -1 * tan30};
-        const vector<number_t> orthBisectorSlopes{0, -1 * COT30, COT30, 0, -1 * COT30, COT30};
+        const number_t orthBisectorSlopes[] = {0, -1 * COT30, COT30, 0, -1 * COT30, COT30};
 
         //Finds the cone of p containing vertex q, for this algorithm all vertices have 6 cones (0-5) with an getAngle of (PI/3).
         inline cone_t getSingleCone(const index_t p, const index_t q, const vector<VertexHandle> &H) {
@@ -50,11 +50,12 @@ namespace unf_spanners {
 
         //Compute max of getCone(p,q) and (getCone(q,p)+3)%6, is used to make sure cones are calculated correctly.
         inline cone_t getCone(const index_t p, const index_t q, const vector<VertexHandle> &H) {
-            if (H[p] < H[q]) {
-                return getSingleCone(p, q, H);
-            } else {
-                return (getSingleCone(q, p, H) + 3) % 6;
-            }
+            return H[p] < H[q] ? getSingleCone(p, q, H) : (getSingleCone(q, p, H) + 3) % 6;
+//            if (H[p] < H[q]) {
+//                return getSingleCone(p, q, H);
+//            } else {
+//                return (getSingleCone(q, p, H) + 3) % 6;
+//            }
         }
 
         //Finds the bisector length of a given edge.
@@ -64,7 +65,7 @@ namespace unf_spanners {
             //assert(cone < 6);
             //assert(e.first < H.size());
 
-            number_t xCord = H[e.first]->point().x() - orthBisectorSlopes.at(cone);
+            number_t xCord = H[e.first]->point().x() - orthBisectorSlopes[cone];
             number_t yCord = H[e.first]->point().y() + 1;
 
             Point bisectorPoint(xCord, yCord);
@@ -124,8 +125,7 @@ namespace unf_spanners {
                                           const cone_t cone,
                                           const DelaunayTriangulation &DT,
                                           const vector<VertexHandle> &H,
-                                          const EdgeBisectorMap &B,
-                                          bool printLog = false) {
+                                          const EdgeBisectorMap &B) {
 
             Edge e = make_pair(p, r);
 
@@ -166,11 +166,10 @@ namespace unf_spanners {
                                  const DelaunayTriangulation &DT,
                                  const vector<VertexHandle> &H,
                                  const EdgeBisectorMap &B,
-                                 PointConeMap &AL_e_a,
-                                 bool printLog = false) {
+                                 PointConeMap &AL_e_a) {
 
             //Creates an edge (p,r)
-            Edge e = make_pair(p, r);
+            //Edge e = make_pair(p, r);
 
             //Computes the cone of p containing r.
             cone_t p_cone = getCone(p, r, H);
@@ -218,7 +217,7 @@ namespace unf_spanners {
                     const size_t z_cone = 1 + int(i == 1) * 4;
                     if (getCone(edge.second, edge.first, H) == cone[z_cone]) {
                         E_CAN.push_back(edge);
-                        if (printLog) cout << edge.first << "-" << edge.second << "[" << i << "]\\" << cone[z_cone] << "/,";
+                        //if (printLog) cout << edge.first << "-" << edge.second << "[" << i << "]\\" << cone[z_cone] << "/,";
 
                         //assert(DT.is_edge(H.at(edge.second), H.at(edge.first)));
                     }
@@ -268,17 +267,16 @@ namespace unf_spanners {
                 }
             }
         }
-    } // namespace BHS2017
+    } // namespace BHS2018
 
 //Main algorithm.
     template<typename RandomAccessIterator, typename OutputIterator>
-    void BHS2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result,
-                 bool printLog = false) {
+    void BHS2018(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result) {
 
         using namespace bhs2017;
 
         //Angle of the cones. Results in 6 cones for a given vertex.
-        const number_t alpha = PI / 3;
+        //const number_t alpha = PI / 3;
 
         vector<Point> P(pointsBegin, pointsEnd);
         vector<index_t> index;
@@ -356,8 +354,8 @@ namespace unf_spanners {
 
             //Timer stretchFactor;
             for (auto e : E_A) {
-                addCanonical(E_CAN, e.first, e.second, DT, handles, B, AL_E_A, printLog);
-                addCanonical(E_CAN, e.second, e.first, DT, handles, B, AL_E_A, printLog);
+                addCanonical(E_CAN, e.first, e.second, DT, handles, B, AL_E_A);
+                addCanonical(E_CAN, e.second, e.first, DT, handles, B, AL_E_A);
             }
         }
 
@@ -423,13 +421,13 @@ namespace unf_spanners {
 //        };
 //        printer.drawVerticesWithInfo(DT, options, borderOptions);
 //
-//        printer.print("BHS2017");
+//        printer.print("BHS2018");
 //        cout << "\n";
 //    }
         // END PRINTER NONSENSE
 
-    } // function BHS2017
+    } // function BHS2018
 
-} // namespace unf_spanners
+} // namespace planespanners
 
 #endif // GSNUNF_BHS2017_H

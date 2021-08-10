@@ -15,19 +15,17 @@
 
 
 
-namespace unf_spanners {
+namespace planespanners {
 
 //Cone angles.
 const number_t alpha = PI/3;
 
 //Slopes of the cone boundary lines.
-//const vector<number_t> bisectorSlopes{ INF, tan30, -1*tan30, INF, tan30, -1*tan30 };
-const vector<number_t> orthBisectorSlopes{ 0, -1*COT30, COT30, 0, -1*COT30, COT30 };
+const number_t orthBisectorSlopes[] = { 0, -1*COT30, COT30, 0, -1*COT30, COT30 };
 
 //Finds the cone of p containing vertex q, for this algorithm all vertices have 6 cones (0-5) with an getAngle of (PI/3).
 template<class Point_2>
-inline cone_t getSingleCone(const index_t p, const index_t q, const vector<Point_2> &H)
-{
+inline cone_t getSingleCone(const index_t p, const index_t q, const vector<Point_2> &H){
     if(CGAL::compare_y(H[p], H[q]) == CGAL::EQUAL ) {
         return 1 + 3*int(CGAL::compare_x(H[p], H[q]) == CGAL::LARGER);
     }
@@ -40,8 +38,7 @@ inline cone_t getSingleCone(const index_t p, const index_t q, const vector<Point
 
 //Compute max of getCone(p,q) and (getCone(q,p)+3)%6, is used to make sure cones are calculated correctly.
 template<class Point>
-inline size_t getCone( const size_t p, const size_t q, const vector<Point> &H )
-{
+inline size_t getCone( const size_t p, const size_t q, const vector<Point> &H ){
     return p < q ?
         getSingleCone(p, q, H)
         : (getSingleCone(q, p, H) + 3 ) % 6;
@@ -78,17 +75,13 @@ class HalfThetaTriangulation {
     template <typename InputIt>
     HalfThetaTriangulation(InputIt first, InputIt last, const Geom_traits& gt = Geom_traits()) :
                 halfTheta(6, Direction_2(1,0), CGAL::ODD_CONES),
-                _gt(gt)
-    {
+                _gt(gt) {
         insert(first,last);
     }
 
-    HalfThetaTriangulation(const Geom_traits& gt = Geom_traits()) :
-                halfTheta(6, Direction_2(1,0), CGAL::ODD_CONES),
-                _gt(gt)
-    {
-
-    }
+//    HalfThetaTriangulation(const Geom_traits& gt = Geom_traits()) :
+//                halfTheta(6, Direction_2(1,0), CGAL::ODD_CONES),
+//                _gt(gt) {}
 
     template < class InputIt>
     std::ptrdiff_t insert(InputIt first, InputIt last) {
@@ -105,7 +98,7 @@ class HalfThetaTriangulation {
         return number_of_vertices() - n;
     }
 
-    const Geom_traits& geom_traits() const { return _gt;}
+//    const Geom_traits& geom_traits() const { return _gt;}
 
     std::ptrdiff_t number_of_vertices() {
         return boost::num_vertices(_G);
@@ -153,7 +146,7 @@ class HalfThetaTriangulation {
 
     //Compute max of getCone(p,q) and (getCone(q,p)+3)%6, is used to make sure cones are calculated correctly.
     inline size_t getCone(const VertexDescriptor &p, const VertexDescriptor &q ) const {
-        return unf_spanners::getCone(p, q, _P);
+        return planespanners::getCone(p, q, _P);
     }
     inline bool edgeExists(const pair<VertexDescriptor,VertexDescriptor>& e) const {
         return boost::edge(e.first, e.second,_G).second;

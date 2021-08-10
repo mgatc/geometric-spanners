@@ -1,5 +1,5 @@
-#ifndef GEOMETRIC_SPANNERS_PGFPLOTSPRINTER_H
-#define GEOMETRIC_SPANNERS_PGFPLOTSPRINTER_H
+#ifndef PLANESPANNERS_PGFPLOTSPRINTER_H
+#define PLANESPANNERS_PGFPLOTSPRINTER_H
 
 #include <map>
 #include <iostream>
@@ -11,12 +11,11 @@
 #include "Result.h"
 #include "utilities.h"
 
-namespace unf_spanners {
+namespace planespanners {
 
     using namespace std;
-    std::vector<std::string> MARKS = {
-        "*"
-    };
+
+    const size_t SCALING_FACTOR=100;
 
     void plotResults(const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter);
 
@@ -30,6 +29,10 @@ namespace unf_spanners {
                 "277da1","360568"
         };
 
+        std::vector<std::string> Marks = {
+                //"otimes*",
+                "*", "triangle*", "square*",  "pentagon*", "diamond*"
+        };
 
         PgfplotsPrinter(string filename, string documentType = "standalone")
                 : TikzPrinter(filename,documentType){
@@ -44,37 +47,11 @@ namespace unf_spanners {
 
 
 
-//        string getLegendAxisAttributes() {
-////            string legend = string(",\nlegend columns=3,\n")
-////                + "legend to name=planespannerlegend\n";
-//
-//            return legend;
-//        }
-//        string getLegend() {
-//            TikzPrinter tikz("templegend");
-//            string legend = "\\begin{axis}[%\n"
-//                            "            hide axis,\n"
-//                            "                    xmin=10,\n"
-//                            "                    xmax=50,\n"
-//                            "                    ymin=0,\n"
-//                            "                    ymax=0.4,\n"
-//                            "                    legend style={draw=white!15!black,legend cell align=left},\n"
-//                            "                    legend columns=3\n"
-//                            "            ]\n\n";
-//            for(string name : ALGORITHM_NAMES) {
-//                legend += "\\addlegendentry{"
-//                        + name
-//                        +  "}";
-//            }
-//            legend += "\\end{axis}";
-//
-//            tikz.addRawText(legend);
-//
-//        }
-        void plotAxis(unsigned iv, const BoundedDegreeSpannerResultSet &results) {
+
+        void plotAxis(unsigned iv, const BoundedDegreeSpannerResultSet &results, bool legend) {
 
             // build axis header
-            string allPlotsOfAxis = getAxisHeader(iv, results);
+            string allPlotsOfAxis = getAxisHeader(iv, results, legend);
 
             for( const auto& alg : results.m_reducedSamples ) {
                 // build the plot
@@ -83,9 +60,9 @@ namespace unf_spanners {
                 for( const auto& level : alg.second ) {
                     // add the level, measurement pair
                     string entry = "("
-                                   + std::to_string(level.first)
+                                   + std::to_string(static_cast<double>(level.first) / SCALING_FACTOR)
                                    + ","
-                                   + unf_spanners::to_string(level.second.IV.at(IV_NAMES[iv]))
+                                   + planespanners::to_string(level.second.IV.at(IV_NAMES[iv]))
                                    + ")\n";
                     plot += entry;
                 }
@@ -98,10 +75,13 @@ namespace unf_spanners {
             }
             allPlotsOfAxis += getAxisFooter();
 
+//            if(legend)
+//                allPlotsOfAxis += getLegend();
+
             m_body.content = allPlotsOfAxis;
         }
         void plotResults(const BoundedDegreeSpannerResultSet &results) {
-            unf_spanners::plotResults(results,this);
+            planespanners::plotResults(results, this);
         }
 //        string addLegendEntry(Algorithm alg) {
 //            string legendEntry = "\\addlegendentry{\\textsc{\\tiny{"
@@ -132,58 +112,73 @@ namespace unf_spanners {
 
             return legend;
         }
-        void addLegend() {
-            m_body.footer += getLegendText(ALGORITHM_NAMES);
+        string getLegend() {
+            return "\\ref{planespannerlegend}\n\n";
         }
         string getPlotHeader(Algorithm alg) {
-            string plotHeader = "\n\n\\addplot";
-            plotHeader += "[thick,color="
-                    + Colors[alg]
-                    + ",mark="
-                    + MARKS[alg % MARKS.size()]
-                    +"]";
+            string plotHeader = "\n\n\\addplot+";
+            plotHeader += string("[solid")
+                    + ",color="
+                    + Colors[alg%Colors.size()];
+            plotHeader += string(",")
+                          + "mark="
+                          + Marks[alg % Marks.size()];
+            plotHeader += "]";
             plotHeader += " coordinates {\n";
             return plotHeader;
         }
         string getPlotFooter(unsigned iv) {
             string plotFooter("}node [pos=1.15, above left] {};\n\n");
-            plotFooter += "\\label{plots:"
-                        + ALGORITHM_NAMES[iv]
-                        + "}";
+//            plotFooter += "\\label{plots:"
+//                        + ALGORITHM_NAMES[iv]
+//                        + "}";
             return plotFooter;
         }
         string getAxisHeader(unsigned iv,
-                             const BoundedDegreeSpannerResultSet &results) {
+                             const BoundedDegreeSpannerResultSet &results,
+                             bool legend ) {
+
             string axisHeader = string("")
-                                + "\\begin{axis}["
-                                + "title={"
-                                + (m_caption.empty() ? PGFPLOT_NAMES[iv] : m_caption)
-                                + "},"
-                                + "grid=major,xlabel=$n$, "
-                                + "xtick={";
-            string xTicks;
+                                + "\\begin{axis}[";
+            if(!m_caption.empty()) axisHeader += "title={" + m_caption + "},";
+            axisHeader += string("scaled ticks=false,grid=major,xlabel={$n$ (in thousands)}, ")
+                        + "xtick=";//{";
+            string xTicks = "data";
             //assert(!results.m_reducedSamples.empty());
-            for( auto level : results.m_reducedSamples.begin()->second ){
-                xTicks += std::to_string(level.first);
-                xTicks += ",";
-            }
-            xTicks = xTicks.substr( 0, xTicks.size()-1 );
+//            for( auto level : results.m_reducedSamples.begin()->second ){
+//                xTicks += std::to_string(static_cast<double>(level.first) / SCALING_FACTOR);
+//                xTicks += ",";
+//            }
+//            xTicks = xTicks.substr( 0, xTicks.size()-1 );
 
             axisHeader += xTicks
-                          + "\n}, ylabel near ticks,ylabel={"
+                          //+ "\n}"
+                          + ", ylabel near ticks,ylabel={"
                           + IV_SYMBOLS.at(iv);
             if(!IV_UNITS.at(iv).empty())
-                axisHeader += " ("
+                axisHeader += " (in "
                           + IV_UNITS.at(iv)
                           + ")";
 
             axisHeader += "}";
 
-//            if(first)
-//                axisHeader += getLegendAxisAttributes();
+            if(legend)
+                axisHeader += getLegendAxisAttributes();
 
             axisHeader += "]"; // close axis environment attributes
             return axisHeader;
+        }
+
+        string getLegendAxisAttributes() {
+
+            string legend = string(",\nlegend columns=3,\n")
+                + "legend to name=planespannerlegend,\n"
+                + "legend entries={";
+            for(auto name : ALGORITHM_NAMES)
+                legend += name + ",";
+            legend += "}";
+
+            return legend;
         }
         string getAxisFooter() {
             string axisFooter("\n\n\\end{axis}\n\n");
@@ -197,30 +192,41 @@ namespace unf_spanners {
 
 
 
-    void plotResults(const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter, vector<string> plotNames = {}) {
+    void plotResults(const DistributionType dist, const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter) {
 
+        // Create plot names
+        vector<string> plotNames;
+        transform(PGFPLOT_NAMES.begin(),
+                  PGFPLOT_NAMES.end(),
+                  back_inserter(plotNames),
+                  [&dist](const string& str) {
+                      string plotName = str + " (" + DISTRIBUTION_NAMES.at(dist) + ")";
+                      //cout<<plotName;
+                      return plotName;
+                  });
 
         const double scale = 1;
         auto plotNameIt = plotNames.begin();
-        bool first = false;
+        bool first = true;
         for( unsigned iv=0;iv<IV_NAMES.size();++iv) {
         //for( const auto& iv : IV_NAMES ) {
             //assert(plotNameIt != plotNames.end());
             string caption = *plotNameIt++;
-            string filename = string("output-plot-") + caption;
+            string filename = string("exp-plot-") + caption;
             boost::erase_all(filename, " ");
+            boost::erase_all(filename, ")");
+            boost::erase_all(filename, "(");
 
             PgfplotsPrinter singlePlotter(filename);
-            singlePlotter.setCaption(caption);
-            singlePlotter.plotAxis(iv,results);
-            if(first)singlePlotter.addLegend();
+            //singlePlotter.setCaption(caption);
+            singlePlotter.plotAxis(iv,results,first);
             first = false;
 
-            addToPrinter->addToDocument(singlePlotter);
+            addToPrinter->addToDocument(singlePlotter,PRECOMPILE_SUBDOCUMENTS);
         }
     }
 
-} // namespace unf_spanners
+} // namespace planespanners
 
 
-#endif //GEOMETRIC_SPANNERS_PGFPLOTSPRINTER_H
+#endif //PLANESPANNERS_PGFPLOTSPRINTER_H

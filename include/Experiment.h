@@ -1,5 +1,5 @@
-#ifndef GEOMETRIC_SPANNERS_EXPERIMENT_H
-#define GEOMETRIC_SPANNERS_EXPERIMENT_H
+#ifndef PLANESPANNERS_EXPERIMENT_H
+#define PLANESPANNERS_EXPERIMENT_H
 
 #include <iostream>
 #include <list>
@@ -19,7 +19,7 @@
 #include "BCC2012.h"
 #include "BGHP2010.h"
 #include "BGS2005.h"
-#include "BHS2017.h"
+#include "BHS2018.h"
 #include "BKPX2015.h"
 #include "BSX2009.h"
 #include "KPT2017.h"
@@ -27,52 +27,79 @@
 #include "KX2012.h"
 #include "LW2004.h"
 
-namespace unf_spanners {
+namespace planespanners {
 
     using std::to_string;
 
     const bool PRINT_GEOMETRY = false;
     const bool PRINT_PGFPLOTS = true;
-    const bool PRINT_TABLES = true;
+    const bool PRINT_IV_TABLES = true;
+    const bool PRINT_SUMMARY_TABLES = true;
 
-    const bool USE_EXACT_STRETCH_FACTOR = true;
+    size_t WRONG_COUNT_2 = 0;
+    number_t WRONG_AMOUNT_2 = 0.0;
+    size_t WRONG_COUNT_3 = 0;
+    number_t WRONG_AMOUNT_3 = 0.0;
+    size_t EXP_COUNT = 0;
+
+    LatexPrinter latex("exp-main");
+    GraphPrinter graph("exp-vis");
+    PgfplotsPrinter pgfplots("exp-plots");
 
     vector<BoundedDegreeSpannerResultSet> RESULTS(DistributionTypeLast);
 
-    LatexPrinter latex("output-main");
-    GraphPrinter graph("output-vis");
-    PgfplotsPrinter pgfplots("output-plots");
+    void PlaneSpannerExperiment( const vector<Point>&,const DistributionType,const Algorithm);
+    bool singleRun( const size_t,const DistributionType,const double);
 
-    GraphPrinter::OptionsList activeEdgeOptions = { // active edge options
-            {"color",      graph.activeEdgeColor},
-            {"line width", to_string(graph.activeEdgeWidth)}
-    },
-    highlightEdgeOptions = { // active edge options
-            {"densely dashed", ""},
-            {"color",          graph.worstPathEdgeColor},
-            {"line width",     to_string(graph.activeEdgeWidth)}
-    },
-    highlightVertexOptions = {
-            {"diamond",    ""},
-            {"vertex",     (to_string(graph.vertexRadius * 1.61))}, // vertex width
-            {"color",      (graph.worstPathEdgeColor)}, // text color
-            {"fill",       (graph.worstPathEdgeColor)}, // vertex color
-            {"line width", (to_string(0))} // vertex border (same color as text)
-    },
-    activeVertexOptions = {
-            {"circle",     ""},
-            {"vertex",     (to_string(graph.vertexRadius))}, // vertex width
-            {"color",      (graph.backgroundColor)}, // text color
-            {"fill",       (graph.activeVertexColor)}, // vertex color
-            {"line width", (to_string(0))} // vertex border (same color as text)
-    },
-    borderOptions = {
-            {"border",     (to_string(graph.vertexRadius))}, // choose shape of vertex
-            {"color",      graph.activeEdgeColor}, // additional border color
-            {"line width", to_string(graph.inactiveEdgeWidth)}, // additional border width
-    };
-    template<class Container>
-    void PlaneSpannerExperiment(const Container &points,
+
+
+    bool experiment(size_t numRuns, size_t n_start, size_t n_end, size_t increment ) {
+
+        // EXPERIMENT PARAMETER OVERRIDE ----------------------------------------//
+        numRuns = numRuns, n_start = n_start, n_end = n_end, increment = increment;
+        // ----------------------------------------------------------------------//
+
+        const number_t width = 1000;
+
+        for( int dist=DistributionTypeFirst; dist!=DistributionTypeLast; ++dist ) {
+            auto distibutionType = static_cast<DistributionType>(dist);
+            auto& result = RESULTS.at(dist);
+            for (size_t trial = 0; trial <= numRuns; ++trial) {
+                for (size_t n = n_start; n <= n_end; n += increment) {
+                    singleRun(n, distibutionType, width);//, "output", nullopt, false, false ) )
+                }
+            }
+            result.computeStatistics();
+
+            if (PRINT_PGFPLOTS) {
+                plotResults(distibutionType, result, &latex);
+            }
+            if(PRINT_IV_TABLES){
+                tabulateIVs(distibutionType, result, &latex);
+            }
+            if (PRINT_SUMMARY_TABLES) {
+                tabulateSummaryResults(distibutionType, result, &latex);
+            }
+
+        }
+
+        if (PRINT_GEOMETRY || PRINT_PGFPLOTS || PRINT_SUMMARY_TABLES || PRINT_IV_TABLES)
+            latex.display();
+
+//        cout<<"Astar Wrong Count="<<WRONG_COUNT_2<<" Average Amount="<<(WRONG_COUNT_2 > 0 ? WRONG_AMOUNT_2/WRONG_COUNT_2 : 0)<<endl;
+//        cout<<"      Wrong Rate="<<(100*((double)WRONG_COUNT_2/EXP_COUNT))<<"%"<<endl;
+//        cout<<"Dijkstra Wrong Count="<<WRONG_COUNT_3<<" Average Amount="<<(WRONG_COUNT_3 > 0 ? WRONG_AMOUNT_3/WRONG_COUNT_3 : 0)<<endl;
+//        cout<<"      Wrong Rate="<<(100*((double)WRONG_COUNT_3/EXP_COUNT))<<"%"<<endl;
+//        cout<<endl<<"Total exp="<<EXP_COUNT<<endl;
+
+        //cout<<"\nTesting Complete. "<< invalid << " of "<<(numRuns*(n_end-n_start))<<" invalid results.\n\n";
+        return true;
+    }
+
+
+
+
+    void PlaneSpannerExperiment(const vector<Point> &points,
                                 const DistributionType dist,
                                 const Algorithm algorithm ) {
         using namespace std;
@@ -106,8 +133,8 @@ namespace unf_spanners {
             case Algorithm::Bcc2012_6:
                 BCC2012<6>(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
-            case Algorithm::Bhs2017:
-                BHS2017(pointsBegin, pointsEnd, back_inserter(spanner));
+            case Algorithm::Bhs2018:
+                BHS2018(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
             case Algorithm::Bghp2010:
                 BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
@@ -123,25 +150,78 @@ namespace unf_spanners {
         }
 
         number_t runtime = tim.stop();
-        size_t n = points.size();
-        size_t deg = degree( spanner.begin(), spanner.end() );
-        number_t degAvg = degreeAvg( spanner.begin(), spanner.end() );
-        number_t lightness = getLightness( points.begin(), points.end(), spanner.begin(), spanner.end() );
-        number_t t = USE_EXACT_STRETCH_FACTOR ?
-            StretchFactorDijkstraReduction( points.begin(), points.end(), spanner.begin(), spanner.end() )
-            : StretchFactorUsingHeuristic( points.begin(), points.end(), spanner.begin(), spanner.end() );
+        BoundedDegreeSpannerResult result(algorithm, runtime, points.begin(), points.end(), spanner.begin(), spanner.end());
+        cout << result;
 
-        list<Edge> WorstPath;
-        SFWorstPath( points.begin(), points.end(), spanner.begin(), spanner.end(),
-                     make_optional(inserter(WorstPath,WorstPath.begin())) );
+        ++EXP_COUNT;
 
-        BoundedDegreeSpannerResult result(algorithm, n, runtime, deg, degAvg, lightness, t );
+//        double stretchFactor;
+//        {
+//            Timer tim;
+//            stretchFactor = StretchFactorDijkstraReduction(points.begin(), points.end(), spanner.begin(),
+//                                                           spanner.end());
+//        }
+//        cout<< stretchFactor;
+//        cout<<",";
+//
+//        double stretchFactor2;
+//        {
+//            Timer tim;
+//            stretchFactor2 = StretchFactorUsingHeuristic(points.begin(), points.end(), spanner.begin(),
+//                                                         spanner.end());
+//        }
+//        cout<< stretchFactor2;
+//        if(abs(stretchFactor2-stretchFactor) > EPSILON) {
+//            cout<<"(WRONG)";
+//            WRONG_COUNT_2++;
+//            WRONG_AMOUNT_2 += abs(stretchFactor2-stretchFactor);
+//        }
+//        cout<<",";
+//
+//        double stretchFactor3;
+////        list<Edge> WorstPathHeuristic;
+////        SFWorstPath2( points.begin(), points.end(), spanner.begin(), spanner.end(),
+////                     make_optional(inserter(WorstPathHeuristic,WorstPathHeuristic.begin())) );
+//        {
+//            Timer tim;
+//            stretchFactor3 = StretchFactorUsingHeuristic2(points.begin(), points.end(), spanner.begin(),
+//                                                          spanner.end());
+//        }
+//        cout<< stretchFactor3;
+//        if(abs(stretchFactor3-stretchFactor) > EPSILON) {
+//            cout<<"(WRONG)";
+//            WRONG_COUNT_3++;
+//            WRONG_AMOUNT_3 += abs(stretchFactor3-stretchFactor);
+//            //print and return
+//            GraphPrinter tikz("scratch-graph");
+//            tikz.autoscale(points.begin(), points.end());
+//            tikz.drawEdges(spanner.begin(), spanner.end(), points, tikz.inactiveEdgeOptions);
+//            tikz.drawVerticesWithInfo(points.begin(), points.end(), tikz.activeVertexOptions);
+//
+//            list<Edge> WorstPath;
+//            SFWorstPath( points.begin(), points.end(), spanner.begin(), spanner.end(),
+//                         make_optional(inserter(WorstPath,WorstPath.begin())) );
+//            tikz.drawEdges(WorstPath.begin(),WorstPath.end(), points, tikz.activeEdgeOptions);
+//
+//
+//            LatexPrinter latex("scratch-latex");
+//            latex.addToDocument(tikz);
+//            latex.display();
+//            assert(!"WRONG STRETCH FACTOR");
+//        }
+//        cout<<endl<<endl;
+
 
         RESULTS.at(dist).registerResult(result);
-        cout << result << endl;
+
         if(PRINT_GEOMETRY){
-            string outputname = string("RPIS-")
-                                + to_string(n)
+            list<Edge> WorstPath;
+            SFWorstPath( points.begin(), points.end(), spanner.begin(), spanner.end(),
+                         make_optional(inserter(WorstPath,WorstPath.begin())) );
+
+            string outputname = "visual-"
+                                + DISTRIBUTION_NAMES.at(dist)
+                                + to_string(points.size())
                                 + "-"
                                 + ALGORITHM_NAMES.at(algorithm);
             GraphPrinter printer(outputname);
@@ -160,17 +240,17 @@ namespace unf_spanners {
             }), spanner.end());
 
             printer.addLatexComment("spanner edges (except for worst path)");
-            printer.drawEdges( spanner.begin(), spanner.end(), points, activeEdgeOptions);
+            printer.drawEdges( spanner.begin(), spanner.end(), points, printer.activeEdgeOptions);
 
             printer.addLatexComment("worst path edges");
-            printer.drawEdges(WorstPath.begin(),WorstPath.end(), points, highlightEdgeOptions);
+            printer.drawEdges(WorstPath.begin(),WorstPath.end(), points, printer.highlightEdgeOptions);
 
             printer.addLatexComment("vertices");
-            printer.drawVertices( points.begin(), points.end(), activeVertexOptions);
+            printer.drawVertices( points.begin(), points.end(), printer.activeVertexOptions);
 
             printer.addLatexComment("worst pair vertices");
             vector<Point> worstPair = { points[WorstPath.front().first], points[WorstPath.back().second] };
-            printer.drawVertices( worstPair.begin(), worstPair.end(), highlightVertexOptions);
+            printer.drawVertices( worstPair.begin(), worstPair.end(), printer.highlightVertexOptions);
 
             latex.addToDocumentAsFigure(printer);
         }
@@ -178,7 +258,7 @@ namespace unf_spanners {
 
     bool singleRun( const size_t n, DistributionType dist, const double width ){ //}, string resultFilename, optional<string> filename, bool forcePrint, bool printLog )
 
-        // SET POINT SET
+        // SET POINTS
         vector<Point> points;
 
         switch(dist) {
@@ -186,27 +266,30 @@ namespace unf_spanners {
             generatePointsInsideASquare(n,width,points);
             break;
         case UniformInsideDisc:
-            generatePointsInsideADisc(n,width/2,points);
+            generatePointsInsideADisc(n,width,points);
             break;
         case NormalInsideSquare:
             generatePointsInsideASquareNormal(n,1,points);
             break;
         case NormalClustersInsideSquare:
-            generatePointsInsideASquareNormal(ceil(sqrt(n)),floor(sqrt(n)),points);
+            generatePointsInsideASquareNormal(n/pow(n,(1/3)),
+                                              pow(n,(1/3)),points);
             break;
         case ContiguousGrid:
-            generateContiguousPointsOnAGrid(n, width, points);
+            generateContiguousPointsOnAGrid(n, points);
             break;
         case UniformRandomGrid:
-            generateRandomPointsOnAGrid(n,width, points);
+            generateRandomPointsOnAGrid(n, points);
             break;
-//        case UniformInsideAnnulus:
-//            generateRandomInsideAnnulus(n, width, width*0.63, points);
-//            break;
+        case UniformInsideAnnulus:
+            generateRandomInsideAnnulus(n, width, width*0.8, points);
+            break;
 //        case Real:
 //            generatePointsFromFile(n, points);
 //            break;
-
+        case DistributionTypeLast:
+        default:
+            assert(!"Invalid distribution type!");
         }
 
         if(PRINT_GEOMETRY) {
@@ -222,7 +305,7 @@ namespace unf_spanners {
                              + "$";
             printer.setCaption(caption);
 
-            printer.drawVertices(points.begin(), points.end(), activeVertexOptions);
+            printer.drawVertices(points.begin(), points.end(), printer.activeVertexOptions);
 
             latex.addToDocumentAsFigure(printer);
         }
@@ -237,59 +320,12 @@ namespace unf_spanners {
         return true;
     }
 
-    bool experiment( size_t trials, size_t n_start, size_t n_end, size_t increment ) {
-        const double width = 10;
-
-        size_t invalid = 0;
-        size_t trialNum = 1;
-
-        for( int dist=DistributionTypeFirst; dist!=DistributionTypeLast; ++dist ) {
-            auto& result = RESULTS.at(dist);
-            for (size_t trial = 0; trial <= trials; ++trial) {
-                for (size_t n = n_start; n <= n_end; n += increment) {
-                    trialNum++;
-                    singleRun(n, static_cast<DistributionType>(dist), width);//, "output", nullopt, false, false ) )
-                }
-            }
-            result.computeStatistics();
-
-            if (PRINT_PGFPLOTS) {
-                // Create plot names
-                vector<string> plotNames;
-                transform(PGFPLOT_NAMES.begin(),
-                          PGFPLOT_NAMES.end(),
-                          back_inserter(plotNames),
-                          [&dist](const string& str) {
-                              string plotName = str + " (" + DISTRIBUTION_NAMES.at(dist) + ")";
-                              //cout<<plotName;
-                              return plotName;
-                          });
-                plotResults(result, &latex, plotNames);
-            }
-            string tableFilename = string("output-table")
-                    + DISTRIBUTION_NAMES.at(dist);
-            TablePrinter table(tableFilename);
-            if (PRINT_TABLES) {
-                table.ignoreIV(0); // ignore runtime
-                table.addColumn(DEGREE_BOUND_SYMBOL, DEGREE_BOUND_PER_ALGORITHM);
-                table.addColumn(STRETCH_FACTOR_BOUND_SYMBOL, STRETCH_FACTOR_BOUND_PER_ALGORITHM);
-                table.tabulateResults(result);
-                latex.addToDocumentAsFigure(table);
-            }
-
-        }
-
-        if (PRINT_GEOMETRY || PRINT_PGFPLOTS || PRINT_TABLES)
-            latex.display();
-
-        //cout<<"\nTesting Complete. "<< invalid << " of "<<(trials*(n_end-n_start))<<" invalid results.\n\n";
-        return invalid == 0;
-    }
 
 
 
 
 
-} // unf_spanners
 
-#endif //GEOMETRIC_SPANNERS_EXPERIMENT_H
+} // planespanners
+
+#endif //PLANESPANNERS_EXPERIMENT_H

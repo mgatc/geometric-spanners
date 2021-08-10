@@ -11,16 +11,17 @@
 #include "utilities.h"
 
 
-namespace unf_spanners {
+namespace planespanners {
 
 using namespace std;
 
 namespace bsx2009 {
 
-inline bool createNewEdge(const DelaunayTriangulation& T,
-                          const vector<VertexHandle>& handles,
+inline bool createNewEdge(//const DelaunayTriangulation& T,
+                          //const vector<VertexHandle>& handles,
                           index_tPairSet &E,
-                          const index_t i, const index_t j, const index_t n, bool printLog = false ) {
+                          const index_t i, const index_t j //const index_t n, bool printLog = false
+                           ) {
     //assert( std::max(i,j) < n );
     //assert( T.is_edge( handles.at(i), handles.at(j) ) );
     //if( printLog ) cout<<"add:("<<i<<","<<j<<") ";
@@ -33,7 +34,10 @@ inline bool createNewEdge(const DelaunayTriangulation& T,
 } // namespace bsx2009
 
 template< typename RandomAccessIterator, typename OutputIterator >
-void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, number_t alpha = 2*PI/3, bool printLog = false ) {
+void BSX2009( RandomAccessIterator pointsBegin,
+              RandomAccessIterator pointsEnd,
+              OutputIterator result,
+              number_t alpha = 2*PI/3) {
     using namespace bsx2009;
 
     // ensure valid alpha
@@ -41,7 +45,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     auto numCones = cone_t( rint( ceil( 2*PI / alpha ) ) );
     //assert( numCones > 0 ); // guard against /0
     auto alphaReal =2*PI / number_t(numCones);
-    cone_t FINAL_DEGREE_BOUND = 14 + numCones;
+    //cone_t FINAL_DEGREE_BOUND = 14 + numCones;
 
     vector<Point> P(pointsBegin, pointsEnd);
     vector<index_t> index;
@@ -106,7 +110,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
         do { // Find closest unprocessed neighbor, also count processed neighbors and neighbors in ePrime
             if( !T.is_infinite(N) ) {
-                if( unf_spanners::contains(ePrime, makeNormalizedPair(u, N->info() ) ) )
+                if( planespanners::contains(ePrime, makeNormalizedPair(u, N->info() ) ) )
                     ++degree;
 
                 if( isProcessed.at( N->info() ) )
@@ -153,7 +157,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         for( const auto &v : closestInCones ) {
             if( !T.is_infinite(v) ) {
                 //if( printLog ) cout<<"forward_";
-                createNewEdge( T, handles, ePrime, u, v->info(), n, printLog );
+                createNewEdge( ePrime, u, v->info());
                 //degree += size_t(inserted);
                 //if( printLog ) cout<<"degree:"<<degree<<",";
             }
@@ -168,7 +172,7 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
                 if( !( T.is_infinite(lastN) || isProcessed.at(lastN->info()) ) ) {
                     // don'stretchFactor add to degree for cross edges, they are not incident on u!
                     //if( printLog ) cout<<"cross_";
-                    createNewEdge( T, handles, ePrime, lastN->info(), N->info(), n, printLog );
+                    createNewEdge( ePrime, lastN->info(), N->info() );
                 }
             }
             lastN = N->handle();
@@ -247,6 +251,6 @@ void BSX2009( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
 
 } // function BSX2009
 
-} // namespace unf_spanners
+} // namespace planespanners
 
 #endif // GSNUNF_BSX2009_H

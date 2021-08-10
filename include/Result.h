@@ -2,10 +2,11 @@
 // Created by matt on 7/20/21.
 //
 
-#ifndef GEOMETRIC_SPANNERS_RESULT_H
-#define GEOMETRIC_SPANNERS_RESULT_H
+#ifndef PLANESPANNERS_RESULT_H
+#define PLANESPANNERS_RESULT_H
 
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <numeric>
 #include <optional>
@@ -14,10 +15,13 @@
 #include <variant>
 #include <vector>
 
+#include "metrics.h"
 #include "utilities.h"
 
-namespace unf_spanners {
+namespace planespanners {
     using namespace std;
+
+    const bool USE_EXACT_STRETCH_FACTOR = false;
 
     struct BoundedDegreeSpannerResult {
 
@@ -26,32 +30,48 @@ namespace unf_spanners {
         number_t runtime;
         mixed_t degree;
         number_t degreeAvg;
+        number_t stretchFactor;
         number_t lightness;
-        std::optional <number_t> stretchFactor;
-        index_t numberOfIVs = 4;
+        //index_t numberOfIVs = 5;
         map<string,mixed_t> IV;
+
+        template <class VertexIterator,class EdgeIterator>
+        BoundedDegreeSpannerResult(const Algorithm algorithm,
+                                   const number_t runtime,
+                                   VertexIterator pointsBegin,
+                                   VertexIterator pointsEnd,
+                                   EdgeIterator edgesBegin,
+                                   EdgeIterator edgesEnd )
+            : BoundedDegreeSpannerResult(algorithm,
+              std::distance(pointsBegin,pointsEnd),
+              runtime,
+              planespanners::degree( edgesBegin, edgesEnd ),
+              planespanners::degreeAvg( edgesBegin, edgesEnd ),
+              (USE_EXACT_STRETCH_FACTOR ?
+                StretchFactorDijkstraReduction( pointsBegin, pointsEnd, edgesBegin, edgesEnd )
+                : StretchFactorUsingHeuristic2( pointsBegin, pointsEnd, edgesBegin, edgesEnd )),
+              getLightness( pointsBegin, pointsEnd, edgesBegin, edgesEnd ) ) {}
 
         BoundedDegreeSpannerResult(const Algorithm algorithm,
                                    const index_t n,
                                    number_t runtime,
                                    mixed_t degree,
                                    const number_t degreeAvg,
-                                   const number_t lightness,
-                                   std::optional<number_t> stretchFactor = nullopt)
+                                   const number_t stretchFactor,
+                                   const number_t lightness)
                 : algorithm(algorithm),
                   n(n),
                   runtime(runtime),
                   degree(std::move(degree)),
                   degreeAvg(degreeAvg),
-                  lightness(lightness),
-                  stretchFactor(std::move(stretchFactor)),
-                  numberOfIVs(numberOfIVs + int(bool(stretchFactor))) {
+                  stretchFactor(stretchFactor),
+                  lightness(lightness) {
             unsigned i=0;
             IV.emplace(IV_NAMES[i++], runtime);
             IV.emplace(IV_NAMES[i++], degree);
             IV.emplace(IV_NAMES[i++], degreeAvg);
+            IV.emplace(IV_NAMES[i++], stretchFactor);
             IV.emplace(IV_NAMES[i++], lightness);
-            if(stretchFactor) IV.emplace(IV_NAMES[i++], *stretchFactor);
         }
 
         template<class Printer>
@@ -60,12 +80,10 @@ namespace unf_spanners {
                              + ALGORITHM_NAMES.at(algorithm)
                              + "}: "
                              + "$\\Delta = "
-                             + unf_spanners::to_string(degree);
+                             + planespanners::to_string(degree);
 
-            if( stretchFactor ) {
-                caption += ",\\ stretchFactor = "
-                           + to_string(*stretchFactor);
-            }
+            caption += ",\\ stretchFactor = "
+                       + to_string(stretchFactor);
 
             caption +="$";
             printer.setCaption(caption);
@@ -77,12 +95,9 @@ namespace unf_spanners {
                << result.runtime << ","
                << result.degree << ","
                << result.degreeAvg << ","
-               << result.lightness << ",";
-
-            if (result.stretchFactor)
-                os << *(result.stretchFactor);
-
-            os << ",\n";
+               << result.stretchFactor << ","
+               << result.lightness << ","
+               << "\n";
 
             return os;
         }
@@ -148,20 +163,18 @@ namespace unf_spanners {
                                                            return a + b.lightness;
                                                        }) / numSamples;
 
-                    optional<number_t> stretchFactor = nullopt;
-                    if(!level.second.empty() && level.second.front().stretchFactor) {
-                        stretchFactor = make_optional(std::accumulate(canonicalBegin,
+                    number_t stretchFactor = std::accumulate(canonicalBegin,
                                                           canonicalEnd,
                                                           0.0,
                                                           []( const auto& a, const auto& b ) {
-                                                              return a + *b.stretchFactor;
-                                                          }) / numSamples );
-                    }
+                                                              return a + b.stretchFactor;
+                                                          }) / numSamples;
+
                     BoundedDegreeSpannerResult result(alg.first,
                                                       level.first,
                                                       runtime,
                                                       degree,
-                                                      degreeAvg, lightness, stretchFactor);
+                                                      degreeAvg, stretchFactor, lightness);
                     m_reducedSamples[alg.first].emplace(level.first, result);
                 }
             }
@@ -196,16 +209,14 @@ namespace unf_spanners {
                                                          return a + b.second.lightness;
                                                      }) / numSamples;
 
-                optional<number_t> stretchFactor = nullopt;
-                if(!alg.second.empty() && alg.second.begin()->second.stretchFactor) {
-                    stretchFactor = make_optional(std::accumulate(canonicalBegin,
-                                                                  canonicalEnd,
-                                                                  0.0,
-                                                                  []( const auto& a, const auto& b ) {
-                                                                      return a + *b.second.stretchFactor;
-                                                                  }) / numSamples );
-                }
-                BoundedDegreeSpannerResult result(alg.first, 0, runtime, degree, degreeAvg, lightness, stretchFactor);
+                number_t stretchFactor =std::accumulate(canonicalBegin,
+                                                          canonicalEnd,
+                                                          0.0,
+                                                          []( const auto& a, const auto& b ) {
+                                                              return a + b.second.stretchFactor;
+                                                          }) / numSamples;
+
+                BoundedDegreeSpannerResult result(alg.first, 0, runtime, degree, degreeAvg, stretchFactor,lightness);
                 m_reducedLevels.emplace(alg.first, result);
             }
 
@@ -290,4 +301,4 @@ namespace unf_spanners {
 //    template<class BoundedDegreeSpannerResult>
 //    class ResultSet;
 
-#endif //GEOMETRIC_SPANNERS_RESULT_H
+#endif //PLANESPANNERS_RESULT_H

@@ -19,7 +19,7 @@
 #include "utilities.h"
 
 
-namespace unf_spanners {
+namespace planespanners {
 
     using namespace std;
 
@@ -98,7 +98,8 @@ namespace unf_spanners {
  *  for loop must be accomplished outside of the function.
  *  Degree 6 and 7 wedge algorithms are implemented as templates.
  *  This is the primary template, but will never be used. Instead,
- *  the specialized templates are used, defined below.
+ *  the specialized templates are used, defined below. clang-tidy
+ *  complains about ununsed parameters here, it is safe to ignore.
  */
         template<cone_t DEGREE, cone_t NUM_CONES = DEGREE + 1>
         inline void wedge(const DelaunayTriangulation &DT,
@@ -255,8 +256,8 @@ namespace unf_spanners {
 //    if(printLog)cout<<"add to E_star:";
 //    if(printLog)for( auto e : addToE_star ) cout<<e.first<<" "<<e.second<<" - ";
 
-            size_t f = i, // will hold the index in Q of the first point in Q_prime
-            a = i;
+            size_t f = i; // will hold the index in Q of the first point in Q_prime
+            size_t a;
 
             // Line 5:
             switch (Q_primePos) {
@@ -382,8 +383,7 @@ namespace unf_spanners {
             typename RandomAccessIterator, typename OutputIterator>
     void BCC2012(RandomAccessIterator pointsBegin,
                  RandomAccessIterator pointsEnd,
-                 OutputIterator result,
-                 bool printLog = false) {
+                 OutputIterator result) {
         using namespace bcc2012;
 
         //assert(DEGREE == 7 || DEGREE == 6);
@@ -573,7 +573,7 @@ namespace unf_spanners {
 
 
 
-} // namespace unf_spanners
+} // namespace planespanners
 
 #endif // GSNUNF_BCC2012_H
 

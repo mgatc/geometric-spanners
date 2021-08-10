@@ -15,13 +15,13 @@
 #include "utilities.h"
 
 
-namespace unf_spanners {
+namespace planespanners {
 
 using namespace std;
 
 namespace kpx2010 {
 
-bool selectEdge(const DelaunayTriangulation& T, index_tPairMap &E, const VertexHandle& i, const VertexHandle& j ) {
+bool selectEdge(index_tPairMap &E, const VertexHandle& i, const VertexHandle& j ) {
     //assert( T.is_edge( i, j ) );
     //if( printLog ) cout<<"add:("<<i->info()<<","<<j->info()<<") ";
 
@@ -36,7 +36,7 @@ bool selectEdge(const DelaunayTriangulation& T, index_tPairMap &E, const VertexH
 } // namespace kpx2010
 
 template< typename RandomAccessIterator, typename OutputIterator >
-void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, cone_t k=14, bool printLog = false ) {
+void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, cone_t k=14 ) {
     using namespace kpx2010;
 
     // ensure k >= 14
@@ -226,80 +226,22 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
         for( const auto& v : selected ) {
             if( !T.is_infinite(v) ) {
                 //if( printLog ) cout<<"forward_";
-                selectEdge( T, G_prime, m, v );
+                selectEdge( G_prime, m, v );
             }
         }
 
     }
 
-    // Done. Send edges from G_prime with value == true (selected by both endpoints) to output.
-
-    // Edge list is only needed for printing. Remove for production.
-//    vector< pair<Point,Point> > edgeList;
-//    edgeList.reserve( G_prime.size() );
-
     // Send resultant graph to output iterator
     for( auto e : G_prime ) {
         if( e.second ) { // e.second holds the bool value of whether both vertices of an edge selected the edge
-            // Edge list is only needed for printing. Remove for production.
-            //edgeList.emplace_back( handles.at(e.first.first)->point(), handles.at(e.first.second)->point() );
-
             *result = e.first;
             ++result;
-//            *result = reverse_pair(e.first);
-//            ++result;
         }
     }
 
-
-    //
-    //
-    // START PRINTER NONSENSE
-    //
-    //
-
-//    if( printLog ) {
-//        GraphPrinter printer(1);
-//        GraphPrinter::OptionsList options;
-//
-//        options = {
-//            { "color", printer.inactiveEdgeColor },
-//            { "line width", to_string(printer.inactiveEdgeWidth) }
-//        };
-//        printer.drawEdges( T, options );
-//
-//        options = { // active edge options
-//            { "color", printer.activeEdgeColor },
-//            { "line width", to_string(printer.activeEdgeWidth) }
-//        };
-//        printer.drawEdges( edgeList.begin(), edgeList.end(), options );
-//
-//
-//        options = {
-//            { "vertex", make_optional( to_string(printer.vertexRadius) ) }, // vertex width
-//            { "color", make_optional( printer.backgroundColor ) }, // text color
-//            { "fill", make_optional( printer.activeVertexColor ) }, // vertex color
-//            { "line width", make_optional( to_string(0) ) } // vertex border (same color as text)
-//        };
-//        GraphPrinter::OptionsList borderOptions = {
-//            { "border", make_optional( to_string(printer.vertexRadius) ) }, // choose shape of vertex
-//            { "color", printer.activeEdgeColor }, // additional border color
-//            { "line width", to_string(printer.inactiveEdgeWidth) }, // additional border width
-//        };
-//        printer.drawVerticesWithInfo( T, options, borderOptions );
-//
-//        printer.print( "bsx2009" );
-//        cout<<"\n";
-//    }
-
-    //
-    //
-    // END PRINTER NONSENSE
-    //
-    //
-
 } // function KPX2010
 
-} // namespace unf_spanners
+} // namespace planespanners
 
 #endif // GSNUNF_KPX2010_H

@@ -12,7 +12,7 @@
 #include "metrics.h"
 
 
-namespace unf_spanners {
+namespace planespanners {
 
 using namespace std;
 
@@ -266,6 +266,6 @@ void LW2004( RandomAccessIterator pointsBegin,
 
 } // function LW2004
 
-} // namespace unf_spanners
+} // namespace planespanners
 
 #endif // GSNUNF_LW2004_H

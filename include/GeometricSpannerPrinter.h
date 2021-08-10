@@ -20,12 +20,13 @@
 #include "names.h"
 #include "utilities.h"
 
-namespace unf_spanners {
+namespace planespanners {
 
 using namespace std;
 
 class TikzPrinter : public LatexPrinter {
   public:
+
     explicit TikzPrinter(string filename, string documentType = "standalone")
         : LatexPrinter(filename,documentType){
 
@@ -91,6 +92,40 @@ public:
     double vertexRadius = 0.3;
     double activeEdgeWidth =0.6;
     double inactiveEdgeWidth = 1.0;
+
+
+    OptionsList activeEdgeOptions = { // active edge options
+            {"color",      activeEdgeColor},
+            {"line width", to_string(activeEdgeWidth)}
+    };
+    OptionsList inactiveEdgeOptions = { // active edge options
+            {"color",      inactiveEdgeColor},
+            {"line width", to_string(inactiveEdgeWidth)}
+    };
+    OptionsList highlightEdgeOptions = { // active edge options
+            {"densely dashed", ""},
+            {"color",          worstPathEdgeColor},
+            {"line width",     to_string(activeEdgeWidth)}
+    };
+    OptionsList highlightVertexOptions = {
+            {"diamond",    ""},
+            {"vertex",     (to_string(vertexRadius * 1.61))}, // vertex width
+            {"color",      (worstPathEdgeColor)}, // text color
+            {"fill",       (worstPathEdgeColor)}, // vertex color
+            {"line width", (std::to_string(0))} // vertex border (same color as text)
+    };
+    OptionsList activeVertexOptions = {
+            {"circle",     ""},
+            {"vertex",     (to_string(vertexRadius))}, // vertex width
+            {"color",      (backgroundColor)}, // text color
+            {"fill",       (activeVertexColor)}, // vertex color
+            {"line width", (std::to_string(0))} // vertex border (same color as text)
+    };
+    OptionsList borderOptions = {
+            {"border",     (to_string(vertexRadius))}, // choose shape of vertex
+            {"color",      activeEdgeColor}, // additional border color
+            {"line width", to_string(inactiveEdgeWidth)}, // additional border width
+    };
 
     explicit GraphPrinter(string filename, string documentType = "standalone")
             : TikzPrinter(filename,documentType){
@@ -267,6 +302,7 @@ private:
     double m_autoscaleVertexSizeFactor = 0.02;
 }; // class GraphPrinter
 
-} // namespace unf_spanners
+
+} // namespace planespanners
 
 #endif // GSNUNF_TIKZPRINTER_H

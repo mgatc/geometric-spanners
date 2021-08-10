@@ -2,8 +2,8 @@
 // Created by matt on 7/19/21.
 //
 
-#ifndef GEOMETRIC_SPANNERS_LATEXPRINTER_H
-#define GEOMETRIC_SPANNERS_LATEXPRINTER_H
+#ifndef PLANESPANNERS_LATEXPRINTER_H
+#define PLANESPANNERS_LATEXPRINTER_H
 
 #include <fstream>
 #include <iostream>
@@ -13,7 +13,9 @@
 
 #include "names.h"
 
-namespace unf_spanners {
+namespace planespanners {
+
+    const bool PRECOMPILE_SUBDOCUMENTS = true;
 
     using namespace std;
 
@@ -22,12 +24,14 @@ namespace unf_spanners {
         typedef pair<string,string> Option;
         typedef vector<Option> OptionsList;
 
+        string directory = "./output/";
+
         explicit LatexPrinter(string filename, string documentType = "article")
             : m_filename(std::move(filename)), m_documentType(std::move(documentType)) {}
 
         // Document-level getters
         string getName() const {
-            return m_filename + m_bodySuffix;
+            return m_filename;
         }
         string getFullDocumentText() const {
             return getDocumentHeader()
@@ -41,6 +45,7 @@ namespace unf_spanners {
             string header = "\\documentclass{"
                     + m_documentType
                     + "}\n\n"
+                      + "\\usepackage[table]{xcolor}\n"
                     + "\\usepackage{tikz,pgfplots}\n"
                     + "\\usetikzlibrary{shapes}\n"
                     + "\\pgfplotsset{compat=1.15}\n\n"
@@ -95,16 +100,25 @@ namespace unf_spanners {
         }
         // Adding to the document's body
         /** Add the contents of a LatexPrinter object to this document*/
-        void addToDocument(const LatexPrinter& printer) {
-            printer.saveBody();
-            addInput(printer.getName());
+        void addToDocument(const LatexPrinter& printer, const bool precompile = false) {
+            string includeName = directory + printer.getName();
+            if(precompile) {
+                printer.compile();
+                includeName += ".pdf";
+                addGraphic(includeName);
+            } else {
+                printer.saveBody();
+                includeName += m_bodySuffix;
+                addInput(includeName);
+            }
+
 
             for( const auto& hex : printer.m_colors ) {
                 defineColor(hex);
             }
         }
         /** Add the contents of a LatexPrinter object to this document as a figure. */
-        void addToDocumentAsFigure(const LatexPrinter& printer, const bool captionAbove = true) {
+        void addToDocumentAsFigure(const LatexPrinter& printer, const bool precompile = false, const bool captionAbove = true) {
 
             addRawText(getFigureHeader());
 
@@ -112,7 +126,7 @@ namespace unf_spanners {
             if(!caption.empty() && captionAbove)
                 addRawText(caption);
 
-            addToDocument(printer);
+            addToDocument(printer,precompile);
 
             if(!caption.empty() && !captionAbove)
                 addRawText(caption);
@@ -122,6 +136,10 @@ namespace unf_spanners {
         void addInput(const string& name) {
             m_body.content += "\\input{" + name + "}\n\n";
         }
+
+        void addGraphic(const string& name) {
+            m_body.content += "\\includegraphics{" + name + "}\n\n";
+        }
         void addRawText(const string& text) {
             m_body.content += text;
         }
@@ -130,7 +148,7 @@ namespace unf_spanners {
         }
 
         void save() const {
-            string texFilename = getTexFilename();
+            string texFilename = directory + getTexFilename();
             cout<<"Saving file "<<texFilename<<"..."<<flush;
 
             FILE *fileOut = fopen(texFilename.c_str(), "w");
@@ -141,8 +159,9 @@ namespace unf_spanners {
             cout<<"done."<<endl;
         }
         void saveBody() const {
-            string texFilename = getTexFilenameForBody();
+            string texFilename = directory + getTexFilenameForBody();
             cout<<"Saving file "<<texFilename<<"..."<<flush;
+
             FILE *fileOut = fopen(texFilename.c_str(), "w");
 
             fprintf(fileOut, "%s", getBodyText().c_str());
@@ -154,7 +173,8 @@ namespace unf_spanners {
             save();
 
             cout<<"Compiling "<< getTexFilename()<<"..."<<flush;
-            string command = "pdflatex " + getTexFilename() + " > /dev/null";
+            string command = "pdflatex -output-directory=" + directory
+                            + " " + directory + getTexFilename() + " > /dev/null";
             ignore = system(command.c_str());
             cout<<"done."<<endl;
         }
@@ -162,7 +182,8 @@ namespace unf_spanners {
             compile();
 
             cout<<"Opening "<<getPdfFilename()<<" for viewing."<<endl;
-            string command = "evince " + getPdfFilename() + " &";
+            string command = "evince " + directory + getPdfFilename() + " &";
+            ignore = system(command.c_str());
             ignore = system(command.c_str());
         }
         /** Define a hex rgb color for use in the document. */
@@ -188,7 +209,7 @@ namespace unf_spanners {
             return m_filename + ".tex";
         }
         string getTexFilenameForBody() const {
-            return getName() + ".tex";
+            return getName() + "_body.tex";
         }
         string getPdfFilename() const {
             return m_filename + ".pdf";
@@ -232,6 +253,6 @@ namespace unf_spanners {
         }
     };
 
-} // unf_spanners
+} // planespanners
 
-#endif //GEOMETRIC_SPANNERS_LATEXPRINTER_H
+#endif //PLANESPANNERS_LATEXPRINTER_H

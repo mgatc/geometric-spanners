@@ -31,7 +31,7 @@
 #include "FloydWarshall.h"
 #include "utilities.h"
 
-namespace unf_spanners {
+namespace planespanners {
 
 using namespace std;
 
@@ -300,7 +300,7 @@ using namespace std;
         double t_max = 0.0;
 
         // calculate euclidean getDistance between all pairs
-#pragma omp parallel for reduction( max: t_max ) default( shared )
+//#pragma omp parallel for reduction( max: t_max ) default( shared )
         for (size_t i = 0; i < n; ++i) {
             // Euclidean distances
             vector<number_t> D(n, INF);
@@ -409,6 +409,7 @@ using namespace std;
         typedef CGAL::Triangulation_vertex_base_with_info_2<index_t, K> Vb;
         typedef CGAL::Triangulation_data_structure_2<Vb> Tds;
         typedef CGAL::Delaunay_triangulation_2<K, Tds> Delaunay;
+
         class PointSFH : public K::Point_2 {
         public:
             index_t id = numeric_limits<index_t>::max(); // dummy value for id
@@ -431,7 +432,7 @@ using namespace std;
             getEdges(E);
         }
 
-        DelaunayTriangulationSFH(const vector<Point> &P) {
+        explicit DelaunayTriangulationSFH(const vector<Point> &P) {
             insertPoints(P);
         }
 
@@ -449,7 +450,7 @@ using namespace std;
             index_t id = 0;
 
             for( Point p : P )
-                points.emplace_back(make_pair(PointSFH(p.x(),p.y()),id++));
+                points.emplace_back(PointSFH(p.x(),p.y()), id++);
 
             T.insert(points.begin(), points.end());
         }
@@ -528,14 +529,14 @@ using namespace std;
 
     template<typename VertexIterator, typename EdgeIterator>
     number_t StretchFactorUsingHeuristic(VertexIterator pointsBegin,
-                                                VertexIterator pointsEnd,
-                                                EdgeIterator edgesBegin,
-                                                EdgeIterator edgesEnd,
-                                                const size_t numberOfThreads = 4) {
+                                         VertexIterator pointsEnd,
+                                         EdgeIterator edgesBegin,
+                                         EdgeIterator edgesEnd,
+                                         const size_t numberOfThreads = 4) {
         const vector<Point> P(pointsBegin, pointsEnd);
         const vector<Edge> E(edgesBegin, edgesEnd);
         vector<unordered_set<index_t>> G(P.size()),
-            DelG(P.size());
+                DelG(P.size());
 
         for (Edge e : E) {
             G[e.first].insert(e.second);
@@ -553,7 +554,7 @@ using namespace std;
         vector<pair<index_t, index_t>> worstPairOfG(numberOfThreads);
         vector<unordered_map<index_t,number_t>> tracker(P.size());
 
-#pragma omp parallel for num_threads(numberOfThreads)
+//#pragma omp parallel for num_threads(numberOfThreads)
         for( index_t u = 0; u < P.size(); u++ ) {
 
             number_t largestSfFromU = 0, currentStretchFactor = 0;
@@ -580,7 +581,7 @@ using namespace std;
 
                     unordered_map<index_t,number_t>::iterator result;
 
-#pragma omp critical
+//#pragma omp critical
                     result = tracker[std::min(u,v)].find(std::max(u,v));
 
                     if (result == tracker[u].end()) {
@@ -593,15 +594,13 @@ using namespace std;
 
                         currentStretchFactor = std::max(currentStretchFactor, stretchFactorUV);
 
-#pragma omp critical
+//#pragma omp critical
                         tracker[std::min(u,v)].insert(make_pair(std::max(u,v), stretchFactorUV));
                     }
-                    else {
-                        if( (*result).second > currentStretchFactor ){
-                            worstPairCurrent.first = u;
-                            worstPairCurrent.second = v;
-                            currentStretchFactor = (*result).second;
-                        }
+                    else if( (*result).second > currentStretchFactor ){
+                        worstPairCurrent.first = u;
+                        worstPairCurrent.second = v;
+                        currentStretchFactor = (*result).second;
                     }
                 }
 
@@ -640,6 +639,448 @@ using namespace std;
                 worstPairU = worstPairOfG[i].first;
                 worstPairV = worstPairOfG[i].second;
             }
+
+        //cout << "Heuristic worst pair: " <<  worstPairU << ", " << worstPairV << endl;
+        return *std::max_element(stretchFactorOfG.begin(),stretchFactorOfG.end());
+    }
+    template<typename VertexIterator, typename EdgeIterator, typename OutputIterator>
+    number_t SFWorstPath2(VertexIterator pointsBegin,
+                         VertexIterator pointsEnd,
+                         EdgeIterator edgesBegin,
+                         EdgeIterator edgesEnd,
+                         std::optional<OutputIterator> out = std::nullopt) {
+
+        vector<Point> P(pointsBegin, pointsEnd);
+        const vector<Edge> E(edgesBegin, edgesEnd);
+
+        const index_t n = P.size();
+        vector<unordered_set<index_t>> G(n),
+                DelG(n);
+
+
+        for (Edge e : E) {
+            G[e.first].insert(e.second);
+            G[e.second].insert(e.first);
+        }
+
+
+
+        vector<Edge> edgesOfDT;
+        vector<index_t> index;
+        spatialSort<K>(P, index);
+
+        //Step 1: Construct Delaunay triangulation
+        DelaunayTriangulation DT; //DelaunayTriangulationSFH DT(P, edgesOfDT);
+        /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
+          (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
+        FaceHandle hint;
+        //cout<<"del:";
+        for (size_t entry : index) {
+            auto vh = DT.insert(P[entry], hint);
+            hint = vh->face();
+            vh->info() = entry;
+            //handles[entry] = vh;
+        }
+        VertexHandle v_inf = DT.infinite_vertex();
+
+        // Convert DT to adjacency list
+        for(auto vit=DT.finite_vertices_begin(); vit != DT.finite_vertices_end(); ++vit) {
+            VertexCirculator N = DT.incident_vertices(vit),
+                    done(N);
+            do {
+                if( N != v_inf )
+                    DelG[vit->info()].insert(N->info());
+            } while( ++N != done );
+        }
+
+
+
+
+        number_t t_G = 0;
+        vector<index_t> MaxParents;
+        index_t i_max = 0, j_max = 1;
+
+        for( index_t u = 0; u < n; u++ ) {
+
+            //cout<<"u="<<u<<endl;
+
+            number_t t_u = 0, t_lvl = 0;
+
+            // BFS variables /////////////////////////
+
+            size_t lvl = 0;
+            index_t count = 0;
+            //pair<index_t, index_t> uWorstPair, lvlWorstPair;
+
+            // bfs queue - should remain small but we will need to search
+            map<index_t, pair<index_t,unsigned>> bfs; // insert with (count++, (vertex,level))
+            bfs.emplace(count++,make_pair(u,lvl));
+            unordered_set<index_t> frontier;
+            unordered_set<index_t> known;
+            known.insert(u);
+
+            // Dijkstra variables ////////////////////
+
+            map<index_t,number_t> dist;
+            vector<size_t> Parents(n);
+            dist[u] = 0.0;
+
+            typedef std::map<number_t, index_t>
+                    Heap;
+            typedef Heap::iterator
+                    HeapHandle;
+
+            Heap open;
+            unordered_map<index_t, HeapHandle> handleToHeap(n);
+            handleToHeap[u] = open.emplace(dist[u], u).first;
+
+
+
+
+            // Iterative Deepening Loop
+            do {
+                ++lvl;
+                t_u = t_lvl;
+                t_lvl = 0;
+
+
+
+                //cout<< "  Start depth limited BFS on Delaunay triangulation of P with"<<endl;
+                //cout<<"  level="<<lvl<<", t_u="<<t_u<<endl<<endl;
+                while(!bfs.empty() && bfs.begin()->second.second < lvl) {
+                    auto v = bfs.begin()->second.first;
+                    bfs.erase(bfs.begin());
+                    //cout<<"    v="<<v<<", |bfs|="<<bfs.size()<<endl;
+
+                    for( auto w : DelG[v] ) {
+                        //cout<<"      w="<<w<<", ";
+                        if( !contains(known,w) ) {
+                            bfs.emplace(count++,make_pair(w,lvl));
+                            known.insert(w);
+                            //if(!contains(dist,w)) {
+                            frontier.insert(w);
+                            //}
+                            //cout<< "not known...adding to queue";
+                        } else {
+                            //cout<<"known...ignoring";
+                        }
+                        //cout<<endl;
+                    }
+                }
+
+                // If we've already found the shortest path distance in a
+                // previous level, remove this vertex from frontier and
+                // update t_lvl if necessary.
+
+                //cout<<endl<<"Frontier={";
+                for(auto vit=frontier.begin(); vit!=frontier.end(); ) {
+                    auto v = *vit;
+                    //cout<<v;
+                    if(contains(dist,v)) {
+                        auto t_v = dist[v] / getDistance(P[u],P[v]);
+                        t_lvl = CGAL::max(t_lvl,t_v);
+                        //cout<<"(known,t_v="<<t_v<<"t_lvl="<<t_lvl<<")";
+                        vit = frontier.erase(vit);
+                    } else {
+                        ++vit;
+                    }
+                    //cout<<",";
+                }
+                //cout<<"}"<<endl<<endl;
+
+                //cout<<"Dijkstra on G only until we find all vertices in frontier"<<endl<<endl;
+
+                while(!frontier.empty()) {
+                    assert(!open.empty());
+                    auto distanceVertex = open.begin();
+                    index_t v = distanceVertex->second;
+                    dist[v] = distanceVertex->first;
+                    open.erase(distanceVertex);
+                    handleToHeap.erase(v);
+
+                    //auto t_v = dist[v];
+
+                    //cout<<"    v="<<v<<", dist="<<dist[v];
+
+                    if( contains(frontier,v) ) {
+                        frontier.erase(v);
+                        //if( v != u ) {
+                        auto t_v = dist[v] / getDistance(P[u], P[v]);
+                        //}
+                        //cout<<", t_v="<<t_v<<", t_lvl="<<t_lvl<<",";
+
+                        t_lvl = CGAL::max(t_lvl, t_v);
+
+                        if (t_v > t_lvl) {
+                            t_lvl = t_v;
+
+                            if (out) {
+                                std::swap(Parents, MaxParents);
+                                i_max = u;
+                                j_max = v;
+                            }
+                        }
+
+                        //cout<<" v is in frontier! Removing... Frontier={";
+                        for(auto v : frontier) {
+                            //cout<<v<<",";
+                        }
+                        //cout<<"},";
+                    }
+                    //cout<<endl;
+                    for( auto w : G[v] ) {
+                        if( !contains(dist,w) ) {
+                            number_t newDist = dist[v] + getDistance(P[w],P[v]);
+                            //cout<<"      w="<<w<<", newDist="<<newDist<<", ";
+                            if( !contains(handleToHeap,w) || newDist < handleToHeap[w]->first ) {
+                                //cout << "new best, ";
+                                if (contains(handleToHeap, w)) {
+                                    open.erase(handleToHeap[w]);
+                                    //cout << " already known...erasing, ";
+                                }
+                                handleToHeap[w] = open.emplace(newDist, w).first;
+                                Parents[w] = v;
+                                //cout << "adding to open" << endl;
+                            }
+                        }
+                        //cout<<endl;
+                    }
+                    //}
+                }
+                //cout<<"Done with limited Dijkstra"<<endl;
+
+            } while(!bfs.empty() && !(t_u > t_lvl));
+
+            // Done searching neighborhood of u
+
+
+            if (t_u > t_G ){
+                t_G = t_u;
+            }
+        }
+
+
+        if (out) {
+            size_t walk = j_max;
+            do {
+                *(*out)++ = make_pair(walk, MaxParents.at(walk));
+                walk = MaxParents.at(walk);
+            } while (walk != i_max);
+        }
+
+        return t_G;
+
+    }
+    template<typename VertexIterator, typename EdgeIterator>
+    number_t StretchFactorUsingHeuristic2(VertexIterator pointsBegin,
+                                         VertexIterator pointsEnd,
+                                         EdgeIterator edgesBegin,
+                                         EdgeIterator edgesEnd,
+                                         const size_t numberOfThreads = 4) {
+        vector<Point> P(pointsBegin, pointsEnd);
+        const vector<Edge> E(edgesBegin, edgesEnd);
+
+        const index_t n = P.size();
+        vector<unordered_set<index_t>> G(n),
+                DelG(n);
+
+
+        for (Edge e : E) {
+            G[e.first].insert(e.second);
+            G[e.second].insert(e.first);
+        }
+
+        vector<Edge> edgesOfDT;
+        vector<index_t> index;
+        spatialSort<K>(P, index);
+
+        //Step 1: Construct Delaunay triangulation
+        DelaunayTriangulation DT; //DelaunayTriangulationSFH DT(P, edgesOfDT);
+        /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
+          (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
+        FaceHandle hint;
+        //cout<<"del:";
+        for (size_t entry : index) {
+            auto vh = DT.insert(P[entry], hint);
+            hint = vh->face();
+            vh->info() = entry;
+            //handles[entry] = vh;
+        }
+        VertexHandle v_inf = DT.infinite_vertex();
+
+        // Convert DT to adjacency list
+        for(auto vit=DT.finite_vertices_begin(); vit != DT.finite_vertices_end(); ++vit) {
+            VertexCirculator N = DT.incident_vertices(vit),
+                done(N);
+            do {
+                if( N != v_inf )
+                    DelG[vit->info()].insert(N->info());
+            } while( ++N != done );
+        }
+
+
+        vector<number_t> stretchFactorOfG(numberOfThreads,0);
+        vector<pair<index_t, index_t>> worstPairOfG(numberOfThreads);
+        vector<unordered_map<index_t,number_t>> tracker(n);
+
+//#pragma omp parallel for num_threads(numberOfThreads)
+        for( index_t u = 0; u < n; u++ ) {
+
+            //cout<<"u="<<u<<endl;
+
+            number_t t_u = 0, t_lvl = 0;
+
+            // BFS variables /////////////////////////
+
+            size_t lvl = 0;
+            index_t count = 0;
+            //pair<index_t, index_t> uWorstPair, lvlWorstPair;
+
+            // bfs queue - should remain small but we will need to search
+            map<index_t, pair<index_t,unsigned>> bfs; // insert with (count++, (vertex,level))
+            bfs.emplace(count++,make_pair(u,lvl));
+            unordered_set<index_t> frontier;
+            unordered_set<index_t> known;
+            known.insert(u);
+
+            // Dijkstra variables ////////////////////
+
+            map<index_t,number_t> dist;
+            dist[u] = 0.0;
+
+            typedef std::map<number_t, index_t>
+                    Heap;
+            typedef Heap::iterator
+                    HeapHandle;
+
+            Heap open;
+            unordered_map<index_t, HeapHandle> handleToHeap(n);
+            handleToHeap[u] = open.emplace(dist[u], u).first;
+
+
+
+
+            // Iterative Deepening Loop
+            do {
+                ++lvl;
+                t_u = t_lvl;
+                t_lvl = 0;
+
+
+
+                //cout<< "  Start depth limited BFS on Delaunay triangulation of P with"<<endl;
+                //cout<<"  level="<<lvl<<", t_u="<<t_u<<endl<<endl;
+                while(!bfs.empty() && bfs.begin()->second.second < lvl) {
+                    auto v = bfs.begin()->second.first;
+                    bfs.erase(bfs.begin());
+                    //cout<<"    v="<<v<<", |bfs|="<<bfs.size()<<endl;
+
+                    for( auto w : DelG[v] ) {
+                        //cout<<"      w="<<w<<", ";
+                        if( !contains(known,w) ) {
+                            bfs.emplace(count++,make_pair(w,lvl));
+                            known.insert(w);
+                            //if(!contains(dist,w)) {
+                            frontier.insert(w);
+                            //}
+                            //cout<< "not known...adding to queue";
+                        } else {
+                            //cout<<"known...ignoring";
+                        }
+                        //cout<<endl;
+                    }
+                }
+
+                // If we've already found the shortest path distance in a
+                // previous level, remove this vertex from frontier and
+                // update t_lvl if necessary.
+
+                //cout<<endl<<"Frontier={";
+                for(auto vit=frontier.begin(); vit!=frontier.end(); ) {
+                    auto v = *vit;
+                    //cout<<v;
+                    if(contains(dist,v)) {
+                        auto t_v = dist[v] / getDistance(P[u],P[v]);
+                        t_lvl = CGAL::max(t_lvl,t_v);
+                        //cout<<"(known,t_v="<<t_v<<"t_lvl="<<t_lvl<<")";
+                        vit = frontier.erase(vit);
+                    } else {
+                        ++vit;
+                    }
+                    //cout<<",";
+                }
+                //cout<<"}"<<endl<<endl;
+
+                //cout<<"Dijkstra on G only until we find all vertices in frontier"<<endl<<endl;
+
+                while(!frontier.empty()) {
+                    assert(!open.empty());
+                    auto distanceVertex = open.begin();
+                    index_t v = distanceVertex->second;
+                    dist[v] = distanceVertex->first;
+                    open.erase(distanceVertex);
+                    handleToHeap.erase(v);
+
+                    //auto t_v = dist[v];
+
+                    //cout<<"    v="<<v<<", dist="<<dist[v];
+
+                    if( contains(frontier,v) ) {
+                        frontier.erase(v);
+                        //if( v != u ) {
+                        auto t_v = dist[v] / getDistance(P[u], P[v]);
+                        //}
+                        //cout<<", t_v="<<t_v<<", t_lvl="<<t_lvl<<",";
+
+                        t_lvl = CGAL::max(t_lvl, t_v);
+
+                        //cout<<" v is in frontier! Removing... Frontier={";
+                        for(auto v : frontier) {
+                            //cout<<v<<",";
+                        }
+                        //cout<<"},";
+                    }
+                    //cout<<endl;
+                    for( auto w : G[v] ) {
+                        if( !contains(dist,w) ) {
+                            number_t newDist = dist[v] + getDistance(P[w],P[v]);
+                            //cout<<"      w="<<w<<", newDist="<<newDist<<", ";
+                            if( !contains(handleToHeap,w) || newDist < handleToHeap[w]->first ) {
+                                //cout << "new best, ";
+                                if (contains(handleToHeap, w)) {
+                                    open.erase(handleToHeap[w]);
+                                    //cout << " already known...erasing, ";
+                                }
+                                handleToHeap[w] = open.emplace(newDist, w).first;
+                                //cout << "adding to open" << endl;
+                            }
+                        }
+                        //cout<<endl;
+                    }
+                    //}
+                }
+                //cout<<"Done with limited Dijkstra"<<endl;
+
+            } while(!bfs.empty() && !(t_u > t_lvl));
+
+            // Done searching neighborhood of u
+
+
+            if (t_u > stretchFactorOfG[omp_get_thread_num()]) {
+//                worstPairOfG[omp_get_thread_num()].first  = uWorstPair.first;
+//                worstPairOfG[omp_get_thread_num()].second = uWorstPair.second;
+                stretchFactorOfG[omp_get_thread_num()]    = t_u;
+            }
+        }
+
+        //index_t worstPairU = worstPairOfG[0].first, worstPairV = worstPairOfG[0].second;
+//        number_t finalSf = stretchFactorOfG[0];
+//        for(index_t i = 1; i < numberOfThreads; i++)
+//            if( stretchFactorOfG[i] >  finalSf ) {
+//                finalSf = stretchFactorOfG[i];
+//                worstPairU = worstPairOfG[i].first;
+//                worstPairV = worstPairOfG[i].second;
+//            }
 
         //cout << "Heuristic worst pair: " <<  worstPairU << ", " << worstPairV << endl;
         return *std::max_element(stretchFactorOfG.begin(),stretchFactorOfG.end());
@@ -814,7 +1255,7 @@ void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_pr
         CGAL::Real_timer m_clock;
     };
 
-} // namespace unf_spanners
+} // namespace planespanners
 
 
 #endif // UNF_SPANNERS_METRICS_H

@@ -19,7 +19,7 @@
 #include "utilities.h"
 
 
-namespace unf_spanners {
+namespace planespanners {
 
     using namespace std;
 
@@ -31,32 +31,31 @@ namespace unf_spanners {
         enum Color {
             Blue, White
         };
-        enum ConePolarity {
-            Positive = 0, // even cones
-            Negative = 1  // odd cones
-        };
 
-//Compute max of getCone(p,q) and (getCone(q,p)+3)%6, is used to make sure cones are calculated correctly.
+        //Compute max of getCone(p,q) and (getCone(q,p)+3)%6, is used to make sure cones are calculated correctly.
         inline Color getColor(const index_t p, const index_t q, const vector<Point> &H) {
             //cout<<"Getting color of "<<p<<"-"<<q<<endl;
             return getCone(p, q, H) % 3 == 1 ? Blue : White;
         }
-
         inline Color getColor(const Edge &e, const vector<Point> &H) {
             return getColor(e.first, e.second, H);
         }
 
+        enum ConePolarity {
+            Positive = 0, // even cones
+            Negative = 1  // odd cones
+        };
         inline ConePolarity getConePolarity(const index_t p, const index_t q, const vector<Point> &H) {
             return ConePolarity(getCone(p, q, H) % 2);
         }
 
-//Finds the bisector length of a given edge.
-        inline number_t bisectorLength(const Edge &e, const vector<Point> &H) {
+        //Finds the bisector length of a given edge.
+        number_t bisectorLength(const Edge &e, const vector<Point> &H) {
             cone_t cone = getCone(e.first, e.second, H);
             //assert(cone < 6);
             //assert(e.first < H.size());
 
-            number_t xCord = H[e.first].x() - orthBisectorSlopes.at(cone);
+            number_t xCord = H[e.first].x() - orthBisectorSlopes[cone];
             number_t yCord = H[e.first].y() + 1;
 
             Point bisectorPoint(xCord, yCord);
@@ -405,8 +404,9 @@ namespace unf_spanners {
 
 // Main algorithm.
     template<typename RandomAccessIterator, typename OutputIterator>
-    void KPT2017(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result,
-                 bool printLog = false) {
+    void KPT2017(RandomAccessIterator pointsBegin,
+                 RandomAccessIterator pointsEnd,
+                 OutputIterator result) {
         using namespace kpt2017;
 
         vector<Point> P(pointsBegin, pointsEnd);
@@ -521,6 +521,6 @@ namespace unf_spanners {
         }
     } // function KPT2017
 
-} // namespace unf_spanners
+} // namespace planespanners
 
 #endif // GSNUNF_KPT2017_H

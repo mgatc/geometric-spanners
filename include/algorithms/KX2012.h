@@ -21,14 +21,14 @@
 #include "utilities.h"
 
 
-namespace unf_spanners {
+namespace planespanners {
 
     using namespace std;
 
     namespace kx2012 {
 
         bool
-        selectEdge(const DelaunayTriangulation &T,
+        selectEdge(//const DelaunayTriangulation &T,
                    index_tPairMap &E,
                    const VertexHandle& i,
                    const VertexHandle& j) {
@@ -38,7 +38,7 @@ namespace unf_spanners {
             auto existing = E.begin();
             bool inserted = false;
             tie(existing, inserted) = E.try_emplace(make_pair(i->info(), j->info()), false);
-            if (unf_spanners::contains(E, edge_j_i)) { E[edge_j_i] = true; }
+            if (planespanners::contains(E, edge_j_i)) { E[edge_j_i] = true; }
 
             return inserted;
         }
@@ -49,10 +49,7 @@ namespace unf_spanners {
     void KX2012(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result,
                 bool printLog = false) {
         using namespace kx2012;
-        using unf_spanners::contains;
-        // ensure k >= 14
-        const size_t k = 14;
-//        const number_t alpha = 2 * PI / k;
+        using planespanners::contains;
 
         //if(printLog) cout<<"alpha:"<<alpha<<",";
 
@@ -97,7 +94,7 @@ namespace unf_spanners {
 
             if (T.is_infinite(N)) ++N; //Verify N is not starting at infinity
             VertexCirculator done(N); //Artificial end to circulator
-            VertexHandle coneReferenceHandle(N);
+            VertexHandle coneReferenceHandle;
 
             //if( printLog ) cout<<"N_init:"<<(T.is_infinite(N)?size_t(numeric_limits<size_t>::max):size_t(N->info()))<<" ";
 
@@ -117,7 +114,7 @@ namespace unf_spanners {
                 }
 
                 //N is set to
-                number_t angleSum = 0;
+                number_t angleSum;
 
                 if (T.is_infinite(N)) { N++; }
                 coneReferenceHandle = N;
@@ -145,11 +142,11 @@ namespace unf_spanners {
 
 
                 for (const auto &v : wideVertices) {
-                    selectEdge(T, E, m, v);
+                    selectEdge( E, m, v);
                 }
             }
             Point coneReferencePoint(coneReferenceHandle->point());
-            number_t conalAngle = 0;
+            //number_t conalAngle;
             {
 //            cout<<"b:";
 //            Timer tim;
@@ -160,21 +157,21 @@ namespace unf_spanners {
 
                 do {
                     if (!T.is_infinite(N)) {
-                        if (unf_spanners::contains(wideVertices, N)) {
+                        if (planespanners::contains(wideVertices, N)) {
                             if (!closestVertexInCone.empty()) {
                                 coneReferencePoint = N->point();
                                 for (const auto &v : closestVertexInCone) {
-                                    selectEdge(T, E, m, v.second);
+                                    selectEdge( E, m, v.second);
                                 }
                                 closestVertexInCone.clear();
                                 closestPointDistanceInCone.clear();
                             }
                         } else {
-                            conalAngle = getAngle(N->point(), p, coneReferencePoint);
+                            number_t conalAngle = getAngle(N->point(), p, coneReferencePoint);
                             cone_t currentCone = floor(conalAngle / PI_OVER_FIVE);
                             number_t currentDistance = getDistance(p, N->point());
 
-                            if (!unf_spanners::contains(closestPointDistanceInCone, currentCone) ||
+                            if (!planespanners::contains(closestPointDistanceInCone, currentCone) ||
                                 (currentDistance < closestPointDistanceInCone[currentCone])) {
                                 closestVertexInCone[currentCone] = N;
                                 closestPointDistanceInCone[currentCone] = currentDistance;
@@ -184,53 +181,53 @@ namespace unf_spanners {
                 } while (++N != done);
 
                 for (const auto &v : closestVertexInCone) {
-                    selectEdge(T, E, m, v.second);
+                    selectEdge( E, m, v.second);
                 }
             }
 
             {
 //            cout<<"c:";
 //            Timer tim;
-                while (!unf_spanners::contains(wideVertices, N) && ++N != done);
+                while (!planespanners::contains(wideVertices, N) && ++N != done);
                 done = N;
                 pair<int, VertexHandle> previousPoint(-1, v_inf);
                 do {
                     if (!T.is_infinite(N)) {
 
-                        if (unf_spanners::contains(wideVertices, N)) {
+                        if (planespanners::contains(wideVertices, N)) {
                             coneReferencePoint = N->point();
                             previousPoint.second = N;
                             previousPoint.first = -1;
 
                         } else {
-                            conalAngle = getAngle(N->point(), p, coneReferencePoint);
+                            number_t conalAngle = getAngle(N->point(), p, coneReferencePoint);
                             auto currentCone = cone_t(floor(conalAngle / PI_OVER_FIVE));
                             int conalDifference = int(currentCone) - int(previousPoint.first);
 
                             for (int conalEdgesToAdd = std::min(conalDifference - 1, 2);
                                  conalEdgesToAdd > 0; conalEdgesToAdd--) {
                                 //Determine if one of the edges adjacent to the empty cone is selected already
-                                bool containsPreviousPoint = unf_spanners::contains(E,
-                                                                                    make_pair(currentPointIndex,
+                                bool containsPreviousPoint = planespanners::contains(E,
+                                                                                     make_pair(currentPointIndex,
                                                                                         previousPoint.second->info()));
-                                bool containsN = unf_spanners::contains(E,
-                                                                        make_pair(currentPointIndex, N->info()));
+                                bool containsN = planespanners::contains(E,
+                                                                         make_pair(currentPointIndex, N->info()));
                                 //assert(previousPoint.second != v_inf);
                                 //assert(N->handle() != v_inf);
                                 if (containsPreviousPoint && !containsN) {
-                                    selectEdge(T, E, m, previousPoint.second);
+                                    selectEdge(E, m, previousPoint.second);
                                 } else if (!containsPreviousPoint && containsN) {
-                                    selectEdge(T, E, m, N->handle());
+                                    selectEdge( E, m, N->handle());
                                 } else //If neither adjacent edge is already selected, add the longest one
                                 {
                                     VertexHandle edgeToAdd =
                                             getDistance(N->point(), p) > getDistance(previousPoint.second->point(), p)
                                             ? N->handle() : previousPoint.second;
 
-                                    selectEdge(T, E, m, edgeToAdd);
+                                    selectEdge( E, m, edgeToAdd);
                                 }
                             }
-                            previousPoint.first = cone_t(currentCone);
+                            previousPoint.first = int(currentCone);
                             previousPoint.second = N;
                         }
                     }
@@ -306,6 +303,6 @@ namespace unf_spanners {
 
     } // function KX2012
 
-} // namespace unf_spanners
+} // namespace planespanners
 
 #endif // GSNUNF_KX2012_H

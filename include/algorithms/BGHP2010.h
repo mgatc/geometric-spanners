@@ -28,7 +28,7 @@
 #include "utilities.h"
 
 
-namespace unf_spanners {
+namespace planespanners {
 
     using namespace std;
 
@@ -431,6 +431,6 @@ namespace unf_spanners {
         }
     } // function BGHP2010
 
-} // namespace unf_spanners
+} // namespace planespanners
 
 #endif // GSNUNF_BGHP2010_H

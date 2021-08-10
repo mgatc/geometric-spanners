@@ -19,3 +19,4 @@ include/workspace.code-workspace
 .sfdx/tools/apex.db
 .idea/
 cmake-build-debug/
+*.zip

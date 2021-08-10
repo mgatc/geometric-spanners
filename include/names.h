@@ -2,15 +2,17 @@
 // Created by matt on 7/16/21.
 //
 
-#ifndef GEOMETRIC_SPANNERS_NAMES_H
-#define GEOMETRIC_SPANNERS_NAMES_H
+#ifndef PLANESPANNERS_NAMES_H
+#define PLANESPANNERS_NAMES_H
 
 #include <string>
 #include <vector>
 
-namespace unf_spanners {
+namespace planespanners {
 
     using namespace std;
+
+    const string N_SYMBOL = "n";
 
     enum DistributionType {
         DistributionTypeFirst=0,
@@ -20,7 +22,7 @@ namespace unf_spanners {
         NormalClustersInsideSquare,
         ContiguousGrid,
         UniformRandomGrid,
-  //      UniformInsideAnnulus,
+        UniformInsideAnnulus,
   //      Real,
         DistributionTypeLast
     };
@@ -42,7 +44,7 @@ namespace unf_spanners {
         Bsx2009,
         Kpx2010,
         Kx2012,
-        Bhs2017,
+        Bhs2018,
         Bcc2012_7,
         Bcc2012_6,
         Bghp2010,
@@ -50,24 +52,25 @@ namespace unf_spanners {
         Bkpx2015,
         AlgorithmLast
     };
+    const string ALGORITHM_SYMBOL = "Algorithm";
     const vector<string> ALGORITHM_NAMES = {
-        "BGS2005",
-        "LW2004",
-        "BSX2009",
-        "KPX2010",
-        "KX2012",
-        "BHS2017",
-        "BCC2012-7",
-        "BCC2012-6",
-        "BGHP2010",
-        "BKPX2015",
-        "KPT2017"
+        "\\texttt{BGS2005}",
+        "\\texttt{LW2004}",
+        "\\texttt{BSX2009}",
+        "\\texttt{KPX2010}",
+        "\\texttt{KX2012}",
+        "\\texttt{BHS2018}",
+        "\\texttt{BCC2012-7}",
+        "\\texttt{BCC2012-6}",
+        "\\texttt{BGHP2010}",
+        "\\texttt{BKPX2015}",
+        "\\texttt{KPT2017}"
     };
-    const string DEGREE_BOUND_SYMBOL = "$\\Delta_{max}$";
+    const string DEGREE_BOUND_SYMBOL = "$\\Delta_{\\mathrm{u.b.}}$";
     const vector<string> DEGREE_BOUND_PER_ALGORITHM = {
         "27","23","17","14","11","8","7","6","6","4","4"
     };
-    const string STRETCH_FACTOR_BOUND_SYMBOL = "$t_{max}$";
+    const string STRETCH_FACTOR_BOUND_SYMBOL = "$t_{\\mathrm{u.b.}}$";
     const vector<string> STRETCH_FACTOR_BOUND_PER_ALGORITHM = {
         "8.27","6.44","23.6","2.92","2.86","4.41","11.7","81.7","6","157","20"
     };
@@ -76,33 +79,33 @@ namespace unf_spanners {
         "runtime",
         "degreeMax",
         "degreeAvg",
-        "lightness",
-        "stretchFactor"
+        "stretchFactor",
+        "lightness"
     };
 
     const vector<string> IV_SYMBOLS = {
-        "$\\rho$",
-        "$\\Delta$",
-        "$\\Delta_{avg}$",
-        "$\\lambda$",
-        "$t$"
+        "runtime",
+        "$\\Delta_{\\mathrm{obs.}}$",
+        "$\\Delta_{\\mathrm{avg.}}$",
+        "$t_{\\mathrm{obs.}}$",
+        "$\\lambda$"
     };
     const vector<string> IV_UNITS = {
-        "s", // runtime in seconds
+        "seconds", // runtime in seconds
         "", // no unit for degree
         "", // not unit for degree
         "", // not unit for lightness
         "" // not unit for stretch factor
     };
     const vector<string> IV_NICE_NAMES = {
-        "runtime",
-        "degree",
-        "average degree",
-        "lightness",
-        "stretch factor"
+        "Average execution time",
+        "Average maximum degree",
+        "Average degree per vertex",
+        "Average stretch factor",
+        "Average lightness"
     };
     const vector<unsigned> IV_PRECISION = {
-        2,2,2,2,2
+        4,2,2,2,2
     };
     const vector<string> PGFPLOT_NAMES = {
         "Mean " + IV_NICE_NAMES[0],
@@ -112,6 +115,6 @@ namespace unf_spanners {
         "Mean " + IV_NICE_NAMES[4]
     };
 
-} // unf_spanners
+} // planespanners
 
-#endif //GEOMETRIC_SPANNERS_NAMES_H
+#endif //PLANESPANNERS_NAMES_H

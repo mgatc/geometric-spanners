@@ -16,7 +16,7 @@
 #include "GeometricSpannerPrinter.h"
 #include "metrics.h"
 
-namespace unf_spanners {
+namespace planespanners {
 
 namespace bgs2005 {
 
@@ -34,13 +34,13 @@ struct SplitVertex {
     VertexHandle s_1_handle;
     index_t key;
 
-    SplitVertex() = default;
+    SplitVertex() : s_1(SIZE_T_MAX), key(SIZE_T_MAX) {}
     explicit SplitVertex( const VertexHandle& v )
-        : v(v) {}
+        : v(v), s_1(SIZE_T_MAX), key(SIZE_T_MAX) {}
     SplitVertex(const VertexHandle& v, const SplitVertex& s_1 )
-        : v(v), s_1( s_1.key ), s_1_handle(s_1.v) {}
+        : v(v), s_1( s_1.key ), s_1_handle(s_1.v), key(SIZE_T_MAX) {}
     SplitVertex(const VertexHandle& v, const index_t& s_1 )
-        : v(v), s_1( s_1 ) {}
+        : v(v), s_1( s_1 ), key(SIZE_T_MAX) {}
     SplitVertex( const SplitVertex& other ) = default;
 
     SplitVertex& operator=( const SplitVertex& other ) { //copy assignment
@@ -128,7 +128,7 @@ inline size_t addVertex(SplitVertexSet& V, const VertexHandle& v, const SplitVer
     return V.insert( SplitVertex( v, s_1 ) );
 }
 
-inline void addEdge(const DelaunayGraph& SG,
+inline void addEdge(//const DelaunayGraph& SG,
                     SplitVertexEdgeMap& E,
                     const SplitVertex& a,
                     const SplitVertex& b ) {
@@ -278,9 +278,9 @@ void SpanningGraph( DelaunayGraph& G ) {
     }
 
     // Test assumption
-    for( auto it=G.m_E.begin(); it!=G.m_E.end(); ++it ) { // for all v_i, 1<=i<=n
+    //for( auto it=G.m_E.begin(); it!=G.m_E.end(); ++it ) { // for all v_i, 1<=i<=n
         //assert( it->second.size() <= 3 );                 // |v_i| <= 3
-    }
+    //}
 }
 
 
@@ -288,7 +288,7 @@ void SpanningGraph( DelaunayGraph& G ) {
 namespace transform_polygon {
 
 inline VertexHandle find_s_1Handle(const DelaunayGraph& SG,
-                                   const pair< const VertexHandle, VertexMap< index_t > >& unsplit,
+                                   const pair<VertexHandle, VertexMap< index_t > >& unsplit,
                                    const VertexHandle& v_n ) {
     VertexHandle v_i = unsplit.first;
     VertexCirculator N = SG.m_DT.incident_vertices(v_i); // get circulator around unsplit.first
@@ -339,7 +339,7 @@ void TransformPolygon( const DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEd
         }
 
         //assert( !SG.m_DT.is_infinite(N) );
-        addEdge(SG, P, v_i, s_1);
+        addEdge( P, v_i, s_1);
 
     } while( v_i != v_1 );
 
@@ -352,7 +352,7 @@ void TransformPolygon( const DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEd
                 v_unsplit = *V.index.find(v );
             VertexHandle s_1_u = find_s_1Handle(SG, u_unsplit, v),
                              s_1_v = find_s_1Handle(SG, v_unsplit, u);
-            addEdge(SG, P, V.at(u, s_1_u), V.at(v, s_1_v));
+            addEdge( P, V.at(u, s_1_u), V.at(v, s_1_v));
         }
     }
 }
@@ -443,14 +443,13 @@ inline SplitVertex get_s_m( const DelaunayGraph& SG, const SplitVertexSet& V, co
 /*
  * Adds a split vertex edge, asserting that neither vertices a nor b are marked as Complete
  */
-inline void addPolygonSpannerEdge(const DelaunayGraph& SG,
+inline void addPolygonSpannerEdge(//const DelaunayGraph& SG,
                                   SplitVertexEdgeMap& E,
                                   SplitVertex& a,
-                                  SplitVertex& b,
-                                  const VertexStatusMap& status ) {
+                                  SplitVertex& b ) {
     //assert( !contains( status, a.key ) || status.at(a.key) != Complete );
     //assert( !contains( status, b.key ) || status.at(b.key) != Complete );
-    return addEdge(SG, E, a, b);
+    return addEdge( E, a, b);
 }
 
 void addCrossEdges(const DelaunayGraph& SG,
@@ -459,13 +458,12 @@ void addCrossEdges(const DelaunayGraph& SG,
                    SplitVertexEdgeMap& E_P,
                    SplitVertex& p,
                    SplitVertex& q,
-                   SplitVertex& r,
-                   const VertexStatusMap& status ) {
+                   SplitVertex& r) {
     optional< SplitVertex > v_last = nullopt;
     bool isInZone = false;
     forEachNeighbor(SG, V, E, q, [&](SplitVertex &v_n) {
         if (isInZone && v_last) {
-            addPolygonSpannerEdge(SG, E_P, *v_last, v_n, status);
+            addPolygonSpannerEdge(E_P, *v_last, v_n);
             //SG.addToEventQueue( {s_last.first, N}, true );
         }
         if (v_n.key == p.key) isInZone = true;
@@ -481,8 +479,7 @@ void addForwardEdges(const DelaunayGraph& SG,
                      SplitVertexEdgeMap& E_P,
                      SplitVertex& p,
                      SplitVertex& q,
-                     SplitVertex& r,
-                     const VertexStatusMap& status ) {
+                     SplitVertex& r) {
 
     //double deg = 180/PI; // used for displaying angles in degree
 
@@ -519,16 +516,14 @@ void addForwardEdges(const DelaunayGraph& SG,
 
     for( SplitVertex v : add )
         if( !SG.m_DT.is_infinite( v.v ) ) {
-            addPolygonSpannerEdge(SG, E_P, q, v, status);
+            addPolygonSpannerEdge( E_P, q, v);
         }
 }
 
-inline void addPolygonEdges(const DelaunayGraph& SG,
-                            SplitVertexEdgeMap& E_P,
+inline void addPolygonEdges(SplitVertexEdgeMap& E_P,
                             SplitVertex& p,
                             SplitVertex& q,
-                            SplitVertex& r,
-                            const VertexStatusMap& status ) {
+                            SplitVertex& r ) {
     /*
      * Only add edges from P if they have not already been added.
      * Failure to check for this will result in breaking the
@@ -536,9 +531,9 @@ inline void addPolygonEdges(const DelaunayGraph& SG,
      * vertices.
      */
     if( !contains( E_P, p.key) || !contains( E_P.at(p.key), q.key ) )
-        addPolygonSpannerEdge(SG, E_P, p, q, status);
+        addPolygonSpannerEdge(E_P, p, q);
     if( !contains( E_P, q.key) || !contains( E_P.at(q.key), r.key ) )
-        addPolygonSpannerEdge(SG, E_P, q, r, status);
+        addPolygonSpannerEdge( E_P, q, r);
 }
 
 inline void addPolygonSpannerEdges(const DelaunayGraph& SG,
@@ -547,23 +542,21 @@ inline void addPolygonSpannerEdges(const DelaunayGraph& SG,
                                    SplitVertexEdgeMap& E_P,
                                    SplitVertex& p,
                                    SplitVertex& q,
-                                   SplitVertex& r,
-                                   const VertexStatusMap& status ) {
+                                   SplitVertex& r ) {
     //assert( !SG.m_DT.is_infinite(p.v) && !SG.m_DT.is_infinite(q.v) && !SG.m_DT.is_infinite(r.v) );
     if( p == r ) return;
 
     //cout<< " adding forward edges...\n";
-    addForwardEdges(SG, V, E, E_P, p, q, r, status);
+    addForwardEdges(SG, V, E, E_P, p, q, r);
     //cout<< " adding cross edges...\n";
-    addCrossEdges(SG, V, E, E_P, p, q, r, status);
+    addCrossEdges(SG, V, E, E_P, p, q, r);
 }
 
 void processVertex(const DelaunayGraph& SG,
                    SplitVertexSet& V,
                    SplitVertexEdgeMap& E,
                    SplitVertexEdgeMap& E_P,
-                   SplitVertex& v_i,
-                   const VertexStatusMap& status ) {
+                   SplitVertex& v_i) {
     SplitVertex s_1 = V.at(v_i.s_1),
                    s_m = get_s_m( SG, V, E, v_i ),
                    s_j,
@@ -574,7 +567,7 @@ void processVertex(const DelaunayGraph& SG,
 //             <<"\n";
     if( E_P.empty() ) {
 //             cout<< " adding edges between s_1 and s_m...\n";
-        addPolygonSpannerEdges(SG, V, E, E_P, s_1, v_i, s_m, status);
+        addPolygonSpannerEdges(SG, V, E, E_P, s_1, v_i, s_m);
     } else {
         optional< index_t > s_j_key;
         index_t s_k_key = s_m.key;
@@ -587,14 +580,14 @@ void processVertex(const DelaunayGraph& SG,
         s_k =  V.at( s_k_key );
 //            cout<< " s_j:" << s_j << " s_k:" << s_k <<"\n";
 //            cout<< " adding edges between s_1 and s_j...\n";
-        addPolygonSpannerEdges(SG, V, E, E_P, s_1, v_i, s_j, status);
+        addPolygonSpannerEdges(SG, V, E, E_P, s_1, v_i, s_j);
 //            cout<< " adding edges between s_k and s_m...\n";
-        addPolygonSpannerEdges(SG, V, E, E_P, s_k, v_i, s_m, status);
+        addPolygonSpannerEdges(SG, V, E, E_P, s_k, v_i, s_m);
     }
 
 //        cout<< " s_m:" << s_m << "\n";
 //        cout<< " adding edges from P...\n";
-    addPolygonEdges(SG, E_P, s_1, v_i, s_m, status);
+    addPolygonEdges( E_P, s_1, v_i, s_m);
 }
 
 } // namespace polygon_spanner
@@ -616,27 +609,26 @@ void PolygonSpanner( DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEdgeMap& E
 
     do { // loop through level queue
         v_i = V.at( level.front() );
-//        //SG.addToEventQueue( v_i, 0 ); // focus0 on v_i
 //        cout<<"\nprocessing "<<v_i<<"\n";
 
-        if( !E_P.empty() ) //assert( E_P.at( v_i.key ).size() <= 5 );
+        //if( !E_P.empty() ) assert( E_P.at( v_i.key ).size() <= 5 );
 
-        processVertex(SG, V, E, E_P, v_i, status);
+        processVertex(SG, V, E, E_P, v_i);
 
         // BFS housekeeping
 
-        forEachNeighbor(SG, V, E, v_i, [&](const SplitVertex &v_n) {
-            if (!contains(status, v_n.key)) { // If N[v_i] is NOT Known, queue it and add to Known
-                level.push(v_n.key);
-                status[v_n.key] = Known;
-//                SG.addToEventQueue( N, 1 ); // focus1 on C
+        forEachNeighbor(SG, V, E, v_i,
+            [&](const SplitVertex &v_n) {
+                if (!contains(status, v_n.key)) { // If N[v_i] is NOT Known, queue it and add to Known
+                    level.push(v_n.key);
+                    status[v_n.key] = Known;
+                }
             }
-        });
+        );
         level.pop();
         status[v_i.key] = Complete;
     } while( !level.empty() ); // level is not empty
 
-    //SG.addToEventQueue( SG._DT.infinite_vertex(), 0 ); // focus0 on infinite
     VertexHandle v1;
 
     // Add all edges from E_P to SG
@@ -647,14 +639,11 @@ void PolygonSpanner( DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEdgeMap& E
             SG.addEdge(v1, V.at(v2).v);
         }
     }
-    // Lemma 3.4   ((PI+1)*(2*PI/(3*cos(PI/6)))) = 10.01602416
-    // CAUTION: StretchFactor(SG) takes O(n^3)!
-    ////assert( StretchFactor(SG) <= ((PI+1)*(2*PI/(3*cos(PI/6)))) );
 
     // Test degree assumption given after lemma 3.4
-    for( auto it=SG.m_E.begin(); it!=SG.m_E.end(); ++it ) {
-        //assert( it->second.size() <= 27 );
-    }
+//    for( auto it=SG.m_E.begin(); it!=SG.m_E.end(); ++it ) {
+//        assert( it->second.size() <= 27 );
+//    }
 
     swap( E, E_P );
 
@@ -664,7 +653,7 @@ void PolygonSpanner( DelaunayGraph& SG, SplitVertexSet& V, SplitVertexEdgeMap& E
 
 
 template< typename RandomAccessIterator, typename OutputIterator >
-void BGS2005( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result, bool printLog = false ) {
+void BGS2005( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result) {
     using namespace bgs2005;
 
     DelaunayGraph G( pointsBegin, pointsEnd ); // Step 1
@@ -687,6 +676,6 @@ void BGS2005( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     }
 }
 
-} // namespace unf_spanners
+} // namespace planespanners
 
 #endif // GSNUNF_BGS2005_H

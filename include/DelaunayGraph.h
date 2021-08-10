@@ -17,7 +17,7 @@
 
 #include "utilities.h"
 
-namespace unf_spanners {
+namespace planespanners {
 
 using namespace std;
 
@@ -84,18 +84,17 @@ class DelaunayGraph {
         }
     }
 
-    template< typename RandomAccessIterator >
-    // kitty: bnnnnn23333333333333333333333,m000000000000000000000000000000000000000000000000000000000re	IIIKKKKKKKKKKKHUG0
-    void buildFromEdgeList( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
-        vector<pair<Point,Point>> edges( edgesBegin, edgesEnd );
-        std::sort( edges.begin(), edges.end() );
-
-        for( auto e=edgesBegin; e!=edgesEnd; ++e ) {
-            VertexHandle u = m_DT.insert(e->first);
-            VertexHandle v = m_DT.insert(e->second);
-            addEdge(u, v);
-        }
-    }
+//    template< typename RandomAccessIterator >
+//    void buildFromEdgeList( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd ) {
+//        vector<pair<Point,Point>> edges( edgesBegin, edgesEnd );
+//        std::sort( edges.begin(), edges.end() );
+//
+//        for( auto e=edgesBegin; e!=edgesEnd; ++e ) {
+//            VertexHandle u = m_DT.insert(e->first);
+//            VertexHandle v = m_DT.insert(e->second);
+//            addEdge(u, v);
+//        }
+//    }
 
     inline void addEdge(const VertexHandle& v1, const VertexHandle& v2 ) {
         addHalfEdge(v1, v2);
@@ -161,6 +160,6 @@ class DelaunayGraph {
 
 }; // class DelaunayGraph
 
-} // namespace unf_spanners
+} // namespace planespanners
 
 #endif // GSNUNF_DELAUNAYGRAPH_H

@@ -4,7 +4,6 @@
 
 #include <array>
 #include <iostream>
-#include <fstream>
 #include <list>
 #include <cassert>
 #include <string>
@@ -19,72 +18,68 @@
 #include <CGAL/boost/iterator/counting_iterator.hpp>
 #include <CGAL/circulator.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Segment_Delaunay_graph_Linf_filtered_traits_2.h>
 #include <CGAL/Segment_Delaunay_graph_Linf_2.h>
+#include <CGAL/Segment_Delaunay_graph_Linf_filtered_traits_2.h>
 #include <CGAL/Segment_Delaunay_graph_storage_traits_with_info_2.h>
-#include <CGAL/spatial_sort.h>
-#include <CGAL/Spatial_sort_traits_adapter_2.h>
 
-#include "GeometricSpannerPrinter.h"
-#include "metrics.h"
+//#include "GeometricSpannerPrinter.h"
+//#include "metrics.h"
+#include "utilities.h"
 
-namespace unf_spanners {
+namespace planespanners {
 
     using namespace std;
 
     namespace bkpx2015 {
 
-    // CGAL objects
+        /*
+         * CGAL Objects
+         *
+         * CGAL::Segment_Delaunay_graph_storage_traits_with_info_2
+         * requires these functors, in their current form, although
+         * our use of SDG does not result in these functors actually
+         * being used by the SDG.
+         *
+         * They will cause "unused" warnings, but these are safe to
+         * ignore.
+         */
 
-    typedef size_t id_type;
+        template<typename T>
+        struct InfoConvert {
+            typedef T Info;
+            typedef const Info &result_type;
 
-    template<typename T>
-    struct InfoConvert
-    {
-        typedef T Info;
-        typedef const Info& result_type;
+            inline const Info &operator()(const Info &info0, bool) const {
+                return info0; // just return the info of the supporting segment
+            }
 
-        inline const Info& operator()(const Info& info0, bool) const {
-            // just return the info of the supporting segment
-            return info0;
-        }
-        inline const Info& operator()(const Info& info0, const Info& , bool) const {
-            // just return the info of the supporting segment
-            return info0;
-        }
-    };
-    // functor that defines how to merge color info when a site (either
-    // point or segment) corresponds to point(s) on plane belonging to
-    // more than one input site
-    template<typename T>
-    struct InfoMerge
-    {
-        typedef T    Info;
-        typedef Info result_type;
+            inline const Info &operator()(const Info &info0, const Info &, bool) const {
+                return info0; // just return the info of the supporting segment
+            }
+        };
 
-        inline Info operator()(const Info& info0, const Info& info1) const {
-            // just return the info of the supporting segment
-            return info0;
-        }
-    };
+        template<typename T>
+        struct InfoMerge {
+            typedef T Info;
+            typedef Info result_type;
 
-        typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-        typedef CGAL::Segment_Delaunay_graph_Linf_filtered_traits_2<K,CGAL::Field_with_sqrt_tag>  Gt;
+            inline Info operator()(const Info &info0, const Info &info1) const {
+                return info0; // just return the info of the supporting segment
+            }
+        };
+
+        typedef CGAL::Segment_Delaunay_graph_Linf_filtered_traits_2<K, CGAL::Field_with_sqrt_tag> Gt;
         typedef CGAL::Segment_Delaunay_graph_storage_traits_with_info_2<Gt,
                 index_t,
                 InfoConvert<index_t>,
                 InfoMerge<index_t>> StorageTraits;
         typedef CGAL::Segment_Delaunay_graph_Linf_2<Gt, StorageTraits> LinfDelaunayGraph;
         typedef LinfDelaunayGraph::Site_2 Site;
-        typedef Site::Point_2 Point;
+        //typedef Site::Point_2 Point;
         typedef LinfDelaunayGraph::Vertex_circulator VertexCirculator;
         //typedef LinfDelaunayGraph::Edge LinfEdge;
         typedef LinfDelaunayGraph::Vertex_handle VertexHandle;
         typedef LinfDelaunayGraph::Face_handle FaceHandle;
-
-        typedef CGAL::Spatial_sort_traits_adapter_2<K,
-                CGAL::Pointer_property_map<Point>::type> SearchTraits;
-
 
         enum AnchorType {
             None, Weak, Strong, StrongSelected, WeakSelected, StartOddChain
@@ -169,7 +164,8 @@ namespace unf_spanners {
                         fans[cone].second = circ;
                         previousCone = cone;
 
-                        number_t proposedDistance = CGAL::l_infinity_distance(point->site().point(), circ->site().point());
+                        number_t proposedDistance = CGAL::l_infinity_distance(point->site().point(),
+                                                                              circ->site().point());
 
                         bool tie = false;
                         if (abs(proposedDistance - distances[cone]) < EPSILON) {
@@ -190,7 +186,8 @@ namespace unf_spanners {
                         }
                     }
 
-                } while (++circ != endpoint); // finished determining the Yao edges + how many points are in fan of u's cone i
+                } while (++circ !=
+                         endpoint); // finished determining the Yao edges + how many points are in fan of u's cone i
 //            }
 //
 //            for (const auto &point : handles) {
@@ -268,7 +265,8 @@ namespace unf_spanners {
 
                         bool cwCanonical = (!ccwCanonical && lcount <= (numNeighbors - 1) &&
                                             !(DT.is_infinite(vhigher)) &&
-                                            (yaoEdges[vhigher->storage_site().info()][getCone(vhigher, v)].first == v) &&
+                                            (yaoEdges[vhigher->storage_site().info()][getCone(vhigher, v)].first ==
+                                             v) &&
                                             yaoEdges[v->storage_site().info()][getCone(v, vhigher)].first != vhigher);
 
                         bool inCanonical = ccwCanonical || cwCanonical;
@@ -292,20 +290,26 @@ namespace unf_spanners {
                                 bool inFan = !((ccwCanonical && position < 1) ||
                                                (cwCanonical && position > numNeighbors));
                                 bool unidirectional = (!(DT.is_infinite(current)) &&
-                                                       yaoEdges[current->storage_site().info()][getCone(current,previous)].first == previous &&
-                                                       yaoEdges[previous->storage_site().info()][getCone(previous,current)].first != current);
+                                                       yaoEdges[current->storage_site().info()][getCone(current,
+                                                                                                        previous)].first ==
+                                                       previous &&
+                                                       yaoEdges[previous->storage_site().info()][getCone(previous,
+                                                                                                         current)].first !=
+                                                       current);
 
                                 inCanonical = inFan && unidirectional;
 
                                 bool yaoConnected = inCanonical && (yaoEdges[u_id][cone].first == current ||
-                                                                    yaoEdges[current->storage_site().info()][(cone + 2) % 4].first == u);
+                                                                    yaoEdges[current->storage_site().info()][
+                                                                            (cone + 2) % 4].first == u);
 
                                 if (yaoConnected)
                                     crown = current;
 
                             }
 
-                            assert(yaoEdges[u_id][cone].first == crown || yaoEdges[crown->storage_site().info()][(cone + 2) % 4].first == u);
+                            assert(yaoEdges[u_id][cone].first == crown ||
+                                   yaoEdges[crown->storage_site().info()][(cone + 2) % 4].first == u);
 
                             anchorEdges[u_id][cone].first = crown;
                             anchorEdges[u_id][cone].second = Weak;
@@ -324,7 +328,8 @@ namespace unf_spanners {
                     VertexHandle v = anchorEdges[u_id][cone].first;
 
                     if (!DT.is_infinite(v) && (anchorEdges[v->storage_site().info()][(cone + 2) % 4].first == u
-                            || DT.is_infinite(anchorEdges[v->storage_site().info()][(cone + 2) % 4].first))) {
+                                               || DT.is_infinite(
+                            anchorEdges[v->storage_site().info()][(cone + 2) % 4].first))) {
                         anchorEdges[u_id][cone].second = Strong;
                     }
                 }
@@ -346,7 +351,7 @@ namespace unf_spanners {
                     if (anchorEdges[u_id][cone].second == Weak) {
                         VertexCirculator circ = DT.incident_vertices(u);
                         auto v1 = pointFans[u_id][cone].first,
-                             vk = pointFans[u_id][cone].second;
+                                vk = pointFans[u_id][cone].second;
                         while (circ != v1) { ++circ; }
 
                         bool found = false;
@@ -375,7 +380,8 @@ namespace unf_spanners {
 
                             currentCone = (visited.size() % 2) ? localCone : cone;
 
-                            inChain = !(anchorEdges[previous_id][currentCone].second == Strong || anchorEdges[previous_id][currentCone].second == StrongSelected);
+                            inChain = !(anchorEdges[previous_id][currentCone].second == Strong ||
+                                        anchorEdges[previous_id][currentCone].second == StrongSelected);
 
                             if (!inChain)
                                 break;
@@ -386,7 +392,8 @@ namespace unf_spanners {
 
                         } while (inChain);
 
-                        assert(anchorEdges[previous_id][currentCone].second == Strong || anchorEdges[previous_id][currentCone].second == StrongSelected);
+                        assert(anchorEdges[previous_id][currentCone].second == Strong ||
+                               anchorEdges[previous_id][currentCone].second == StrongSelected);
 
                         bool oddChain = (visited.size() % 2);
 
@@ -416,7 +423,7 @@ namespace unf_spanners {
                                const VertexHandle u,
                                const VertexHandle v) {
 
-           return any_of(edgeList.begin(), edgeList.end(), [&](const auto &e) {
+            return any_of(edgeList.begin(), edgeList.end(), [&](const auto &e) {
                 return (u == e.first || u == e.second) && (v == e.first || v == e.second);
             });
         }
@@ -753,8 +760,7 @@ namespace unf_spanners {
 
 
     template<typename RandomAccessIterator, typename OutputIterator>
-    void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result,
-                  bool printLog = false) {
+    void BKPX2015(RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, OutputIterator result) {
 
         using namespace bkpx2015;
 

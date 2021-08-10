@@ -107,7 +107,7 @@ namespace spanners {
         "Average lightness"
     };
     const vector<unsigned> IV_PRECISION = {
-        4,2,2,2,2
+        2,2,2,2,2
     };
     const vector<string> PGFPLOT_NAMES = {
         "Mean " + IV_NICE_NAMES[0],

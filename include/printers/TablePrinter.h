@@ -219,11 +219,17 @@ namespace spanners {
             size_t i=0;
             singleTabulater.addColumn(N_SYMBOL, nLevels, i++);
 
+            vector<string> AlgorithmNamesSmallText;
+            transform(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),back_inserter(AlgorithmNamesSmallText),
+                [](const auto& text){
+                    return "\\tiny{" + text + "}";
+            });
+
             for(int alg=Algorithm::AlgorithmFirst;
                 alg!=Algorithm::AlgorithmLast; ++alg ) {
                 vector<string> singleColumn;
                 getSingleIVColumn( iv, Algorithm(alg), results, singleColumn);
-                singleTabulater.addColumn(ALGORITHM_NAMES[alg], singleColumn, i++);
+                singleTabulater.addColumn(AlgorithmNamesSmallText[alg], singleColumn, i++);
             }
             singleTabulater.tabulate(TablePrinter::CellHighlightStyle::MaxInRow);
             addToPrinter->addToDocument(singleTabulater, PRECOMPILE_SUBDOCUMENTS);

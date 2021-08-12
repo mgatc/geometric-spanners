@@ -36,6 +36,31 @@ namespace spanners {
         "Uniform Inside Annulus",
         "Real-world"
     };
+    enum ExperimentType {
+        PlaneSpanner,
+        Degree3Spanner,
+        Delaunay
+    };
+
+    enum DelaunayAlgorithm {
+        DelaunayAlgorithmFirst=0,
+        L2Sorted = DelaunayAlgorithmFirst,
+        LinfSorted,
+        TDSorted,
+        L2Unsorted,
+        LinfUnsorted,
+        TDUnsorted,
+        DelaunayAlgorithmLast
+    };
+    const vector<string> DELAUNAY_ALGORITHM_NAMES = {
+            "\\texttt{$L_2$ Delaunay} (Sorted)",
+            "\\texttt{$L_inf$ Delaunay} (Sorted)",
+            "\\texttt{TD Delaunay} (Sorted)",
+            "\\texttt{$L_2$ Delaunay} (Unsorted)",
+            "\\texttt{$L_inf$ Delaunay} (Unsorted)",
+            "\\texttt{TD Delaunay} (Unsorted)",
+
+    };
 
     enum Algorithm {
         AlgorithmFirst=0,

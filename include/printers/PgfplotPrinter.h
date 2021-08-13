@@ -154,7 +154,7 @@ namespace spanners {
             axisHeader += xTicks
                           //+ "\n}"
                           + ", ylabel near ticks,ylabel={"
-                          + IV_SYMBOLS.at(iv);
+                          + IV_NICE_NAMES.at(iv);
             if(!IV_UNITS.at(iv).empty())
                 axisHeader += " (in "
                           + IV_UNITS.at(iv)
@@ -192,7 +192,7 @@ namespace spanners {
 
 
 
-    void plotResults(const DistributionType dist, const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter) {
+    void plotResults(const string& dist, const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter) {
 
         // Create plot names
         vector<string> plotNames;
@@ -200,7 +200,7 @@ namespace spanners {
                   PGFPLOT_NAMES.end(),
                   back_inserter(plotNames),
                   [&dist](const string& str) {
-                      string plotName = str + " (" + DISTRIBUTION_NAMES.at(dist) + ")";
+                      string plotName = str + " (" + dist + ")";
                       //cout<<plotName;
                       return plotName;
                   });

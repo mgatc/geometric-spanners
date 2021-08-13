@@ -20,30 +20,50 @@ int main(int argc, char *argv[]) {
             runs, n_begin, n_end, increment
     };
 
-    for (size_t arg = 1;
-         arg < std::min(size_t(argc), experimentParameters.size() + 1);
-         ++arg) {
-        try {
-            experimentParameters[arg - 1] = stoul(argv[arg]);
-            cout << "Parameter " << (arg - 1) << " = " << experimentParameters[arg - 1] << "\n";
-        }
-        catch (invalid_argument &ia) {
-            cout << "Invalid experiment parameter '" << arg << "', using default value = "
-                 << experimentParameters[arg - 1] << "\n";
-        }
+
+    size_t N = experimentParameters[0];
+
+    switch(argc) {
+        case 2:
+            ignore = system("rm ./output/scratch-*");
+            try{
+                spanners::scratch(stoi(argv[1]));
+            } catch(invalid_argument &ia) {
+                cout << "Invalid parameter '" << argv[1] << "'... exiting\n";
+                return EXIT_FAILURE;
+            }
+            break;
+        case 3:
+            ignore = system( "rm ./output/real-*");
+            try{
+                spanners::ExperimentFromConfigurationFile(stoi(argv[1]), argv[2]);
+            } catch(invalid_argument &ia) {
+                cout << "Invalid parameter '" << argv[1] << "'... exiting\n";
+                return EXIT_FAILURE;
+            }
+            break;
+        case 5:
+            for (size_t arg = 1;
+                 arg < std::min(size_t(argc), experimentParameters.size() + 1);
+                 ++arg) {
+                try {
+                    experimentParameters[arg - 1] = stoul(argv[arg]);
+                    cout << "Parameter " << (arg - 1) << " = " << experimentParameters[arg - 1] << "\n";
+                }
+                catch (invalid_argument &ia) {
+                    cout << "Invalid parameter '" << arg << "'... exiting\n";
+                }
+            }
+            ignore = system("rm ./output/exp-*");
+            spanners::SyntheticExperiment(experimentParameters[0],
+                                          experimentParameters[1],
+                                          experimentParameters[2],
+                                          experimentParameters[3]);
+            break;
+        default:
+            cout<<"Invalid arguments... try again."<<endl;
+            return EXIT_FAILURE;
     }
 
-    size_t N = experimentParameters.empty() ? 50 : experimentParameters[0];
-
-    if (argc == 2) {
-        ignore = system("rm ./output/scratch-*");
-        spanners::scratch(N);
-    } else {
-        ignore = system("rm ./output/exp-*");
-        spanners::experiment(experimentParameters[0],
-                   experimentParameters[1],
-                   experimentParameters[2],
-                   experimentParameters[3]);
-    }
-    return 0;
+    return EXIT_SUCCESS;
 }

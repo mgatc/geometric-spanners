@@ -1,7 +1,3 @@
-//
-// Created by matt on 7/16/21.
-//
-
 #ifndef SPANNERS_NAMES_H
 #define SPANNERS_NAMES_H
 
@@ -12,7 +8,7 @@ namespace spanners {
 
     using namespace std;
 
-    const string N_SYMBOL = "n";
+    const string N_SYMBOL = "$n$";
 
     enum DistributionType {
         DistributionTypeFirst=0,
@@ -23,8 +19,8 @@ namespace spanners {
         ContiguousGrid,
         UniformRandomGrid,
         UniformInsideAnnulus,
-  //      Real,
-        DistributionTypeLast
+        DistributionTypeLast,
+        Real // special case, at the end to avoid using this value in synthetic experiments
     };
     vector<string> DISTRIBUTION_NAMES = {
         "Uniform Inside Square",
@@ -34,33 +30,33 @@ namespace spanners {
         "Contiguous Grid",
         "Uniform Random Grid",
         "Uniform Inside Annulus",
-        "Real-world"
+        "Real"
     };
-    enum ExperimentType {
-        PlaneSpanner,
-        Degree3Spanner,
-        Delaunay
-    };
+//    enum ExperimentType {
+//        PlaneSpanner,
+//        Degree3Spanner,
+//        Delaunay
+//    };
 
-    enum DelaunayAlgorithm {
-        DelaunayAlgorithmFirst=0,
-        L2Sorted = DelaunayAlgorithmFirst,
-        LinfSorted,
-        TDSorted,
-        L2Unsorted,
-        LinfUnsorted,
-        TDUnsorted,
-        DelaunayAlgorithmLast
-    };
-    const vector<string> DELAUNAY_ALGORITHM_NAMES = {
-            "\\texttt{$L_2$ Delaunay} (Sorted)",
-            "\\texttt{$L_inf$ Delaunay} (Sorted)",
-            "\\texttt{TD Delaunay} (Sorted)",
-            "\\texttt{$L_2$ Delaunay} (Unsorted)",
-            "\\texttt{$L_inf$ Delaunay} (Unsorted)",
-            "\\texttt{TD Delaunay} (Unsorted)",
-
-    };
+//    enum DelaunayAlgorithm {
+//        DelaunayAlgorithmFirst=0,
+//        L2Sorted = DelaunayAlgorithmFirst,
+//        LinfSorted,
+//        TDSorted,
+//        L2Unsorted,
+//        LinfUnsorted,
+//        TDUnsorted,
+//        DelaunayAlgorithmLast
+//    };
+//    const vector<string> DELAUNAY_ALGORITHM_NAMES = {
+//            "\\texttt{$L_2$ Delaunay} (Sorted)",
+//            "\\texttt{$L_inf$ Delaunay} (Sorted)",
+//            "\\texttt{TD Delaunay} (Sorted)",
+//            "\\texttt{$L_2$ Delaunay} (Unsorted)",
+//            "\\texttt{$L_inf$ Delaunay} (Unsorted)",
+//            "\\texttt{TD Delaunay} (Unsorted)",
+//
+//    };
 
     enum Algorithm {
         AlgorithmFirst=0,
@@ -75,7 +71,7 @@ namespace spanners {
         Bghp2010,
         Bkpx2015,
         Kpt2017,
-        Degree3,
+//        Degree3,
         AlgorithmLast
     };
     const string ALGORITHM_SYMBOL = "Algorithm";
@@ -90,16 +86,16 @@ namespace spanners {
         "\\texttt{BCC2012-6}",
         "\\texttt{BGHP2010}",
         "\\texttt{BKPX2015}",
-        "\\texttt{KPT2017}",
-        "\\texttt{Degree3}"
+        "\\texttt{KPT2017}"
+    //    "\\texttt{Degree3}"
     };
-    const string DEGREE_BOUND_SYMBOL = "$\\Delta_{\\mathrm{u.b.}}$";
+    const string DEGREE_BOUND_SYMBOL = "$\\Delta_{\\mathrm{ub}}$";
     const vector<string> DEGREE_BOUND_PER_ALGORITHM = {
-        "27","23","17","14","11","8","7","6","6","4","4","3"
+        "27","23","17","14","11","8","7","6","6","4","4"//,"3"
     };
-    const string STRETCH_FACTOR_BOUND_SYMBOL = "$t_{\\mathrm{u.b.}}$";
+    const string STRETCH_FACTOR_BOUND_SYMBOL = "$t_{\\mathrm{ub}}$";
     const vector<string> STRETCH_FACTOR_BOUND_PER_ALGORITHM = {
-        "8.27","6.44","23.6","2.92","2.86","4.41","11.7","81.7","6","157","20","INF"
+        "8.27","6.44","23.6","2.92","2.86","4.41","11.7","81.7","6","157","20"//,"INF"
     };
 
     const vector<string> IV_NAMES = {
@@ -112,17 +108,17 @@ namespace spanners {
 
     const vector<string> IV_SYMBOLS = {
         "runtime",
-        "$\\Delta_{\\mathrm{obs.}}$",
-        "$\\Delta_{\\mathrm{avg.}}$",
-        "$t_{\\mathrm{obs.}}$",
+        "$\\Delta_{\\mathrm{obs}}$",
+        "$\\Delta_{\\mathrm{avg}}$",
+        "$t_{\\mathrm{obs}}$",
         "$\\lambda$"
     };
     const vector<string> IV_UNITS = {
         "seconds", // runtime in seconds
         "", // no unit for degree
-        "", // not unit for degree
-        "", // not unit for lightness
-        "" // not unit for stretch factor
+        "", // no unit for degree
+        "", // no unit for lightness
+        "" // no unit for stretch factor
     };
     const vector<string> IV_NICE_NAMES = {
         "Average execution time",

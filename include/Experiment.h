@@ -6,6 +6,9 @@
 #include <optional>
 #include <utility>
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+
 #include "algorithms/Degree3.h"
 
 #include "algorithms/BCC2012.h"
@@ -33,6 +36,8 @@
 
 namespace spanners {
 
+    const string DATA_DIRECTORY = "";
+
     using std::to_string;
 
     const bool PRINT_GEOMETRY = false;
@@ -50,14 +55,60 @@ namespace spanners {
     GraphPrinter graph("exp-vis");
     PgfplotPrinter pgfplots("exp-plots");
 
-    vector<BoundedDegreeSpannerResultSet> RESULTS(DistributionTypeLast);
+    map<string,BoundedDegreeSpannerResultSet> RESULTS;
 
-    void PlaneSpannerExperiment( const vector<Point>&,const DistributionType,const Algorithm);
-    bool singleRun( const size_t,const DistributionType,const double);
+    void SingleTrial (const vector<Point>& points, const string dist );
+    void PlaneSpannerTest( const vector<Point>&,const DistributionType,const Algorithm);
+    void SyntheticTrial(const size_t n, DistributionType dist, const double width);
+
+    void ExperimentFromConfigurationFile(size_t numRuns, string configFilename) {
+        boost::property_tree::ptree config;
+
+        using std::string, std::vector;
+        namespace pt = boost::property_tree;
+        pt::read_xml(configFilename,config);
+
+        for( auto pointset : config.get_child("pointsets") ) {
+            string filename = pointset.second.get_child("filename").data(),
+                   fullname = DATA_DIRECTORY + filename;
+            std::ifstream in(fullname);
+
+            if (in.is_open()) {
+                vector<Point> P;
+                number_t x,y;
+                while ( in >> x >> y ) {
+                    P.emplace_back(x,y);
+                }
+                in.close();
+
+                auto& result = RESULTS.emplace(filename, BoundedDegreeSpannerResultSet()).first->second;
+
+                cout<< "Added "<< P.size() <<" points from file\n";
+                for (size_t trial = 0; trial <= numRuns; ++trial) {
+                    SingleTrial(P, filename);
+                }
+                result.computeStatistics();
+                if (PRINT_PGFPLOTS) {
+                    plotResults(filename, result, &latex);
+                }
+                if(PRINT_IV_TABLES){
+                    tabulateIVs(filename, result, &latex);
+                }
+                if (PRINT_SUMMARY_TABLES) {
+                    tabulateSummaryResults(filename, result, &latex);
+                }
+
+                if (PRINT_GEOMETRY || PRINT_PGFPLOTS || PRINT_SUMMARY_TABLES || PRINT_IV_TABLES)
+                    latex.display();
+            } else {
+                cout<<"Error opening file!\n";
+            }
+
+        }
+    }
 
 
-
-    bool experiment(size_t numRuns, size_t n_start, size_t n_end, size_t increment ) {
+    void SyntheticExperiment(size_t numRuns, size_t n_start, size_t n_end, size_t increment ) {
 
         // EXPERIMENT PARAMETER OVERRIDE ----------------------------------------//
         numRuns = numRuns, n_start = n_start, n_end = n_end, increment = increment;
@@ -66,24 +117,34 @@ namespace spanners {
         const number_t width = 1000;
 
         for( int dist=DistributionTypeFirst; dist!=DistributionTypeLast; ++dist ) {
-            auto distibutionType = static_cast<DistributionType>(dist);
-            auto& result = RESULTS.at(dist);
+            auto distributionType = static_cast<DistributionType>(dist);
+            string distName = DISTRIBUTION_NAMES.at(dist);
+
+            cout<< "!! Starting  "<< distName << "distribution trials !!\n"
+                << "NOTE: one extra trial is performed because trial 0 will be thrown out!"<<endl<<endl;
+
+            auto& result = (RESULTS.emplace(distName, BoundedDegreeSpannerResultSet()).first)->second;
             for (size_t trial = 0; trial <= numRuns; ++trial) {
+                cout<< "Starting trial "<< trial << "..."<<endl<<endl;
                 for (size_t n = n_start; n <= n_end; n += increment) {
-                    singleRun(n, distibutionType, width);//, "output", nullopt, false, false ) )
+                    SyntheticTrial(n, distributionType, width);//, "output", nullopt, false, false ) )
                 }
+                cout<<"\n\n";
             }
             result.computeStatistics();
 
             if (PRINT_PGFPLOTS) {
-                plotResults(distibutionType, result, &latex);
+                plotResults(distName, result, &latex);
             }
             if(PRINT_IV_TABLES){
-                tabulateIVs(distibutionType, result, &latex);
+                tabulateIVs(distName, result, &latex);
             }
             if (PRINT_SUMMARY_TABLES) {
-                tabulateSummaryResults(distibutionType, result, &latex);
+                tabulateSummaryResults(distName, result, &latex);
             }
+            cout<< "!! Ending  "<< distName << "distribution trials !!\n"
+                << "-------------------------------------------"<<endl;
+
 
         }
 
@@ -97,15 +158,14 @@ namespace spanners {
 //        cout<<endl<<"Total exp="<<EXP_COUNT<<endl;
 
         //cout<<"\nTesting Complete. "<< invalid << " of "<<(numRuns*(n_end-n_start))<<" invalid results.\n\n";
-        return true;
     }
 
 
 
 
-    void PlaneSpannerExperiment(const vector<Point> &points,
-                                const DistributionType dist,
-                                const Algorithm algorithm ) {
+    void PlaneSpannerTest(const vector<Point> &points,
+                          const string dist,
+                          const Algorithm algorithm ) {
         using namespace std;
 
         list<pair<size_t, size_t> > spanner;
@@ -149,9 +209,9 @@ namespace spanners {
             case Algorithm::Kpt2017:
                 KPT2017(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
-            case Algorithm::Degree3:
-                DEG3(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
+//            case Algorithm::Degree3:
+//                DEG3(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
             case Algorithm::AlgorithmLast:
                 assert(false);
         }
@@ -162,62 +222,6 @@ namespace spanners {
 
         ++EXP_COUNT;
 
-//        double stretchFactor;
-//        {
-//            Timer tim;
-//            stretchFactor = StretchFactorDijkstraReduction(points.begin(), points.end(), spanner.begin(),
-//                                                           spanner.end());
-//        }
-//        cout<< stretchFactor;
-//        cout<<",";
-//
-//        double stretchFactor2;
-//        {
-//            Timer tim;
-//            stretchFactor2 = StretchFactorUsingHeuristic(points.begin(), points.end(), spanner.begin(),
-//                                                         spanner.end());
-//        }
-//        cout<< stretchFactor2;
-//        if(abs(stretchFactor2-stretchFactor) > EPSILON) {
-//            cout<<"(WRONG)";
-//            WRONG_COUNT_2++;
-//            WRONG_AMOUNT_2 += abs(stretchFactor2-stretchFactor);
-//        }
-//        cout<<",";
-//
-//        double stretchFactor3;
-////        list<Edge> WorstPathHeuristic;
-////        SFWorstPath2( points.begin(), points.end(), spanner.begin(), spanner.end(),
-////                     make_optional(inserter(WorstPathHeuristic,WorstPathHeuristic.begin())) );
-//        {
-//            Timer tim;
-//            stretchFactor3 = StretchFactorUsingHeuristic2(points.begin(), points.end(), spanner.begin(),
-//                                                          spanner.end());
-//        }
-//        cout<< stretchFactor3;
-//        if(abs(stretchFactor3-stretchFactor) > EPSILON) {
-//            cout<<"(WRONG)";
-//            WRONG_COUNT_3++;
-//            WRONG_AMOUNT_3 += abs(stretchFactor3-stretchFactor);
-//            //print and return
-//            GraphPrinter tikz("scratch-graph");
-//            tikz.autoscale(points.begin(), points.end());
-//            tikz.drawEdges(spanner.begin(), spanner.end(), points, tikz.inactiveEdgeOptions);
-//            tikz.drawVerticesWithInfo(points.begin(), points.end(), tikz.activeVertexOptions);
-//
-//            list<Edge> WorstPath;
-//            SFWorstPath( points.begin(), points.end(), spanner.begin(), spanner.end(),
-//                         make_optional(inserter(WorstPath,WorstPath.begin())) );
-//            tikz.drawEdges(WorstPath.begin(),WorstPath.end(), points, tikz.activeEdgeOptions);
-//
-//
-//            LatexPrinter latex("scratch-latex");
-//            latex.addToDocument(tikz);
-//            latex.display();
-//            assert(!"WRONG STRETCH FACTOR");
-//        }
-//        cout<<endl<<endl;
-
 
         RESULTS.at(dist).registerResult(result);
 
@@ -227,7 +231,7 @@ namespace spanners {
                          make_optional(inserter(WorstPath,WorstPath.begin())) );
 
             string outputname = "visual-"
-                                + DISTRIBUTION_NAMES.at(dist)
+                                + dist
                                 + to_string(points.size())
                                 + "-"
                                 + ALGORITHM_NAMES.at(algorithm);
@@ -263,7 +267,39 @@ namespace spanners {
         }
     }
 
-    bool singleRun( const size_t n, DistributionType dist, const double width ){ //}, string resultFilename, optional<string> filename, bool forcePrint, bool printLog )
+    void SingleTrial (const vector<Point>& points, const string dist ){
+        const size_t n = points.size();
+
+        cout<< "Starting trial..."<<endl<<endl;
+        if(PRINT_GEOMETRY) {
+            string outputname = string("RPIS-") + to_string(n);
+            GraphPrinter printer(outputname);
+            double documentSizeInCm = 10;
+            printer.autoscale(points.begin(), points.end(), documentSizeInCm);
+            GraphPrinter::clearCaptionFile();
+
+            // draw point set
+            string caption = string("$N=")
+                             + to_string(n)
+                             + "$";
+            printer.setCaption(caption);
+
+            printer.drawVertices(points.begin(), points.end(), printer.activeVertexOptions);
+
+            latex.addToDocumentAsFigure(printer);
+        }
+        for(int alg=Algorithm::AlgorithmFirst;
+          alg!=Algorithm::AlgorithmLast; ++alg ) {
+            PlaneSpannerTest(points, dist, static_cast<Algorithm>(alg));
+        }
+
+        cout<< "Finished trial...\n"
+            << "-----------------"<<endl;
+    }
+
+
+    void SyntheticTrial(const size_t n, DistributionType dist, const double width ){ //}, string resultFilename, optional<string> filename, bool forcePrint, bool printLog )
+
 
         // SET POINTS
         vector<Point> points;
@@ -299,32 +335,8 @@ namespace spanners {
             assert(!"Invalid distribution type!");
         }
 
-        if(PRINT_GEOMETRY) {
-            string outputname = string("RPIS-") + to_string(n);
-            GraphPrinter printer(outputname);
-            double documentSizeInCm = 10;
-            printer.autoscale(points.begin(), points.end(), documentSizeInCm);
-            GraphPrinter::clearCaptionFile();
+        SingleTrial(points, DISTRIBUTION_NAMES.at(dist));
 
-            // draw point set
-            string caption = string("$N=")
-                             + to_string(n)
-                             + "$";
-            printer.setCaption(caption);
-
-            printer.drawVertices(points.begin(), points.end(), printer.activeVertexOptions);
-
-            latex.addToDocumentAsFigure(printer);
-        }
-        for(int alg=Algorithm::AlgorithmFirst;
-             alg!=Algorithm::AlgorithmLast; ++alg )
-        {
-            PlaneSpannerExperiment( points, dist, static_cast<Algorithm>(alg) );
-        }
-
-        cout<<endl;
-
-        return true;
     }
 
 

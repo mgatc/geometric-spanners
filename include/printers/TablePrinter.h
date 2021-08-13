@@ -130,16 +130,16 @@ namespace spanners {
         map<int,pair<string,vector<string>>> m_added;
     };
 
-    void tabulateSummaryResults(const DistributionType dist, const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter) {
+    void tabulateSummaryResults(const string& dist, const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter) {
 
-        string distributionNameNoSpaces = DISTRIBUTION_NAMES.at(dist);
+        string distributionNameNoSpaces(dist);
         boost::erase_all(distributionNameNoSpaces, " ");
         string tableFilename = string("exp-table")
                                + distributionNameNoSpaces;
 
 //                TablePrinter table(tableFilename);
 //
-        string tableCaption = DISTRIBUTION_NAMES.at(dist) + " Summary";
+        string tableCaption = dist + " Summary";
 //                table.setCaption(tableCaption);
         string filename = string("exp-table_summary-") + tableCaption;
         boost::erase_all(filename, " ");
@@ -182,7 +182,7 @@ namespace spanners {
         }
     }
 
-    void tabulateIVs(const DistributionType dist, const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter) {
+    void tabulateIVs(const string& dist, const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter) {
 
         // Create table names
         vector<string> tableNames;
@@ -190,7 +190,7 @@ namespace spanners {
                   PGFPLOT_NAMES.end(),
                   back_inserter(tableNames),
                   [&dist](const string& str) {
-                      string tableName = str + " (" + DISTRIBUTION_NAMES.at(dist) + ")";
+                      string tableName = str + " (" + dist + ")";
                       //cout<<tableName;
                       return tableName;
                   });
@@ -219,11 +219,11 @@ namespace spanners {
             size_t i=0;
             singleTabulater.addColumn(N_SYMBOL, nLevels, i++);
 
-            vector<string> AlgorithmNamesSmallText;
-            transform(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),back_inserter(AlgorithmNamesSmallText),
-                [](const auto& text){
-                    return "\\tiny{" + text + "}";
-            });
+            vector<string> AlgorithmNamesSmallText(ALGORITHM_NAMES);
+//            transform(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),back_inserter(AlgorithmNamesSmallText),
+//                [](const auto& text){
+//                    return "\\tiny{" + text + "}";
+//            });
 
             for(int alg=Algorithm::AlgorithmFirst;
                 alg!=Algorithm::AlgorithmLast; ++alg ) {

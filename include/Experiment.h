@@ -36,7 +36,8 @@
 
 namespace spanners {
 
-    const string DATA_DIRECTORY = "";
+    const string INPUT_DATA_DIRECTORY = "../input/";
+    const string OUTPUT_DATA_DIRECTORY = "../output/";
 
     using std::to_string;
 
@@ -51,9 +52,9 @@ namespace spanners {
     number_t WRONG_AMOUNT_3 = 0.0;
     size_t EXP_COUNT = 0;
 
-    LatexPrinter latex("exp-main");
-    GraphPrinter graph("exp-vis");
-    PgfplotPrinter pgfplots("exp-plots");
+    LatexPrinter latex(OUTPUT_DATA_DIRECTORY, "exp-main");
+    GraphPrinter graph(OUTPUT_DATA_DIRECTORY, "exp-vis");
+    PgfplotPrinter pgfplots(OUTPUT_DATA_DIRECTORY, "exp-plots");
 
     map<string,BoundedDegreeSpannerResultSet> RESULTS;
 
@@ -68,9 +69,17 @@ namespace spanners {
         namespace pt = boost::property_tree;
         pt::read_xml(configFilename,config);
 
+        auto& result = RESULTS.emplace(configFilename, BoundedDegreeSpannerResultSet()).first->second;
+
+        map<index_t, string> PointsetNames;
+
         for( auto pointset : config.get_child("pointsets") ) {
+
             string filename = pointset.second.get_child("filename").data(),
-                   fullname = DATA_DIRECTORY + filename;
+                   fullname = INPUT_DATA_DIRECTORY + filename,
+                   filenameNoExtension = filename;
+            boost::erase_all(filenameNoExtension, ".xy");
+
             std::ifstream in(fullname);
 
             if (in.is_open()) {
@@ -81,30 +90,48 @@ namespace spanners {
                 }
                 in.close();
 
-                auto& result = RESULTS.emplace(filename, BoundedDegreeSpannerResultSet()).first->second;
+                const index_t n = P.size();
+                string pointsetName = pointset.second.get_child("nicename").data();
+                PointsetNames.emplace(n,pointsetName);
 
-                cout<< "Added "<< P.size() <<" points from file\n";
+                cout<< "!! Starting  "<< pointsetName << " trials !!\n"
+                    << "Added "<< n <<" points from file\n"
+
+                    << "NOTE: one extra trial is performed because trial 0 will be thrown out!"<<endl<<endl;
+
                 for (size_t trial = 0; trial <= numRuns; ++trial) {
-                    SingleTrial(P, filename);
-                }
-                result.computeStatistics();
-                if (PRINT_PGFPLOTS) {
-                    plotResults(filename, result, &latex);
-                }
-                if(PRINT_IV_TABLES){
-                    tabulateIVs(filename, result, &latex);
-                }
-                if (PRINT_SUMMARY_TABLES) {
-                    tabulateSummaryResults(filename, result, &latex);
+                    SingleTrial(P, configFilename);
                 }
 
-                if (PRINT_GEOMETRY || PRINT_PGFPLOTS || PRINT_SUMMARY_TABLES || PRINT_IV_TABLES)
-                    latex.display();
+                cout<< "!! Ending  "<< pointsetName << " trials !!\n"
+                    << "-------------------------------------------"<<endl;
+
             } else {
                 cout<<"Error opening file!\n";
             }
 
         }
+
+        result.computeStatistics();
+
+        string experimentName = configFilename;
+        boost::erase_all(experimentName, ".xml");
+        boost::erase_all(experimentName, ".");
+        boost::erase_all(experimentName, "/");
+
+        if (PRINT_PGFPLOTS) {
+            plotResults(experimentName, result, &latex);
+        }
+        if(PRINT_IV_TABLES){
+            tabulateIVsFromConfigExperiment(experimentName, result, PointsetNames, &latex);
+        }
+        if (PRINT_SUMMARY_TABLES) {
+            tabulateSummaryResults(experimentName, result, &latex);
+        }
+
+        if (PRINT_GEOMETRY || PRINT_PGFPLOTS || PRINT_SUMMARY_TABLES || PRINT_IV_TABLES)
+            latex.display();
+
     }
 
 

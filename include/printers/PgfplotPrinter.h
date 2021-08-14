@@ -15,7 +15,7 @@ namespace spanners {
 
     using namespace std;
 
-    const size_t SCALING_FACTOR=100;
+    const size_t SCALING_FACTOR=1000;
 
     void plotResults(const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter);
 
@@ -34,8 +34,8 @@ namespace spanners {
                 "*", "triangle*", "square*",  "pentagon*", "diamond*"
         };
 
-        PgfplotPrinter(string filename, string documentType = "standalone")
-                : TikzPrinter(filename,documentType){
+        PgfplotPrinter(string directory, string filename, string documentType = "standalone")
+                : TikzPrinter(directory,filename,documentType){
             m_body = Body{getTikzHeader(),
                           "",
                           getTikzFooter() };
@@ -217,7 +217,7 @@ namespace spanners {
             boost::erase_all(filename, ")");
             boost::erase_all(filename, "(");
 
-            PgfplotPrinter singlePlotter(filename);
+            PgfplotPrinter singlePlotter(addToPrinter->m_directory, filename);
             //singlePlotter.setCaption(caption);
             singlePlotter.plotAxis(iv,results,first);
             first = false;

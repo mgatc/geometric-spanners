@@ -27,8 +27,8 @@ using namespace std;
 class TikzPrinter : public LatexPrinter {
   public:
 
-    explicit TikzPrinter(string filename, string documentType = "standalone")
-        : LatexPrinter(filename,documentType){
+    explicit TikzPrinter(string directory, string filename, string documentType = "standalone")
+        : LatexPrinter(directory,filename,documentType){
 
         // setup graph environment
         //string tikzOptions = getTikzOptions();

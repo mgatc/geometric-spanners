@@ -1,17 +1,18 @@
 #include <algorithm> // min
+#include <experimental/filesystem>
 #include <iostream>
 #include <vector>
 
 #include "Experiment.h"
 #include "Scratch.h"
 
-const bool MEASURE_STRETCH_FACTOR = true;
-
 using namespace std;
+using namespace spanners;
 
 int main(int argc, char *argv[]) {
 
-    const size_t runs = 100;
+    // DEFAULT ARGUMENTS IN THE EVENT COMMAND LINE INPUT IS NOT GIVEN
+    const size_t runs = 5;
     const size_t n_begin = 5000;
     const size_t n_end = 10000;
     const size_t increment = 1000;
@@ -20,12 +21,16 @@ int main(int argc, char *argv[]) {
             runs, n_begin, n_end, increment
     };
 
-
     size_t N = experimentParameters[0];
+
+    namespace fs = std::experimental::filesystem;
+    fs::remove_all(OUTPUT_DATA_DIRECTORY);
+    fs::create_directory(OUTPUT_DATA_DIRECTORY);
+    fs::create_directory(INPUT_DATA_DIRECTORY);
 
     switch(argc) {
         case 2:
-            ignore = system("rm ./output/scratch-*");
+//            ignore = system("rm ../output/scratch-*");
             try{
                 spanners::scratch(stoi(argv[1]));
             } catch(invalid_argument &ia) {
@@ -34,7 +39,7 @@ int main(int argc, char *argv[]) {
             }
             break;
         case 3:
-            ignore = system( "rm ./output/real-*");
+//            ignore = system( "rm ../output/real-*");
             try{
                 spanners::ExperimentFromConfigurationFile(stoi(argv[1]), argv[2]);
             } catch(invalid_argument &ia) {
@@ -42,6 +47,7 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
             }
             break;
+        case 0: // run an experiment with default args
         case 5:
             for (size_t arg = 1;
                  arg < std::min(size_t(argc), experimentParameters.size() + 1);
@@ -54,7 +60,7 @@ int main(int argc, char *argv[]) {
                     cout << "Invalid parameter '" << arg << "'... exiting\n";
                 }
             }
-            ignore = system("rm ./output/exp-*");
+//            ignore = system("rm ../output/exp-*");
             spanners::SyntheticExperiment(experimentParameters[0],
                                           experimentParameters[1],
                                           experimentParameters[2],

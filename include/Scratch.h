@@ -37,6 +37,7 @@
 
 namespace spanners {
 
+    const string SCRATCH_DIRECTORY = "../scratch/";
 
     void scratch(const vector<Point>& points) {
 
@@ -73,12 +74,12 @@ namespace spanners {
 
         // PRODUCE A LaTeX / TiKz DOCUMENT AND DISPLAY
 
-        GraphPrinter tikz("scratch-graph");
+        GraphPrinter tikz(SCRATCH_DIRECTORY,"scratch-graph");
         tikz.autoscale(points.begin(), points.end());
         tikz.drawEdges(result.begin(), result.end(), points, tikz.activeEdgeOptions);
         tikz.drawVerticesWithInfo(points.begin(), points.end(), tikz.activeVertexOptions);
 
-        LatexPrinter latex("scratch-latex");
+        LatexPrinter latex(SCRATCH_DIRECTORY,"scratch-latex");
         latex.addToDocument(tikz);
         latex.display();
 

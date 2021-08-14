@@ -24,10 +24,10 @@ namespace spanners {
         typedef pair<string,string> Option;
         typedef vector<Option> OptionsList;
 
-        string directory = "./output/";
+        string m_directory = "";
 
-        explicit LatexPrinter(string filename, string documentType = "article")
-            : m_filename(std::move(filename)), m_documentType(std::move(documentType)) {}
+        explicit LatexPrinter(string directory, string filename, string documentType = "article")
+            : m_directory(directory), m_filename(std::move(filename)), m_documentType(std::move(documentType)) {}
 
         // Document-level getters
         string getName() const {
@@ -46,7 +46,7 @@ namespace spanners {
                     + m_documentType
                     + "}\n\n"
                       + "\\usepackage[table]{xcolor}\n"
-                    + "\\usepackage{tikz,pgfplots}\n"
+                    + "\\usepackage{tikz,pgfplots,amsmath}\n"
                     + "\\usetikzlibrary{shapes}\n"
                     + "\\pgfplotsset{compat=1.15}\n\n"
                     + getColorDefinitions()
@@ -101,7 +101,7 @@ namespace spanners {
         // Adding to the document's body
         /** Add the contents of a LatexPrinter object to this document*/
         void addToDocument(const LatexPrinter& printer, const bool precompile = false) {
-            string includeName = directory + printer.getName();
+            string includeName = printer.getName();
             if(precompile) {
                 printer.compile();
                 includeName += ".pdf";
@@ -148,7 +148,7 @@ namespace spanners {
         }
 
         void save() const {
-            string texFilename = directory + getTexFilename();
+            string texFilename = m_directory + getTexFilename();
             cout<<"Saving file "<<texFilename<<"..."<<flush;
 
             FILE *fileOut = fopen(texFilename.c_str(), "w");
@@ -159,7 +159,7 @@ namespace spanners {
             cout<<"done."<<endl;
         }
         void saveBody() const {
-            string texFilename = directory + getTexFilenameForBody();
+            string texFilename = m_directory + getTexFilenameForBody();
             cout<<"Saving file "<<texFilename<<"..."<<flush;
 
             FILE *fileOut = fopen(texFilename.c_str(), "w");
@@ -173,8 +173,8 @@ namespace spanners {
             save();
 
             cout<<"Compiling "<< getTexFilename()<<"..."<<flush;
-            string command = "pdflatex -output-directory=" + directory
-                            + " " + directory + getTexFilename() + " > /dev/null";
+            string command = "pdflatex -output-directory=" + m_directory
+                            + " " + m_directory + getTexFilename() + " > /dev/null";
             ignore = system(command.c_str());
             cout<<"done."<<endl;
         }
@@ -182,7 +182,7 @@ namespace spanners {
             compile();
 
             cout<<"Opening "<<getPdfFilename()<<" for viewing."<<endl;
-            string command = "evince " + directory + getPdfFilename() + " &";
+            string command = "evince " + m_directory + getPdfFilename() + " &";
             ignore = system(command.c_str());
             ignore = system(command.c_str());
         }

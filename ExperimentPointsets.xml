@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pointsets>
+    birch3 99801
+    monalisa 100000
+    usa 115475
+    kddcup 145751
+    europe 169308
+    wiki 317695
+    uber pickup 185316
+    vlsi 477710
+
+
+    <pointset>
+        <filename>WikiCoords.xy</filename>
+        <nicename>Wiki Coordinates</nicename>
+        <description>Latitude/longitude of all English language Wikipedia articles with location data.</description>
+        <url>https://github.com/placemarkt/wiki_coordinates</url>
+    </pointset>
+    <pointset>
+        <filename>birch3.xy</filename>
+        <nicename>Birch3</nicename>
+        <description>Synthetic random sized clusters in random locations.</description>
+        <url>http://cs.joensuu.fi/sipu/datasets/</url>
+    </pointset>
+    <pointset>
+        <filename>uber_pickups.xy</filename>
+        <nicename>Uber Pickups in NYC</nicename>
+        <description>Uber pickups in NYC.</description>
+        <url>https://www.kaggle.com/wikunia/nyc-taxis-combined-with-dimacs/home.</url>
+    </pointset>
+    <pointset>
+        <filename>usa115475.xy</filename>
+        <nicename>USA</nicename>
+        <description>Nearly all towns, villages, and cities in the United States.</description>
+        <url>http://www.math.uwaterloo.ca/tsp/</url>
+    </pointset>
+    <pointset>
+        <filename>europediff.xy</filename>
+        <nicename>Europe</nicename>
+        <description>Differential coordinates of the map of Europe.</description>
+        <url>http://cs.joensuu.fi/sipu/datasets/</url>
+    </pointset>
+    <pointset>
+        <filename>KDDCUP04Bio.xy</filename>
+        <nicename>KDDCUP04</nicename>
+        <description>The first two dimensions of a protein data set.</description>
+        <url>http://cs.joensuu.fi/sipu/datasets/</url>
+    </pointset>
+    <pointset>
+        <filename>mona-lisa.xy</filename>
+        <nicename>Mona Lisa</nicename>
+        <description>Coordinates of a continuous-line drawing of the Mona Lisa.</description>
+        <url>http://www.math.uwaterloo.ca/tsp/</url>
+    </pointset>
+    <pointset>
+        <filename>VSLI.xy</filename>
+        <nicename>VSLI</nicename>
+        <description>VSLI coordinates for LRB744710.</description>
+        <url>http://www.math.uwaterloo.ca/tsp/</url>
+    </pointset>
+
+</pointsets>

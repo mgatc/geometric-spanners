@@ -70,7 +70,7 @@ namespace spanners {
                     pPrevConeFilled = filled.at(p)[conePrev];
 
             return (!qOnBoundary && !pGivenConeFilled)
-                   || (qOnBoundary && (!pGivenConeFilled || !pPrevConeFilled));
+                   || (qOnBoundary && (!pGivenConeFilled && !pPrevConeFilled)); ////////
         }
 
         template<cone_t DEGREE, cone_t NUM_CONES = DEGREE + 1>
@@ -443,7 +443,7 @@ namespace spanners {
 //        if(printLog) cout<<"  p_filled:"<<filled.at(p)<<"\n";
 //        if(printLog) cout<<"  q_filled:"<<filled.at(q)<<"\n";
 
-            // If either p or q's cone is filled, don'stretchFactor even bother
+            // If either p or q's cone is filled, don't even bother
             if (filled.at(p).count() == NUM_CONES || filled.at(q).count() == NUM_CONES)
                 continue;
 

@@ -58,7 +58,7 @@ namespace spanners {
 
     map<string,BoundedDegreeSpannerResultSet> RESULTS;
 
-    void SingleTrial (const vector<Point>& points, const string dist );
+    void SingleTrial (const vector<Point>& points, const string dist, bool lite );
     void PlaneSpannerTest( const vector<Point>&,const DistributionType,const Algorithm);
     void SyntheticTrial(const size_t n, DistributionType dist, const double width);
 
@@ -100,7 +100,7 @@ namespace spanners {
                     << "NOTE: one extra trial is performed because trial 0 will be thrown out!"<<endl<<endl;
 
                 for (size_t trial = 0; trial <= numRuns; ++trial) {
-                    SingleTrial(P, configFilename);
+                    SingleTrial(P, configFilename, trial!=1);
                 }
 
                 cout<< "!! Ending  "<< pointsetName << " trials !!\n"
@@ -112,7 +112,7 @@ namespace spanners {
 
         }
 
-        result.computeStatistics();
+        result.computeStatistics(true);
 
         string experimentName = configFilename;
         boost::erase_all(experimentName, ".xml");
@@ -192,7 +192,7 @@ namespace spanners {
 
     void PlaneSpannerTest(const vector<Point> &points,
                           const string dist,
-                          const Algorithm algorithm ) {
+                          const Algorithm algorithm, bool lite = false ) {
         using namespace std;
 
         list<pair<size_t, size_t> > spanner;
@@ -244,7 +244,7 @@ namespace spanners {
         }
 
         number_t runtime = tim.stop();
-        BoundedDegreeSpannerResult result(algorithm, runtime, points.begin(), points.end(), spanner.begin(), spanner.end());
+        BoundedDegreeSpannerResult result(algorithm, runtime, points.begin(), points.end(), spanner.begin(), spanner.end(), lite);
         cout << result;
 
         ++EXP_COUNT;
@@ -294,7 +294,7 @@ namespace spanners {
         }
     }
 
-    void SingleTrial (const vector<Point>& points, const string dist ){
+    void SingleTrial (const vector<Point>& points, const string dist, bool lite = false ){
         const size_t n = points.size();
 
         cout<< "Starting trial..."<<endl<<endl;
@@ -317,7 +317,7 @@ namespace spanners {
         }
         for(int alg=Algorithm::AlgorithmFirst;
           alg!=Algorithm::AlgorithmLast; ++alg ) {
-            PlaneSpannerTest(points, dist, static_cast<Algorithm>(alg));
+            PlaneSpannerTest(points, dist, static_cast<Algorithm>(alg), lite);
         }
 
         cout<< "Finished trial...\n"

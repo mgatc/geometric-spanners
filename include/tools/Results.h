@@ -41,13 +41,14 @@ namespace spanners {
                                    VertexIterator pointsBegin,
                                    VertexIterator pointsEnd,
                                    EdgeIterator edgesBegin,
-                                   EdgeIterator edgesEnd )
+                                   EdgeIterator edgesEnd,
+                                   bool lite = false)
             : BoundedDegreeSpannerResult(algorithm,
                                          std::distance(pointsBegin,pointsEnd),
                                          runtime,
                                          spanners::degree(edgesBegin, edgesEnd ),
                                          spanners::degreeAvg(edgesBegin, edgesEnd ),
-                                         (USE_EXACT_STRETCH_FACTOR ?
+                                         (lite ? 0 : USE_EXACT_STRETCH_FACTOR ?
                 StretchFactorDijkstraReduction( pointsBegin, pointsEnd, edgesBegin, edgesEnd )
                 : StretchFactorUsingHeuristic2( pointsBegin, pointsEnd, edgesBegin, edgesEnd )),
                                          getLightness( pointsBegin, pointsEnd, edgesBegin, edgesEnd ) ) {}
@@ -58,7 +59,8 @@ namespace spanners {
                                    mixed_t degree,
                                    const number_t degreeAvg,
                                    const number_t stretchFactor,
-                                   const number_t lightness)
+                                   const number_t lightness,
+                                   bool lite = false)
                 : algorithm(algorithm),
                   n(n),
                   runtime(runtime),
@@ -127,14 +129,14 @@ namespace spanners {
 //        const ReducedSamplesResultMap& getReducedResults() const {
 //            return m_reducedSamples;
 //        }
-        void computeStatistics() {
+        void computeStatistics(bool lite = false) {
             for( const auto& alg : m_results ) {
                 for( auto level : alg.second ) {
-                    auto numSamples = level.second.size();
+                    auto numSamples = level.second.size()-1;
                     // Calculate averages
                     auto canonicalEnd = level.second.end();
-                    auto canonicalBegin = level.second.begin();
-                    next(canonicalBegin); // skip first run
+                    auto canonicalBegin = next(level.second.begin());// skip first run
+                    //next(canonicalBegin);
 
                     auto runtime = std::accumulate(canonicalBegin,
                                                    canonicalEnd,
@@ -163,18 +165,19 @@ namespace spanners {
                                                            return a + b.lightness;
                                                        }) / numSamples;
 
-                    number_t stretchFactor = std::accumulate(canonicalBegin,
-                                                          canonicalEnd,
-                                                          0.0,
-                                                          []( const auto& a, const auto& b ) {
-                                                              return a + b.stretchFactor;
-                                                          }) / numSamples;
+                    number_t stretchFactor = lite ? canonicalBegin->stretchFactor
+                        : (std::accumulate(canonicalBegin,
+                                          canonicalEnd,
+                                          0.0,
+                                          []( const auto& a, const auto& b ) {
+                                              return a + b.stretchFactor;
+                                          }) / numSamples);
 
                     BoundedDegreeSpannerResult result(alg.first,
                                                       level.first,
                                                       runtime,
                                                       degree,
-                                                      degreeAvg, stretchFactor, lightness);
+                                                      degreeAvg, stretchFactor, lightness,lite);
                     m_reducedSamples[alg.first].emplace(level.first, result);
                 }
             }
@@ -209,14 +212,15 @@ namespace spanners {
                                                          return a + b.second.lightness;
                                                      }) / numSamples;
 
-                number_t stretchFactor =std::accumulate(canonicalBegin,
-                                                          canonicalEnd,
-                                                          0.0,
-                                                          []( const auto& a, const auto& b ) {
-                                                              return a + b.second.stretchFactor;
-                                                          }) / numSamples;
+                number_t stretchFactor = lite ? canonicalBegin->second.stretchFactor
+                     : (std::accumulate(canonicalBegin,
+                                      canonicalEnd,
+                                      0.0,
+                                      []( const auto& a, const auto& b ) {
+                                          return a + b.second.stretchFactor;
+                                      }) / numSamples);
 
-                BoundedDegreeSpannerResult result(alg.first, 0, runtime, degree, degreeAvg, stretchFactor,lightness);
+                BoundedDegreeSpannerResult result(alg.first,0,runtime,degree,degreeAvg,stretchFactor,lightness,lite);
                 m_reducedLevels.emplace(alg.first, result);
             }
 

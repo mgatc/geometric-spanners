@@ -174,8 +174,26 @@ namespace spanners {
         }
     }
 
+    template<class InputIterator>
+    bool writePointsToFile(InputIterator begin, InputIterator end, string name="") {
+        vector<Point> points(begin,end);
+        ofstream out;
+        string fName;
+        fName = "data-" + to_string(points.size()) + ".xy";
+        out.open( fName, ios::trunc );
+
+        if(!out.is_open())
+            return false;
+
+        for( Point p : points )
+            out << p << endl;
+
+        out.close();
+        return points.size() > 0;
+    }
+
     template< class OutputIterator >
-    string generateRandomPoints( index_t n, number_t size, OutputIterator pointsOut ) {
+    void generateRandomPoints( index_t n, number_t size, OutputIterator pointsOut ) {
         typedef CGAL::Creator_uniform_2<number_t,Point> Creator;
 
         auto g1 = CGAL::Random_points_in_square_2<Point,Creator>( size );
@@ -212,18 +230,10 @@ namespace spanners {
         for( Point p : points )
             *(pointsOut++) = p;
 
-        // copy points to file
-        ofstream out;
-        string fName;
-        fName = "data-" + to_string(n) + "_" + to_string(size) + "x" + to_string(size) + ".txt";
-        out.open( fName, ios::trunc );
-        for( Point p : points )
-            out << p << endl;
+        writePointsToFile(points.begin(),points.end());
 
-        out.close();
-
-        return fName;
     }
+
 
 //    template< class OutputIterator >
 //    string generatePointsNovel( OutputIterator pointsOut, size_t rows = 10, size_t cols = 10 ) {

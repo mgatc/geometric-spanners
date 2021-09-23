@@ -131,6 +131,9 @@ namespace spanners {
         // Our zero is also "up," but we only want positive values between 0 and 2*PI:
 
         result = fmod(result + 2 * PI, 2 * PI);
+
+//        cout<<p<<" - "<<q<<" - "<<r<<endl;
+//        cout<<"angle="<<result<<endl;
         return result;
     }
 
@@ -178,9 +181,9 @@ namespace spanners {
     bool writePointsToFile(InputIterator begin, InputIterator end, string name="") {
         vector<Point> points(begin,end);
         ofstream out;
-        string fName;
-        fName = "data-" + to_string(points.size()) + ".xy";
-        out.open( fName, ios::trunc );
+        if(name.empty())
+            name = "data-" + to_string(points.size()) + ".xy";
+        out.open( name, ios::trunc );
 
         if(!out.is_open())
             return false;

@@ -27,6 +27,7 @@ int main(int argc, char *argv[]) {
     fs::remove_all(OUTPUT_DATA_DIRECTORY);
     fs::create_directory(OUTPUT_DATA_DIRECTORY);
     fs::create_directory(INPUT_DATA_DIRECTORY);
+    fs::create_directory(SCRATCH_DIRECTORY);
 
     switch(argc) {
         case 2:
@@ -34,8 +35,9 @@ int main(int argc, char *argv[]) {
             try{
                 spanners::scratch(stoi(argv[1]));
             } catch(invalid_argument &ia) {
-                cout << "Invalid parameter '" << argv[1] << "'... exiting\n";
-                return EXIT_FAILURE;
+                spanners::scratch(argv[1]);
+//                cout << "Invalid parameter '" << argv[1] << "'... exiting\n";
+//                return EXIT_FAILURE;
             }
             break;
         case 3:

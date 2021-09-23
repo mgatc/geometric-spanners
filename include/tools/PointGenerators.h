@@ -90,6 +90,74 @@ namespace spanners {
 
         perturb(P, PERTURBATION_VALUE);
     }
+    void generatePointsOnASquare(const index_t n, const double sizeOfSquare, vector<Point> &P) {
+        typedef CGAL::Random_points_on_square_2<Point, CGAL::Creator_uniform_2<number_t, Point> > Point_generator;
+        Point_generator g(sizeOfSquare / 2);
+
+        std::copy_n(g, n, back_inserter(P));
+
+        //perturb(P, PERTURBATION_VALUE);
+    }
+    void generatePointsOnADisc(const index_t n, const double sizeOfSquare, vector<Point> &P) {
+        typedef CGAL::Random_points_on_circle_2<Point, CGAL::Creator_uniform_2<number_t, Point> > Point_generator;
+        Point_generator g(sizeOfSquare / 2);
+
+        std::copy_n(g, n, back_inserter(P));
+
+        //perturb(P, PERTURBATION_VALUE);
+    }
+
+    double randFloat() {
+        return (double)rand() / (double)RAND_MAX;
+    }
+    void generatePointsOnSpokes(const index_t n, const unsigned numSpokes, vector<Point> &P) {
+        srand(23);
+        double spokeAngle = 2*PI / numSpokes;
+
+        for(index_t i=0; i<n; ++i) {
+            double distance = randFloat();
+            double angle = randFloat() * 2 * PI;
+            angle = ((unsigned) (angle / spokeAngle) )*spokeAngle;
+            P.emplace_back(cos(angle) * distance,
+                           sin(angle) * distance);
+        }
+
+        perturb(P, PERTURBATION_VALUE);
+    }
+    void generatePointsInGalaxy(const index_t n, const unsigned numSpokes, vector<Point> &P) {
+        // see https://itinerantgames.tumblr.com/post/78592276402/a-2d-procedural-galaxy-with-c
+        srand(23);
+        const double spokeAngle = 2*PI / numSpokes,
+                     armOffsetMax = 0.5,
+                     rotationFactor = 5,
+                     perturbationValue = 0.02;
+
+        for(index_t i=0; i<n; ++i) {
+            double distance = randFloat();
+            distance = pow(distance,2);
+
+            double angle = randFloat() * 2 * PI;
+            double armOffset = randFloat() * armOffsetMax;
+            armOffset -= armOffsetMax / 2;
+            armOffset *= (1/distance);
+
+            double squaredArmOffset = pow(armOffset,2);
+            squaredArmOffset *= -1 * int(armOffset < 0);
+            armOffset = squaredArmOffset;
+
+            double rotation = distance * rotationFactor;
+
+            angle = ((unsigned) (angle / spokeAngle) )*spokeAngle;
+            angle += armOffset + rotation;
+
+            P.emplace_back(cos(angle) * distance,
+                           sin(angle) * distance);
+        }
+
+
+
+        perturb(P, perturbationValue);
+    }
 
     void generatePointsInsideADisc(const index_t n, const double radiusOfDisk, vector<Point> &P) {
         typedef CGAL::Random_points_in_disc_2<Point, CGAL::Creator_uniform_2<number_t, Point> > Point_generator;

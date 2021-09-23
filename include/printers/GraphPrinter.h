@@ -84,14 +84,15 @@ class GraphPrinter : public TikzPrinter {
 public:
     string activeEdgeColor =     "000000";
     string inactiveEdgeColor =   "bbbbbb";
+    string triangulationEdgeColor =   "dddddd";
     string worstPathEdgeColor =  "ff0000";
     string activeVertexColor =   "0000ff";
     string inactiveVertexColor = "f7b267";
     string backgroundColor =     "FEFEF6";
     string textColor =           "111116";
-    double vertexRadius = 0.3;
+    double vertexRadius = 0.05;
     double activeEdgeWidth =0.6;
-    double inactiveEdgeWidth = 1.0;
+    double inactiveEdgeWidth = 0.4;
 
 
     OptionsList activeEdgeOptions = { // active edge options
@@ -102,8 +103,18 @@ public:
             {"color",      inactiveEdgeColor},
             {"line width", to_string(inactiveEdgeWidth)}
     };
-    OptionsList highlightEdgeOptions = { // active edge options
+    OptionsList triangulationEdgeOptions = { // active edge options
             {"densely dashed", ""},
+            {"color",      inactiveEdgeColor},
+            {"line width", to_string(inactiveEdgeWidth/2)}
+    };
+    OptionsList coneOptions = { // active edge options
+            {"color",      activeEdgeColor},
+            {"line width", to_string(inactiveEdgeWidth/3)},
+            {"densely dotted",  ""}
+    };
+    OptionsList highlightEdgeOptions = { // active edge options
+            //{"densely dashed", ""},
             {"color",          worstPathEdgeColor},
             {"line width",     to_string(activeEdgeWidth)}
     };
@@ -136,13 +147,15 @@ public:
         string tikzHeader = getTikzHeader(tikzOptions);
         //cout<<tikzHeader<<endl;
         m_body = Body{ tikzHeader,
-                      getTikzGrid() + "\n\n",
+                     // getTikzGrid() +
+                      "\n\n",
                       getTikzFooter()};
 
         // define colors
         defineColor(activeEdgeColor);
         defineColor(inactiveEdgeColor);
         defineColor(worstPathEdgeColor);
+        defineColor(triangulationEdgeColor);
         defineColor(activeVertexColor);
         defineColor(inactiveVertexColor);
         defineColor(backgroundColor);
@@ -157,11 +170,15 @@ public:
     template< typename RandomAccessIterator, typename PointContainer >
     void drawEdges( RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd, const PointContainer &P, const OptionsList& options = {} ) {
         for( auto e=edgesBegin; e!=edgesEnd; ++e ) {
-            drawLine( P[e->first].x(),
-                      P[e->first].y(),
-                      P[e->second].x(),
-                      P[e->second].y(), options );
+            drawEdge(P[e->first], P[e->second], options);
         }
+    }
+    template< typename P>
+    void drawEdge(const P& lhs, const P& rhs, const OptionsList& options = {} ) {
+        drawLine( lhs.x(),
+                  lhs.y(),
+                  rhs.x(),
+                  rhs.y(), options );
     }
 
     template< typename Triangulation >
@@ -242,7 +259,7 @@ public:
 
         if( label.empty() ){
             stringstream stream;
-            stream << fixed << setprecision(1);
+            stream << fixed << setprecision(2);
             stream << x << "," << y;
             //label = stream.str();
         }
@@ -288,6 +305,27 @@ public:
             drawLine( x1,y1,x2,y2,options );
         }
         m_body.content += "\n";
+    }
+
+    template< typename P>
+    void drawCones(const P& center, const P& orientation, size_t numCones, double length, const OptionsList& options = {} ) {
+        double xCenter = center.x(),
+               yCenter = center.y(),
+               xTranslated = orientation.x() - xCenter,
+               yTranslated = orientation.y() - yCenter,
+               orientationLength = sqrt(pow(xTranslated,2) + pow(yTranslated,2)),
+               sizingFactor = length / orientationLength,
+               x = xTranslated*sizingFactor + xCenter,
+               y = yTranslated*sizingFactor + yCenter,
+               theta = 2*PI / numCones;
+
+        for( size_t i=0; i<numCones; ++i) {
+            drawLine(x,y,xCenter,yCenter,options);
+            xTranslated = x - xCenter;
+            yTranslated = y - yCenter;
+            x = xCenter + xTranslated*cos(theta) + yTranslated*sin(theta);
+            y = yCenter - xTranslated*sin(theta) + yTranslated*cos(theta);
+        }
     }
 
     void drawLine( double x1, double y1, double x2, double y2, const OptionsList& options = {} ) {

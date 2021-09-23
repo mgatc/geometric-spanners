@@ -42,14 +42,14 @@ namespace spanners {
     using std::to_string;
 
     const bool PRINT_GEOMETRY = false;
-    const bool PRINT_PGFPLOTS = true;
-    const bool PRINT_IV_TABLES = true;
-    const bool PRINT_SUMMARY_TABLES = true;
+    const bool PRINT_PGFPLOTS = false;
+    const bool PRINT_IV_TABLES = false;
+    const bool PRINT_SUMMARY_TABLES = false;
 
-    size_t WRONG_COUNT_2 = 0;
-    number_t WRONG_AMOUNT_2 = 0.0;
-    size_t WRONG_COUNT_3 = 0;
-    number_t WRONG_AMOUNT_3 = 0.0;
+    size_t WRONG_COUNT_DIJKSTRA = 0;
+    number_t WRONG_AMOUNT_DIJKSTRA = 0.0;
+    size_t WRONG_COUNT_ASTAR = 0;
+    number_t WRONG_AMOUNT_ASTAR = 0.0;
     size_t EXP_COUNT = 0;
 
     LatexPrinter latex(OUTPUT_DATA_DIRECTORY, "exp-main");
@@ -141,7 +141,7 @@ namespace spanners {
         numRuns = numRuns, n_start = n_start, n_end = n_end, increment = increment;
         // ----------------------------------------------------------------------//
 
-        const number_t width = 1000;
+        const number_t width = 10;
 
         for( int dist=DistributionTypeFirst; dist!=DistributionTypeLast; ++dist ) {
             auto distributionType = static_cast<DistributionType>(dist);
@@ -178,11 +178,11 @@ namespace spanners {
         if (PRINT_GEOMETRY || PRINT_PGFPLOTS || PRINT_SUMMARY_TABLES || PRINT_IV_TABLES)
             latex.display();
 
-//        cout<<"Astar Wrong Count="<<WRONG_COUNT_2<<" Average Amount="<<(WRONG_COUNT_2 > 0 ? WRONG_AMOUNT_2/WRONG_COUNT_2 : 0)<<endl;
-//        cout<<"      Wrong Rate="<<(100*((double)WRONG_COUNT_2/EXP_COUNT))<<"%"<<endl;
-//        cout<<"Dijkstra Wrong Count="<<WRONG_COUNT_3<<" Average Amount="<<(WRONG_COUNT_3 > 0 ? WRONG_AMOUNT_3/WRONG_COUNT_3 : 0)<<endl;
-//        cout<<"      Wrong Rate="<<(100*((double)WRONG_COUNT_3/EXP_COUNT))<<"%"<<endl;
-//        cout<<endl<<"Total exp="<<EXP_COUNT<<endl;
+        cout << "Exp Wrong Count=" << WRONG_COUNT_DIJKSTRA << " Average Amount=" << (WRONG_COUNT_DIJKSTRA > 0 ? WRONG_AMOUNT_DIJKSTRA / WRONG_COUNT_DIJKSTRA : 0) << endl;
+        cout << "      Wrong Rate=" << (100*((double)WRONG_COUNT_DIJKSTRA / EXP_COUNT)) << "%" << endl;
+        cout << "A* Wrong Count=" << WRONG_COUNT_ASTAR << " Average Amount=" << (WRONG_COUNT_ASTAR > 0 ? WRONG_AMOUNT_ASTAR / WRONG_COUNT_ASTAR : 0) << endl;
+        cout << "      Wrong Rate=" << (100*((double)WRONG_COUNT_ASTAR / EXP_COUNT)) << "%" << endl;
+        cout<<endl<<"Total exp="<<EXP_COUNT<<endl;
 
         //cout<<"\nTesting Complete. "<< invalid << " of "<<(numRuns*(n_end-n_start))<<" invalid results.\n\n";
     }
@@ -244,10 +244,65 @@ namespace spanners {
         }
 
         number_t runtime = tim.stop();
-        BoundedDegreeSpannerResult result(algorithm, runtime, points.begin(), points.end(), spanner.begin(), spanner.end(), lite);
+        BoundedDegreeSpannerResult result(algorithm, runtime, points.begin(), points.end(), spanner.begin(), spanner.end(), true);
         cout << result;
 
+        cout<< "EXACT: time=";
+        number_t t_exact = INF;
+        {
+            Timer tim;
+            t_exact = StretchFactorDijkstraReduction(points.begin(),points.end(),spanner.begin(),spanner.end());
+        }
+        cout<<"  t="<<t_exact<<";    ";
+
+        cout<< "ASTAR: time=";
+        number_t t_astar = INF;
+        {
+            Timer tim;
+            t_astar = StretchFactorUsingHeuristic(points.begin(),points.end(),spanner.begin(),spanner.end());
+        }
+        cout<<"  t="<<t_astar<<";    ";
+
+
+
+        cout<< "EXP: time=";
+        number_t t_exp = INF;
+        {
+            Timer tim;
+            t_exp = StretchFactorUsingHeuristic2(points.begin(),points.end(),spanner.begin(),spanner.end());
+        }
+        cout<<"  t="<<t_exp<<";\n";
+
+        if( abs(t_exact - t_exp) > EPSILON ) {
+            WRONG_COUNT_DIJKSTRA++;
+            WRONG_AMOUNT_DIJKSTRA += abs(t_exact - t_exp);
+            cout<<"!!!!!!!!!!!!!!!!!DIJKSTRA WRONG!!!!!!!!!!!!!!!!!!!\n";
+
+            string name = "";
+            writePointsToFile(points.begin(),points.end(),name);
+
+            assert(!"WRONG STRETCH FACTOR");
+        }
+        if( abs(t_exact - t_astar) > EPSILON ) {
+            WRONG_COUNT_ASTAR++;
+            WRONG_AMOUNT_ASTAR += abs(t_exact - t_astar);
+            cout<<"!!!!!!!!!!!!!!!!!ASTAR WRONG!!!!!!!!!!!!!!!!!!!\n";
+        }
+        cout<<"\n";
+
         ++EXP_COUNT;
+
+        size_t degree = get<size_t>(result.degree);
+
+//        if(//(algorithm == Algorithm::Bcc2012_6 && degree > 6)||
+//              (algorithm == Algorithm::Bcc2012_7 && degree > 7)){
+//            string name = "breaks_bcc";
+//            //name += algorithm == Algorithm::Bcc2012_6 ? "6" : "7";
+//            writePointsToFile(points.begin(),points.end(),name);
+//            cout<<name<<endl;
+//            assert(!"degree violated");
+//        }
+
 
 
         RESULTS.at(dist).registerResult(result);
@@ -337,6 +392,12 @@ namespace spanners {
             break;
         case UniformInsideDisc:
             generatePointsInsideADisc(n,width,points);
+            break;
+        case UniformOnSquare:
+            generatePointsOnASquare(n,width,points);
+            break;
+        case UniformOnDisc:
+            generatePointsOnADisc(n,width,points);
             break;
         case NormalInsideSquare:
             generatePointsInsideASquareNormal(n,1,points);

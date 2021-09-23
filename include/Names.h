@@ -14,6 +14,8 @@ namespace spanners {
         DistributionTypeFirst=0,
         UniformInsideSquare = DistributionTypeFirst,
         UniformInsideDisc,
+        UniformOnSquare,
+        UniformOnDisc,
         NormalInsideSquare,
         NormalClustersInsideSquare,
         ContiguousGrid,
@@ -91,11 +93,13 @@ namespace spanners {
     };
     const string DEGREE_BOUND_SYMBOL = "$\\Delta_{\\mathrm{ub}}$";
     const vector<string> DEGREE_BOUND_PER_ALGORITHM = {
-        "27","23","17","14","11","8","7","6","6","4","4"//,"3"
+        //"27","23","17","14","11","8",
+        "7","6"//,"6","4","4"//,"3"
     };
     const string STRETCH_FACTOR_BOUND_SYMBOL = "$t_{\\mathrm{ub}}$";
     const vector<string> STRETCH_FACTOR_BOUND_PER_ALGORITHM = {
-        "8.27","6.44","23.6","2.92","2.86","4.41","11.7","81.7","6","157","20"//,"INF"
+        //"8.27","6.44","23.6","2.92","2.86","4.41",
+        "11.7","81.7"//,"6","157","20"//,"INF"
     };
 
     const vector<string> IV_NAMES = {
@@ -130,13 +134,14 @@ namespace spanners {
     const vector<unsigned> IV_PRECISION = {
         2,2,2,2,2
     };
-    const vector<string> PGFPLOT_NAMES = {
-        "Mean " + IV_NICE_NAMES[0],
-        "Mean maximum " + IV_NICE_NAMES[1],
-        "Mean " + IV_NICE_NAMES[2],
-        "Mean " + IV_NICE_NAMES[3],
-        "Mean " + IV_NICE_NAMES[4]
-    };
+    const vector<string> PGFPLOT_NAMES(IV_NICE_NAMES);
+//    = {
+//        "Mean " + IV_NICE_NAMES[0],
+//        "Mean maximum " + IV_NICE_NAMES[1],
+//        "Mean " + IV_NICE_NAMES[2],
+//        "Mean " + IV_NICE_NAMES[3],
+//        "Mean " + IV_NICE_NAMES[4]
+//    };
 
 } // spanners
 

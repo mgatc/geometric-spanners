@@ -30,6 +30,7 @@
 #include "tools/DelaunayGraph.h"
 #include "tools/FloydWarshall.h"
 #include "tools/Utilities.h"
+#include "printers/GraphPrinter.h"
 
 namespace spanners {
 
@@ -56,6 +57,7 @@ using namespace std;
         auto max_el = max_element(adj.begin(), adj.end(), [&](const auto &lhs, const auto &rhs) {
             return lhs.second.size() < rhs.second.size();
         });
+        cout<<"Largest degree vertex="<<max_el->first<<endl;
 
         return max_el->second.size();
     }
@@ -331,6 +333,7 @@ using namespace std;
         // Find the big mac daddy stretchFactor aka big money
         return t_max;
     }
+
 
     template<typename VertexIterator, typename EdgeIterator, typename OutputIterator>
     number_t SFWorstPath(VertexIterator pointsBegin,
@@ -752,19 +755,26 @@ using namespace std;
                     bfs.erase(bfs.begin());
                     //cout<<"    v="<<v<<", |bfs|="<<bfs.size()<<endl;
 
-                    for( auto w : DelG[v] ) {
-                        //cout<<"      w="<<w<<", ";
-                        if( !contains(known,w) ) {
-                            bfs.emplace(count++,make_pair(w,lvl));
-                            known.insert(w);
-                            //if(!contains(dist,w)) {
-                            frontier.insert(w);
-                            //}
-                            //cout<< "not known...adding to queue";
-                        } else {
-                            //cout<<"known...ignoring";
+                    // Add neighbors of DT and G
+                    vector<unordered_set<index_t>*> N = { &DelG[v], &G[v] };
+                    for( auto n : N ) {
+                        for( auto w : *n ) {
+                            //cout<<"      w="<<w<<", ";
+                            if( !contains(known,w) ) {
+                                bfs.emplace(count++,make_pair(w,lvl));
+                                known.insert(w);
+                                //if(!contains(dist,w)) {
+                                frontier.insert(w);
+                                //}
+                                //cout<< "not known...adding to queue";
+                            } else {
+                                //cout<<"known...ignoring";
+                            }
+                            //cout<<endl;
                         }
-                        //cout<<endl;
+                    }
+                    for( auto w : G[v] ) {
+
                     }
                 }
 
@@ -871,12 +881,17 @@ using namespace std;
         return t_G;
 
     }
+    GraphPrinter tikz("../scratch/","scratch-graph");
+
     template<typename VertexIterator, typename EdgeIterator>
     number_t StretchFactorUsingHeuristic2(VertexIterator pointsBegin,
                                          VertexIterator pointsEnd,
                                          EdgeIterator edgesBegin,
                                          EdgeIterator edgesEnd,
                                          const size_t numberOfThreads = 4) {
+
+        const bool PRINT_LOG = false;
+
         vector<Point> P(pointsBegin, pointsEnd);
         const vector<Edge> E(edgesBegin, edgesEnd);
 
@@ -908,6 +923,9 @@ using namespace std;
         }
         VertexHandle v_inf = DT.infinite_vertex();
 
+
+        //tikz.drawEdges(DT, tikz.inactiveEdgeOptions);
+
         // Convert DT to adjacency list
         for(auto vit=DT.finite_vertices_begin(); vit != DT.finite_vertices_end(); ++vit) {
             VertexCirculator N = DT.incident_vertices(vit),
@@ -923,12 +941,11 @@ using namespace std;
         vector<pair<index_t, index_t>> worstPairOfG(numberOfThreads);
         vector<unordered_map<index_t,number_t>> tracker(n);
 
-        #pragma omp parallel for num_threads(numberOfThreads)
+        //#pragma omp parallel for num_threads(numberOfThreads)
         for( index_t u = 0; u < n; u++ ) {
 
-            //cout<<"u="<<u<<endl;
+            if(PRINT_LOG)cout<<"u="<<u<<endl;
 
-            number_t t_u = 0, t_lvl = 0;
 
             // BFS variables /////////////////////////
 
@@ -939,6 +956,7 @@ using namespace std;
             // bfs queue - should remain small but we will need to search
             map<index_t, pair<index_t,unsigned>> bfs; // insert with (count++, (vertex,level))
             bfs.emplace(count++,make_pair(u,lvl));
+            map<index_t,index_t> parent;
             unordered_set<index_t> frontier;
             unordered_set<index_t> known;
             known.insert(u);
@@ -946,7 +964,9 @@ using namespace std;
             // Dijkstra variables ////////////////////
 
             map<index_t,number_t> dist;
+            map<index_t,number_t> t;
             dist[u] = 0.0;
+            t[u] = 0.0;
 
             typedef std::map<number_t, index_t>
                     Heap;
@@ -963,31 +983,35 @@ using namespace std;
             // Iterative Deepening Loop
             do {
                 ++lvl;
-                t_u = t_lvl;
-                t_lvl = 0;
+//                t_u = t_lvl;
+//                t_lvl = 0;
 
 
 
-                //cout<< "  Start depth limited BFS on Delaunay triangulation of P with"<<endl;
-                //cout<<"  level="<<lvl<<", t_u="<<t_u<<endl<<endl;
+                if(PRINT_LOG) cout<< "  Start depth limited BFS on Delaunay triangulation of P with"<<endl;
+                if(PRINT_LOG) cout<<"  level="<<lvl<<endl<<endl;
                 while(!bfs.empty() && bfs.begin()->second.second < lvl) {
                     auto v = bfs.begin()->second.first;
                     bfs.erase(bfs.begin());
-                    //cout<<"    v="<<v<<", |bfs|="<<bfs.size()<<endl;
+                    if(PRINT_LOG) cout<<"    v="<<v<<", |bfs|="<<bfs.size()<<endl;
+                    if(v == u || t[parent[v]] < t[v] || abs(t[parent[v]] - t[v]) < EPSILON) {
+                        for (auto w : DelG[v]) {
+                            if(PRINT_LOG) cout<<"      w="<<w<<", ";
+                            parent.try_emplace(w,v);
+                            //t.try_emplace(parent[w], INF);
+                            if(t[v] < t[parent[w]] )
+                                parent[w] = v;
 
-                    for( auto w : DelG[v] ) {
-                        //cout<<"      w="<<w<<", ";
-                        if( !contains(known,w) ) {
-                            bfs.emplace(count++,make_pair(w,lvl));
-                            known.insert(w);
-                            //if(!contains(dist,w)) {
-                            frontier.insert(w);
-                            //}
-                            //cout<< "not known...adding to queue";
-                        } else {
-                            //cout<<"known...ignoring";
+                            if(!contains(known, w)) {
+                                bfs.emplace(count++, make_pair(w, lvl));
+                                known.insert(w);
+                                frontier.insert(w);
+                                if(PRINT_LOG) cout<< "not known...adding to queue";
+                            } else {
+                                if(PRINT_LOG) cout<<"known...ignoring";
+                            }
+                            if(PRINT_LOG) cout<<endl;
                         }
-                        //cout<<endl;
                     }
                 }
 
@@ -995,23 +1019,23 @@ using namespace std;
                 // previous level, remove this vertex from frontier and
                 // update t_lvl if necessary.
 
-                //cout<<endl<<"Frontier={";
+                if(PRINT_LOG) cout<<endl<<"Frontier={";
                 for(auto vit=frontier.begin(); vit!=frontier.end(); ) {
                     auto v = *vit;
-                    //cout<<v;
+                    if(PRINT_LOG) cout<<v;
                     if(contains(dist,v)) {
-                        auto t_v = dist[v] / getDistance(P[u],P[v]);
-                        t_lvl = CGAL::max(t_lvl,t_v);
+//                        auto t_v = dist[v] / getDistance(P[u],P[v]);
+//                        t_lvl = CGAL::max(t_lvl,t_v);
                         //cout<<"(known,t_v="<<t_v<<"t_lvl="<<t_lvl<<")";
                         vit = frontier.erase(vit);
                     } else {
                         ++vit;
                     }
-                    //cout<<",";
+                    if(PRINT_LOG) cout<<",";
                 }
-                //cout<<"}"<<endl<<endl;
+                if(PRINT_LOG) cout<<"}"<<endl<<endl;
 
-                //cout<<"Dijkstra on G only until we find all vertices in frontier"<<endl<<endl;
+                if(PRINT_LOG) cout<<"Dijkstra on G only until we find all vertices in frontier"<<endl<<endl;
 
                 while(!frontier.empty()) {
                     assert(!open.empty());
@@ -1021,50 +1045,54 @@ using namespace std;
                     open.erase(distanceVertex);
                     handleToHeap.erase(v);
 
-                    //auto t_v = dist[v];
 
-                    //cout<<"    v="<<v<<", dist="<<dist[v];
+                    if(PRINT_LOG) cout<<"    v="<<v<<", dist="<<dist[v];
 
-                    if( contains(frontier,v) ) {
-                        frontier.erase(v);
-                        //if( v != u ) {
-                        auto t_v = dist[v] / getDistance(P[u], P[v]);
-                        //}
-                        //cout<<", t_v="<<t_v<<", t_lvl="<<t_lvl<<",";
-
-                        t_lvl = CGAL::max(t_lvl, t_v);
-
-                        //cout<<" v is in frontier! Removing... Frontier={";
-                        for(auto v : frontier) {
-                            //cout<<v<<",";
-                        }
-                        //cout<<"},";
+                    //if( contains(frontier,v) ) {
+                    frontier.erase(v);
+                    auto t_v = dist[v];
+                    if( v != u ) {
+                        t_v /= getDistance(P[u], P[v]);
                     }
+                    t[v] = t_v;
+                    if(PRINT_LOG) cout<<", t_v="<<t_v;//<<", t_lvl="<<t_lvl<<",";
+
+                    //t_lvl = CGAL::max(t_lvl, t_v);
+
+                    if(PRINT_LOG) cout<<" Frontier={";
+                    for(auto v : frontier) {
+                        if(PRINT_LOG) cout<<v<<",";
+                    }
+                    //cout<<"},";
+                    //}
                     //cout<<endl;
                     for( auto w : G[v] ) {
                         if( !contains(dist,w) ) {
                             number_t newDist = dist[v] + getDistance(P[w],P[v]);
-                            //cout<<"      w="<<w<<", newDist="<<newDist<<", ";
+                            if(PRINT_LOG) cout<<"      w="<<w<<", newDist="<<newDist<<", ";
                             if( !contains(handleToHeap,w) || newDist < handleToHeap[w]->first ) {
-                                //cout << "new best, ";
+                                if(PRINT_LOG) cout<< "new best, ";
                                 if (contains(handleToHeap, w)) {
                                     open.erase(handleToHeap[w]);
-                                    //cout << " already known...erasing, ";
+                                    if(PRINT_LOG) cout<< " already known...erasing, ";
                                 }
                                 handleToHeap[w] = open.emplace(newDist, w).first;
-                                //cout << "adding to open" << endl;
+                                if(PRINT_LOG) cout<< "adding to open" << endl;
                             }
                         }
-                        //cout<<endl;
+                        if(PRINT_LOG) cout<<endl;
                     }
                     //}
                 }
-                //cout<<"Done with limited Dijkstra"<<endl;
+                if(PRINT_LOG) cout<<"Done with limited Dijkstra"<<endl;
 
-            } while(!bfs.empty() && !(t_u > t_lvl));
+            } while(!bfs.empty());
 
             // Done searching neighborhood of u
 
+            number_t t_u = max_element(t.begin(),t.end(),[](const auto& lhs, const auto& rhs){
+                return lhs.second < rhs.second;
+            })->second;
 
             if (t_u > stretchFactorOfG[omp_get_thread_num()]) {
 //                worstPairOfG[omp_get_thread_num()].first  = uWorstPair.first;

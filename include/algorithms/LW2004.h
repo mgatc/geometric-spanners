@@ -106,23 +106,23 @@ void LW2004( RandomAccessIterator pointsBegin,
         //if( printLog ) cout<<"\nu:"<<u<<" ";
 
         // Get neighbors of u
-        VertexCirculator N = T.incident_vertices(u_handle );
+        VertexCirculator N = T.incident_vertices(u_handle);
         //if( printLog ) cout<<"N_init:"<<(T.is_infinite(N)?size_t(numeric_limits<size_t>::max):size_t(N->info()))<<" ";
         // find a processed neighbor if it exists or we reach the start again
         while( T.is_infinite(--N) );
         VertexCirculator done(N); // set done to a vertex that is not infinite
         while( ( T.is_infinite(--N) || !isProcessed.at(N->info()) ) && N!=done );
+        done = N;
 
         // Find and store sector boundaries, start with N
-        size_t processedNeighbors = isProcessed.at( N->info() ) ? 1 : 0;
-        vector<VertexHandle> sectorBoundaries{N->handle() };
-        while( --N != sectorBoundaries.front() ) {
+        bool noProcessedNeighbors = !isProcessed.at( N->info() );
+        vector<VertexHandle> sectorBoundaries{ N };
+        while( --N != done ) {
             if( ( !T.is_infinite(N) && isProcessed.at( N->info() ) ) ) { // check for v_inf first or isProcessed will be out of range
                 sectorBoundaries.push_back( N->handle() );
-                ++processedNeighbors;
             }
         }
-        //assert( processedNeighbors <= 5 );
+        assert( sectorBoundaries.size() <= 5 );
 
 
         // Now, compute the angles of the sectors, the number of cones in each sector,
@@ -131,12 +131,11 @@ void LW2004( RandomAccessIterator pointsBegin,
         vector< vector<VertexHandle> > closest(sectorBoundaries.size() );
 
         for( size_t i=0; i<sectorBoundaries.size(); ++i ) {
-            number_t sectorAngle = angle(
-                    sectorBoundaries.at(i)->point(),
-                    u_handle->point(),
-                    sectorBoundaries.at((i + 1) % sectorBoundaries.size())->point()
-            );
-            if( sectorAngle < EPSILON ) sectorAngle = 360.0;
+            number_t sectorAngle = sectorBoundaries.size() == 1 ?
+                    360.0
+                    : getAngle(sectorBoundaries.at(i)->point(),
+                            u_handle->point(),
+                            sectorBoundaries.at((i + 1) % sectorBoundaries.size())->point() );
             auto numCones = cone_t(rint( ceil( sectorAngle / alpha ) ));
             //assert( numCones > 0 ); // guard against /0
             alphaReal[i] = sectorAngle / number_t(numCones);
@@ -145,27 +144,25 @@ void LW2004( RandomAccessIterator pointsBegin,
 
         VertexHandle lastN = v_inf;
         //if( isProcessed.at( N->info() ) ) --N; // if N is processed, step
-        size_t sector = -1; // The first sector boundary will increment sector, which should be 0 for the first sector
+        int sector = -1;
 
         do { // Loop through neighbors and add appropriate edges
             if( !T.is_infinite(N) ) {
-                // If N is the next sectorBoundary, increment sector
-                if( N->handle() == sectorBoundaries.at((sector+1)%sectorBoundaries.size()) )
+                // If N is the next sector boundary, increment sector
+                if( N == sectorBoundaries.at((sector+1)%sectorBoundaries.size()) )
                     ++sector;
-                // It is possible for a sectorBoundary to be not processed,
-                // in the case of no processed neighbors.
-                if( !isProcessed.at( N->info() ) ) {
+
+                if( !isProcessed[N->info()] ) {
                     //assert( sector < sectorBoundaries.size() );
                     // evaluate possible forward edges
-                    number_t theta = angle(
+                    number_t theta = getAngle(
                             sectorBoundaries.at(sector)->point(),
                             u_handle->point(),
                             N->point()
                     );
-                    // get getAngle will return 360 for any getAngle(vuv) (we want it to be 0 here)
-                    auto cone = cone_t( (theta-EPSILON) / alphaReal.at(sector) );
-                    if( cone >= closest.at(sector).size() )
-                        cone = 0;
+                    auto cone = cone_t( theta / alphaReal.at(sector) );
+//                    if( cone >= closest.at(sector).size() )
+//                        cone = 0;
                     // Store value until after all neighbors are processed, then add
                     if( T.is_infinite( closest.at(sector).at(cone) )
                       || CGAL::squared_distance( u_handle->point(), N->point() )
@@ -181,7 +178,7 @@ void LW2004( RandomAccessIterator pointsBegin,
                 }
             }
             lastN = N->handle();
-        } while( --N != sectorBoundaries.front() );
+        } while( --N != done );
 
         // If N and lastN are not processed, add final cross edge
         if( !T.is_infinite(     N ) && !isProcessed.at(     N->info() )

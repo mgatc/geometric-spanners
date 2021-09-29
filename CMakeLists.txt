@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.19)
 project(geometric_spanners)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-O3 -fopenmp -fexceptions -frounding-math -Wall -Wextra -Wno-unused")
+set(CMAKE_CXX_FLAGS "-fopenmp -fexceptions -frounding-math -Wall -Wextra -Wno-unused")
 
 include_directories(/usr/include)
 include_directories(include)

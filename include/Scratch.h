@@ -98,7 +98,7 @@ namespace spanners {
                 {"line width", to_string(tikz.inactiveEdgeWidth/2)}
         };
 
-       // tikz.drawEdges(result.begin(),result.end(),points,edgeOptions);
+        tikz.drawEdges(result.begin(),result.end(),points,edgeOptions);
 
 
 

@@ -203,39 +203,39 @@ namespace spanners {
         Timer tim;
 
         switch (algorithm) {
-//            case Algorithm::Bgs2005:
-//                BGS2005(pointsBegin, pointsEnd, back_inserter(spanner));
-//                break;
+            case Algorithm::Bgs2005:
+                BGS2005(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
             case Algorithm::Lw2004:
                 LW2004(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
-//            case Algorithm::Bsx2009:
-//                BSX2009(pointsBegin, pointsEnd, back_inserter(spanner));
-//                break;
-//            case Algorithm::Kpx2010:
-//                KPX2010(pointsBegin, pointsEnd, back_inserter(spanner));
-//                break;
-//            case Algorithm::Kx2012:
-//                KX2012(pointsBegin, pointsEnd, back_inserter(spanner));
-//                break;
-//            case Algorithm::Bcc2012_7:
-//                BCC2012<7>(pointsBegin, pointsEnd, back_inserter(spanner));
-//                break;
-//            case Algorithm::Bcc2012_6:
-//                BCC2012<6>(pointsBegin, pointsEnd, back_inserter(spanner));
-//                break;
-//            case Algorithm::Bhs2018:
-//                BHS2018(pointsBegin, pointsEnd, back_inserter(spanner));
-//                break;
-//            case Algorithm::Bghp2010:
-//                BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
-//                break;
-//            case Algorithm::Bkpx2015:
-//                BKPX2015(pointsBegin, pointsEnd, back_inserter(spanner));
-//                break;
-//            case Algorithm::Kpt2017:
-//                KPT2017(pointsBegin, pointsEnd, back_inserter(spanner));
-//                break;
+            case Algorithm::Bsx2009:
+                BSX2009(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
+            case Algorithm::Kpx2010:
+                KPX2010(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
+            case Algorithm::Kx2012:
+                KX2012(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
+            case Algorithm::Bcc2012_7:
+                BCC2012<7>(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
+            case Algorithm::Bcc2012_6:
+                BCC2012<6>(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
+            case Algorithm::Bhs2018:
+                BHS2018(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
+            case Algorithm::Bghp2010:
+                BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
+            case Algorithm::Bkpx2015:
+                BKPX2015(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
+            case Algorithm::Kpt2017:
+                KPT2017(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
 //            case Algorithm::Degree3:
 //                DEG3(pointsBegin, pointsEnd, back_inserter(spanner));
 //                break;

@@ -57,7 +57,7 @@ using namespace std;
         auto max_el = max_element(adj.begin(), adj.end(), [&](const auto &lhs, const auto &rhs) {
             return lhs.second.size() < rhs.second.size();
         });
-        cout<<"Largest degree vertex="<<max_el->first<<endl;
+//        cout<<"Largest degree vertex="<<max_el->first<<endl;
 
         return max_el->second.size();
     }

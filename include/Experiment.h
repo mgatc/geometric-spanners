@@ -56,83 +56,84 @@ namespace spanners {
     GraphPrinter graph(OUTPUT_DATA_DIRECTORY, "exp-vis");
     PgfplotPrinter pgfplots(OUTPUT_DATA_DIRECTORY, "exp-plots");
 
-    map<string,BoundedDegreeSpannerResultSet> RESULTS;
+//    map<string,BoundedDegreeSpannerResultSet> RESULTS;
 
-    void SingleTrial (const vector<Point>& points, const string dist, bool lite );
-    void PlaneSpannerTest( const vector<Point>&,const DistributionType,const Algorithm);
-    void SyntheticTrial(const size_t n, DistributionType dist, const double width);
+    void SingleTrial (const vector<Point>& points, const DistributionType dist, ofstream& expOut , bool lite );
+    void PlaneSpannerTest( const vector<Point>&,const DistributionType,const Algorithm, ofstream& expOut );
+    void SyntheticTrial(const size_t n, DistributionType dist, const double width, ofstream& expOut );
 
-    void ExperimentFromConfigurationFile(size_t numRuns, string configFilename) {
-        boost::property_tree::ptree config;
-
-        using std::string, std::vector;
-        namespace pt = boost::property_tree;
-        pt::read_xml(configFilename,config);
-
-        auto& result = RESULTS.emplace(configFilename, BoundedDegreeSpannerResultSet()).first->second;
-
-        map<index_t, string> PointsetNames;
-
-        for( auto pointset : config.get_child("pointsets") ) {
-
-            string filename = pointset.second.get_child("filename").data(),
-                   fullname = INPUT_DATA_DIRECTORY + filename,
-                   filenameNoExtension = filename;
-            boost::erase_all(filenameNoExtension, ".xy");
-
-            std::ifstream in(fullname);
-
-            if (in.is_open()) {
-                vector<Point> P;
-                number_t x,y;
-                while ( in >> x >> y ) {
-                    P.emplace_back(x,y);
-                }
-                in.close();
-
-                const index_t n = P.size();
-                string pointsetName = pointset.second.get_child("nicename").data();
-                PointsetNames.emplace(n,pointsetName);
-
-                cout<< "!! Starting  "<< pointsetName << " trials !!\n"
-                    << "Added "<< n <<" points from file\n"
-
-                    << "NOTE: one extra trial is performed because trial 0 will be thrown out!"<<endl<<endl;
-
-                for (size_t trial = 0; trial <= numRuns; ++trial) {
-                    SingleTrial(P, configFilename, trial!=1);
-                }
-
-                cout<< "!! Ending  "<< pointsetName << " trials !!\n"
-                    << "-------------------------------------------"<<endl;
-
-            } else {
-                cout<<"Error opening file!\n";
-            }
-
-        }
-
-        result.computeStatistics(true);
-
-        string experimentName = configFilename;
-        boost::erase_all(experimentName, ".xml");
-        boost::erase_all(experimentName, ".");
-        boost::erase_all(experimentName, "/");
-
-        if (PRINT_PGFPLOTS) {
-            plotResults(experimentName, result, &latex);
-        }
-        if(PRINT_IV_TABLES){
-            tabulateIVsFromConfigExperiment(experimentName, result, PointsetNames, &latex);
-        }
-        if (PRINT_SUMMARY_TABLES) {
-            tabulateSummaryResults(experimentName, result, &latex);
-        }
-
-        if (PRINT_GEOMETRY || PRINT_PGFPLOTS || PRINT_SUMMARY_TABLES || PRINT_IV_TABLES)
-            latex.display();
-
-    }
+//    void ExperimentFromConfigurationFile(size_t numRuns, string configFilename) {
+//        boost::property_tree::ptree config;
+//
+//        using std::string, std::vector;
+//        namespace pt = boost::property_tree;
+//        pt::read_xml(configFilename,config);
+//
+////        auto& result = RESULTS.emplace(configFilename, BoundedDegreeSpannerResultSet()).first->second;
+//
+//        map<index_t, string> PointsetNames;
+//
+//
+//        for( auto pointset : config.get_child("pointsets") ) {
+//
+//            string filename = pointset.second.get_child("filename").data(),
+//                   fullname = INPUT_DATA_DIRECTORY + filename,
+//                   filenameNoExtension = filename;
+//            boost::erase_all(filenameNoExtension, ".xy");
+//
+//            std::ifstream in(fullname);
+//
+//            if (in.is_open()) {
+//                vector<Point> P;
+//                number_t x,y;
+//                while ( in >> x >> y ) {
+//                    P.emplace_back(x,y);
+//                }
+//                in.close();
+//
+//                const index_t n = P.size();
+//                string pointsetName = pointset.second.get_child("nicename").data();
+//                PointsetNames.emplace(n,pointsetName);
+//
+//                cout<< "!! Starting  "<< pointsetName << " trials !!\n"
+//                    << "Added "<< n <<" points from file\n"
+//
+//                    << "NOTE: one extra trial is performed because trial 0 will be thrown out!"<<endl<<endl;
+//
+//                for (size_t trial = 0; trial <= numRuns; ++trial) {
+//                    SingleTrial(P, DistributionType::Real, trial!=1);
+//                }
+//
+//                cout<< "!! Ending  "<< pointsetName << " trials !!\n"
+//                    << "-------------------------------------------"<<endl;
+//
+//            } else {
+//                cout<<"Error opening file!\n";
+//            }
+//
+//        }
+//
+////        result.computeStatistics(true);
+//
+//        string experimentName = configFilename;
+//        boost::erase_all(experimentName, ".xml");
+//        boost::erase_all(experimentName, ".");
+//        boost::erase_all(experimentName, "/");
+//
+////        if (PRINT_PGFPLOTS) {
+////            plotResults(experimentName, result, &latex);
+////        }
+////        if(PRINT_IV_TABLES){
+////            tabulateIVsFromConfigExperiment(experimentName, result, PointsetNames, &latex);
+////        }
+////        if (PRINT_SUMMARY_TABLES) {
+////            tabulateSummaryResults(experimentName, result, &latex);
+////        }
+////
+////        if (PRINT_GEOMETRY || PRINT_PGFPLOTS || PRINT_SUMMARY_TABLES || PRINT_IV_TABLES)
+////            latex.display();
+//
+//    }
 
 
     void SyntheticExperiment(size_t numRuns, size_t n_start, size_t n_end, size_t increment ) {
@@ -140,6 +141,27 @@ namespace spanners {
         // EXPERIMENT PARAMETER OVERRIDE ----------------------------------------//
         numRuns = numRuns, n_start = n_start, n_end = n_end, increment = increment;
         // ----------------------------------------------------------------------//
+
+        // get unix timestamp to use as experiment file name
+        auto time = std::time(nullptr);
+        auto filename = to_string(time) + ".csv";
+
+        ofstream expOut;
+        expOut.open(filename,ios_base::out);
+
+        if(!expOut.is_open()) assert(!"ERROR OPENING OUTPUT FILE\n\n");
+
+        const string DELIMITER = ",";
+
+        expOut << "distribution" << DELIMITER
+               << "n" << DELIMITER
+               << "spannerAlg" << DELIMITER
+               << "runtime" << DELIMITER
+               << "degree" << DELIMITER
+               << "degreeAvg" << DELIMITER
+               << "stretchFactor" << DELIMITER
+               << "lightness" << DELIMITER
+               << "\n";
 
         const number_t width = 10;
 
@@ -150,39 +172,43 @@ namespace spanners {
             cout<< "!! Starting  "<< distName << "distribution trials !!\n"
                 << "NOTE: one extra trial is performed because trial 0 will be thrown out!"<<endl<<endl;
 
-            auto& result = (RESULTS.emplace(distName, BoundedDegreeSpannerResultSet()).first)->second;
+            //auto& result = (RESULTS.emplace(distName, BoundedDegreeSpannerResultSet()).first)->second;
             for (size_t trial = 0; trial <= numRuns; ++trial) {
                 cout<< "Starting trial "<< trial << "..."<<endl<<endl;
                 for (size_t n = n_start; n <= n_end; n += increment) {
-                    SyntheticTrial(n, distributionType, width);//, "output", nullopt, false, false ) )
+                    SyntheticTrial(n, distributionType, width, expOut);//, "output", nullopt, false, false ) )
                 }
                 cout<<"\n\n";
             }
-            result.computeStatistics();
 
-            if (PRINT_PGFPLOTS) {
-                plotResults(distName, result, &latex);
-            }
-            if(PRINT_IV_TABLES){
-                tabulateIVs(distName, result, &latex);
-            }
-            if (PRINT_SUMMARY_TABLES) {
-                tabulateSummaryResults(distName, result, &latex);
-            }
+            //result.computeStatistics();
+
+//            if (PRINT_PGFPLOTS) {
+//                plotResults(distName, result, &latex);
+//            }
+//            if(PRINT_IV_TABLES){
+//                tabulateIVs(distName, result, &latex);
+//            }
+//            if (PRINT_SUMMARY_TABLES) {
+//                tabulateSummaryResults(distName, result, &latex);
+//            }
             cout<< "!! Ending  "<< distName << "distribution trials !!\n"
                 << "-------------------------------------------"<<endl;
 
+            if(!expOut.is_open()) assert(!"ERROR! OUTPUT FILE CLOSED!\n\n");
 
         }
+
+        expOut.close();
 
         if (PRINT_GEOMETRY || PRINT_PGFPLOTS || PRINT_SUMMARY_TABLES || PRINT_IV_TABLES)
             latex.display();
 
-        cout << "Exp Wrong Count=" << WRONG_COUNT_DIJKSTRA << " Average Amount=" << (WRONG_COUNT_DIJKSTRA > 0 ? WRONG_AMOUNT_DIJKSTRA / WRONG_COUNT_DIJKSTRA : 0) << endl;
-        cout << "      Wrong Rate=" << (100*((double)WRONG_COUNT_DIJKSTRA / EXP_COUNT)) << "%" << endl;
-        cout << "A* Wrong Count=" << WRONG_COUNT_ASTAR << " Average Amount=" << (WRONG_COUNT_ASTAR > 0 ? WRONG_AMOUNT_ASTAR / WRONG_COUNT_ASTAR : 0) << endl;
-        cout << "      Wrong Rate=" << (100*((double)WRONG_COUNT_ASTAR / EXP_COUNT)) << "%" << endl;
-        cout<<endl<<"Total exp="<<EXP_COUNT<<endl;
+//        cout << "Exp Wrong Count=" << WRONG_COUNT_DIJKSTRA << " Average Amount=" << (WRONG_COUNT_DIJKSTRA > 0 ? WRONG_AMOUNT_DIJKSTRA / WRONG_COUNT_DIJKSTRA : 0) << endl;
+//        cout << "      Wrong Rate=" << (100*((double)WRONG_COUNT_DIJKSTRA / EXP_COUNT)) << "%" << endl;
+//        cout << "A* Wrong Count=" << WRONG_COUNT_ASTAR << " Average Amount=" << (WRONG_COUNT_ASTAR > 0 ? WRONG_AMOUNT_ASTAR / WRONG_COUNT_ASTAR : 0) << endl;
+//        cout << "      Wrong Rate=" << (100*((double)WRONG_COUNT_ASTAR / EXP_COUNT)) << "%" << endl;
+//        cout<<endl<<"Total exp="<<EXP_COUNT<<endl;
 
         //cout<<"\nTesting Complete. "<< invalid << " of "<<(numRuns*(n_end-n_start))<<" invalid results.\n\n";
     }
@@ -191,8 +217,10 @@ namespace spanners {
 
 
     void PlaneSpannerTest(const vector<Point> &points,
-                          const string dist,
-                          const Algorithm algorithm, bool lite = false ) {
+                          const DistributionType dist,
+                          const Algorithm algorithm,
+                          ofstream& expOut,
+                          bool lite = false ) {
         using namespace std;
 
         list<pair<size_t, size_t> > spanner;
@@ -244,69 +272,89 @@ namespace spanners {
         }
 
         number_t runtime = tim.stop();
-        BoundedDegreeSpannerResult result(algorithm, runtime, points.begin(), points.end(), spanner.begin(), spanner.end(), true);
+        BoundedDegreeSpannerResult result(dist, algorithm, runtime, points.begin(), points.end(), spanner.begin(), spanner.end(), false);
         cout << result;
+        expOut << result;
 
-        cout<< "EXACT: time=";
-        number_t t_exact = INF;
-        {
-            Timer tim;
-            t_exact = StretchFactorDijkstraReduction(points.begin(),points.end(),spanner.begin(),spanner.end());
+        if(!result.verify()) {
+            string filename = "breaks";
+            filename += ALGORITHM_NAMES.at(algorithm);
+            filename += ".xy";
+            writePointsToFile(points.begin(),points.end(),filename);
+
+            cout<< "\n"
+                << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+                << "!!!!!!!!!!!!!!!! ALGORITHM ERROR !!!!!!!!!!!!!!!!!!!!"
+                << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+
+            char userContinues = 'x';
+            while( userContinues != 'y' && userContinues != 'n' ) {
+                cout<< "\n Do you wish to continue the experiment? (y/n) ";
+                cin>>userContinues;
+            }
+            if(userContinues=='n') assert(!"Experiment terminated by user.");
         }
-        cout<<"  t="<<t_exact<<";    ";
 
-//        cout<< "ASTAR: time=";
-//        number_t t_astar = INF;
+//        cout<< "EXACT: time=";
+//        number_t t_exact = INF;
 //        {
 //            Timer tim;
-//            t_astar = StretchFactorUsingHeuristic(points.begin(),points.end(),spanner.begin(),spanner.end());
+//            t_exact = StretchFactorDijkstraReduction(points.begin(),points.end(),spanner.begin(),spanner.end());
 //        }
-//        cout<<"  t="<<t_astar<<";    ";
-
-
-
-        cout<< "EXP: time=";
-        number_t t_exp = INF;
-        {
-            Timer tim;
-            t_exp = StretchFactorUsingHeuristic2(points.begin(),points.end(),spanner.begin(),spanner.end());
-        }
-        cout<<"  t="<<t_exp<<";\n";
-
-        if( abs(t_exact - t_exp) > EPSILON ) {
-            WRONG_COUNT_DIJKSTRA++;
-            WRONG_AMOUNT_DIJKSTRA += abs(t_exact - t_exp);
-            cout<<"!!!!!!!!!!!!!!!!!DIJKSTRA WRONG!!!!!!!!!!!!!!!!!!!\n";
-
-            string name = "";
-            //writePointsToFile(points.begin(),points.end(),name);
-
-            //assert(!"WRONG STRETCH FACTOR");
-        }
-        if( t_exact > 6.44 ) {
-            writePointsToFile(points.begin(),points.end(),"breaksLW.xy");
-
-            GraphPrinter::OptionsList edgeOptions = { // active edge options
-                    {"color",      graph.activeEdgeColor},
-                    {"line width", to_string(graph.inactiveEdgeWidth/2)}
-            };
-
-            graph.drawEdges(spanner.begin(),spanner.end(),points,edgeOptions);
-            graph.drawVertices(points.begin(), points.end(), graph.activeVertexOptions);
-            graph.display();
-            
-            assert(!"LW broke");
-        }
+//        cout<<"  t="<<t_exact<<";    ";
+//
+////        cout<< "ASTAR: time=";
+////        number_t t_astar = INF;
+////        {
+////            Timer tim;
+////            t_astar = StretchFactorUsingHeuristic(points.begin(),points.end(),spanner.begin(),spanner.end());
+////        }
+////        cout<<"  t="<<t_astar<<";    ";
+//
+//
+//
+//        cout<< "EXP: time=";
+//        number_t t_exp = INF;
+//        {
+//            Timer tim;
+//            t_exp = StretchFactorUsingHeuristic2(points.begin(),points.end(),spanner.begin(),spanner.end());
+//        }
+//        cout<<"  t="<<t_exp<<";\n";
+//
+//        if( abs(t_exact - t_exp) > EPSILON ) {
+//            WRONG_COUNT_DIJKSTRA++;
+//            WRONG_AMOUNT_DIJKSTRA += abs(t_exact - t_exp);
+//            cout<<"!!!!!!!!!!!!!!!!!DIJKSTRA WRONG!!!!!!!!!!!!!!!!!!!\n";
+//
+//            string name = "";
+//            //writePointsToFile(points.begin(),points.end(),name);
+//
+//            //assert(!"WRONG STRETCH FACTOR");
+//        }
+//        if( t_exact > 6.44 ) {
+//            writePointsToFile(points.begin(),points.end(),"breaksLW.xy");
+//
+//            GraphPrinter::OptionsList edgeOptions = { // active edge options
+//                    {"color",      graph.activeEdgeColor},
+//                    {"line width", to_string(graph.inactiveEdgeWidth/2)}
+//            };
+//
+//            graph.drawEdges(spanner.begin(),spanner.end(),points,edgeOptions);
+//            graph.drawVertices(points.begin(), points.end(), graph.activeVertexOptions);
+//            graph.display();
+//
+//            assert(!"LW broke");
+//        }
 //        if( abs(t_exact - t_astar) > EPSILON ) {
 //            WRONG_COUNT_ASTAR++;
 //            WRONG_AMOUNT_ASTAR += abs(t_exact - t_astar);
 //            cout<<"!!!!!!!!!!!!!!!!!ASTAR WRONG!!!!!!!!!!!!!!!!!!!\n";
 //        }
-        cout<<"\n";
+//        cout<<"\n";
 
         ++EXP_COUNT;
 
-        size_t degree = get<size_t>(result.degree);
+//        size_t degree = get<size_t>(result.degree);
 
 //        if(//(algorithm == Algorithm::Bcc2012_6 && degree > 6)||
 //              (algorithm == Algorithm::Bcc2012_7 && degree > 7)){
@@ -319,7 +367,7 @@ namespace spanners {
 
 
 
-        RESULTS.at(dist).registerResult(result);
+//        RESULTS.at(dist).registerResult(result);
 
         if(PRINT_GEOMETRY){
             list<Edge> WorstPath;
@@ -363,7 +411,7 @@ namespace spanners {
         }
     }
 
-    void SingleTrial (const vector<Point>& points, const string dist, bool lite = false ){
+    void SingleTrial (const vector<Point>& points, const DistributionType dist, ofstream& expOut, bool lite = false ){
         const size_t n = points.size();
 
         cout<< "Starting trial..."<<endl<<endl;
@@ -386,7 +434,7 @@ namespace spanners {
         }
         for(int alg=Algorithm::AlgorithmFirst;
           alg!=Algorithm::AlgorithmLast; ++alg ) {
-            PlaneSpannerTest(points, dist, static_cast<Algorithm>(alg), lite);
+            PlaneSpannerTest(points, dist, static_cast<Algorithm>(alg), expOut, lite);
         }
 
         cout<< "Finished trial...\n"
@@ -394,7 +442,7 @@ namespace spanners {
     }
 
 
-    void SyntheticTrial(const size_t n, DistributionType dist, const double width ){ //}, string resultFilename, optional<string> filename, bool forcePrint, bool printLog )
+    void SyntheticTrial(const size_t n, DistributionType dist, const double width, ofstream& expOut  ){ //}, string resultFilename, optional<string> filename, bool forcePrint, bool printLog )
 
 
         // SET POINTS
@@ -437,7 +485,7 @@ namespace spanners {
             assert(!"Invalid distribution type!");
         }
 
-        SingleTrial(points, DISTRIBUTION_NAMES.at(dist));
+        SingleTrial(points, dist,expOut );
 
     }
 

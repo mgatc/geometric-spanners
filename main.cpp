@@ -42,13 +42,13 @@ int main(int argc, char *argv[]) {
             break;
         case 3:
 //            ignore = system( "rm ../output/real-*");
-            try{
-                spanners::ExperimentFromConfigurationFile(stoi(argv[1]), argv[2]);
-            } catch(invalid_argument &ia) {
-                cout << "Invalid parameter '" << argv[1] << "'... exiting\n";
-                return EXIT_FAILURE;
-            }
-            break;
+//            try{
+//                spanners::ExperimentFromConfigurationFile(stoi(argv[1]), argv[2]);
+//            } catch(invalid_argument &ia) {
+//                cout << "Invalid parameter '" << argv[1] << "'... exiting\n";
+//                return EXIT_FAILURE;
+//            }
+//            break;
         case 0: // run an experiment with default args
         case 5:
             for (size_t arg = 1;

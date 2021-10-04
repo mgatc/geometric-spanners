@@ -78,18 +78,18 @@ namespace spanners {
     };
     const string ALGORITHM_SYMBOL = "Algorithm";
     const vector<string> ALGORITHM_NAMES = {
-        "\\texttt{BGS2005}",
-        "\\texttt{LW2004}",
-        "\\texttt{BSX2009}",
-        "\\texttt{KPX2010}",
-        "\\texttt{KX2012}",
-        "\\texttt{BHS2018}",
-        "\\texttt{BCC2012-7}",
-        "\\texttt{BCC2012-6}",
-        "\\texttt{BGHP2010}",
-        "\\texttt{BKPX2015}",
-        "\\texttt{KPT2017}"
-    //    "\\texttt{Degree3}"
+        "BGS2005",
+        "LW2004",
+        "BSX2009",
+        "KPX2010",
+        "KX2012",
+        "BHS2018",
+        "BCC2012-7",
+        "BCC2012-6",
+        "BGHP2010",
+        "BKPX2015",
+        "KPT2017"
+    //    "Degree3"
     };
     const string DEGREE_BOUND_SYMBOL = "$\\Delta_{\\mathrm{ub}}$";
     const vector<string> DEGREE_BOUND_PER_ALGORITHM = {

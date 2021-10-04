@@ -11,7 +11,6 @@
 #include <utility>
 #include <vector>
 
-
 #include <boost/functional/hash.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_traits.hpp>
@@ -27,10 +26,7 @@
 
 #include <omp.h>
 
-#include "tools/DelaunayGraph.h"
-#include "tools/FloydWarshall.h"
 #include "tools/Utilities.h"
-#include "printers/GraphPrinter.h"
 
 namespace spanners {
 
@@ -123,94 +119,6 @@ using namespace std;
         return w;
     }
 
-    template<typename Triangulation>
-    number_t weight(const Triangulation &T) {
-        number_t w = 0;
-        for (auto e = T.finite_edges_begin(); e != T.finite_edges_end(); ++e) {
-            auto p = make_pair(
-                    e->first->vertex((e->second + 1) % 3)->point(),
-                    e->first->vertex((e->second + 2) % 3)->point()
-            );
-            w += getDistance(p.first, p.second);
-        }
-        return w;
-    }
-
-    template<typename VertexContainer, typename AdjacencyList>
-    optional<number_t> AStar(VertexContainer V, AdjacencyList G_prime, index_t start, index_t goal) {
-        typedef pair<number_t, index_t>
-                DistanceIndexPair;
-        typedef boost::heap::fibonacci_heap<DistanceIndexPair, boost::heap::compare<MinHeapCompare<DistanceIndexPair>>>
-                Heap;
-        typedef Heap::handle_type
-                HeapHandle;
-
-        index_t n = V.size();
-        auto startPoint = V.at(start)->point();
-        auto goalPoint = V.at(goal)->point();
-        EuclideanDistanceToPoint h = {V.at(goal)->point()}; // initialize heuristic functor
-
-        Heap open;
-        unordered_map<index_t, HeapHandle> handleToHeap(n);
-        handleToHeap[start] = open.emplace(h(startPoint), start);
-
-        //unordered_set<size_t> closed(n);
-        vector<index_t> parents(n);
-
-        vector<number_t> g(n, INF);
-        g[start] = 0;
-
-        vector<number_t> f(n, INF);
-        f[start] = h(startPoint);
-
-        DistanceIndexPair current = open.top(); // initialize current vertex to start
-        index_t u_index = current.second;
-        auto currentPoint = startPoint;
-        auto neighborPoint = currentPoint;
-//    cout<<"\n    A* start:"<<startPoint;
-//    cout<<",";
-//    cout<<" goal:"<<V.at(goal)->point();
-//    cout<<",";
-
-        do {
-            current = open.top();
-            open.pop();
-
-            u_index = current.second;
-            currentPoint = V.at(u_index)->point();
-//        cout<<"\n      current:"<<currentPoint;
-//        cout<<",";
-            if (u_index == goal) return make_optional(g.at(goal));
-//        cout<<" no goal, ";
-            // loop through neighbors of current
-            for (size_t neighbor : G_prime.at(u_index)) {
-                neighborPoint = V.at(neighbor)->point();
-//            cout<<"\n        n:"<<neighborPoint;
-//            cout<<",";
-                number_t newScore = g.at(u_index)
-                                    + d(currentPoint, neighborPoint);
-//            cout<<"g:"<<newScore;
-//            cout<<",";
-                if (newScore < g.at(neighbor)) {
-                    parents[neighbor] = u_index;
-                    g[neighbor] = newScore;
-                    f[neighbor] = g.at(neighbor) + h(neighborPoint);
-                    DistanceIndexPair q = make_pair(f.at(neighbor), neighbor);
-
-                    if (contains(handleToHeap, neighbor)) {
-                        HeapHandle neighborHandle = handleToHeap.at(neighbor);
-                        open.update(neighborHandle, q);
-                        open.update(neighborHandle);
-                    } else {
-                        handleToHeap[neighbor] = open.push(q);
-                    }
-                }
-            }
-        } while (!open.empty());
-
-        return nullopt;
-    }
-
 
     template<typename VertexContainer, typename AdjacencyList>
     void Dijkstra(const index_t i,
@@ -241,38 +149,28 @@ using namespace std;
         auto currentPoint = startPoint;
         auto neighborPoint = currentPoint;
         number_t newScore = 0;
-//    cout<<"\n    A* start:"<<startPoint;
-//    cout<<",";
-//    cout<<" goal:"<<V.at(goal)->point();
-//    cout<<",";
 
         do {
             current = open.begin();
 
             u_index = current->second;
             currentPoint = V[u_index];
-//        cout<<"\n      current:"<<currentPoint;
-//        cout<<",";
+
             // loop through neighbors of current
             for (index_t neighbor : G.at(u_index)) {
                 neighborPoint = V[neighbor];
-//            cout<<"\n        n:"<<neighborPoint;
-//            cout<<",";
                 newScore = ShortestPaths[u_index]
                            + getDistance(currentPoint, neighborPoint);
-//            cout<<"g:"<<newScore;
-//            cout<<",";
                 if (newScore < ShortestPaths[neighbor]) {
                     Parents[neighbor] = u_index;
                     ShortestPaths[neighbor] = newScore;
-                    //DistanceIndexPair q = make_pair( ShortestPaths.at(neighbor), neighbor );
+
                     if (contains(handleToHeap, neighbor)) {
                         open.erase(handleToHeap[neighbor]);
                     }
                     handleToHeap[neighbor] = open.emplace(ShortestPaths[neighbor], neighbor).first;
                 }
             }
-            //closed.insert(current.second);
             open.erase(current);
         } while (!open.empty());
     }
@@ -281,34 +179,31 @@ using namespace std;
     number_t StretchFactorDijkstraReduction(VertexIterator pointsBegin,
                                             VertexIterator pointsEnd,
                                             EdgeIterator edgesBegin,
-                                            EdgeIterator edgesEnd) {
+                                            EdgeIterator edgesEnd,
+                                            const size_t numberOfThreads = 4) {
         typedef typename VertexIterator::value_type Point_2;
 
         const vector<Point_2> V(pointsBegin, pointsEnd); // container for vertices
         const size_t n = V.size();
-//    unordered_map< size_t, size_t > vMap; // map point to index in V
+
         vector<unordered_set<size_t> > G(n, unordered_set<size_t>()); // adjacency list
-        //size_t index = 0;
 
         // Create list of vertices, map to their indices, and adjacency list
         for (auto eit = edgesBegin; eit != edgesEnd; ++eit) {
             auto p = eit->first,
-                    q = eit->second;
+                 q = eit->second;
 
             G[p].insert(q);
             G[q].insert(p);
         }
-        //vector<double> T( n, INF );
         double t_max = 0.0;
 
-        // calculate euclidean getDistance between all pairs
-//#pragma omp parallel for reduction( max: t_max ) default( shared )
+        #pragma omp parallel for reduction(max: t_max) shared(G) default(none) num_threads(numberOfThreads)
         for (size_t i = 0; i < n; ++i) {
             // Euclidean distances
-            vector<number_t> D(n, INF);
+            vector<number_t> D(n);
             for (size_t j = 0; j < n; ++j) {
-                D.at(j) =
-                        i == j ? 0 : getDistance(V.at(i), V.at(j));
+                D[j] = i == j ? 0 : getDistance(V[i], V[j]);
             }
             // Shortest paths
             vector<number_t> ShortestPaths(n, INF);
@@ -317,8 +212,8 @@ using namespace std;
 
             // Divide each shortest path getDistance by the euclidean distance between the vertices.
             for (size_t j = 0; j < n; ++j) {
-                ShortestPaths.at(j) = ( // avoid /0
-                        i == j ? 0 : ShortestPaths.at(j) / D.at(j)
+                ShortestPaths[j] = ( // avoid /0
+                        i == j ? 0 : ShortestPaths[j] / D[j]
                 );
             }
             // Find max_t
@@ -334,868 +229,6 @@ using namespace std;
         return t_max;
     }
 
-
-    template<typename VertexIterator, typename EdgeIterator, typename OutputIterator>
-    number_t SFWorstPath(VertexIterator pointsBegin,
-                         VertexIterator pointsEnd,
-                         EdgeIterator edgesBegin,
-                         EdgeIterator edgesEnd,
-                         std::optional<OutputIterator> out = std::nullopt) {
-        typedef typename VertexIterator::value_type Point_2;
-
-        const vector<Point_2> V(pointsBegin, pointsEnd); // container for vertices
-        const size_t n = V.size();
-
-        vector<unordered_set<size_t> > G(n, unordered_set<size_t>()); // adjacency list
-
-        // Create list of vertices, map to their indices, and adjacency list
-        for (auto eit = edgesBegin; eit != edgesEnd; ++eit) {
-            auto p = eit->first,
-                    q = eit->second;
-
-            G[p].insert(q);
-            G[q].insert(p);
-        }
-        //vector<double> T( n, INF );
-        double t_max = 0.0;
-
-        vector<index_t> MaxParents;
-        index_t i_max = 0, j_max = 1;
-
-        // calculate euclidean getDistance between all pairs
-        for (size_t i = 0; i < n; ++i) {
-            // Euclidean distances
-            vector<number_t> D(n, INF);
-            for (size_t j = 0; j < n; ++j) {
-                D.at(j) =
-                        i == j ? 0 : getDistance(V.at(i), V.at(j));
-            }
-            // Shortest paths
-            vector<number_t> ShortestPaths(n, INF);
-            vector<size_t> Parents(n);
-            Dijkstra(i, V, G, ShortestPaths, Parents);
-
-            // Divide each shortest path getDistance by the euclidean distance between the vertices.
-            for (size_t j = 0; j < n; ++j) {
-                ShortestPaths.at(j) = ( // avoid /0
-                        i == j ? 0 : ShortestPaths.at(j) / D.at(j)
-                );
-            }
-            // Find max_t
-            auto t_local = max_element(
-                    begin(ShortestPaths),
-                    end(ShortestPaths)
-            );
-            if (*t_local > t_max) {
-                t_max = *t_local;
-
-                if (out) {
-                    std::swap(Parents, MaxParents);
-                    i_max = i;
-                    j_max = t_local - ShortestPaths.begin();
-                }
-            }
-        }
-
-        if (out) {
-            size_t walk = j_max;
-            do {
-                *(*out)++ = make_pair(walk, MaxParents.at(walk));
-                walk = MaxParents.at(walk);
-            } while (walk != i_max);
-        }
-        // Find the big mac daddy stretchFactor aka big money
-        return t_max;
-    }
-
-    class DelaunayTriangulationSFH {
-        typedef CGAL::Triangulation_vertex_base_with_info_2<index_t, K> Vb;
-        typedef CGAL::Triangulation_data_structure_2<Vb> Tds;
-        typedef CGAL::Delaunay_triangulation_2<K, Tds> Delaunay;
-
-        class PointSFH : public K::Point_2 {
-        public:
-            index_t id = numeric_limits<index_t>::max(); // dummy value for id
-            string color = "white";
-
-            PointSFH() = default;
-
-            PointSFH(number_t X, number_t Y) : K::Point_2(X, Y) { }
-            PointSFH(number_t X, number_t Y, index_t k) : K::Point_2(X, Y) { id = k; }
-
-            friend ostream &operator<<(ostream &strm, const PointSFH &p) {
-                return strm << p.id << ": (" << p.x() << ", " << p.y() << ")";
-            }
-        };
-
-        Delaunay T;
-    public:
-        DelaunayTriangulationSFH(const vector<Point> &P, vector<Edge> &E) {
-            insertPoints(P);
-            getEdges(E);
-        }
-
-        explicit DelaunayTriangulationSFH(const vector<Point> &P) {
-            insertPoints(P);
-        }
-
-        void getEdges(vector<Edge> &E) {
-            for(auto it = T.finite_edges_begin(); it != T.finite_edges_end(); ++it) {
-                Delaunay::Edge e=*it;
-                index_t i1 = e.first->vertex( (e.second+1)%3 )->info();
-                index_t i2 = e.first->vertex( (e.second+2)%3 )->info();
-                E.emplace_back(i1,i2);
-            }
-        }
-
-        void insertPoints(const vector<Point> &P) {
-            vector<pair<PointSFH, index_t> > points;
-            index_t id = 0;
-
-            for( Point p : P )
-                points.emplace_back(PointSFH(p.x(),p.y()), id++);
-
-            T.insert(points.begin(), points.end());
-        }
-
-        index_t findClosestPoint(const Point &p) {
-            auto handle = T.nearest_vertex(p);
-            return handle->info();
-        }
-    };
-
-    struct priorityComparator{
-        bool operator()(const pair<number_t,index_t> &p1, const pair<number_t,index_t> &p2) const{
-            return p1.first > p2.first;
-        }
-    };
-
-    typedef boost::heap::fibonacci_heap<pair<number_t,index_t>, boost::heap::compare<priorityComparator>> FibonacciHeap;
-
-    number_t aStar(const vector<Point> &P, const vector<unordered_set<index_t>> &G, const index_t startVertex, const index_t goalVertex){
-
-        FibonacciHeap openSet;
-        vector<index_t> cameFrom(P.size(),-1);
-        vector<bool> isInOpenSet(P.size(),false);
-        vector<FibonacciHeap::handle_type> handleOfVertex(P.size());
-        vector<number_t>  g(P.size(), INF);
-
-        handleOfVertex[startVertex] = openSet.push(make_pair(getDistance(P[startVertex],P[goalVertex]),startVertex));
-        isInOpenSet[startVertex] = true;
-        g[startVertex] = 0;
-
-        //unsigned count = 0;
-        //bool flag = false;
-
-        while( !openSet.empty() ){
-            // count++;
-
-//        if( count == 400 ) {
-//            flag = true;
-//            break;
-//        }
-
-            pair<number_t,index_t> current = openSet.top();
-            openSet.pop();
-            isInOpenSet[current.second] = false;
-
-            if( current.second == goalVertex ) {
-                number_t pathLength = 0;
-                index_t currentVertex = current.second;
-                while ( currentVertex !=  startVertex ) {
-                    pathLength += getDistance( P[currentVertex], P[cameFrom[currentVertex]]);
-                    currentVertex = cameFrom[currentVertex];
-                }
-                return pathLength;
-            }
-
-            for( index_t neighbor : G[current.second] ) {
-
-                number_t tentativeGscore = g[current.second] + getDistance(P[current.second],P[neighbor]);
-                if( tentativeGscore < g[neighbor]){
-                    cameFrom[neighbor] = current.second;
-                    g[neighbor] = tentativeGscore;
-                    number_t fOfNeighbor = g[neighbor] + getDistance(P[neighbor], P[goalVertex]);
-
-                    if (!isInOpenSet[neighbor]) {
-                        handleOfVertex[neighbor] = openSet.push(make_pair(fOfNeighbor, neighbor));
-                        isInOpenSet[neighbor] = true;
-                    }
-                    else
-                        openSet.decrease(handleOfVertex[neighbor],make_pair(fOfNeighbor, neighbor));
-                }
-            }
-        }
-
-        return INF;
-    }
-
-    template<typename VertexIterator, typename EdgeIterator>
-    number_t StretchFactorUsingHeuristic(VertexIterator pointsBegin,
-                                         VertexIterator pointsEnd,
-                                         EdgeIterator edgesBegin,
-                                         EdgeIterator edgesEnd,
-                                         const size_t numberOfThreads = 4) {
-        const vector<Point> P(pointsBegin, pointsEnd);
-        const vector<Edge> E(edgesBegin, edgesEnd);
-        vector<unordered_set<index_t>> G(P.size()),
-                DelG(P.size());
-
-        for (Edge e : E) {
-            G[e.first].insert(e.second);
-            G[e.second].insert(e.first);
-        }
-
-        vector<Edge> edgesOfDT;
-        DelaunayTriangulationSFH DT(P, edgesOfDT);
-        for(Edge e : edgesOfDT ) {
-            DelG[e.first].insert(e.second);
-            DelG[e.second].insert(e.first);
-        }
-
-        vector<number_t> stretchFactorOfG(numberOfThreads,0);
-        vector<pair<index_t, index_t>> worstPairOfG(numberOfThreads);
-        vector<unordered_map<index_t,number_t>> tracker(P.size());
-
-//#pragma omp parallel for num_threads(numberOfThreads)
-        for( index_t u = 0; u < P.size(); u++ ) {
-
-            number_t largestSfFromU = 0, currentStretchFactor = 0;
-            pair<index_t, index_t> worstPairSoFar, worstPairCurrent;
-            unordered_set<index_t> localPoints;
-
-            vector<bool> isConsidered(P.size(),false);
-            isConsidered[u] = true;
-            localPoints.insert(u);
-
-            while( true ) {
-
-                unordered_set<index_t> underConsideration;
-                for (auto i : localPoints) {
-                    for (auto j : DelG[i]) {
-                        if (!isConsidered[j]) {
-                            underConsideration.insert(j);
-                            isConsidered[j] = true;
-                        }
-                    }
-                }
-
-                for (index_t v : underConsideration) {
-
-                    unordered_map<index_t,number_t>::iterator result;
-
-//#pragma omp critical
-                    result = tracker[std::min(u,v)].find(std::max(u,v));
-
-                    if (result == tracker[u].end()) {
-                        number_t stretchFactorUV = aStar(P, G, u, v) / getDistance(P[u], P[v]);
-
-                        if (stretchFactorUV > currentStretchFactor) {
-                            worstPairCurrent.first  = u;
-                            worstPairCurrent.second = v;
-                        }
-
-                        currentStretchFactor = std::max(currentStretchFactor, stretchFactorUV);
-
-//#pragma omp critical
-                        tracker[std::min(u,v)].insert(make_pair(std::max(u,v), stretchFactorUV));
-                    }
-                    else if( (*result).second > currentStretchFactor ){
-                        worstPairCurrent.first = u;
-                        worstPairCurrent.second = v;
-                        currentStretchFactor = (*result).second;
-                    }
-                }
-
-                if (currentStretchFactor > largestSfFromU) {
-                    largestSfFromU = currentStretchFactor;
-                    worstPairSoFar.first  = worstPairCurrent.first;
-                    worstPairSoFar.second = worstPairCurrent.second;
-                }
-                else
-                    break;
-
-                localPoints.clear();
-                for( index_t i : underConsideration )
-                    localPoints.insert(i);
-            }
-//<<<<<<< HEAD
-//            t_local = std::max( t_local, current.first / D.at(current.second) );
-//            t_lower = T.empty() ? 0 : T.top().first;
-//            // Make sure we have a value for every vertex before checking t
-//        } while( ( count < n || ( t_lower > t_local && t_lower > t_max ) ) && !open.empty() );
-//=======
-//>>>>>>> d254eb1d160dec11dc67c4c85bc1cfafe27a218a
-
-            if (largestSfFromU > stretchFactorOfG[omp_get_thread_num()]) {
-                worstPairOfG[omp_get_thread_num()].first  = worstPairSoFar.first;
-                worstPairOfG[omp_get_thread_num()].second = worstPairSoFar.second;
-                stretchFactorOfG[omp_get_thread_num()]    = largestSfFromU;
-            }
-        }
-
-        index_t worstPairU = worstPairOfG[0].first, worstPairV = worstPairOfG[0].second;
-        number_t finalSf = stretchFactorOfG[0];
-        for(index_t i = 1; i < numberOfThreads; i++)
-            if( stretchFactorOfG[i] >  finalSf ) {
-                finalSf = stretchFactorOfG[i];
-                worstPairU = worstPairOfG[i].first;
-                worstPairV = worstPairOfG[i].second;
-            }
-
-        //cout << "Heuristic worst pair: " <<  worstPairU << ", " << worstPairV << endl;
-        return *std::max_element(stretchFactorOfG.begin(),stretchFactorOfG.end());
-    }
-    template<typename VertexIterator, typename EdgeIterator, typename OutputIterator>
-    number_t SFWorstPath2(VertexIterator pointsBegin,
-                         VertexIterator pointsEnd,
-                         EdgeIterator edgesBegin,
-                         EdgeIterator edgesEnd,
-                         std::optional<OutputIterator> out = std::nullopt) {
-
-        vector<Point> P(pointsBegin, pointsEnd);
-        const vector<Edge> E(edgesBegin, edgesEnd);
-
-        const index_t n = P.size();
-        vector<unordered_set<index_t>> G(n),
-                DelG(n);
-
-
-        for (Edge e : E) {
-            G[e.first].insert(e.second);
-            G[e.second].insert(e.first);
-        }
-
-
-
-        vector<Edge> edgesOfDT;
-        vector<index_t> index;
-        spatialSort<K>(P, index);
-
-        //Step 1: Construct Delaunay triangulation
-        DelaunayTriangulation DT; //DelaunayTriangulationSFH DT(P, edgesOfDT);
-        /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
-          (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
-        FaceHandle hint;
-        //cout<<"del:";
-        for (size_t entry : index) {
-            auto vh = DT.insert(P[entry], hint);
-            hint = vh->face();
-            vh->info() = entry;
-            //handles[entry] = vh;
-        }
-        VertexHandle v_inf = DT.infinite_vertex();
-
-        // Convert DT to adjacency list
-        for(auto vit=DT.finite_vertices_begin(); vit != DT.finite_vertices_end(); ++vit) {
-            VertexCirculator N = DT.incident_vertices(vit),
-                    done(N);
-            do {
-                if( N != v_inf )
-                    DelG[vit->info()].insert(N->info());
-            } while( ++N != done );
-        }
-
-
-
-
-        number_t t_G = 0;
-        vector<index_t> MaxParents;
-        index_t i_max = 0, j_max = 1;
-
-        for( index_t u = 0; u < n; u++ ) {
-
-            //cout<<"u="<<u<<endl;
-
-            number_t t_u = 0, t_lvl = 0;
-
-            // BFS variables /////////////////////////
-
-            size_t lvl = 0;
-            index_t count = 0;
-            //pair<index_t, index_t> uWorstPair, lvlWorstPair;
-
-            // bfs queue - should remain small but we will need to search
-            map<index_t, pair<index_t,unsigned>> bfs; // insert with (count++, (vertex,level))
-            bfs.emplace(count++,make_pair(u,lvl));
-            unordered_set<index_t> frontier;
-            unordered_set<index_t> known;
-            known.insert(u);
-
-            // Dijkstra variables ////////////////////
-
-            map<index_t,number_t> dist;
-            vector<size_t> Parents(n);
-            dist[u] = 0.0;
-
-            typedef std::map<number_t, index_t>
-                    Heap;
-            typedef Heap::iterator
-                    HeapHandle;
-
-            Heap open;
-            unordered_map<index_t, HeapHandle> handleToHeap(n);
-            handleToHeap[u] = open.emplace(dist[u], u).first;
-
-
-
-
-            // Iterative Deepening Loop
-            do {
-                ++lvl;
-                t_u = t_lvl;
-                t_lvl = 0;
-
-
-
-                //cout<< "  Start depth limited BFS on Delaunay triangulation of P with"<<endl;
-                //cout<<"  level="<<lvl<<", t_u="<<t_u<<endl<<endl;
-                while(!bfs.empty() && bfs.begin()->second.second < lvl) {
-                    auto v = bfs.begin()->second.first;
-                    bfs.erase(bfs.begin());
-                    //cout<<"    v="<<v<<", |bfs|="<<bfs.size()<<endl;
-
-                    // Add neighbors of DT and G
-                    vector<unordered_set<index_t>*> N = { &DelG[v], &G[v] };
-                    for( auto n : N ) {
-                        for( auto w : *n ) {
-                            //cout<<"      w="<<w<<", ";
-                            if( !contains(known,w) ) {
-                                bfs.emplace(count++,make_pair(w,lvl));
-                                known.insert(w);
-                                //if(!contains(dist,w)) {
-                                frontier.insert(w);
-                                //}
-                                //cout<< "not known...adding to queue";
-                            } else {
-                                //cout<<"known...ignoring";
-                            }
-                            //cout<<endl;
-                        }
-                    }
-                    for( auto w : G[v] ) {
-
-                    }
-                }
-
-                // If we've already found the shortest path distance in a
-                // previous level, remove this vertex from frontier and
-                // update t_lvl if necessary.
-
-                //cout<<endl<<"Frontier={";
-                for(auto vit=frontier.begin(); vit!=frontier.end(); ) {
-                    auto v = *vit;
-                    //cout<<v;
-                    if(contains(dist,v)) {
-                        auto t_v = dist[v] / getDistance(P[u],P[v]);
-                        t_lvl = CGAL::max(t_lvl,t_v);
-                        //cout<<"(known,t_v="<<t_v<<"t_lvl="<<t_lvl<<")";
-                        vit = frontier.erase(vit);
-                    } else {
-                        ++vit;
-                    }
-                    //cout<<",";
-                }
-                //cout<<"}"<<endl<<endl;
-
-                //cout<<"Dijkstra on G only until we find all vertices in frontier"<<endl<<endl;
-
-                while(!frontier.empty()) {
-                    assert(!open.empty());
-                    auto distanceVertex = open.begin();
-                    index_t v = distanceVertex->second;
-                    dist[v] = distanceVertex->first;
-                    open.erase(distanceVertex);
-                    handleToHeap.erase(v);
-
-                    //auto t_v = dist[v];
-
-                    //cout<<"    v="<<v<<", dist="<<dist[v];
-
-                    if( contains(frontier,v) ) {
-                        frontier.erase(v);
-                        //if( v != u ) {
-                        auto t_v = dist[v] / getDistance(P[u], P[v]);
-                        //}
-                        //cout<<", t_v="<<t_v<<", t_lvl="<<t_lvl<<",";
-
-                        t_lvl = CGAL::max(t_lvl, t_v);
-
-                        if (t_v > t_lvl) {
-                            t_lvl = t_v;
-
-                            if (out) {
-                                std::swap(Parents, MaxParents);
-                                i_max = u;
-                                j_max = v;
-                            }
-                        }
-
-                        //cout<<" v is in frontier! Removing... Frontier={";
-                        for(auto v : frontier) {
-                            //cout<<v<<",";
-                        }
-                        //cout<<"},";
-                    }
-                    //cout<<endl;
-                    for( auto w : G[v] ) {
-                        if( !contains(dist,w) ) {
-                            number_t newDist = dist[v] + getDistance(P[w],P[v]);
-                            //cout<<"      w="<<w<<", newDist="<<newDist<<", ";
-                            if( !contains(handleToHeap,w) || newDist < handleToHeap[w]->first ) {
-                                //cout << "new best, ";
-                                if (contains(handleToHeap, w)) {
-                                    open.erase(handleToHeap[w]);
-                                    //cout << " already known...erasing, ";
-                                }
-                                handleToHeap[w] = open.emplace(newDist, w).first;
-                                Parents[w] = v;
-                                //cout << "adding to open" << endl;
-                            }
-                        }
-                        //cout<<endl;
-                    }
-                    //}
-                }
-                //cout<<"Done with limited Dijkstra"<<endl;
-
-            } while(!bfs.empty() && !(t_u > t_lvl));
-
-            // Done searching neighborhood of u
-
-
-            if (t_u > t_G ){
-                t_G = t_u;
-            }
-        }
-
-
-        if (out) {
-            size_t walk = j_max;
-            do {
-                *(*out)++ = make_pair(walk, MaxParents.at(walk));
-                walk = MaxParents.at(walk);
-            } while (walk != i_max);
-        }
-
-        return t_G;
-
-    }
-    GraphPrinter tikz("../scratch/","scratch-graph");
-
-    template<typename VertexIterator, typename EdgeIterator>
-    number_t StretchFactorUsingHeuristic2(VertexIterator pointsBegin,
-                                         VertexIterator pointsEnd,
-                                         EdgeIterator edgesBegin,
-                                         EdgeIterator edgesEnd,
-                                         const size_t numberOfThreads = 4) {
-
-        const bool PRINT_LOG = false;
-
-        vector<Point> P(pointsBegin, pointsEnd);
-        const vector<Edge> E(edgesBegin, edgesEnd);
-
-        const index_t n = P.size();
-        vector<unordered_set<index_t>> G(n),
-                DelG(n);
-
-
-        for (Edge e : E) {
-            G[e.first].insert(e.second);
-            G[e.second].insert(e.first);
-        }
-
-        vector<Edge> edgesOfDT;
-        vector<index_t> index;
-        spatialSort<K>(P, index);
-
-        //Step 1: Construct Delaunay triangulation
-        DelaunayTriangulation DT; //DelaunayTriangulationSFH DT(P, edgesOfDT);
-        /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
-          (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
-        FaceHandle hint;
-        //cout<<"del:";
-        for (size_t entry : index) {
-            auto vh = DT.insert(P[entry], hint);
-            hint = vh->face();
-            vh->info() = entry;
-            //handles[entry] = vh;
-        }
-        VertexHandle v_inf = DT.infinite_vertex();
-
-
-        //tikz.drawEdges(DT, tikz.inactiveEdgeOptions);
-
-        // Convert DT to adjacency list
-        for(auto vit=DT.finite_vertices_begin(); vit != DT.finite_vertices_end(); ++vit) {
-            VertexCirculator N = DT.incident_vertices(vit),
-                done(N);
-            do {
-                if( N != v_inf )
-                    DelG[vit->info()].insert(N->info());
-            } while( ++N != done );
-        }
-
-
-        vector<number_t> stretchFactorOfG(numberOfThreads,0);
-        vector<pair<index_t, index_t>> worstPairOfG(numberOfThreads);
-        vector<unordered_map<index_t,number_t>> tracker(n);
-
-        //#pragma omp parallel for num_threads(numberOfThreads)
-        for( index_t u = 0; u < n; u++ ) {
-
-            if(PRINT_LOG)cout<<"u="<<u<<endl;
-
-
-            // BFS variables /////////////////////////
-
-            size_t lvl = 0;
-            index_t count = 0;
-            //pair<index_t, index_t> uWorstPair, lvlWorstPair;
-
-            // bfs queue - should remain small but we will need to search
-            map<index_t, pair<index_t,unsigned>> bfs; // insert with (count++, (vertex,level))
-            bfs.emplace(count++,make_pair(u,lvl));
-            map<index_t,index_t> parent;
-            unordered_set<index_t> frontier;
-            unordered_set<index_t> known;
-            known.insert(u);
-
-            // Dijkstra variables ////////////////////
-
-            map<index_t,number_t> dist;
-            map<index_t,number_t> t;
-            dist[u] = 0.0;
-            t[u] = 0.0;
-
-            typedef std::map<number_t, index_t>
-                    Heap;
-            typedef Heap::iterator
-                    HeapHandle;
-
-            Heap open;
-            unordered_map<index_t, HeapHandle> handleToHeap(n);
-            handleToHeap[u] = open.emplace(dist[u], u).first;
-
-
-
-
-            // Iterative Deepening Loop
-            do {
-                ++lvl;
-//                t_u = t_lvl;
-//                t_lvl = 0;
-
-
-
-                if(PRINT_LOG) cout<< "  Start depth limited BFS on Delaunay triangulation of P with"<<endl;
-                if(PRINT_LOG) cout<<"  level="<<lvl<<endl<<endl;
-                while(!bfs.empty() && bfs.begin()->second.second < lvl) {
-                    auto v = bfs.begin()->second.first;
-                    bfs.erase(bfs.begin());
-                    if(PRINT_LOG) cout<<"    v="<<v<<", |bfs|="<<bfs.size()<<endl;
-                    if(v == u || t[parent[v]] < t[v] || abs(t[parent[v]] - t[v]) < EPSILON) {
-                        for (auto w : DelG[v]) {
-                            if(PRINT_LOG) cout<<"      w="<<w<<", ";
-                            parent.try_emplace(w,v);
-                            //t.try_emplace(parent[w], INF);
-                            if(t[v] < t[parent[w]] )
-                                parent[w] = v;
-
-                            if(!contains(known, w)) {
-                                bfs.emplace(count++, make_pair(w, lvl));
-                                known.insert(w);
-                                frontier.insert(w);
-                                if(PRINT_LOG) cout<< "not known...adding to queue";
-                            } else {
-                                if(PRINT_LOG) cout<<"known...ignoring";
-                            }
-                            if(PRINT_LOG) cout<<endl;
-                        }
-                    }
-                }
-
-                // If we've already found the shortest path distance in a
-                // previous level, remove this vertex from frontier and
-                // update t_lvl if necessary.
-
-                if(PRINT_LOG) cout<<endl<<"Frontier={";
-                for(auto vit=frontier.begin(); vit!=frontier.end(); ) {
-                    auto v = *vit;
-                    if(PRINT_LOG) cout<<v;
-                    if(contains(dist,v)) {
-//                        auto t_v = dist[v] / getDistance(P[u],P[v]);
-//                        t_lvl = CGAL::max(t_lvl,t_v);
-                        //cout<<"(known,t_v="<<t_v<<"t_lvl="<<t_lvl<<")";
-                        vit = frontier.erase(vit);
-                    } else {
-                        ++vit;
-                    }
-                    if(PRINT_LOG) cout<<",";
-                }
-                if(PRINT_LOG) cout<<"}"<<endl<<endl;
-
-                if(PRINT_LOG) cout<<"Dijkstra on G only until we find all vertices in frontier"<<endl<<endl;
-
-                while(!frontier.empty()) {
-                    assert(!open.empty());
-                    auto distanceVertex = open.begin();
-                    index_t v = distanceVertex->second;
-                    dist[v] = distanceVertex->first;
-                    open.erase(distanceVertex);
-                    handleToHeap.erase(v);
-
-
-                    if(PRINT_LOG) cout<<"    v="<<v<<", dist="<<dist[v];
-
-                    //if( contains(frontier,v) ) {
-                    frontier.erase(v);
-                    auto t_v = dist[v];
-                    if( v != u ) {
-                        t_v /= getDistance(P[u], P[v]);
-                    }
-                    t[v] = t_v;
-                    if(PRINT_LOG) cout<<", t_v="<<t_v;//<<", t_lvl="<<t_lvl<<",";
-
-                    //t_lvl = CGAL::max(t_lvl, t_v);
-
-                    if(PRINT_LOG) cout<<" Frontier={";
-                    for(auto v : frontier) {
-                        if(PRINT_LOG) cout<<v<<",";
-                    }
-                    //cout<<"},";
-                    //}
-                    //cout<<endl;
-                    for( auto w : G[v] ) {
-                        if( !contains(dist,w) ) {
-                            number_t newDist = dist[v] + getDistance(P[w],P[v]);
-                            if(PRINT_LOG) cout<<"      w="<<w<<", newDist="<<newDist<<", ";
-                            if( !contains(handleToHeap,w) || newDist < handleToHeap[w]->first ) {
-                                if(PRINT_LOG) cout<< "new best, ";
-                                if (contains(handleToHeap, w)) {
-                                    open.erase(handleToHeap[w]);
-                                    if(PRINT_LOG) cout<< " already known...erasing, ";
-                                }
-                                handleToHeap[w] = open.emplace(newDist, w).first;
-                                if(PRINT_LOG) cout<< "adding to open" << endl;
-                            }
-                        }
-                        if(PRINT_LOG) cout<<endl;
-                    }
-                    //}
-                }
-                if(PRINT_LOG) cout<<"Done with limited Dijkstra"<<endl;
-
-            } while(!bfs.empty());
-
-            // Done searching neighborhood of u
-
-            number_t t_u = max_element(t.begin(),t.end(),[](const auto& lhs, const auto& rhs){
-                return lhs.second < rhs.second;
-            })->second;
-
-            if (t_u > stretchFactorOfG[omp_get_thread_num()]) {
-//                worstPairOfG[omp_get_thread_num()].first  = uWorstPair.first;
-//                worstPairOfG[omp_get_thread_num()].second = uWorstPair.second;
-                stretchFactorOfG[omp_get_thread_num()]    = t_u;
-            }
-        }
-
-        //index_t worstPairU = worstPairOfG[0].first, worstPairV = worstPairOfG[0].second;
-//        number_t finalSf = stretchFactorOfG[0];
-//        for(index_t i = 1; i < numberOfThreads; i++)
-//            if( stretchFactorOfG[i] >  finalSf ) {
-//                finalSf = stretchFactorOfG[i];
-//                worstPairU = worstPairOfG[i].first;
-//                worstPairV = worstPairOfG[i].second;
-//            }
-
-        //cout << "Heuristic worst pair: " <<  worstPairU << ", " << worstPairV << endl;
-        return *std::max_element(stretchFactorOfG.begin(),stretchFactorOfG.end());
-    }
-
-/*template< typename VertexContainer, typename VertexMap, typename AdjacencyList, typename Matrix, typename H>
-void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_prime, Matrix<double>& ShortestKnownPaths, const Matrix<double>& EuclideanDistances, Matrix<H>& upperBoundHandles, size_t start, size_t goal ) {
-    typedef pair<double,size_t>
-        DistanceIndexPair;
-    typedef boost::heap::fibonacci_heap< DistanceIndexPair,boost::heap::compare<MinHeapCompare<DistanceIndexPair>>>
-        Heap;
-    typedef Heap::handle_type
-        HeapHandle;
-
-    size_t n = V.size();
-    size_t inf = numeric_limits<size_t>::max();
-    Point startPoint = V.at(start)->point();
-    Point goalPoint = V.at(goal)->point();
-    EuclideanDistance h = { V.at(goal)->point() }; // initialize heuristic functor
-
-    Heap open;
-    unordered_map<size_t,HeapHandle> handleToHeap(n);
-    handleToHeap[start] = open.emplace( h( startPoint ), start );
-
-    //unordered_set<size_t> closed(n);
-    vector<size_t> parents(n);
-
-    vector<double>& g = ShortestKnownPaths.at(i);
-
-    vector<double> f( n, inf );
-    f[start] = h( startPoint );
-
-    DistanceIndexPair current = open.top(); // initialize current vertex to start
-    size_t u_index = current.second;
-    Point currentPoint = startPoint;
-    Point neighborPoint;
-//    cout<<"\n    A* start:"<<startPoint;
-//    cout<<",";
-//    cout<<" goal:"<<V.at(goal)->point();
-//    cout<<",";
-
-    do {
-        current = open.top();
-        open.pop();
-
-        u_index = current.second;
-        currentPoint = V.at(u_index)->point();
-//        cout<<"\n      current:"<<currentPoint;
-//        cout<<",";
-        if( u_index == goal ) return;
-//        cout<<" no goal, ";
-        double t_new = 0;
-        // loop through neighbors of current
-        for( size_t neighbor : G_prime.at(u_index) ) {
-            neighborPoint = V.at(neighbor)->point();
-//            cout<<"\n        n:"<<neighborPoint;
-//            cout<<",";
-            double newScore = g.at(u_index)
-                + d( currentPoint, neighborPoint );
-//            cout<<"g:"<<newScore;
-//            cout<<",";
-            if( newScore < g.at( neighbor ) ) {
-                parents[neighbor] = u_index;
-                g[neighbor] = newScore;
-                f[neighbor] = g.at(neighbor) + h(neighborPoint);
-                DistanceIndexPair q = make_pair( f.at(neighbor), neighbor );
-
-                // calculate the new path's stretchFactor
-                t_new = newScore / EuclideanDistances.at(i).at(u_index);
-                // update t_upper in stretchFactor-Heap
-                auto tValue = make_pair( t_new, make_pair(i,u_index) );
-                H tHandle = upperBoundHandles.at(i).at(u_index);
-
-
-                if( contains( handleToHeap, neighbor ) ) {
-                    HeapHandle neighborHandle = handleToHeap.at(neighbor);
-                    open.update(neighborHandle,q);
-                    open.update(neighborHandle);
-                } else {
-                    handleToHeap[neighbor] = open.push(q);
-                }
-            }
-        }
-    } while( !open.empty() );
-
-    return;
-}*/
     template< class VertexIterator, class EdgeIterator, class EdgeOutputIterator >
     void getMST( VertexIterator pointsBegin,
                      VertexIterator pointsEnd,
@@ -1213,7 +246,7 @@ void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_pr
         Graph G;
 
         for( auto pit=pointsBegin; pit!=pointsEnd; ++pit ) {
-            auto v = add_vertex( *pit, G );
+            add_vertex( *pit, G );
         }
 
         index_t p, q;
@@ -1229,11 +262,10 @@ void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_pr
         std::list<EdgeDescriptor> mst;
         boost::kruskal_minimum_spanning_tree(G,std::back_inserter(mst));
 
-        for(auto it = mst.begin(); it != mst.end(); ++it){
-            EdgeDescriptor ed = *it;
-            VertexDescriptor p = source(ed, G),
-                             q = target(ed, G);
-            *out = make_pair(p,q);
+        for(auto ed : mst){
+            VertexDescriptor u = source(ed, G),
+                             v = target(ed, G);
+            *out = make_pair(u,v);
         }
     }
     template< class VertexIterator, class EdgeIterator>
@@ -1254,31 +286,18 @@ void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_pr
     class Timer {
     public:
         explicit Timer(std::string delimiter = ",") : m_delimiter(std::move(delimiter)) {
-            //m_startTime = std::chrono::high_resolution_clock::now();
             m_clock.start();
         }
-
         ~Timer() {
-            if( m_clock.is_running() ) {
+            if( m_clock.is_running() )
                 std::cout << stop() << m_delimiter;
-            }
         }
-
         double stop() {
-//            auto endTime = std::chrono::high_resolution_clock::now();
-//            auto start = std::chrono::time_point_cast<std::chrono::microseconds>(
-//                    m_startTime).time_since_epoch().count();
-//            auto end = std::chrono::time_point_cast<std::chrono::microseconds>(endTime).time_since_epoch().count();
-//            auto duration = end - start;
             m_clock.stop();
-            //running = false;
-
             return m_clock.time();
         }
 
     private:
-        //bool running;
-        //std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
         std::string m_delimiter;
         CGAL::Real_timer m_clock;
     };

@@ -10,8 +10,6 @@ include_directories(/usr/lib/gcc/x86_64-linux-gnu/7/include)
 
 add_executable(geometric_spanners
 
-        include/algorithms/Degree3.h
-
         include/algorithms/BCC2012.h
         include/algorithms/BGHP2010.h
         include/algorithms/BGS2005.h
@@ -23,13 +21,7 @@ add_executable(geometric_spanners
         include/algorithms/KX2012.h
         include/algorithms/LW2004.h
 
-        include/printers/GraphPrinter.h
-        include/printers/PgfplotPrinter.h
-        include/printers/LatexPrinter.h
-        include/printers/TablePrinter.h
-
         include/tools/DelaunayGraph.h
-        include/tools/FloydWarshall.h
         include/tools/Metrics.h
         include/tools/PointGenerators.h
         include/tools/Results.h
@@ -38,10 +30,9 @@ add_executable(geometric_spanners
 
         include/Experiment.h
         include/Names.h
-        include/Scratch.h
 
         main.cpp
-        include/algorithms/Degree3.h)
+)
 
 target_link_libraries(geometric_spanners gmp)
 target_link_libraries(geometric_spanners mpfr)

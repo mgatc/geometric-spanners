@@ -1,10 +1,8 @@
 #include <algorithm> // min
-#include <experimental/filesystem>
 #include <iostream>
 #include <vector>
 
 #include "Experiment.h"
-#include "Scratch.h"
 
 using namespace std;
 using namespace spanners;
@@ -21,57 +19,24 @@ int main(int argc, char *argv[]) {
             runs, n_begin, n_end, increment
     };
 
-    size_t N = experimentParameters[0];
-
-    namespace fs = std::experimental::filesystem;
-    fs::remove_all(OUTPUT_DATA_DIRECTORY);
-    fs::create_directory(OUTPUT_DATA_DIRECTORY);
-    fs::create_directory(INPUT_DATA_DIRECTORY);
-    fs::create_directory(SCRATCH_DIRECTORY);
-
-    switch(argc) {
-        case 2:
-//            ignore = system("rm ../output/scratch-*");
-            try{
-                spanners::scratch(stoi(argv[1]));
-            } catch(invalid_argument &ia) {
-                spanners::scratch(argv[1]);
-//                cout << "Invalid parameter '" << argv[1] << "'... exiting\n";
-//                return EXIT_FAILURE;
-            }
-            break;
-        case 3:
-//            ignore = system( "rm ../output/real-*");
-//            try{
-//                spanners::ExperimentFromConfigurationFile(stoi(argv[1]), argv[2]);
-//            } catch(invalid_argument &ia) {
-//                cout << "Invalid parameter '" << argv[1] << "'... exiting\n";
-//                return EXIT_FAILURE;
-//            }
-//            break;
-        case 0: // run an experiment with default args
-        case 5:
-            for (size_t arg = 1;
-                 arg < std::min(size_t(argc), experimentParameters.size() + 1);
-                 ++arg) {
-                try {
-                    experimentParameters[arg - 1] = stoul(argv[arg]);
-                    cout << "Parameter " << (arg - 1) << " = " << experimentParameters[arg - 1] << "\n";
-                }
-                catch (invalid_argument &ia) {
-                    cout << "Invalid parameter '" << arg << "'... exiting\n";
-                }
-            }
-//            ignore = system("rm ../output/exp-*");
-            spanners::SyntheticExperiment(experimentParameters[0],
-                                          experimentParameters[1],
-                                          experimentParameters[2],
-                                          experimentParameters[3]);
-            break;
-        default:
-            cout<<"Invalid arguments... try again."<<endl;
-            return EXIT_FAILURE;
+    for (size_t arg = 1;
+         arg < std::min(size_t(argc), experimentParameters.size() + 1);
+         ++arg) {
+        try {
+            experimentParameters[arg - 1] = stoul(argv[arg]);
+            cout << "Parameter " << (arg - 1) << " = " << experimentParameters[arg - 1] << "\n";
+        }
+        catch (invalid_argument &ia) {
+            cout << "Invalid parameter '" << arg << "'... exiting\n";
+        }
     }
+
+    spanners::SyntheticExperiment(experimentParameters[0],
+                                  experimentParameters[1],
+                                  experimentParameters[2],
+                                  experimentParameters[3]);
+
+
 
     return EXIT_SUCCESS;
 }

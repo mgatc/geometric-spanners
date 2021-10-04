@@ -32,6 +32,7 @@ namespace spanners {
         number_t degreeAvg;
         number_t stretchFactor;
         number_t lightness;
+        bool lite;
         //index_t numberOfIVs = 5;
         map<string,mixed_t> IV;
 
@@ -50,10 +51,10 @@ namespace spanners {
                                          runtime,
                                          spanners::degree(edgesBegin, edgesEnd ),
                                          spanners::degreeAvg(edgesBegin, edgesEnd ),
-                                         (lite ? 0 : USE_EXACT_STRETCH_FACTOR ?
-                StretchFactorDijkstraReduction( pointsBegin, pointsEnd, edgesBegin, edgesEnd )
-                : StretchFactorUsingHeuristic2( pointsBegin, pointsEnd, edgesBegin, edgesEnd )),
-                                         getLightness( pointsBegin, pointsEnd, edgesBegin, edgesEnd ) ) {}
+                                         (lite ? 0 :
+                StretchFactorDijkstraReduction( pointsBegin, pointsEnd, edgesBegin, edgesEnd )),
+                                         getLightness( pointsBegin, pointsEnd, edgesBegin, edgesEnd ),
+                                         lite ) {}
 
         BoundedDegreeSpannerResult(const DistributionType distribution,
                                    const Algorithm algorithm,
@@ -71,7 +72,8 @@ namespace spanners {
                   degree(std::move(degree)),
                   degreeAvg(degreeAvg),
                   stretchFactor(stretchFactor),
-                  lightness(lightness) {
+                  lightness(lightness),
+                  lite(lite) {
             unsigned i=0;
             IV.emplace(IV_NAMES[i++], runtime);
             IV.emplace(IV_NAMES[i++], degree);
@@ -82,7 +84,11 @@ namespace spanners {
         bool verify() {
             const auto degreeBound = static_cast<size_t>(stoi(DEGREE_BOUND_PER_ALGORITHM.at(algorithm)));
             const auto sfBound = static_cast<double>(stod(STRETCH_FACTOR_BOUND_PER_ALGORITHM.at(algorithm)));
-            return get<index_t>(degree) <= degreeBound && (stretchFactor < sfBound || abs(stretchFactor - sfBound) < EPSILON);
+
+            const bool sfMinimum = stretchFactor > 1.0 || abs(stretchFactor - 1.0) < EPSILON;
+            const bool sfMaximum = stretchFactor < sfBound || abs(stretchFactor - sfBound) < EPSILON;
+            const bool degreeMaximum = get<index_t>(degree) <= degreeBound;
+            return degreeMaximum && sfMaximum && sfMinimum;
         }
 
         template<class Printer>

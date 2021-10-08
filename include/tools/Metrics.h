@@ -198,7 +198,7 @@ using namespace std;
         }
         double t_max = 0.0;
 
-        #pragma omp parallel for reduction(max: t_max) shared(G) default(none) num_threads(numberOfThreads)
+        #pragma omp parallel for reduction(max: t_max) default(shared) num_threads(numberOfThreads)
         for (size_t i = 0; i < n; ++i) {
             // Euclidean distances
             vector<number_t> D(n);

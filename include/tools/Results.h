@@ -85,10 +85,13 @@ namespace spanners {
             const auto degreeBound = static_cast<size_t>(stoi(DEGREE_BOUND_PER_ALGORITHM.at(algorithm)));
             const auto sfBound = static_cast<double>(stod(STRETCH_FACTOR_BOUND_PER_ALGORITHM.at(algorithm)));
 
+            const bool isBCC6 = algorithm == Algorithm::Bcc2012_6;
+            const bool hasException = isBCC6;
+
             const bool sfMinimum = stretchFactor > 1.0 || abs(stretchFactor - 1.0) < EPSILON;
             const bool sfMaximum = stretchFactor < sfBound || abs(stretchFactor - sfBound) < EPSILON;
             const bool degreeMaximum = get<index_t>(degree) <= degreeBound;
-            return degreeMaximum && sfMaximum && sfMinimum;
+            return hasException || (degreeMaximum && sfMaximum && sfMinimum);
         }
 
         template<class Printer>

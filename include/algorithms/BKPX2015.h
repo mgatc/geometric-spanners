@@ -1,4 +1,3 @@
-//Needs optimizing currently testing.
 #ifndef UNF_SPANNERS_BKPX2015_H
 #define UNF_SPANNERS_BKPX2015_H
 
@@ -17,13 +16,8 @@
 #include <CGAL/algorithm.h> //
 #include <CGAL/boost/iterator/counting_iterator.hpp>
 #include <CGAL/circulator.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Segment_Delaunay_graph_Linf_2.h>
-#include <CGAL/Segment_Delaunay_graph_Linf_filtered_traits_2.h>
-#include <CGAL/Segment_Delaunay_graph_storage_traits_with_info_2.h>
 
-//#include "printers/GraphPrinter.h"
-//#include "tools/Metrics.h"
+#include "tools/DelaunayLinf.h"
 #include "tools/Utilities.h"
 
 namespace spanners {
@@ -32,54 +26,12 @@ namespace spanners {
 
     namespace bkpx2015 {
 
-        /*
-         * CGAL Objects
-         *
-         * CGAL::Segment_Delaunay_graph_storage_traits_with_info_2
-         * requires these functors, in their current form, although
-         * our use of SDG does not result in these functors actually
-         * being used by the SDG.
-         *
-         * They will cause "unused" warnings, but these are safe to
-         * ignore.
-         */
-
-        template<typename T>
-        struct InfoConvert {
-            typedef T Info;
-            typedef const Info &result_type;
-
-            inline const Info &operator()(const Info &info0, bool) const {
-                return info0; // just return the info of the supporting segment
-            }
-
-            inline const Info &operator()(const Info &info0, const Info &, bool) const {
-                return info0; // just return the info of the supporting segment
-            }
-        };
-
-        template<typename T>
-        struct InfoMerge {
-            typedef T Info;
-            typedef Info result_type;
-
-            inline Info operator()(const Info &info0, const Info &info1) const {
-                return info0; // just return the info of the supporting segment
-            }
-        };
-
-        typedef CGAL::Segment_Delaunay_graph_Linf_filtered_traits_2<K, CGAL::Field_with_sqrt_tag> Gt;
-        typedef CGAL::Segment_Delaunay_graph_storage_traits_with_info_2<Gt,
-                index_t,
-                InfoConvert<index_t>,
-                InfoMerge<index_t>> StorageTraits;
-        typedef CGAL::Segment_Delaunay_graph_Linf_2<Gt, StorageTraits> LinfDelaunayGraph;
-        typedef LinfDelaunayGraph::Site_2 Site;
+        typedef DelaunayLinf::Site_2 Site;
         //typedef Site::Point_2 Point;
-        typedef LinfDelaunayGraph::Vertex_circulator VertexCirculator;
-        //typedef LinfDelaunayGraph::Edge LinfEdge;
-        typedef LinfDelaunayGraph::Vertex_handle VertexHandle;
-        typedef LinfDelaunayGraph::Face_handle FaceHandle;
+        typedef DelaunayLinf::Vertex_circulator VertexCirculator;
+        //typedef DelaunayLinf::Edge LinfEdge;
+        typedef DelaunayLinf::Vertex_handle VertexHandle;
+        typedef DelaunayLinf::Face_handle FaceHandle;
 
         enum AnchorType {
             None, Weak, Strong, StrongSelected, WeakSelected, StartOddChain
@@ -95,7 +47,7 @@ namespace spanners {
 
         // inline functions required for bkpx2015
 
-        inline cone_t getSingleCone(const VertexHandle &u, const VertexHandle &v) {
+        cone_t getSingleCone(const VertexHandle &u, const VertexHandle &v) {
             const number_t alpha = PI / 2;
             const Point refPoint(u->site().point().x(), u->site().point().y() + 1);
 
@@ -106,17 +58,17 @@ namespace spanners {
         }
 
         // get the cone of v wrt u (where u is at the center)
-        inline cone_t getCone(const VertexHandle &u, const VertexHandle &v) {
+        cone_t getCone(const VertexHandle &u, const VertexHandle &v) {
             return u > v ? getSingleCone(u, v)
                          : (getSingleCone(v, u) + 2) % 4;
         }
 
         // add yao edges
-        inline void addYaoEdges(vector<YaoCones> &yaoEdges,
+        void addYaoEdges(vector<YaoCones> &yaoEdges,
                                 vector<FanCones> &pointFans,
                                 vector<NumYaoEdges> &yaoEdgeCount,
                                 const vector<VertexHandle> &handles,
-                                const LinfDelaunayGraph &DT) {
+                                const DelaunayLinf &DT) {
 
             VertexCirculator circ = DT.incident_vertices(handles[0]); // default value
             vector<number_t> distances(4);
@@ -209,12 +161,12 @@ namespace spanners {
         }
 
 
-        inline void determineAnchors(vector<AnchorCones> &anchorEdges,
+        void determineAnchors(vector<AnchorCones> &anchorEdges,
                                      vector<YaoCones> &yaoEdges,
                                      vector<FanCones> &pointFans,
                                      vector<NumYaoEdges> &yaoEdgeCount,
                                      vector<VertexHandle> &handles,
-                                     LinfDelaunayGraph &DT) {
+                                     DelaunayLinf &DT) {
 
             for (const auto &u : handles) {
 
@@ -419,7 +371,7 @@ namespace spanners {
             }
         } // function Complete
 
-        inline bool inEdgeList(const vector<SpannerEdge> &edgeList,
+        bool inEdgeList(const vector<SpannerEdge> &edgeList,
                                const VertexHandle u,
                                const VertexHandle v) {
 
@@ -429,13 +381,13 @@ namespace spanners {
         }
 
 
-        inline void degreeEightSpanner(vector<SpannerCones> &H8,
+        void degreeEightSpanner(vector<SpannerCones> &H8,
                                        vector<AnchorCones> &anchorEdges,
                                        vector<YaoCones> &yaoEdges,
                                        vector<FanCones> &pointFans,
                                        vector<NumYaoEdges> &yaoEdgeCount,
                                        vector<VertexHandle> &handles,
-                                       LinfDelaunayGraph &DT) {
+                                       DelaunayLinf &DT) {
             // put the edges conal vector
             for (const auto &w : handles) {
                 SpannerCones edges(4);
@@ -564,12 +516,12 @@ namespace spanners {
         }
 
 
-        inline void processSpanner(vector<SpannerCones> &H8,
+        void processSpanner(vector<SpannerCones> &H8,
                                    const vector<AnchorCones> &anchorEdges,
                                    const vector<YaoCones> &yaoEdges,
                                    const vector<FanCones> &pointFans,
                                    const vector<VertexHandle> &handles,
-                                   const LinfDelaunayGraph &DT) {
+                                   const DelaunayLinf &DT) {
 
             for (const auto &u : handles) {
 
@@ -770,7 +722,7 @@ namespace spanners {
         vector<Point> P(pointsBegin, pointsEnd);
         vector<size_t> index;
         spatialSort<K>(P, index);
-        LinfDelaunayGraph DT;
+        DelaunayLinf DT;
         Site site;
         index_t id = 0;
 

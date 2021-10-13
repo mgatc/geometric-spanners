@@ -27,12 +27,11 @@
 
 #include <omp.h>
 
-#include "tools/DelaunayGraph.h"
+#include "tools/DelaunayL2.h"
 #include "tools/FloydWarshall.h"
 #include "tools/StretchFactorExact.h"
 #include "tools/StretchFactorExperimental.h"
 #include "tools/Utilities.h"
-#include "printers/GraphPrinter.h"
 
 namespace spanners {
 

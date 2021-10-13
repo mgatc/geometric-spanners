@@ -1,5 +1,5 @@
-#ifndef SPANNERS_DELAUNAYGRAPH_H
-#define SPANNERS_DELAUNAYGRAPH_H
+#ifndef SPANNERS_DELAUNAYL2_H
+#define SPANNERS_DELAUNAYL2_H
 
 #include <iostream>
 #include <queue>
@@ -27,13 +27,13 @@ using namespace std;
 typedef CGAL::Triangulation_vertex_base_with_info_2<index_t, K> Vb;
 typedef CGAL::Triangulation_face_base_2<K>                      Fb;
 typedef CGAL::Triangulation_data_structure_2<Vb, Fb>            Tds;
-typedef CGAL::Delaunay_triangulation_2<K, Tds>                  DelaunayTriangulation;
+typedef CGAL::Delaunay_triangulation_2<K, Tds>                  DelaunayL2;
 
-typedef DelaunayTriangulation::Vertex_handle                   VertexHandle;
-typedef DelaunayTriangulation::Vertex_circulator               VertexCirculator;
-typedef DelaunayTriangulation::Face_handle                     FaceHandle;
-//typedef DelaunayTriangulation::Finite_vertices_iterator        Finite_vertices_iterator;
-//typedef DelaunayTriangulation::Finite_edges_iterator           Finite_edges_iterator;
+typedef DelaunayL2::Vertex_handle                   VertexHandle;
+typedef DelaunayL2::Vertex_circulator               VertexCirculator;
+typedef DelaunayL2::Face_handle                     FaceHandle;
+//typedef DelaunayL2::Finite_vertices_iterator        Finite_vertices_iterator;
+//typedef DelaunayL2::Finite_edges_iterator           Finite_edges_iterator;
 
 typedef set<VertexHandle> VertexSet;
 typedef unordered_set<VertexHandle> VertexHash;
@@ -60,7 +60,7 @@ class DelaunayGraph {
   public:
 
     /* Data */
-    DelaunayTriangulation m_DT;
+    DelaunayL2 m_DT;
     AdjacencyList m_E;
 
 
@@ -162,4 +162,4 @@ class DelaunayGraph {
 
 } // namespace spanners
 
-#endif // SPANNERS_DELAUNAYGRAPH_H
+#endif // SPANNERS_DELAUNAYL2_H

@@ -16,6 +16,36 @@ namespace spanners {
 
     using namespace std;
 
+    enum DistributionType {
+        DistributionTypeFirst=0,
+        UniformInsideSquare = DistributionTypeFirst,
+        UniformInsideDisc,
+        //UniformOnSquare,
+        UniformOnDisc,
+        NormalInsideSquare,
+        NormalClustersInsideSquare,
+        ContiguousGrid,
+        UniformRandomGrid,
+        UniformInsideAnnulus,
+        Galaxy,
+        DistributionTypeLast,
+        Real // special case, at the end to avoid using this value in synthetic experiments
+    };
+
+    vector<string> DISTRIBUTION_NAMES = {
+            "Uniform Inside Square",
+            "Uniform Inside Disc",
+            //"Uniform On Square",
+            "Uniform On Disc",
+            "Normal Inside Square",
+            "Normal Inside Square with Clusters",
+            "Contiguous Grid",
+            "Uniform Random Grid",
+            "Uniform Inside Annulus",
+            "Galaxy"
+            //"Real"
+    };
+
     class RandomPointGenerator_2 {
 
     public:

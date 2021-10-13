@@ -13,7 +13,7 @@
 #include <CGAL/circulator.h>
 
 #include "printers/GraphPrinter.h"
-#include "tools/DelaunayGraph.h"
+#include "tools/DelaunayL2.h"
 #include "tools/Metrics.h"
 #include "tools/Utilities.h"
 
@@ -98,8 +98,8 @@ namespace spanners {
         }
 
         tuple<index_t,index_t,index_t> getNeighborsInCone(const index_t p, const index_t q, const cone_t cone, const cone_t numCones,
-                                const DelaunayTriangulation& DT, const vector<VertexHandle>& handles, const vector<index_t>& closest,
-                                vector<index_t>& Q) {
+                                                          const DelaunayL2& DT, const vector<VertexHandle>& handles, const vector<index_t>& closest,
+                                                          vector<index_t>& Q) {
             const number_t ALPHA = 2 * PI / numCones;
 
             // Line 2: Build Q
@@ -150,7 +150,7 @@ namespace spanners {
  *  complains about ununsed parameters here, it is safe to ignore.
  */
         template<cone_t DEGREE, cone_t NUM_CONES = DEGREE + 1>
-        inline void wedge(const DelaunayTriangulation &DT,
+        inline void wedge(const DelaunayL2 &DT,
                           const vector<VertexHandle> &handles,
                           const vector<index_t> &closest,
                           const WedgeParameters &params,
@@ -159,7 +159,7 @@ namespace spanners {
         }
 
         template<>
-        inline void wedge<7>(const DelaunayTriangulation &DT,
+        inline void wedge<7>(const DelaunayL2 &DT,
                              const vector<VertexHandle> &handles,
                              const vector<index_t> &closest,
                              const WedgeParameters &params,
@@ -203,7 +203,7 @@ namespace spanners {
         }
 
         template<>
-        inline void wedge<6>(const DelaunayTriangulation &DT,
+        inline void wedge<6>(const DelaunayL2 &DT,
                              const vector<VertexHandle> &handles,
                              const vector<index_t> &closest,
                              const WedgeParameters &params,
@@ -385,7 +385,7 @@ namespace spanners {
         spatialSort<K>(P, index);
 
         //Step 1: Construct Delaunay triangulation
-        DelaunayTriangulation DT;
+        DelaunayL2 DT;
 
         //N is the number of vertices in the delaunay triangulation.
         index_t n = P.size();

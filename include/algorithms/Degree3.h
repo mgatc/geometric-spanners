@@ -86,7 +86,7 @@ namespace spanners {
         typedef LinfDelaunayGraph::Site_2 Site;
         typedef Site::Point_2 Point;
         typedef LinfDelaunayGraph::Vertex_circulator VertexCirculator;
-        //typedef LinfDelaunayGraph::Edge LinfEdge;
+        //typedef DelaunayLinf::Edge LinfEdge;
         typedef LinfDelaunayGraph::Vertex_handle VertexHandle;
         typedef LinfDelaunayGraph::Face_handle FaceHandle;
 
@@ -108,7 +108,7 @@ namespace spanners {
 
         // inline functions required for bkpx2015
 
-        inline cone_t getSingleCone(const VertexHandle &u, const VertexHandle &v) {
+        cone_t getSingleCone(const VertexHandle &u, const VertexHandle &v) {
             const number_t alpha = PI / 2;
             const Point refPoint(u->site().point().x(), u->site().point().y() + 1);
 
@@ -119,13 +119,13 @@ namespace spanners {
         }
 
         // get the cone of v wrt u (where u is at the center)
-        inline cone_t getCone(const VertexHandle &u, const VertexHandle &v) {
+        cone_t getCone(const VertexHandle &u, const VertexHandle &v) {
             return u > v ? getSingleCone(u, v)
                          : (getSingleCone(v, u) + 2) % 4;
         }
 
         // add yao edges
-        inline void addYaoEdges(vector<YaoCones> &yaoEdges,
+        void addYaoEdges(vector<YaoCones> &yaoEdges,
                                 vector<FanCones> &pointFans,
                                 vector<NumYaoEdges> &yaoEdgeCount,
                                 const vector<VertexHandle> &handles,
@@ -220,7 +220,7 @@ namespace spanners {
         }
 
 
-        inline void determineAnchors(vector<AnchorCones> &anchorEdges,
+        void determineAnchors(vector<AnchorCones> &anchorEdges,
                                      vector<YaoCones> &yaoEdges,
                                      vector<FanCones> &pointFans,
                                      vector<NumYaoEdges> &yaoEdgeCount,
@@ -420,7 +420,7 @@ namespace spanners {
             }
         } // function Complete
 
-        inline bool inEdgeList(const vector<SpannerEdge> &edgeList,
+        bool inEdgeList(const vector<SpannerEdge> &edgeList,
                                const VertexHandle u,
                                const VertexHandle v) {
 
@@ -430,7 +430,7 @@ namespace spanners {
         }
 
 
-        inline void degreeEightSpanner(vector<SpannerCones> &H8,
+        void degreeEightSpanner(vector<SpannerCones> &H8,
                                        vector<AnchorCones> &anchorEdges,
                                        vector<YaoCones> &yaoEdges,
                                        vector<FanCones> &pointFans,
@@ -565,7 +565,7 @@ namespace spanners {
         }
 
 
-        inline void processSpanner(vector<SpannerCones> &H8,
+        void processSpanner(vector<SpannerCones> &H8,
                                    const vector<AnchorCones> &anchorEdges,
                                    const vector<YaoCones> &yaoEdges,
                                    const vector<FanCones> &pointFans,

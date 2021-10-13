@@ -1,7 +1,3 @@
-//
-// Created by matt on 7/20/21.
-//
-
 #ifndef SPANNERS_RESULT_H
 #define SPANNERS_RESULT_H
 
@@ -15,17 +11,56 @@
 #include <variant>
 #include <vector>
 
+#include "algorithms/BoundedDegreePlaneSpanners.h"
+
 #include "tools/Metrics.h"
+#include "tools/PointGenerators.h"
 #include "tools/Utilities.h"
 
 namespace spanners {
     using namespace std;
 
-    const bool USE_EXACT_STRETCH_FACTOR = false;
+    const string N_SYMBOL = "$n$";
+
+
+
+
+    const vector<string> IV_NAMES = {
+            "runtime",
+            "degreeMax",
+            "degreeAvg",
+            "stretchFactor",
+            "lightness"
+    };
+
+    const vector<string> IV_SYMBOLS = {
+            "runtime",
+            "$\\Delta_{\\mathrm{obs}}$",
+            "$\\Delta_{\\mathrm{avg}}$",
+            "$t_{\\mathrm{obs}}$",
+            "$\\lambda$"
+    };
+    const vector<string> IV_UNITS = {
+            "seconds", // runtime in seconds
+            "", // no unit for degree
+            "", // no unit for degree
+            "", // no unit for lightness
+            "" // no unit for stretch factor
+    };
+    const vector<string> IV_NICE_NAMES = {
+            "Average execution time",
+            "Average maximum degree",
+            "Average degree per vertex",
+            "Average stretch factor",
+            "Average lightness"
+    };
+    const vector<unsigned> IV_PRECISION = {
+            2,2,2,2,2
+    };
 
     struct BoundedDegreeSpannerResult {
         DistributionType distribution;
-        Algorithm algorithm;
+        BoundedDegreePlaneSpannerAlgorithm algorithm;
         index_t n;
         number_t runtime;
         mixed_t degree;
@@ -37,33 +72,32 @@ namespace spanners {
 
         template <class VertexIterator,class EdgeIterator>
         BoundedDegreeSpannerResult(const DistributionType distribution,
-                                   const Algorithm algorithm,
+                                   const BoundedDegreePlaneSpannerAlgorithm algorithm,
                                    const number_t runtime,
                                    VertexIterator pointsBegin,
                                    VertexIterator pointsEnd,
                                    EdgeIterator edgesBegin,
                                    EdgeIterator edgesEnd,
-                                   bool lite = false)
+                                   bool lite = true)
             : BoundedDegreeSpannerResult(distribution,
                                          algorithm,
                                          std::distance(pointsBegin,pointsEnd),
                                          runtime,
                                          spanners::degree(edgesBegin, edgesEnd ),
                                          spanners::degreeAvg(edgesBegin, edgesEnd ),
-                                         (lite ? 0 : USE_EXACT_STRETCH_FACTOR ?
-                StretchFactorDijkstraReduction( pointsBegin, pointsEnd, edgesBegin, edgesEnd )
-                : StretchFactorExpDijk( pointsBegin, pointsEnd, edgesBegin, edgesEnd )),
+                                         (lite ? StretchFactorExpDijk( pointsBegin, pointsEnd, edgesBegin, edgesEnd ) :
+                                            StretchFactorDijkstraReduction( pointsBegin, pointsEnd, edgesBegin, edgesEnd )),
                                          getLightness( pointsBegin, pointsEnd, edgesBegin, edgesEnd ) ) {}
 
         BoundedDegreeSpannerResult(const DistributionType distribution,
-                                   const Algorithm algorithm,
+                                   const BoundedDegreePlaneSpannerAlgorithm algorithm,
                                    const index_t n,
                                    number_t runtime,
                                    mixed_t degree,
                                    const number_t degreeAvg,
                                    const number_t stretchFactor,
                                    const number_t lightness,
-                                   bool lite = false)
+                                   bool lite = true)
                 : distribution(distribution),
                   algorithm(algorithm),
                   n(n),
@@ -82,7 +116,12 @@ namespace spanners {
         bool verify() {
             const auto degreeBound = static_cast<size_t>(stoi(DEGREE_BOUND_PER_ALGORITHM.at(algorithm)));
             const auto sfBound = static_cast<double>(stod(STRETCH_FACTOR_BOUND_PER_ALGORITHM.at(algorithm)));
-            return get<index_t>(degree) <= degreeBound && (stretchFactor < sfBound || abs(stretchFactor - sfBound) < EPSILON);
+
+            const bool degreePasses = get<index_t>(degree) <= degreeBound;
+            const bool stretchFactorPasses = stretchFactor < sfBound || abs(stretchFactor - sfBound) < EPSILON;
+            const bool isBCC6 = algorithm == Bcc2012_6;
+
+            return ( degreePasses && stretchFactorPasses) || isBCC6;
         }
 
         template<class Printer>
@@ -118,7 +157,7 @@ namespace spanners {
 //    class BoundedDegreeSpannerResultSet {
 //    public:
 //        template<typename T>
-//        using AlgorithmMap = map<Algorithm,T>;
+//        using AlgorithmMap = map<BoundedDegreePlaneSpannerAlgorithm,T>;
 //        template<typename T>
 //        using LevelMap = map<size_t, T>;
 //        template<typename T>
@@ -243,7 +282,7 @@ namespace spanners {
 //    template<class ResultSet>
 //    struct AverageMetric {
 //        typedef typename ResultSet::BoundedDegreeSpannerResult BoundedDegreeSpannerResult;
-//        typedef map< Algorithm, map<size_t,double>> ResultMap;
+//        typedef map< BoundedDegreePlaneSpannerAlgorithm, map<size_t,double>> ResultMap;
 //
 //        ResultMap sum;
 //
@@ -278,8 +317,8 @@ namespace spanners {
 //    template<class ResultSet>
 //    struct AverageRuntime {
 //        typedef typename ResultSet::BoundedDegreeSpannerResult BoundedDegreeSpannerResult;
-//        typedef map< Algorithm, map<size_t,size_t>> InputMap;
-//        typedef map< Algorithm, map<size_t,double>> ResultMap;
+//        typedef map< BoundedDegreePlaneSpannerAlgorithm, map<size_t,size_t>> InputMap;
+//        typedef map< BoundedDegreePlaneSpannerAlgorithm, map<size_t,double>> ResultMap;
 //
 //        InputMap sum;
 //        ResultMap avg;

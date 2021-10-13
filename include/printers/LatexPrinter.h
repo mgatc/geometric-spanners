@@ -11,8 +11,6 @@
 #include <unordered_set>
 #include <utility>
 
-#include "Names.h"
-
 namespace spanners {
 
     const bool PRECOMPILE_SUBDOCUMENTS = true;

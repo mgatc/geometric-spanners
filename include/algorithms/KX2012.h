@@ -16,7 +16,7 @@
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 
 #include "printers/GraphPrinter.h"
-#include "tools/DelaunayGraph.h"
+#include "tools/DelaunayL2.h"
 #include "tools/Metrics.h"
 #include "tools/Utilities.h"
 
@@ -28,7 +28,7 @@ namespace spanners {
     namespace kx2012 {
 
         bool
-        selectEdge(//const DelaunayTriangulation &T,
+        selectEdge(//const DelaunayL2 &T,
                    index_tPairMap &E,
                    const VertexHandle& i,
                    const VertexHandle& j) {
@@ -60,7 +60,7 @@ namespace spanners {
         spatialSort<K>(P, index);
 
         //Step 1: Construct Delaunay triangulation
-        DelaunayTriangulation T;
+        DelaunayL2 T;
 
         //N is the number of vertices in the delaunay triangulation.
         index_t n = P.size();

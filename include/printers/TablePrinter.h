@@ -176,7 +176,7 @@ namespace spanners {
 //    }
 
 
-//    void getSingleIVColumn(size_t iv, Algorithm alg, const BoundedDegreeSpannerResultSet &results,  vector<string>& singleColumn) {
+//    void getSingleIVColumn(size_t iv, BoundedDegreePlaneSpannerAlgorithm alg, const BoundedDegreeSpannerResultSet &results,  vector<string>& singleColumn) {
 //        for( const auto& level : results.m_reducedSamples.at(alg) ) {
 //            ostringstream stream;
 //            stream << fixed;
@@ -234,10 +234,10 @@ namespace spanners {
 ////                    return "\\tiny{" + text + "}";
 ////            });
 //
-//            for(int alg=Algorithm::AlgorithmFirst;
-//                alg!=Algorithm::AlgorithmLast; ++alg ) {
+//            for(int alg=BoundedDegreePlaneSpannerAlgorithm::AlgorithmFirst;
+//                alg!=BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast; ++alg ) {
 //                vector<string> singleColumn;
-//                getSingleIVColumn( iv, Algorithm(alg), results, singleColumn);
+//                getSingleIVColumn( iv, BoundedDegreePlaneSpannerAlgorithm(alg), results, singleColumn);
 //                singleTabulater.addColumn(AlgorithmNamesSmallText[alg], singleColumn, i++);
 //            }
 //            singleTabulater.tabulate(TablePrinter::CellHighlightStyle::MaxInRow);
@@ -291,10 +291,10 @@ namespace spanners {
 ////                    return "\\tiny{" + text + "}";
 ////            });
 //
-//            for(int alg=Algorithm::AlgorithmFirst;
-//                alg!=Algorithm::AlgorithmLast; ++alg ) {
+//            for(int alg=BoundedDegreePlaneSpannerAlgorithm::AlgorithmFirst;
+//                alg!=BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast; ++alg ) {
 //                vector<string> singleColumn;
-//                getSingleIVColumn( iv, Algorithm(alg), results, singleColumn);
+//                getSingleIVColumn( iv, BoundedDegreePlaneSpannerAlgorithm(alg), results, singleColumn);
 //                singleTabulater.addColumn(AlgorithmNamesSmallText[alg], singleColumn, i++);
 //            }
 //            singleTabulater.tabulate(TablePrinter::CellHighlightStyle::MaxInRow);

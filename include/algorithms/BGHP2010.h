@@ -24,7 +24,7 @@
 //Project library
 #include "printers/GraphPrinter.h"
 #include "tools/Metrics.h"
-#include "tools/TDDelaunay.h"
+#include "tools/DelaunayTD.h"
 #include "tools/Utilities.h"
 
 
@@ -34,8 +34,7 @@ namespace spanners {
 
     namespace bghp2010 {
 
-        typedef HalfThetaTriangulation <K> TDDelaunayGraph;
-        typedef TDDelaunayGraph::VertexDescriptor VertexDescriptor;
+        typedef DelaunayTD::VertexDescriptor VertexDescriptor;
 
         enum EdgeLabel { // per cone
             FIRST = 1,
@@ -50,12 +49,12 @@ namespace spanners {
 
 //Finds the bisector length of a given edge.
         inline number_t bisectorLength(const Edge &e, const vector<Point> &H) {
-            cone_t cone = getCone(e.first, e.second, H);
+            cone_t cone = td::getCone(e.first, e.second, H);
 
 //    //assert(cone<6);
 //    //assert(e.first<H.size());
 
-            number_t xCord = H[e.first].x() - orthBisectorSlopes[cone];
+            number_t xCord = H[e.first].x() - td::orthBisectorSlopes[cone];
             number_t yCord = H[e.first].y() + 1;
 
             Point bisectorPoint(xCord, yCord);
@@ -126,7 +125,7 @@ namespace spanners {
             if (child == SIZE_T_MAX || grandparent == SIZE_T_MAX)
                 return false;
 
-            cone_t childCone = getCone(child, grandparent, P);
+            cone_t childCone = td::getCone(child, grandparent, P);
 
             if (childCone != i)
                 return false;
@@ -172,7 +171,7 @@ namespace spanners {
             for (index_t u = 0; u < n; ++u) {
                 for (auto v : ClosestEdges[u]) {
                     if (v != SIZE_T_MAX) {
-                        cone_t cone = getCone(u, v, P);
+                        cone_t cone = td::getCone(u, v, P);
                         auto pair1 = make_pair(u, cone),
                              pair2 = make_pair(v, (cone + 3) % 6);
                         Charges.try_emplace(pair1, 0);
@@ -205,7 +204,7 @@ namespace spanners {
                      ++it) {
                     auto e = *it;
                     auto v = D.target(e);
-                    cone_t posCone = getCone(u, v, P);
+                    cone_t posCone = td::getCone(u, v, P);
                     for (int j = -1; j <= 1; ++j) {
                         cone_t i = (posCone + 6 + j) % 6;
                         //size_t iLessOne = (i - 1 + 6) % 6;
@@ -314,7 +313,7 @@ namespace spanners {
 
         // Step 1
         const vector<Point> P(pointsBegin, pointsEnd);
-        TDDelaunayGraph D(P.begin(), P.end());
+        DelaunayTD D(P.begin(), P.end());
 
         {
             //Timer tim;

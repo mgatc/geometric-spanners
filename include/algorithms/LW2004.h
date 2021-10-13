@@ -7,7 +7,7 @@
 #include <vector> // vertex containers
 
 #include "printers/GraphPrinter.h"
-#include "tools/DelaunayGraph.h"
+#include "tools/DelaunayL2.h"
 #include "tools/Utilities.h"
 #include "tools/Metrics.h"
 
@@ -25,7 +25,7 @@ inline Edge createEdge(const size_t i, const size_t j )
     return make_pair( std::min(i,j), std::max(i,j) );
 }
 
-inline void createNewEdge(const DelaunayTriangulation& T,
+inline void createNewEdge(const DelaunayL2& T,
                           const vector<VertexHandle>& handles,
                           index_tPairSet &E,
                           const index_t i,
@@ -58,7 +58,7 @@ void LW2004( RandomAccessIterator pointsBegin,
     spatialSort<K>(P, index);
 
     //Step 1: Construct Delaunay triangulation
-    DelaunayTriangulation T;
+    DelaunayL2 T;
 
     //N is the number of vertices in the delaunay triangulation.
     const index_t n = P.size();

@@ -15,7 +15,7 @@
 //Project library
 #include "printers/GraphPrinter.h"
 #include "tools/Metrics.h"
-#include "tools/TDDelaunay.h"
+#include "tools/DelaunayTD.h"
 #include "tools/Utilities.h"
 
 
@@ -25,8 +25,7 @@ namespace spanners {
 
     namespace kpt2017 {
 
-        typedef HalfThetaTriangulation<K> TDDelaunayGraph;
-        typedef TDDelaunayGraph::VertexDescriptor VertexDescriptor;
+        typedef DelaunayTD::VertexDescriptor VertexDescriptor;
 
         enum Color {
             Blue, White
@@ -35,7 +34,7 @@ namespace spanners {
         //Compute max of getCone(p,q) and (getCone(q,p)+3)%6, is used to make sure cones are calculated correctly.
         inline Color getColor(const index_t p, const index_t q, const vector<Point> &H) {
             //cout<<"Getting color of "<<p<<"-"<<q<<endl;
-            return getCone(p, q, H) % 3 == 1 ? Blue : White;
+            return td::getCone(p, q, H) % 3 == 1 ? Blue : White;
         }
         inline Color getColor(const Edge &e, const vector<Point> &H) {
             return getColor(e.first, e.second, H);
@@ -46,16 +45,16 @@ namespace spanners {
             Negative = 1  // odd cones
         };
         inline ConePolarity getConePolarity(const index_t p, const index_t q, const vector<Point> &H) {
-            return ConePolarity(getCone(p, q, H) % 2);
+            return ConePolarity(td::getCone(p, q, H) % 2);
         }
 
         //Finds the bisector length of a given edge.
         number_t bisectorLength(const Edge &e, const vector<Point> &H) {
-            cone_t cone = getCone(e.first, e.second, H);
+            cone_t cone = td::getCone(e.first, e.second, H);
             //assert(cone < 6);
             //assert(e.first < H.size());
 
-            number_t xCord = H[e.first].x() - orthBisectorSlopes[cone];
+            number_t xCord = H[e.first].x() - td::orthBisectorSlopes[cone];
             number_t yCord = H[e.first].y() + 1;
 
             Point bisectorPoint(xCord, yCord);
@@ -92,7 +91,7 @@ namespace spanners {
                     auto e = *eit;
                     auto v = D.source(e);
 //            bool same_y = CGAL::compare_y(P[w], P[v]) == CGAL::EQUAL;
-                    cone_t cone = getCone(w, v, P);
+                    cone_t cone = td::getCone(w, v, P);
                     cone_t flattened_cone = cone / 2;
                     auto e_bisector_length = bisectorLength(make_pair(w, v), P);
                     if (e_bisector_length < localMinimumBisectors[flattened_cone]) {
@@ -411,7 +410,7 @@ namespace spanners {
 
         vector<Point> P(pointsBegin, pointsEnd);
 
-        TDDelaunayGraph D(P.begin(), P.end());
+        DelaunayTD D(P.begin(), P.end());
         {
             //Timer tim;
 
@@ -421,7 +420,7 @@ namespace spanners {
             auto AnchorComp = [&P](const Edge &lhs, const Edge &rhs) {
                 return lhs.second < rhs.second
                        || (lhs.second == rhs.second
-                           && getCone(lhs.second, lhs.first, P) < getCone(rhs.second, rhs.first, P));
+                           && td::getCone(lhs.second, lhs.first, P) < td::getCone(rhs.second, rhs.first, P));
             };
             // Step 1. add all blue anchors to A
             set<Edge, decltype(AnchorComp)> A(

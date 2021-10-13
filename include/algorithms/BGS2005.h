@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "printers/GraphPrinter.h"
-#include "tools/DelaunayGraph.h"
+#include "tools/DelaunayL2.h"
 #include "tools/Metrics.h"
 
 namespace spanners {

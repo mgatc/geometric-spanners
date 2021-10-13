@@ -50,7 +50,7 @@ namespace spanners {
         spatialSort<K>(P, index);
 
         //Step 1: Construct Delaunay triangulation
-        DelaunayTriangulation DT; //DelaunayTriangulationSFH DT(P, edgesOfDT);
+        DelaunayL2 DT; //DelaunayTriangulationSFH DT(P, edgesOfDT);
         /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
           (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
         FaceHandle hint;

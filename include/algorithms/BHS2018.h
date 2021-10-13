@@ -14,7 +14,7 @@
 #include <CGAL/Line_2.h>
 
 //Project library
-#include "tools/DelaunayGraph.h"
+#include "tools/DelaunayL2.h"
 #include "printers/GraphPrinter.h"
 #include "tools/Metrics.h"
 #include "tools/Utilities.h"
@@ -123,7 +123,7 @@ namespace spanners {
                                           const index_t p,
                                           const index_t r,
                                           const cone_t cone,
-                                          const DelaunayTriangulation &DT,
+                                          const DelaunayL2 &DT,
                                           const vector<VertexHandle> &H,
                                           const EdgeBisectorMap &B) {
 
@@ -163,7 +163,7 @@ namespace spanners {
         inline void addCanonical(vector<Edge> &E_CAN,
                                  const index_t p,
                                  const index_t r,
-                                 const DelaunayTriangulation &DT,
+                                 const DelaunayL2 &DT,
                                  const vector<VertexHandle> &H,
                                  const EdgeBisectorMap &B,
                                  PointConeMap &AL_e_a) {
@@ -283,7 +283,7 @@ namespace spanners {
         spatialSort<K>(P, index);
 
         //Step 1: Construct Delaunay triangulation
-        DelaunayTriangulation DT;
+        DelaunayL2 DT;
 
         //N is the number of vertices in the delaunay triangulation.
         size_t n = P.size();

@@ -13,18 +13,7 @@
 
 
 
-#include "algorithms/BCC2012.h"
-#include "algorithms/BGHP2010.h"
-#include "algorithms/BGS2005.h"
-#include "algorithms/BHS2018.h"
-#include "algorithms/BKPX2015.h"
-#include "algorithms/BSX2009.h"
-#include "algorithms/KPT2017.h"
-#include "algorithms/KPX2010.h"
-#include "algorithms/KX2012.h"
-#include "algorithms/LW2004.h"
-
-#include "Names.h"
+#include "algorithms/BoundedDegreePlaneSpanners.h"
 
 #include "printers/LatexPrinter.h"
 #include "printers/PgfplotPrinter.h"

@@ -10,7 +10,7 @@
 #include <CGAL/algorithm.h>
 
 //#include "printers/GraphPrinter.h"
-#include "tools/DelaunayGraph.h"
+#include "tools/DelaunayL2.h"
 #include "tools/Metrics.h"
 #include "tools/Utilities.h"
 
@@ -52,7 +52,7 @@ void KPX2010( RandomAccessIterator pointsBegin, RandomAccessIterator pointsEnd, 
     spatialSort<K>(P, index);
 
     //Step 1: Construct Delaunay triangulation
-    DelaunayTriangulation T;
+    DelaunayL2 T;
 
     //N is the number of vertices in the delaunay triangulation.
     size_t n = P.size();

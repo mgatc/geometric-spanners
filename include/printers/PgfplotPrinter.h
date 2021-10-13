@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "printers/GraphPrinter.h"
-#include "Names.h"
 #include "tools/Results.h"
 #include "tools/Utilities.h"
 
@@ -83,7 +82,7 @@ namespace spanners {
 //        void plotResults(const BoundedDegreeSpannerResultSet &results) {
 //            spanners::plotResults(results, this);
 //        }
-//        string addLegendEntry(Algorithm alg) {
+//        string addLegendEntry(BoundedDegreePlaneSpannerAlgorithm alg) {
 //            string legendEntry = "\\addlegendentry{\\textsc{\\tiny{"
 //                                 + ALGORITHM_NAMES[alg]
 //                                 + "}}}";
@@ -115,7 +114,7 @@ namespace spanners {
         string getLegend() {
             return "\\ref{planespannerlegend}\n\n";
         }
-        string getPlotHeader(Algorithm alg) {
+        string getPlotHeader(BoundedDegreePlaneSpannerAlgorithm alg) {
             string plotHeader = "\n\n\\addplot+";
             plotHeader += string("[solid")
                     + ",color="

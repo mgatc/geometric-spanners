@@ -6,7 +6,7 @@
 #include <vector> // vertex containers
 
 #include "printers/GraphPrinter.h"
-#include "tools/DelaunayGraph.h"
+#include "tools/DelaunayL2.h"
 #include "tools/Metrics.h"
 #include "tools/Utilities.h"
 
@@ -17,7 +17,7 @@ using namespace std;
 
 namespace bsx2009 {
 
-inline bool createNewEdge(//const DelaunayTriangulation& T,
+inline bool createNewEdge(//const DelaunayL2& T,
                           //const vector<VertexHandle>& handles,
                           index_tPairSet &E,
                           const index_t i, const index_t j //const index_t n, bool printLog = false
@@ -52,7 +52,7 @@ void BSX2009( RandomAccessIterator pointsBegin,
     spatialSort<K>(P, index);
 
     //Step 1: Construct Delaunay triangulation
-    DelaunayTriangulation T;
+    DelaunayL2 T;
 
     //N is the number of vertices in the delaunay triangulation.
     size_t n = P.size();

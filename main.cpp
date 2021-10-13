@@ -13,9 +13,9 @@ int main(int argc, char *argv[]) {
 
     // DEFAULT ARGUMENTS IN THE EVENT COMMAND LINE INPUT IS NOT GIVEN
     const size_t runs = 5;
-    const size_t n_begin = 5000;
-    const size_t n_end = 10000;
-    const size_t increment = 1000;
+    const size_t n_begin = 10000;
+    const size_t n_end = 100000;
+    const size_t increment = 10000;
 
     vector<size_t> experimentParameters = {
             runs, n_begin, n_end, increment
@@ -23,21 +23,13 @@ int main(int argc, char *argv[]) {
 
     size_t N = experimentParameters[0];
 
-    namespace fs = std::experimental::filesystem;
-    fs::remove_all(OUTPUT_DATA_DIRECTORY);
-    fs::create_directory(OUTPUT_DATA_DIRECTORY);
-    fs::create_directory(INPUT_DATA_DIRECTORY);
-    fs::create_directory(SCRATCH_DIRECTORY);
-
     switch(argc) {
         case 2:
-//            ignore = system("rm ../output/scratch-*");
             try{
                 spanners::scratch(stoi(argv[1]));
             } catch(invalid_argument &ia) {
+                // check extension for .xy or .csv
                 spanners::scratch(argv[1]);
-//                cout << "Invalid parameter '" << argv[1] << "'... exiting\n";
-//                return EXIT_FAILURE;
             }
             break;
         case 3:
@@ -51,6 +43,7 @@ int main(int argc, char *argv[]) {
 //            break;
         case 0: // run an experiment with default args
         case 5:
+        default:
             for (size_t arg = 1;
                  arg < std::min(size_t(argc), experimentParameters.size() + 1);
                  ++arg) {
@@ -62,15 +55,10 @@ int main(int argc, char *argv[]) {
                     cout << "Invalid parameter '" << arg << "'... exiting\n";
                 }
             }
-//            ignore = system("rm ../output/exp-*");
             spanners::SyntheticExperiment(experimentParameters[0],
                                           experimentParameters[1],
                                           experimentParameters[2],
                                           experimentParameters[3]);
-            break;
-        default:
-            cout<<"Invalid arguments... try again."<<endl;
-            return EXIT_FAILURE;
     }
 
     return EXIT_SUCCESS;

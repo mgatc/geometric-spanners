@@ -4,6 +4,10 @@ project(geometric_spanners)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-fopenmp -fexceptions -frounding-math -Wall -Wextra -Wno-unused")
 
+# UNCOMMENT FOR RELEASE
+#set(CMAKE_CXX_FLAGS "-O3 -fopenmp -fexceptions -frounding-math -Wall -Wextra -Wno-unused")
+#set(CMAKE_BUILD_TYPE Release)
+
 include_directories(/usr/include)
 include_directories(include)
 include_directories(/usr/lib/gcc/x86_64-linux-gnu/7/include)
@@ -33,6 +37,8 @@ add_executable(geometric_spanners
         include/tools/Metrics.h
         include/tools/PointGenerators.h
         include/tools/Results.h
+        include/tools/StretchFactorExact.h
+        include/tools/StretchFactorExperimental.h
         include/tools/TDDelaunay.h
         include/tools/Utilities.h
 
@@ -40,12 +46,10 @@ add_executable(geometric_spanners
         include/Names.h
         include/Scratch.h
 
-        main.cpp
-        include/algorithms/Degree3.h)
+        main.cpp)
 
 target_link_libraries(geometric_spanners gmp)
 target_link_libraries(geometric_spanners mpfr)
 target_link_libraries(geometric_spanners boost_system)
 target_link_libraries(geometric_spanners boost_thread)
-target_link_libraries(geometric_spanners CGAL)
 target_link_libraries(geometric_spanners stdc++fs)

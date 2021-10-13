@@ -52,7 +52,7 @@ namespace spanners {
                                          spanners::degreeAvg(edgesBegin, edgesEnd ),
                                          (lite ? 0 : USE_EXACT_STRETCH_FACTOR ?
                 StretchFactorDijkstraReduction( pointsBegin, pointsEnd, edgesBegin, edgesEnd )
-                : StretchFactorUsingHeuristic2( pointsBegin, pointsEnd, edgesBegin, edgesEnd )),
+                : StretchFactorExpDijk( pointsBegin, pointsEnd, edgesBegin, edgesEnd )),
                                          getLightness( pointsBegin, pointsEnd, edgesBegin, edgesEnd ) ) {}
 
         BoundedDegreeSpannerResult(const DistributionType distribution,

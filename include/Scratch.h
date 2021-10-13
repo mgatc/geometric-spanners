@@ -89,20 +89,20 @@ namespace spanners {
         number_t t_exp = INF;
         {
             Timer tim;
-            t_exp = StretchFactorUsingHeuristic2(points.begin(),points.end(),result.begin(),result.end());
+            t_exp = StretchFactorExpDijk(points.begin(),points.end(),result.begin(),result.end());
         }
         cout<<"  t="<<t_exp<<";\n";
 
-        GraphPrinter::OptionsList edgeOptions = { // active edge options
-                {"color",      tikz.activeEdgeColor},
-                {"line width", to_string(tikz.inactiveEdgeWidth/2)}
-        };
-
-        tikz.drawEdges(result.begin(),result.end(),points,edgeOptions);
-
-
-
-        tikz.drawVertices(points.begin(), points.end(), tikz.activeVertexOptions);
+//        GraphPrinter::OptionsList edgeOptions = { // active edge options
+//                {"color",      tikz.activeEdgeColor},
+//                {"line width", to_string(tikz.inactiveEdgeWidth/2)}
+//        };
+//
+//        tikz.drawEdges(result.begin(),result.end(),points,edgeOptions);
+//
+//
+//
+//        tikz.drawVertices(points.begin(), points.end(), tikz.activeVertexOptions);
 
 
 
@@ -117,7 +117,7 @@ namespace spanners {
 //        tikz.drawEdges(WorstPath.begin(),WorstPath.end(), points, tikz.highlightEdgeOptions);
 
 
-        tikz.display();
+//        tikz.display();
 
 
 
@@ -128,15 +128,6 @@ namespace spanners {
             t_exact = StretchFactorDijkstraReduction(points.begin(),points.end(),result.begin(),result.end());
         }
         cout<<"  t="<<t_exact<<";    ";
-
-        cout<< "ASTAR: time=";
-        number_t t_astar = INF;
-        {
-            Timer tim;
-            t_astar = StretchFactorUsingHeuristic(points.begin(),points.end(),result.begin(),result.end());
-        }
-        cout<<"  t="<<t_astar<<";    ";
-
 
 
 //        cout<<"\nWorst path: ";
@@ -153,9 +144,9 @@ namespace spanners {
         double width = 10;
 
         vector<Point> points;
-        points.reserve(n);
-        //generateRandomPoints(n, width / 2, back_inserter(points));
-        generatePointsInGalaxy(n,5,points);
+
+        RandomPointGenerator_2 generator;
+        generator.generatePointsInGalaxy(n,5,points);
 
         scratch(points);
     }

@@ -447,39 +447,37 @@ namespace spanners {
 
         // SET POINTS
         vector<Point> points;
+        RandomPointGenerator_2 generator;
 
         switch(dist) {
         case UniformInsideSquare:
-            generatePointsInsideASquare(n,width,points);
+            generator.generatePointsInsideASquare(n,width,points);
             break;
         case UniformInsideDisc:
-            generatePointsInsideADisc(n,width,points);
+            generator.generatePointsInsideADisc(n,width,points);
             break;
 //        case UniformOnSquare:
 //            generatePointsOnASquare(n,width,points);
 //            break;
         case UniformOnDisc:
-            generatePointsOnADisc(n,width,points);
+            generator.generatePointsOnADisc(n,width,points);
             break;
         case NormalInsideSquare:
-            generatePointsInsideASquareNormal(n,1,points);
+            generator.generatePointsInsideASquareNormal(n,1,points);
             break;
         case NormalClustersInsideSquare:
-            generatePointsInsideASquareNormal(n/pow(n,(1/3)),
+            generator.generatePointsInsideASquareNormal(n/pow(n,(1/3)),
                                               pow(n,(1/3)),points);
             break;
         case ContiguousGrid:
-            generateContiguousPointsOnAGrid(n, points);
+            generator.generateContiguousPointsOnAGrid(n, points);
             break;
         case UniformRandomGrid:
-            generateRandomPointsOnAGrid(n, points);
+            generator.generateRandomPointsOnAGrid(n, points);
             break;
         case UniformInsideAnnulus:
-            generateRandomInsideAnnulus(n, width, width*0.8, points);
+            generator.generateRandomInsideAnnulus(n, width, width*0.8, points);
             break;
-//        case Real:
-//            generatePointsFromFile(n, points);
-//            break;
         case DistributionTypeLast:
         default:
             assert(!"Invalid distribution type!");

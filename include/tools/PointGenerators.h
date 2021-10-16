@@ -21,7 +21,7 @@ namespace spanners {
         UniformInsideSquare = DistributionTypeFirst,
         UniformInsideDisc,
         //UniformOnSquare,
-        UniformOnDisc,
+        UniformOnCircle,
         NormalInsideSquare,
         NormalClustersInsideSquare,
         ContiguousGrid,
@@ -36,7 +36,7 @@ namespace spanners {
             "Uniform Inside Square",
             "Uniform Inside Disc",
             //"Uniform On Square",
-            "Uniform On Disc",
+            "Uniform On Circle",
             "Normal Inside Square",
             "Normal Inside Square with Clusters",
             "Contiguous Grid",
@@ -55,28 +55,42 @@ namespace spanners {
             typedef CGAL::Random_points_in_square_2<Point, CGAL::Creator_uniform_2<number_t, Point> > Point_generator;
             Point_generator g(sizeOfSquare / 2, m_randCgal);
 
-            std::copy_n(g, n, back_inserter(P));
+            unordered_set<Point> P_unique;
+            size_t remaining;
+            while((remaining = n - P_unique.size()) > 0)
+                std::copy_n(g, n, inserter(P_unique));
 
+            std::copy(P_unique.begin(),P_unique.end(),back_inserter(P));
             perturb(P, m_perturbationValue);
         }
         void generatePointsOnASquare(const index_t n, const double sizeOfSquare, vector<Point> &P) {
             typedef CGAL::Random_points_on_square_2<Point, CGAL::Creator_uniform_2<number_t, Point> > Point_generator;
             Point_generator g(sizeOfSquare / 2, m_randCgal);
 
-            std::copy_n(g, n, back_inserter(P));
+            unordered_set<Point> P_unique;
+            size_t remaining;
+            while((remaining = n - P_unique.size()) > 0)
+                std::copy_n(g, n, inserter(P_unique));
+
+            std::copy(P_unique.begin(),P_unique.end(),back_inserter(P));
         }
-        void generatePointsOnADisc(const index_t n, const double sizeOfSquare, vector<Point> &P) {
+        void generatePointsOnACircle(const index_t n, const double sizeOfSquare, vector<Point> &P) {
             typedef CGAL::Random_points_on_circle_2<Point, CGAL::Creator_uniform_2<number_t, Point> > Point_generator;
             Point_generator g(sizeOfSquare / 2, m_randCgal);
 
-            std::copy_n(g, n, back_inserter(P));
+            unordered_set<Point> P_unique;
+            size_t remaining;
+            while((remaining = n - P_unique.size()) > 0)
+                std::copy_n(g, n, inserter(P_unique));
+
+            std::copy(P_unique.begin(),P_unique.end(),back_inserter(P));
         }
 
         void generatePointsOnSpokes(const index_t n, const unsigned numSpokes, vector<Point> &P) {
             //srand(seed());
             double spokeAngle = 2*PI / numSpokes;
 
-            set<Point> P_unique;
+            unordered_set<Point> P_unique;
 
             while( P_unique.size() < n ) {
                 double distance = randFloat();
@@ -96,7 +110,7 @@ namespace spanners {
                     rotationFactor = 5,
                     perturbationValue = 0.02;
 
-            set<Point> P_unique;
+            unordered_set<Point> P_unique;
 
             while( P_unique.size() < n ) {
                 //for(index_t i=0; i<n; ++i) {
@@ -129,7 +143,12 @@ namespace spanners {
             typedef CGAL::Random_points_in_disc_2<Point, CGAL::Creator_uniform_2<number_t, Point> > Point_generator;
             Point_generator g(radiusOfDisk, m_randCgal);
 
-            std::copy_n(g, n, back_inserter(P));
+            unordered_set<Point> P_unique;
+            size_t remaining;
+            while((remaining = n - P_unique.size()) > 0)
+                std::copy_n(g, n, inserter(P_unique));
+
+            std::copy(P_unique.begin(),P_unique.end(),back_inserter(P));
             perturb(P, m_perturbationValue);
         }
 
@@ -150,6 +169,8 @@ namespace spanners {
             index_t shiftX, shiftY;
             unordered_set<pair<index_t, index_t>, boost::hash<pair<index_t, index_t>>> S;
 
+            unordered_set<Point> P_unique;
+
             for (index_t c = 0; c < numberOfClusters; c++) {
                 if (c != 0) {
                     shiftX = shiftDistribution(rngShift) % (20 * numberOfClusters);
@@ -167,9 +188,11 @@ namespace spanners {
                 for (index_t i = 0; i < pointsInACuster; i++) {
                     double x = distributionX(generatorX) + shiftX;
                     double y = distributionY(generatorY) + shiftY;
-                    P.emplace_back(K::Point_2(x, y));
+                    P_unique.emplace(x, y);
                 }
             }
+
+            std::copy(P_unique.begin(),P_unique.end(),back_inserter(P));
             perturb(P, m_perturbationValue);
         }
 
@@ -180,6 +203,8 @@ namespace spanners {
 
         void generateRandomPointsOnAGrid(const index_t n, vector<Point> &P) {
             unordered_set<pair<int, int>, boost::hash<pair<int, int>>> S;
+            unordered_set<Point> P_unique;
+
             std::mt19937 rngX(seed());
             std::mt19937 rngY(seed());
             std::uniform_int_distribution xDistribution(0, (int) ceil(0.7 * n)), yDistribution(0, (int) ceil(0.7 * n));
@@ -190,17 +215,19 @@ namespace spanners {
                 int x = xDistribution(rngX), y = yDistribution(rngY);
 
                 if (S.find(make_pair(x, y)) == S.end()) {
-                    P.emplace_back(x, y);
+                    P_unique.emplace(x, y);
                     S.insert(make_pair(x, y));
                     count++;
                 }
             }
 
+            std::copy(P_unique.begin(),P_unique.end(),back_inserter(P));
             perturb(P, m_perturbationValue);
         }
 
         void generateRandomInsideAnnulus(const index_t n, const double r2, const double r1, vector<Point> &P) {
             assert(r2 > r1);
+            unordered_set<Point> P_unique;
 
             std::default_random_engine generator(seed());
             std::uniform_real_distribution<double> distributionR(r1, r2), distributionT(0, 1);
@@ -208,9 +235,10 @@ namespace spanners {
             for (index_t i = 0; i < n; i++) {
                 double t = 2 * M_PI * distributionT(generator);
                 double r = distributionR(generator);
-                P.emplace_back(r * cos(t), r * sin(t));
+                P_unique.emplace(r * cos(t), r * sin(t));
             }
 
+            std::copy(P_unique.begin(),P_unique.end(),back_inserter(P));
             perturb(P, m_perturbationValue);
         }
 

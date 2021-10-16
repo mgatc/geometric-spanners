@@ -161,6 +161,34 @@ namespace spanners {
     }
 
 
+    string removeSpaces(string str) {
+        str.erase(std::remove_if(str.begin(), str.end(),
+                                 [](auto x) { return std::isspace(x); }), str.end());
+        return str;
+    }
+    std::vector<std::string> getNextLineAndSplitIntoTokens(std::istream& str)
+    {
+        // https://stackoverflow.com/a/1120224
+        std::vector<std::string>   result;
+        std::string                line;
+        std::getline(str,line);
+
+        std::stringstream          lineStream(line);
+        std::string                cell;
+
+        while(std::getline(lineStream,cell, ','))
+        {
+            result.push_back(cell);
+        }
+        // This checks for a trailing comma with no data after it.
+//        if (!lineStream && cell.empty())
+//        {
+//            // If there was a trailing comma then add an empty element.
+//            result.push_back("");
+//        }
+        return result;
+    }
+
 
     template< class OutputIterator >
     void readPointsFromFile( OutputIterator out, const string& outputFileName, const size_t n=SIZE_T_MAX ) {

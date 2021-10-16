@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 
+#include "Analysis.h"
 #include "Experiment.h"
 #include "Scratch.h"
 
@@ -29,7 +30,22 @@ int main(int argc, char *argv[]) {
                 spanners::scratch(stoi(argv[1]));
             } catch(invalid_argument &ia) {
                 // check extension for .xy or .csv
-                spanners::scratch(argv[1]);
+                string filename = argv[1];
+                auto dotIndex = filename.rfind('.');
+
+                if(dotIndex == string::npos) {
+                    cout<<"INVALID FILE TYPE\n\n";
+                    return EXIT_FAILURE;
+                }
+
+                string extension = filename.substr(dotIndex+1);
+
+                if(extension == "csv") {
+                    BoundedDegreePlaneSpannerAnalysis(filename);
+                } else if(extension == "xy") {
+                    scratch(filename);
+                }
+
             }
             break;
         case 3:

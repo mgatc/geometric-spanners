@@ -141,6 +141,9 @@ namespace spanners {
         void addRawText(const string& text) {
             m_body.content += text;
         }
+        void clearpage() {
+            addRawText("\\clearpage\n\n");
+        }
         void addLatexComment( const string& comment ) {
             addRawText("% " + comment + "\n");
         }

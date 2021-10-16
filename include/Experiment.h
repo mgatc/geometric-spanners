@@ -169,8 +169,8 @@ namespace spanners {
 //        case UniformOnSquare:
 //            pointGenerator.generatePointsOnASquare(n,width,points);
 //            break;
-            case UniformOnDisc:
-                pointGenerator.generatePointsOnADisc(n,width,points);
+            case UniformOnCircle:
+                pointGenerator.generatePointsOnACircle(n, width, points);
                 break;
             case NormalInsideSquare:
                 pointGenerator.generatePointsInsideASquareNormal(n,1,points);
@@ -258,10 +258,11 @@ namespace spanners {
         expOut << "distribution" << DELIMITER
                << "n" << DELIMITER
                << "spannerAlg" << DELIMITER
-               << "stretchFactorExact" << DELIMITER
-               << "runtimeExact" << DELIMITER
-               << "stretchFactorExperimental" << DELIMITER
-               << "runtimeExperimental" << DELIMITER
+               << "runtime" << DELIMITER
+               << "degree" << DELIMITER
+               << "degreeAvg" << DELIMITER
+               << "stretchFactor" << DELIMITER
+               << "lightness" << DELIMITER
                << "\n";
 
         SyntheticExperimentDistributionLoop(numRuns,n_start,n_end,increment,expOut);

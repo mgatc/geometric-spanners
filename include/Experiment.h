@@ -24,30 +24,31 @@
 
 namespace spanners {
 
-    const bool USE_EXACT_STRETCH_FACTOR = false;
+    const bool USE_EXPERIMENTAL_STRETCH_FACTOR = true;
 
+    const string INPUT_DATA_DIRECTORY = "../input/";
     const string OUTPUT_DATA_DIRECTORY = "./";
     const string OUTPUT_EXTENSION = ".csv";
     const string DELIMITER = ",";
 
     using std::to_string;
 
-    const bool PRINT_GEOMETRY = false;
-    const bool PRINT_PGFPLOTS = true;
-    const bool PRINT_IV_TABLES = false;
-    const bool PRINT_SUMMARY_TABLES = false;
-
     const number_t INPUT_WIDTH = 1000;
 
-    size_t WRONG_COUNT_DIJKSTRA = 0;
-    number_t WRONG_AMOUNT_DIJKSTRA = 0.0;
     size_t EXP_COUNT = 0;
 
+
+    /**
+     * Constructs on spanner using the given algorithm on the given point set,
+     * then writes the result to the expOut file. Due to its
+     */
+    template <typename DistributionSubTypeEnum>
     void BoundedDegreePlaneSpannerTest(const BoundedDegreePlaneSpannerAlgorithm algorithm,
-                                       const DistributionType dist,
+                                       const DistributionType distributionType,
+                                       const DistributionSubTypeEnum distribution,
                                        const vector<Point> &points,
                                        ofstream& expOut,
-                                       bool lite = false) {
+                                       bool measureStretchFactor = true) {
         using namespace std;
 
         list<pair<size_t, size_t> > spanner;
@@ -100,10 +101,11 @@ namespace spanners {
 
         number_t runtime = tim.stop();
 
-        BoundedDegreeSpannerResult result(dist, algorithm, runtime,
+        BoundedDegreeSpannerResult result(distributionType, distribution,
+                                          algorithm, runtime,
                                           points.begin(), points.end(),
                                           spanner.begin(), spanner.end(),
-                                          !USE_EXACT_STRETCH_FACTOR);
+                                          !measureStretchFactor);
         cout << result;
         expOut << result;
 
@@ -131,9 +133,12 @@ namespace spanners {
     }
 
     // An experiment featuring multiple graphs on the same point set
-    void BoundedDegreePlaneSpannerAlgorithmLoop(const DistributionType dist,
+    template<typename DistributionSubTypeEnum>
+    void BoundedDegreePlaneSpannerAlgorithmLoop(const DistributionType distributionType,
+                                                const DistributionSubTypeEnum distribution,
                                                 const vector<Point>& points,
-                                                ofstream& expOut ){
+                                                ofstream& expOut,
+                                                const bool measureStretchFactor = true ){
         const size_t n = points.size();
 
         cout<< "Starting trial..."<<endl<<endl;
@@ -143,7 +148,7 @@ namespace spanners {
             auto algorithm = static_cast<BoundedDegreePlaneSpannerAlgorithm>(alg);
             list<pair<size_t, size_t> > spanner;
 
-            BoundedDegreePlaneSpannerTest(algorithm, dist, points, expOut);
+            BoundedDegreePlaneSpannerTest(algorithm, distributionType, distribution, points, expOut, measureStretchFactor);
 
             ++EXP_COUNT;
         }
@@ -153,11 +158,11 @@ namespace spanners {
     }
 
     // Generates a random point set from the given distribution and runs an experiment with multiple graphs on the point set
-    void generateRandomPointSet(const DistributionType dist,
+    void generateRandomPointSet(const SyntheticDistribution dist,
                                 const size_t n,
                                 const double width,
                                 vector<Point>& points){
-        RandomPointGenerator_2 pointGenerator;
+        PointGenerator_2 pointGenerator;
 
         switch(dist) {
             case UniformInsideSquare:
@@ -190,7 +195,7 @@ namespace spanners {
             case Galaxy:
                 pointGenerator.generatePointsInGalaxy(n, 5, points);
                 break;
-            case DistributionTypeLast:
+            case SyntheticDistributionLast:
             default:
                 assert(!"Invalid distribution type!");
         }
@@ -198,23 +203,23 @@ namespace spanners {
     }
 
     // An experiment from n_start to n_end with a single distribution
-    void SyntheticExperimentInputSizeLoop(DistributionType dist, size_t n_start, size_t n_end, size_t increment, ofstream& expOut) {
+    void SyntheticExperimentInputSizeLoop(SyntheticDistribution dist, size_t n_start, size_t n_end, size_t increment, ofstream& expOut) {
         for (size_t n = n_start; n <= n_end; n += increment) {
             // SET POINTS
             vector<Point> points;
             generateRandomPointSet(dist, n, INPUT_WIDTH, points);
-            BoundedDegreePlaneSpannerAlgorithmLoop(dist,points,expOut);
+            BoundedDegreePlaneSpannerAlgorithmLoop(DistributionType::Synthetic,dist,points,expOut);
         }
     }
 
     // An experiment of numRuns trials for a single distribution
-    void SyntheticExperimentRepetitionLoop(DistributionType dist,
+    void SyntheticExperimentRepetitionLoop(SyntheticDistribution dist,
                                            size_t numRuns,
                                            size_t n_start,
                                            size_t n_end,
                                            size_t increment,
                                            ofstream& expOut ) {
-        string distName = DISTRIBUTION_NAMES.at(dist);
+        string distName = SYNTHETIC_DISTRIBUTION_NAMES.at(dist);
         srand(0);
         for (size_t trial = 0; trial < numRuns; ++trial) {
             cout<< "Starting trial "<< trial << " of "<<distName<<"\n\n";
@@ -230,9 +235,9 @@ namespace spanners {
                                              ofstream& expOut) {
         const number_t width = 10;
 
-        for( int dist=DistributionTypeFirst; dist!=DistributionTypeLast; ++dist ) {
-            auto distributionType = static_cast<DistributionType>(dist);
-            string distName = DISTRIBUTION_NAMES.at(dist);
+        for(int dist=SyntheticDistributionFirst; dist != SyntheticDistributionLast; ++dist ) {
+            auto distributionType = static_cast<SyntheticDistribution>(dist);
+            string distName = SYNTHETIC_DISTRIBUTION_NAMES.at(dist);
 
             cout<< "!! Starting  "<< distName << "distribution trials !!\n"<<endl<<endl;
 
@@ -247,8 +252,10 @@ namespace spanners {
     void SyntheticExperiment(size_t numRuns, size_t n_start, size_t n_end, size_t increment ) {
 
         // get unix timestamp to use as experiment file name
+        string filename = "synthetic-";
         auto time = std::time(nullptr);
-        auto filename = to_string(time) + OUTPUT_EXTENSION;
+        filename += std::to_string(time)
+                    + OUTPUT_EXTENSION;
 
         ofstream expOut;
         expOut.open(filename,ios_base::out);
@@ -272,78 +279,58 @@ namespace spanners {
 
 
 
-//    void ExperimentFromConfigurationFile(size_t numRuns, string configFilename) {
-//        boost::property_tree::ptree config;
-//
-//        using std::string, std::vector;
-//        namespace pt = boost::property_tree;
-//        pt::read_xml(configFilename,config);
-//
-////        auto& result = RESULTS.emplace(configFilename, BoundedDegreeSpannerResultSet()).first->second;
-//
-//        map<index_t, string> PointsetNames;
-//
-//
-//        for( auto pointset : config.get_child("pointsets") ) {
-//
-//            string filename = pointset.second.get_child("filename").data(),
-//                   fullname = INPUT_DATA_DIRECTORY + filename,
-//                   filenameNoExtension = filename;
-//            boost::erase_all(filenameNoExtension, ".xy");
-//
-//            std::ifstream in(fullname);
-//
-//            if (in.is_open()) {
-//                vector<Point> P;
-//                number_t x,y;
-//                while ( in >> x >> y ) {
-//                    P.emplace_back(x,y);
-//                }
-//                in.close();
-//
-//                const index_t n = P.size();
-//                string pointsetName = pointset.second.get_child("nicename").data();
-//                PointsetNames.emplace(n,pointsetName);
-//
-//                cout<< "!! Starting  "<< pointsetName << " trials !!\n"
-//                    << "Added "<< n <<" points from file\n"
-//
-//                    << "NOTE: one extra trial is performed because trial 0 will be thrown out!"<<endl<<endl;
-//
-//                for (size_t trial = 0; trial <= numRuns; ++trial) {
-//                    SingleTrial(P, DistributionType::Real, trial!=1);
-//                }
-//
-//                cout<< "!! Ending  "<< pointsetName << " trials !!\n"
-//                    << "-------------------------------------------"<<endl;
-//
-//            } else {
-//                cout<<"Error opening file!\n";
-//            }
-//
-//        }
-//
-////        result.computeStatistics(true);
-//
-//        string experimentName = configFilename;
-//        boost::erase_all(experimentName, ".xml");
-//        boost::erase_all(experimentName, ".");
-//        boost::erase_all(experimentName, "/");
-//
-//        if (PRINT_PGFPLOTS) {
-//            plotResults(experimentName, result, &latex);
-//        }
-//        if(PRINT_IV_TABLES){
-//            tabulateIVsFromConfigExperiment(experimentName, result, PointsetNames, &latex);
-//        }
-//        if (PRINT_SUMMARY_TABLES) {
-//            tabulateSummaryResults(experimentName, result, &latex);
-//        }
-//
-//        if (PRINT_GEOMETRY || PRINT_PGFPLOTS || PRINT_SUMMARY_TABLES || PRINT_IV_TABLES)
-//            latex.display();
-//
-//    }
+    void ExperimentFromConfigurationFile(string configFilename, size_t numRuns=1) {
+        using std::string, std::vector;
+        namespace pt = boost::property_tree;
+
+        configFilename = INPUT_DATA_DIRECTORY + configFilename;
+        pt::ptree config;
+        pt::read_xml(configFilename,config);
+
+
+        // get unix timestamp to use as experiment file name
+        auto time = std::time(nullptr);
+        string filename = "real-";
+        filename += std::to_string(time)
+                 + OUTPUT_EXTENSION;
+
+        ofstream expOut;
+        expOut.open(filename,ios_base::out);
+
+        if(!expOut.is_open()) assert(!"ERROR OPENING OUTPUT FILE\n\n");
+
+        unsigned pointSetID = 0;
+
+        for( auto pointset : config.get_child("pointsets") ) {
+
+            string filename = pointset.second.get_child("filename").data(),
+                   fullname = INPUT_DATA_DIRECTORY + filename,
+                   filenameNoExtension = filename;
+            boost::erase_all(filenameNoExtension, ".xy");
+
+            vector<Point> P;
+            PointGenerator_2 generator;
+            generator.loadFromFile(fullname,P);
+            const index_t n = P.size();
+
+            string pointsetName = pointset.second.get_child("nicename").data();
+            REAL_POINTSET_NAMES.push_back(pointsetName);
+
+            cout<< "!! Starting  "<< pointsetName << " trials !!\n"
+                << "Added "<< n <<" points from file\n\n";
+
+            for (size_t trial = 0; trial < numRuns; ++trial) {
+                BoundedDegreePlaneSpannerAlgorithmLoop(DistributionType::Real, pointSetID, P, expOut, trial == 0);
+            }
+
+            cout<< "!! Ending  "<< pointsetName << " trials !!\n"
+                << "-------------------------------------------"<<endl;
+
+            pointSetID++;
+        }
+
+        expOut.close();
+    }
 
 
 } // spanners

@@ -17,8 +17,15 @@ namespace spanners {
     using namespace std;
 
     enum DistributionType {
-        DistributionTypeFirst=0,
-        UniformInsideSquare = DistributionTypeFirst,
+        DistributionTypeFirst = 0,
+        Synthetic = DistributionTypeFirst,
+        Real,
+        DistributionTypeLast
+    };
+
+    enum SyntheticDistribution {
+        SyntheticDistributionFirst=0,
+        UniformInsideSquare = SyntheticDistributionFirst,
         UniformInsideDisc,
         //UniformOnSquare,
         //UniformOnCircle,
@@ -28,11 +35,10 @@ namespace spanners {
         UniformRandomGrid,
         UniformInsideAnnulus,
         Galaxy,
-        DistributionTypeLast,
-        Real // special case, at the end to avoid using this value in synthetic experiments
+        SyntheticDistributionLast
     };
 
-    vector<string> DISTRIBUTION_NAMES = {
+    const vector<string> SYNTHETIC_DISTRIBUTION_NAMES = {
             "Uniform Inside Square",
             "Uniform Inside Disc",
             //"Uniform On Square",
@@ -42,14 +48,30 @@ namespace spanners {
             "Contiguous Grid",
             "Uniform Random Grid",
             "Uniform Inside Annulus",
-            "Galaxy"
-            //"Real"
+            "Galaxy",
+            "Real"
     };
+    vector<string> REAL_POINTSET_NAMES;
 
-    class RandomPointGenerator_2 {
+    class PointGenerator_2 {
 
     public:
-        RandomPointGenerator_2() : m_randCgal(std::rand()) {}
+        PointGenerator_2() : m_randCgal(std::rand()) {}
+
+        void loadFromFile(const string filename, vector<Point> &P) {
+            std::ifstream in(filename);
+
+            if (!in.is_open())
+                cout<<"Error opening file!\n";
+
+            number_t x,y;
+            while ( in >> x >> y ) {
+                P.emplace_back(x,y);
+            }
+            in.close();
+
+            perturb(P, m_perturbationValue);
+        }
 
         void generatePointsInsideASquare(const index_t n, const double sizeOfSquare, vector<Point> &P) {
             typedef CGAL::Random_points_in_square_2<Point, CGAL::Creator_uniform_2<number_t, Point> > Point_generator;

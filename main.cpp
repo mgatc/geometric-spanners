@@ -1,5 +1,4 @@
 #include <algorithm> // min
-#include <experimental/filesystem>
 #include <iostream>
 #include <vector>
 
@@ -13,6 +12,7 @@ using namespace spanners;
 int main(int argc, char *argv[]) {
 
     // DEFAULT ARGUMENTS IN THE EVENT COMMAND LINE INPUT IS NOT GIVEN
+    const string defaultFilename = "ExperimentPointsets.xml";
     const size_t runs = 5;
     const size_t n_begin = 10000;
     const size_t n_end = 100000;
@@ -22,44 +22,31 @@ int main(int argc, char *argv[]) {
             runs, n_begin, n_end, increment
     };
 
-    size_t N = experimentParameters[0];
+    size_t n = (argc > 2 ? stoi(argv[2]) : 5);
+    string filename = argc > 1 ? argv[1] : defaultFilename;
+    auto dotIndex = filename.rfind('.');
+    string extension = filename.substr(dotIndex+1);
+
+    const int NO_ARGS_AMOUNT = 1;
 
     switch(argc) {
         case 2:
-            try{
-                spanners::scratch(stoi(argv[1]));
-            } catch(invalid_argument &ia) {
-                // check extension for .xy or .csv
-                string filename = argv[1];
-                auto dotIndex = filename.rfind('.');
-
-                if(dotIndex == string::npos) {
-                    cout<<"INVALID FILE TYPE\n\n";
-                    return EXIT_FAILURE;
-                }
-
-                string extension = filename.substr(dotIndex+1);
-
-                if(extension == "csv") {
-                    BoundedDegreePlaneSpannerAnalysis(filename);
-                } else if(extension == "xy") {
-                    scratch(filename);
-                }
-
+            if(extension == "csv") {
+                BoundedDegreePlaneSpannerAnalysis(filename);
+                break;
+            } else if(extension == "xy") {
+                scratch(filename);
+                break;
+            }
+            [[fallthrough]];
+        case NO_ARGS_AMOUNT: // run a real-world experiment with default args
+        case 3:
+            if(extension == "xml") {
+                ExperimentFromConfigurationFile(filename,n);
             }
             break;
-        case 3:
-//            ignore = system( "rm ../output/real-*");
-//            try{
-//                spanners::ExperimentFromConfigurationFile(stoi(argv[1]), argv[2]);
-//            } catch(invalid_argument &ia) {
-//                cout << "Invalid parameter '" << argv[1] << "'... exiting\n";
-//                return EXIT_FAILURE;
-//            }
-//            break;
-        case 0: // run an experiment with default args
-        case 5:
-        default:
+//        case NO_ARGS_AMOUNT: // run a synthetic experiment with default args
+        case 5: // run a synthetic experiment with given args
             for (size_t arg = 1;
                  arg < std::min(size_t(argc), experimentParameters.size() + 1);
                  ++arg) {
@@ -71,11 +58,14 @@ int main(int argc, char *argv[]) {
                     cout << "Invalid parameter '" << arg << "'... exiting\n";
                 }
             }
-            spanners::SyntheticExperiment(experimentParameters[0],
-                                          experimentParameters[1],
-                                          experimentParameters[2],
-                                          experimentParameters[3]);
+            SyntheticExperiment(experimentParameters[0],
+                                experimentParameters[1],
+                                experimentParameters[2],
+                                experimentParameters[3]);
+            break;
+        default:
+            cout<<"Invalid arguments... try again."<<endl;
+            return EXIT_FAILURE;
     }
-
     return EXIT_SUCCESS;
 }

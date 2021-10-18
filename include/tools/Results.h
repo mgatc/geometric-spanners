@@ -185,8 +185,10 @@ namespace spanners {
         return os;
     }
 
+    template <typename DistributionSubTypeEnum>
     struct BoundedDegreeSpannerResult {
-        DistributionType distribution;
+        DistributionType distributionType;
+        DistributionSubTypeEnum distribution;
         BoundedDegreePlaneSpannerAlgorithm algorithm;
         index_t n;
         number_t runtime;
@@ -200,27 +202,27 @@ namespace spanners {
         BoundedDegreeSpannerResult() = default;
 
         template<class VertexIterator, class EdgeIterator>
-        BoundedDegreeSpannerResult(const DistributionType distribution,
+        BoundedDegreeSpannerResult(const DistributionType distributionType,
+                                   const DistributionSubTypeEnum distribution,
                                    const BoundedDegreePlaneSpannerAlgorithm algorithm,
                                    const number_t runtime,
                                    VertexIterator pointsBegin,
                                    VertexIterator pointsEnd,
                                    EdgeIterator edgesBegin,
                                    EdgeIterator edgesEnd,
-                                   bool lite = true)
-                : BoundedDegreeSpannerResult(distribution,
+                                   bool lite = false)
+                : BoundedDegreeSpannerResult(distributionType,
+                                             distribution,
                                              algorithm,
                                              std::distance(pointsBegin, pointsEnd),
                                              runtime,
-                                             spanners::degree(edgesBegin, edgesEnd),
-                                             spanners::degreeAvg(edgesBegin, edgesEnd),
-                                             (lite ? StretchFactorExpDijk(pointsBegin, pointsEnd, edgesBegin, edgesEnd)
-                                                   :
-                                              StretchFactorDijkstraReduction(pointsBegin, pointsEnd, edgesBegin,
-                                                                             edgesEnd)),
-                                             getLightness(pointsBegin, pointsEnd, edgesBegin, edgesEnd)) {}
+                                             (lite ? 0 : spanners::degree(edgesBegin, edgesEnd)),
+                                             (lite ? 0.0 : spanners::degreeAvg(edgesBegin, edgesEnd)),
+                                             (lite ? 0.0 : StretchFactorExpDijk(pointsBegin, pointsEnd, edgesBegin, edgesEnd)),
+                                             (lite ? 0.0 : getLightness(pointsBegin, pointsEnd, edgesBegin, edgesEnd)) ) {}
 
-        BoundedDegreeSpannerResult(const DistributionType distribution,
+        BoundedDegreeSpannerResult(const DistributionType distributionType,
+                                   const DistributionSubTypeEnum distribution,
                                    const BoundedDegreePlaneSpannerAlgorithm algorithm,
                                    const index_t n,
                                    number_t runtime,
@@ -228,8 +230,9 @@ namespace spanners {
                                    const number_t degreeAvg,
                                    const number_t stretchFactor,
                                    const number_t lightness,
-                                   bool lite = true)
-                : distribution(distribution),
+                                   bool lite = false)
+                : distributionType(distributionType),
+                  distribution(distribution),
                   algorithm(algorithm),
                   n(n),
                   runtime(runtime),
@@ -274,7 +277,10 @@ namespace spanners {
 
         //friend ostream& operator<<(ostream &os, const BoundedDegreeSpannerResult &result);
         friend ostream &operator<<(ostream &os, const BoundedDegreeSpannerResult &result) {
-            os << DISTRIBUTION_NAMES.at(result.distribution) << ","
+            const vector<string>& distributionNames = result.distributionType == DistributionType::Synthetic ?
+                    SYNTHETIC_DISTRIBUTION_NAMES : REAL_POINTSET_NAMES;
+
+            os << distributionNames.at(result.distribution) << ","
                << result.n << ","
                << ALGORITHM_NAMES.at(result.algorithm) << ","
                << result.runtime << ","

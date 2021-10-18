@@ -134,7 +134,7 @@ namespace spanners {
 
         vector<Point> points;
 
-        RandomPointGenerator_2 generator;
+        PointGenerator_2 generator;
         generator.generatePointsInGalaxy(n,5,points);
 
         scratch(points);

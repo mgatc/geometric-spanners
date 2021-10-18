@@ -137,8 +137,8 @@ public:
             {"line width", to_string(inactiveEdgeWidth)}, // additional border width
     };
 
-    explicit GraphPrinter(string filename, string documentType = "standalone")
-            : TikzPrinter(filename,documentType){
+    explicit GraphPrinter(string directory, string filename, string documentType = "standalone")
+            : TikzPrinter(directory,filename,documentType){
 
         // setup graph environment
         string tikzOptions = getTikzOptions();

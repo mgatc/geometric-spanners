@@ -23,8 +23,8 @@ namespace spanners {
             MaxInRow
         };
 
-        TablePrinter(string filename, string documentType = "standalone")
-        : LatexPrinter(filename,documentType){
+        TablePrinter(string directory, string filename, string documentType = "standalone")
+        : LatexPrinter(directory,filename,documentType){
             defineColor(TABLE_COLOR_1);
             defineColor(TABLE_COLOR_2);
         }
@@ -186,7 +186,7 @@ namespace spanners {
 //        }
 //    }
 //
-//    void tabulateIVsFromConfigExperiment(const string& dist, const BoundedDegreeSpannerResultSet &results, const map<index_t,string>& PointsetNames, LatexPrinter* addToPrinter) {
+//    void tabulateIVsFromConfigExperiment(const string& dist, const BoundedDegreeSpannerResultSet &results, const map<index_t,string>& REAL_POINTSET_NAMES, LatexPrinter* addToPrinter) {
 //        // Create table names
 //        vector<string> tableNames;
 //        transform(PGFPLOT_NAMES.begin(),
@@ -205,8 +205,8 @@ namespace spanners {
 //            nLevels.push_back(std::to_string(level.first));
 //        }
 //        //}
-//        vector<string> names(PointsetNames.size());
-//        transform(PointsetNames.begin(),PointsetNames.end(),names.begin(),
+//        vector<string> names(REAL_POINTSET_NAMES.size());
+//        transform(REAL_POINTSET_NAMES.begin(),REAL_POINTSET_NAMES.end(),names.begin(),
 //            [](const auto& entry) -> string {
 //                return "\\text{" + entry.second + "}";
 //        });

@@ -177,6 +177,14 @@ namespace analysis {
         }
     }
 
+    void
+    tabulateDistributionSpannerReducedLevels(DistributionSpannerReducedLevelResultMap& spannerSummary, LatexPrinter& document) {
+        for(auto distribution : spannerSummary) {
+            string tableName +=
+            TablePrinter table("document-table-")
+        }
+    }
+
 //    void
 //    tabulateDistributionSummaries(const DistributionLevelResultMap& spannerLevel,
 //                                  const DistributionReducedLevelResultMap& summary,
@@ -261,7 +269,7 @@ void BoundedDegreePlaneSpannerAnalysis(const string filename) {
     DistributionSpannerLevelResultMap spannerResults = getDistributionSpannerLevelResults(raw);
     DistributionSpannerReducedLevelResultMap spannerSummary = calculateDistributionSpannerSummaries(spannerResults);
     plotDistributionSpannerReducedLevels(spannerSummary,document);
-    //tabulateDistributionSpannerReducedLevels(spannerResults,spannerSummary,document);
+    tabulateDistributionSpannerReducedLevels(spannerSummary,document);
 
     cout<<"Finding average per level for all distributions..."<<endl;
     document.addRawText("\\section{Overall Summary}\n\n");

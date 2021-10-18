@@ -90,7 +90,7 @@ namespace spanners {
         vector<pair<index_t, index_t>> worstPairOfG(numberOfThreads);
         vector<unordered_map<index_t,number_t>> tracker(n);
 
-//#pragma omp parallel for num_threads(numberOfThreads)
+#pragma omp parallel for num_threads(numberOfThreads)
         for( index_t u = 0; u < n; u++ ) {
 
             // BFS variables /////////////////////////

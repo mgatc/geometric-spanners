@@ -169,9 +169,9 @@ namespace spanners {
 //        case UniformOnSquare:
 //            pointGenerator.generatePointsOnASquare(n,width,points);
 //            break;
-            case UniformOnCircle:
-                pointGenerator.generatePointsOnACircle(n, width, points);
-                break;
+//            case UniformOnCircle:
+//                pointGenerator.generatePointsOnACircle(n, width, points);
+//                break;
             case NormalInsideSquare:
                 pointGenerator.generatePointsInsideASquareNormal(n,1,points);
                 break;

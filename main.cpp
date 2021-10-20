@@ -39,13 +39,13 @@ int main(int argc, char *argv[]) {
                 break;
             }
             [[fallthrough]];
-        case NO_ARGS_AMOUNT: // run a real-world experiment with default args
+//        case NO_ARGS_AMOUNT: // run a real-world experiment with default args
         case 3:
             if(extension == "xml") {
                 ExperimentFromConfigurationFile(filename,n);
             }
             break;
-//        case NO_ARGS_AMOUNT: // run a synthetic experiment with default args
+        case NO_ARGS_AMOUNT: // run a synthetic experiment with default args
         case 5: // run a synthetic experiment with given args
             for (size_t arg = 1;
                  arg < std::min(size_t(argc), experimentParameters.size() + 1);

@@ -203,12 +203,14 @@ namespace spanners {
     }
 
     // An experiment from n_start to n_end with a single distribution
-    void SyntheticExperimentInputSizeLoop(SyntheticDistribution dist, size_t n_start, size_t n_end, size_t increment, ofstream& expOut) {
+    void SyntheticExperimentInputSizeLoop(SyntheticDistribution dist,
+                                          size_t n_start, size_t n_end, size_t increment, ofstream& expOut, bool measureStretchFactor = true ) {
+        measureStretchFactor = false;
         for (size_t n = n_start; n <= n_end; n += increment) {
             // SET POINTS
             vector<Point> points;
             generateRandomPointSet(dist, n, INPUT_WIDTH, points);
-            BoundedDegreePlaneSpannerAlgorithmLoop(DistributionType::Synthetic,dist,points,expOut);
+            BoundedDegreePlaneSpannerAlgorithmLoop(DistributionType::Synthetic,dist,points,expOut,measureStretchFactor);
         }
     }
 

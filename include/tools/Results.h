@@ -198,6 +198,7 @@ namespace spanners {
         number_t lightness;
         //index_t numberOfIVs = 5;
         map<string, mixed_t> IV;
+        bool lite;
 
         BoundedDegreeSpannerResult() = default;
 
@@ -219,7 +220,8 @@ namespace spanners {
                                              (lite ? 0 : spanners::degree(edgesBegin, edgesEnd)),
                                              (lite ? 0.0 : spanners::degreeAvg(edgesBegin, edgesEnd)),
                                              (lite ? 0.0 : StretchFactorExpDijk(pointsBegin, pointsEnd, edgesBegin, edgesEnd)),
-                                             (lite ? 0.0 : getLightness(pointsBegin, pointsEnd, edgesBegin, edgesEnd)) ) {}
+                                             (lite ? 0.0 : getLightness(pointsBegin, pointsEnd, edgesBegin, edgesEnd)),
+                                             lite) {}
 
         BoundedDegreeSpannerResult(const DistributionType distributionType,
                                    const DistributionSubTypeEnum distribution,
@@ -239,7 +241,8 @@ namespace spanners {
                   degree(std::move(degree)),
                   degreeAvg(degreeAvg),
                   stretchFactor(stretchFactor),
-                  lightness(lightness) {
+                  lightness(lightness),
+                  lite(lite) {
             unsigned i = 0;
             IV.emplace(IV_NAMES[i++], runtime);
             IV.emplace(IV_NAMES[i++], degree);
@@ -256,7 +259,7 @@ namespace spanners {
             const bool stretchFactorPasses = stretchFactor < sfBound || abs(stretchFactor - sfBound) < EPSILON;
             const bool isBCC6 = algorithm == Bcc2012_6;
 
-            return (degreePasses && stretchFactorPasses) || isBCC6;
+            return lite || (degreePasses && stretchFactorPasses) || isBCC6;
         }
 
         template<class Printer>

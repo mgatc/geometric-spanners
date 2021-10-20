@@ -31,9 +31,9 @@ namespace spanners {
         Bhs2018,
         Bcc2012_7,
         Bcc2012_6,
-        Bghp2010,
+//        Bghp2010,
         Bkpx2015,
-        Kpt2017,
+//        Kpt2017,
 //        Degree3,
         AlgorithmLast
     };
@@ -47,20 +47,22 @@ namespace spanners {
             "BHS2018",
             "BCC2012-7",
             "BCC2012-6",
-            "BGHP2010",
-            "BKPX2015",
-            "KPT2017"
+//            "BGHP2010",
+            "BKPX2015"
+//            "KPT2017"
             //    "Degree3"
     };
     const string DEGREE_BOUND_SYMBOL = "$\\Delta_{\\mathrm{ub}}$";
     const vector<string> DEGREE_BOUND_PER_ALGORITHM = {
             "27",
-            "23", "17", "14", "11", "8", "7", "6", "6", "4", "4"//,"3"
+            "23", "17", "14", "11", "8", "7", "6", //"6",
+            "4", //"4"//,"3"
     };
     const string STRETCH_FACTOR_BOUND_SYMBOL = "$t_{\\mathrm{ub}}$";
     const vector<string> STRETCH_FACTOR_BOUND_PER_ALGORITHM = {
             "8.27",
-            "6.44", "23.6", "2.92", "2.86", "4.41", "11.7", "81.7", "6", "157", "20"//,"INF"
+            "6.44", "23.6", "2.92", "2.86", "4.41", "11.7", "81.7", //"6",
+            "157" //"20"//,"INF"
     };
 
 } // spanners

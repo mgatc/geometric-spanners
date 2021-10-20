@@ -14,9 +14,9 @@ int main(int argc, char *argv[]) {
     // DEFAULT ARGUMENTS IN THE EVENT COMMAND LINE INPUT IS NOT GIVEN
     const string defaultFilename = "ExperimentPointsets.xml";
     const size_t runs = 5;
-    const size_t n_begin = 10000;
-    const size_t n_end = 100000;
-    const size_t increment = 10000;
+    const size_t n_begin = 100000;
+    const size_t n_end = 1000000;
+    const size_t increment = 100000;
 
     vector<size_t> experimentParameters = {
             runs, n_begin, n_end, increment

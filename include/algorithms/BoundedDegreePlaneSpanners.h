@@ -37,7 +37,7 @@ namespace spanners {
 //        Degree3,
         AlgorithmLast
     };
-    const string ALGORITHM_SYMBOL = "BoundedDegreePlaneSpannerAlgorithm";
+    const string ALGORITHM_SYMBOL = "Algorithm";
     const vector<string> ALGORITHM_NAMES = {
             "BGS2005",
             "LW2004",

@@ -165,7 +165,7 @@ namespace spanners {
                 lhs.runtime / realDivisor,
                 lhs.degree,
                 lhs.degreeAvg / realDivisor,
-                lhs.avgDegreePerPoint / realDivisor,
+                lhs.avgDegreePerPoint,
                 lhs.stretchFactor / realDivisor,
                 lhs.lightness / realDivisor
         };

@@ -26,15 +26,14 @@ namespace spanners {
             }
         }
         template<class PlotMap>
-        void plotAxis(const string& iv, const PlotMap& results, const double xScale = 1.0, const double yScale = 1.0) {
+        void plotAxis(const string& iv, const PlotMap& results, const double xScale = 1.0, const double yScale = 1.0, const bool first = true) {
 
             assert(abs(xScale) > 0 && abs(yScale) > 0);
 
             // build axis header
-            string allPlotsOfAxis = getAxisHeader(iv, results, xScale);
+            string allPlotsOfAxis = getAxisHeader(iv, results, xScale,first);
 
             // build the plot
-
             for( const auto& spanner : results ) {
                 string ivPlot = getPlotHeader();//
                 for( const auto& level : spanner.second ) {
@@ -48,21 +47,37 @@ namespace spanners {
                     ivPlot += entry;
                 }
                 ivPlot += getPlotFooter();
-                //ivPlot += addLegendEntry(spanner.first);
+                if(first) {
+                    ivPlot += getLegendEntry(spanner.first);
+                }
                 allPlotsOfAxis += ivPlot;
             }
             allPlotsOfAxis += getAxisFooter(m_filename);
             m_body.content = allPlotsOfAxis;
         }
-        string addLegendEntry(const string& legendText) {
+        string getLegend() {
+            string refOpener("\\ref{");
+            string refText = removeSpaces(m_caption) + "-legend";
+            string refCloser("}");
+
+            return refOpener + refText + refCloser;
+        }
+        string getLegendEntry(const string& legendText) {
             string legendEntry = "\\addlegendentry{\\texttt{"
                                  + legendText
                                  + "}}";
             return legendEntry;
         }
         string getPlotHeader() {
-            string plotHeader = "\n\n\\addplot+";
-            plotHeader += string("[solid");
+            string plotHeader = "\n\n\\addplot[";
+
+            auto color = getColor();
+
+            plotHeader += string("solid,")
+                        + "mark=" + getMark()+ ","
+                        + "mark color=" + color + ","
+                        + "color=" + color;
+
             plotHeader += "]";
             plotHeader += " coordinates {\n";
             return plotHeader;
@@ -72,12 +87,15 @@ namespace spanners {
             return plotFooter;
         }
         template<class ResultMap>
-        string getAxisHeader(const string& iv, const ResultMap& results, const double xScale = 1.0) {
+        string getAxisHeader(const string& iv, const ResultMap& results, const double xScale = 1.0, bool first = true) {
 
             string axisHeader = string("")
                                 + "\\begin{axis}[";
             if(!m_caption.empty()) axisHeader += "title={" + m_caption + "},";
+            string legendText = "legend to name=" + removeSpaces(m_caption)
+                    + "-legend, legend columns={3}, ";
             axisHeader += string("scaled ticks=false,grid=major,xlabel={$n$ (in thousands)}, ")
+                          + (first ? legendText : "")
                           + "xtick={";
             string xTicks = "";
 
@@ -99,7 +117,7 @@ namespace spanners {
             double margin = std::abs(firstTickScaled - secondTickScaled);
             double xMin = firstTickScaled - margin;
             double xMax = lastTickScaled + margin;
-            
+
             axisHeader += xTicks
                           + "\n}"
                           + ", ylabel near ticks,ylabel={"
@@ -113,18 +131,6 @@ namespace spanners {
             axisHeader += "]"; // close axis environment attributes
             return axisHeader;
         }
-
-        string getLegendAxisAttributes() {
-
-            string legend = string(",\nlegend columns=3,\n")
-                            + "legend to name=planespannerlegend,\n"
-                            + "legend entries={";
-            for(auto name : ALGORITHM_NAMES)
-                legend += name + ",";
-            legend += "}";
-
-            return legend;
-        }
         string getAxisFooter(const string& plotLabel = "") {
             string axisFooter("\n\n\\end{axis}\n\n");
             axisFooter += "\\label{plots:"
@@ -132,19 +138,35 @@ namespace spanners {
                           + "}";
             return axisFooter;
         }
-
-        // Palette generated using https://coolors.co/
-        inline const static vector<string> Colors = {
-                "f94144","f3722c","f8961e",
-                "f9844a","f9c74f","90be6d",
-                "43aa8b","4d908e","577590",
-                "277da1","360568"
-        };
-
-        inline const static vector<string> Marks = {
+    private:
+        vector<string> Marks = {
                 //"otimes*",
                 "*", "triangle*", "square*",  "pentagon*", "diamond*"
         };
+        size_t m_markIndex = 0; // a valid index of Marks
+        string getMark() {
+            auto currentMark = m_markIndex;
+            m_markIndex = (m_markIndex+1) % Marks.size();
+            return Marks.at(currentMark);
+        }
+
+        // Palette generated using https://coolors.co/
+        vector<string> Colors = {
+            "acf39d",
+            "333745",
+            "e85f5c",
+            "9cfffa",
+            "773344",
+            "e3b5a4",
+            "d9d0de"
+        };
+        size_t m_colorIndex = 0;
+        string getColor() {
+            auto currentColor = m_colorIndex;
+            m_colorIndex = (m_colorIndex+1) % Colors.size();
+            return Colors.at(currentColor);
+        }
+
 
     }; // class PgfplotsPrinter
 

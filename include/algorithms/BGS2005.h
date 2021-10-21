@@ -401,7 +401,7 @@ void forEachNeighbor(const DelaunayGraph& SG,
     unordered_set< SplitVertex, VertexHandleHash, VertexHandleComparator > N_E;
 
     for( auto k: E.at( v_i.key ) ) {
-        if( k != v_i.s_1 ) { // don'stretchFactor enter s_1
+        if( k != v_i.s_1 ) { // don't enter s_1
             N_E.insert( V.at(k) );
         }
     }
@@ -510,7 +510,7 @@ void addForwardEdges(const DelaunayGraph& SG,
                 add.at(i) = v_n;   // if the saved vertex is infinite or longer than the current one, update
         }
         // p is guaranteed to be already added or will be added immediately after this step
-        // so don'stretchFactor set isInZone to true until after it's passed
+        // so don't set isInZone to true until after it's passed
         if (v_n.key == p.key) isInZone = true;
     });
 

@@ -83,15 +83,15 @@ namespace spanners {
             case BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
                 BHS2018(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
-//            case BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
-//                BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
-//                break;
+            case BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
+                BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
             case BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
                 BKPX2015(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
-//            case BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
-//                KPT2017(pointsBegin, pointsEnd, back_inserter(spanner));
-//                break;
+            case BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
+                KPT2017(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
 //            case BoundedDegreePlaneSpannerAlgorithm::Degree3:
 //                DEG3(pointsBegin, pointsEnd, back_inserter(spanner));
 //                break;
@@ -270,7 +270,7 @@ namespace spanners {
                << "runtime" << DELIMITER
                << "degree" << DELIMITER
                << "degreeAvg" << DELIMITER
-               << "stretchFactor" << DELIMITER
+               << "avgStretchFactor" << DELIMITER
                << "lightness" << DELIMITER
                << "\n";
 

@@ -27,7 +27,7 @@ namespace spanners {
             "runtime",
             "degreeMax",
             "degreeAvg",
-            "stretchFactor",
+            "avgStretchFactor",
             "lightness"
     };
 
@@ -95,7 +95,8 @@ namespace spanners {
         size_t degree = 0;
         double degreeAvg = 0.0;
         double avgDegreePerPoint = 0.0;
-        double stretchFactor = 0.0;
+        double avgStretchFactor = 0.0;
+        double maxStretchFactor = 0.0;
         double lightness = 0.0;
 
         BoundedDegreeSpannerAnalysisResult() = default;
@@ -107,9 +108,10 @@ namespace spanners {
             n = getLevel(row);
             runtime = getRuntime(row);
             degree = getDegree(row);
-            degreeAvg = getDegree(row);
+            degreeAvg = degree;
             avgDegreePerPoint = getAvgDegreePerPoint(row);
-            stretchFactor = getStretchFactor(row);
+            avgStretchFactor = getStretchFactor(row);
+            maxStretchFactor = avgStretchFactor;
             lightness = getLightness(row);
         }
 
@@ -123,8 +125,10 @@ namespace spanners {
                 return degreeAvg;
             else if(ivName == "avgDegreePerPoint")
                 return avgDegreePerPoint;
-            else if(ivName == "stretchFactor")
-                return stretchFactor;
+            else if(ivName == "avgStretchFactor")
+                return avgStretchFactor;
+            else if(ivName == "maxStretchFactor")
+                return maxStretchFactor;
             else if(ivName == "lightness")
                 return lightness;
 
@@ -150,7 +154,8 @@ namespace spanners {
                 std::max(lhs.degree, rhs.degree),
                 lhs.degreeAvg + rhs.degreeAvg,
                 (lhs.avgDegreePerPoint * lhs.n + rhs.avgDegreePerPoint * rhs.n)/(lhs.n+rhs.n),
-                lhs.stretchFactor + rhs.stretchFactor,
+                lhs.avgStretchFactor + rhs.avgStretchFactor,
+                std::max(lhs.maxStretchFactor, rhs.maxStretchFactor),
                 lhs.lightness + rhs.lightness
         };
     }
@@ -166,7 +171,8 @@ namespace spanners {
                 lhs.degree,
                 lhs.degreeAvg / realDivisor,
                 lhs.avgDegreePerPoint,
-                lhs.stretchFactor / realDivisor,
+                lhs.avgStretchFactor / realDivisor,
+                lhs.maxStretchFactor,
                 lhs.lightness / realDivisor
         };
     }
@@ -180,7 +186,8 @@ namespace spanners {
            << result.degree << ","
            << result.degreeAvg << ","
            << result.avgDegreePerPoint << ","
-           << result.stretchFactor << ","
+           << result.avgStretchFactor << ","
+           << result.maxStretchFactor << ","
            << result.lightness;
         return os;
     }
@@ -270,7 +277,7 @@ namespace spanners {
                              + "$\\Delta = "
                              + spanners::to_string(degree);
 
-            caption += ",\\ stretchFactor = "
+            caption += ",\\ avgStretchFactor = "
                        + to_string(stretchFactor);
 
             caption += "$";

@@ -44,8 +44,9 @@ namespace analysis {
     typedef map<distribution_t, ReducedLevelResultMap> DistributionReducedLevelResultMap;
     typedef map<distribution_t, result_t> DistributionSummaryMap;
 
-    const std::array<string,6> ANALYSIS_IVs = {
-        "runtime","degree","degreeAvg","avgDegreePerPoint","stretchFactor","lightness"
+    const std::array<string,7> ANALYSIS_IVs = {
+        "runtime","degree","degreeAvg","avgDegreePerPoint",
+        "avgStretchFactor","maxStretchFactor","lightness"
     };
 
     vector<vector<string>>
@@ -68,10 +69,10 @@ namespace analysis {
     getDistributionSpannerLevelResults(const vector<vector<string>> &rawResults) {
         DistributionSpannerLevelResultMap results;
         auto headerRow = rawResults.front();
-        bool first = true;
+        bool isFirst = true;
         for (auto row : rawResults) {
-            if(first) {
-                first = false;
+            if(isFirst) {
+                isFirst = false;
                 continue;
             }
             result_t result;
@@ -109,29 +110,84 @@ namespace analysis {
     void
     plot(const DistributionSpannerReducedLevelResultMap &summary,
          LatexPrinter &document) {
-        bool first = true;
-        for (const auto &distribution : summary) {
-            for(const auto &iv : ANALYSIS_IVs) {
-                string caption = distribution.first;
+
+        bool isFirst = true;
+        for(const auto& distributionName : SYNTHETIC_DISTRIBUTION_NAMES ) {
+            if(summary.find(distributionName)!=summary.end()){
+                const auto &distribution = summary.at(distributionName);
+                set<string> tdPlots = {"BGHP2010", "KPT2017"};
+                // split distribution.second into containers for td and non-td
+                SpannerReducedLevelResultMap tdResults, nontdResults;
+                copy_if(distribution.begin(), distribution.end(),
+                        inserter(tdResults, tdResults.end()),
+                        [&tdPlots](const auto &elem) {
+                            return contains(tdPlots, elem.first);
+                        });
+
+                string caption = distributionName;
+                caption += "-";
+                caption += "TD";
 
                 string plotName("document-plot-");
                 plotName += removeSpaces(caption);
                 plotName += "-";
-                plotName += iv;
+                plotName += "runtime";
 
-                PgfplotPrinter plot("./", plotName);
-                plot.setCaption(caption);
-                plot.plotAxis(iv, distribution.second, X_PLOT_SCALE, Y_PLOT_SCALE,first);
-                document.addToDocument(plot);
+                PgfplotPrinter tdPlot("./", plotName);
+                tdPlot.setCaption(caption);
+                tdPlot.plotAxis("runtime", tdResults, X_PLOT_SCALE, Y_PLOT_SCALE, false);
+                document.addToDocument(tdPlot);
 
-                if(first) {
-                    first = false;
-                    string legendRefText = plot.getLegend();
-                    document.addRawText(legendRefText);
-                    document.addRawText("\n\n");
+                set<string> nontdPlots;
+                std::copy_if(ALGORITHM_NAMES.begin(), ALGORITHM_NAMES.end(),
+                             inserter(nontdPlots, nontdPlots.end()),
+                             [&tdPlots](const string &name) { // return true if name is not in tdPlots
+                                 return !contains(tdPlots, name);
+                             });
+                copy_if(distribution.begin(), distribution.end(),
+                        inserter(nontdResults, nontdResults.end()),
+                        [&nontdPlots](const auto &elem) {
+                            return contains(nontdPlots, elem.first);
+                        });
+
+
+                caption = distributionName;
+                caption += "-";
+                caption += "nonTD";
+
+                plotName = "document-plot-";
+                plotName += removeSpaces(caption);
+                plotName += "-";
+                plotName += "runtime";
+
+                PgfplotPrinter nontdPlot("./", plotName);
+                nontdPlot.setCaption(caption);
+                nontdPlot.plotAxis("runtime", nontdResults, X_PLOT_SCALE, Y_PLOT_SCALE, false);
+                document.addToDocument(nontdPlot);
+
+
+                for (const auto &iv: ANALYSIS_IVs) {
+                    string caption = distributionName;
+
+                    string plotName("document-plot-");
+                    plotName += removeSpaces(caption);
+                    plotName += "-";
+                    plotName += iv;
+
+                    PgfplotPrinter plot("./", plotName);
+                    plot.setCaption(caption);
+                    plot.plotAxis(iv, distribution, X_PLOT_SCALE, Y_PLOT_SCALE, isFirst);
+                    document.addToDocument(plot);
+
+                    if (isFirst) {
+                        isFirst = false;
+                        string legendRefText = plot.getLegend();
+                        document.addRawText(legendRefText);
+                        document.addRawText("\n\n");
+                    }
                 }
-            }
-            document.clearpage();
+                document.clearpage();
+        }
         }
     }
 
@@ -184,11 +240,11 @@ namespace analysis {
         SpannerLevelResultMap results;
         auto headerRow = rawResults.front();
 
-        bool first = true;
+        bool isFirst = true;
 
         for(auto row : rawResults) {
-            if(first) {
-                first = false;
+            if(isFirst) {
+                isFirst = false;
                 continue;
             }
             result_t result;

@@ -469,7 +469,7 @@ namespace spanners {
      */
     template< class DelaunayTriangulation, typename OutputIterator >
     void canonicalOrder( const DelaunayTriangulation& DT, OutputIterator out ) {
-        //Timer stretchFactor(",");
+        //Timer t(",");
         typedef typename DelaunayTriangulation::Vertex_handle VertexHandle;
         typedef typename DelaunayTriangulation::Vertex_circulator VertexCirculator;
         typedef unordered_set<VertexHandle> VertexHash;

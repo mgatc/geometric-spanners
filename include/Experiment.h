@@ -285,7 +285,7 @@ namespace spanners {
         using std::string, std::vector;
         namespace pt = boost::property_tree;
 
-        configFilename = INPUT_DATA_DIRECTORY + configFilename;
+        configFilename = configFilename;
         pt::ptree config;
         pt::read_xml(configFilename,config);
 

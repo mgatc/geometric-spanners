@@ -12,7 +12,7 @@ using namespace spanners;
 int main(int argc, char *argv[]) {
 
     // DEFAULT ARGUMENTS IN THE EVENT COMMAND LINE INPUT IS NOT GIVEN
-    const string defaultFilename = "experiment.xml";
+    const string defaultFilename = "../experiment.xml";
     const size_t runs = 5;
     const size_t n_begin = 100000;
     const size_t n_end = 1000000;
@@ -39,13 +39,13 @@ int main(int argc, char *argv[]) {
                 break;
             }
             [[fallthrough]];
-//        case NO_ARGS_AMOUNT: // run a real-world experiment with default args
+        case NO_ARGS_AMOUNT: // run a real-world experiment with default args
         case 3:
             if(extension == "xml") {
                 ExperimentFromConfigurationFile(filename,n);
             }
             break;
-        case NO_ARGS_AMOUNT: // run a synthetic experiment with default args
+//        case NO_ARGS_AMOUNT: // run a synthetic experiment with default args
         case 5: // run a synthetic experiment with given args
             for (size_t arg = 1;
                  arg < std::min(size_t(argc), experimentParameters.size() + 1);

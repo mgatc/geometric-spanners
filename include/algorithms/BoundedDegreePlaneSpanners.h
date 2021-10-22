@@ -48,7 +48,7 @@ namespace spanners {
             "BCC2012-7",
             "BCC2012-6",
             "BGHP2010",
-            "BKPX2015"
+            "BKPX2015",
             "KPT2017"
             //    "Degree3"
     };

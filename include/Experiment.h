@@ -83,11 +83,11 @@ namespace spanners {
             case BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
                 BHS2018(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
-            case BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
-                BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
             case BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
                 BKPX2015(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
+            case BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
+                BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
             case BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
                 KPT2017(pointsBegin, pointsEnd, back_inserter(spanner));
@@ -309,6 +309,8 @@ namespace spanners {
                    fullname = INPUT_DATA_DIRECTORY + filename,
                    filenameNoExtension = filename;
             boost::erase_all(filenameNoExtension, ".xy");
+
+            cout<<fullname<<endl;
 
             vector<Point> P;
             PointGenerator_2 generator;

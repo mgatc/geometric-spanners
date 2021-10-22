@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pointsets>
+    <pointset>
+        <filename>TopUSCities.xy</filename>
+        <nicename>Top U.S. Cities</nicename>
+        <description>Incorporated places in the United States (excluding the U.S. territories) with a population of at least 100,000 on July 1, 2020, as estimated by the United States Census Bureau.</description>
+        <url>https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population</url>
+    </pointset>
+
+    <pointset>
+        <filename>USMetropolitanAreas.xy</filename>
+        <nicename>U.S. Metropolitan Areas</nicename>
+        <description>Metropolitan Combined Statistical Areas as determined by the U.S. Census Bureau as of January 1, 2020.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+
+
+    <pointset>
+        <filename>USMicropolitanAreas.xy</filename>
+        <nicename>U.S. Micropolitan Areas</nicename>
+        <description>Micropolitan Combined Statistical Areas as determined by the U.S. Census Bureau as of January 1, 2020.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+    <pointset>
+        <filename>USMilitaryBases.xy</filename>
+        <nicename>U.S. Military Installations</nicename>
+        <description>Military Installations as determined by the U.S. Census Bureau as of January 1, 2020.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+
+    <pointset>
+        <filename>USNationalParks.xy</filename>
+        <nicename>U.S. National Parks</nicename>
+        <description>National Parks as determined by the U.S. Census Bureau as of January 1, 2020.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+
+    <pointset>
+        <filename>USUrbanAreas.xy</filename>
+        <nicename>U.S. Urbanized Areas</nicename>
+        <description>Urbanized Areas as determined by the U.S. Census Bureau as of January 1, 2010.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+
+</pointsets>

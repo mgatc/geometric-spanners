@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pointsets>
+    <pointset>
+        <filename>Burma.xy</filename>
+        <nicename>Cities in Burma</nicename>
+        <description>Cities in Burma, derived from data from the National Imagery and Mapping Agency database of geographic feature names.</description>
+        <url>https://www.math.uwaterloo.ca/tsp/world/countries.html</url>
+    </pointset>
+    <pointset>
+        <filename>TopUSCities.xy</filename>
+        <nicename>Top U.S. Cities</nicename>
+        <description>Incorporated places in the United States (excluding the U.S. territories) with a population of at least 100,000 on July 1, 2020, as estimated by the United States Census Bureau.</description>
+        <url>https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population</url>
+    </pointset>
+    <pointset>
+        <filename>GlobalAirports.xy</filename>
+        <nicename>Global Airports</nicename>
+        <description>The Global Airport Database (GADB) is a FREE downloadable database of 9300 airports big and small from all around the world under the MIT License.</description>
+        <url>https://www.partow.net/miscellaneous/airportdatabase</url>
+    </pointset>
+    <pointset>
+        <filename>ClimateSensors.xy</filename>
+        <nicename>Climate Sensors</nicename>
+        <description>Integrated Surface Database Stations (September 2020). Worldwide surface weather observation station locations, though the best spatial coverage is evident in North America, Europe, Australia, and parts of Asia.</description>
+        <url>https://www1.ncdc.noaa.gov/pub/data/noaa/isd-history.txt</url>
+    </pointset>
+    <pointset>
+        <filename>HumanMobilityNaturalDisasters.xy</filename>
+        <nicename>Human Mobility During Natural Disasters</nicename>
+        <description>Geolocation information for thousands of Twitter users during natural disasters in their area.</description>
+        <url>https://www.kaggle.com/dryad/human-mobility-during-natural-disasters</url>
+    </pointset>
+    <pointset>
+        <filename>USMetropolitanAreas.xy</filename>
+        <nicename>U.S. Metropolitan Areas</nicename>
+        <description>Metropolitan Combined Statistical Areas as determined by the U.S. Census Bureau as of January 1, 2020.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+    <pointset>
+        <filename>USMicropolitanAreas.xy</filename>
+        <nicename>U.S. Micropolitan Areas</nicename>
+        <description>Micropolitan Combined Statistical Areas as determined by the U.S. Census Bureau as of January 1, 2020.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+    <pointset>
+        <filename>USMilitaryBases.xy</filename>
+        <nicename>U.S. Military Installations</nicename>
+        <description>Military Installations as determined by the U.S. Census Bureau as of January 1, 2020.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+    <pointset>
+        <filename>PleiadesAncientSiteLocations.xy</filename>
+        <nicename>Pleiades Ancient Sites</nicename>
+        <description>Ancient site locations with extensive coverage for the Greek and Roman world, and is expanding into Ancient Near Eastern, Byzantine, Celtic, and Early Medieval geography.</description>
+        <url>https://pleiades.stoa.org/</url>
+    </pointset>
+    <pointset>
+        <filename>USNationalParks.xy</filename>
+        <nicename>U.S. National Parks</nicename>
+        <description>National Parks as determined by the U.S. Census Bureau as of January 1, 2020.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+    <pointset>
+        <filename>SlovakianRoads.xy</filename>
+        <nicename>Slovakian Roads</nicename>
+        <description>Covers entire area of Slovakia and consists of the graph of the road network.</description>
+        <url>https://doi.org/10.1016/j.dib.2018.01.008</url>
+    </pointset>
+    <pointset>
+        <filename>USPrisons.xy</filename>
+        <nicename>U.S. Prisons</nicename>
+        <description>Correctional facilities as determined by the U.S. Census Bureau as of January 1, 2020.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+    <pointset>
+        <filename>TheThingsNetwork.xy</filename>
+        <nicename>The Things Network LoRa Gateways</nicename>
+        <description>Locations of LoRa Gateways that are part of The Things Network, an open community of people, companies, governments, and universities.</description>
+        <url>https://www.thethingsnetwork.org/gateway-data/</url>
+    </pointset>
+    <pointset>
+        <filename>USPublicUseAreas.xy</filename>
+        <nicename>U.S. Public Use Areas</nicename>
+        <description>Public Use Microdata Areas as determined by the U.S. Census Bureau as of January 1, 2010.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+    <pointset>
+        <filename>USUrbanAreas.xy</filename>
+        <nicename>U.S. Urbanized Areas</nicename>
+        <description>Urbanized Areas as determined by the U.S. Census Bureau as of January 1, 2010.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+    <pointset>
+        <filename>USColleges.xy</filename>
+        <nicename>U.S. College and Universities</nicename>
+        <description> College and Universities as determined by the U.S. Census Bureau as of January 1, 2020.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+    <pointset>
+        <filename>USUrbanClusters.xy</filename>
+        <nicename>U.S. Urbanized Clusters</nicename>
+        <description>Urbanized Clusters as determined by the U.S. Census Bureau as of January 1, 2010.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+    <pointset>
+        <filename>USGlaciers.xy</filename>
+        <nicename>U.S. Glaciers</nicename>
+        <description>Glaciers as determined by the U.S. Census Bureau as of January 1, 2020.</description>
+        <url>https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_nation_based_files.html</url>
+    </pointset>
+    <pointset>
+        <filename>WikiCoords.xy</filename>
+        <nicename>Wiki Coordinates</nicename>
+        <description>Latitude/longitude of all English language Wikipedia articles with location data.</description>
+        <url>https://github.com/placemarkt/wiki_coordinates</url>
+    </pointset>
+    <pointset>
+        <filename>USLibraries.xy</filename>
+        <nicename>U.S. Libraries</nicename>
+        <description>Locations of public libraries in the 50 U.S. states, the District of Columbia, and outlying territories from FY2019.</description>
+        <url>https://www.imls.gov/research-evaluation/data-collection/public-libraries-survey</url>
+    </pointset>
+    <pointset>
+        <filename>birch3.xy</filename>
+        <nicename>Birch3 </nicename>
+        <description>Synthetic random sized clusters in random locations.</description>
+        <url>http://cs.joensuu.fi/sipu/datasets/</url>
+    </pointset>
+    <pointset>
+        <filename>uber_pickups.xy</filename>
+        <nicename>Uber Pickups in NYC</nicename>
+        <description>Uber pickups in NYC.</description>
+        <url>https://www.kaggle.com/wikunia/nyc-taxis-combined-with-dimacs/home.</url>
+    </pointset>
+    <pointset>
+        <filename>uber_dropoffs.xy</filename>
+        <nicename>Uber Dropoffs in NYC</nicename>
+        <description>Uber dropoffs in NYC.</description>
+        <url>https://www.kaggle.com/wikunia/nyc-taxis-combined-with-dimacs/home.</url>
+    </pointset>
+    <pointset>
+        <filename>uber_combined.xy</filename>
+        <nicename>Uber Pickups and Dropoffs in NYC</nicename>
+        <description>Combined Uber pickups and dropoffs in NYC.</description>
+        <url>https://www.kaggle.com/wikunia/nyc-taxis-combined-with-dimacs/home.</url>
+    </pointset>
+    <pointset>
+        <filename>uber-raw-data-538.xy</filename>
+        <nicename>Uber Pickups in NYC from 538</nicename>
+        <description>Uber pickup locations in NYC source from 538.</description>
+        <url>https://www.kaggle.com/fivethirtyeight/uber-pickups-in-new-york-city.</url>
+    </pointset>
+    <pointset>
+        <filename>usa115475.xy</filename>
+        <nicename>USA</nicename>
+        <description>Nearly all towns, villages, and cities in the United States.</description>
+        <url>http://www.math.uwaterloo.ca/tsp/</url>
+    </pointset>
+    <pointset>
+        <filename>europediff.xy</filename>
+        <nicename>Europe</nicename>
+        <description>Differential coordinates of the map of Europe.</description>
+        <url>http://cs.joensuu.fi/sipu/datasets/</url>
+    </pointset>
+    <pointset>
+        <filename>hail-2015.xy</filename>
+        <nicename>Hail</nicename>
+        <description>Hail storm cell locations based on NEXRAD radar data obtained in 2015</description>
+        <url>https://www.kaggle.com/noaa/severe-weather-data-inventory</url>
+    </pointset>
+    <pointset>
+        <filename>KDDCUP04Bio.xy</filename>
+        <nicename>KDDCUP04</nicename>
+        <description>The first two dimensions of a protein data set.</description>
+        <url>http://cs.joensuu.fi/sipu/datasets/</url>
+    </pointset>
+    <pointset>
+        <filename>mona-lisa.xy</filename>
+        <nicename>Mona Lisa</nicename>
+        <description>Coordinates of a continuous-line drawing of the Mona Lisa.</description>
+        <url>http://www.math.uwaterloo.ca/tsp/</url>
+    </pointset>
+    <pointset>
+        <filename>MopsiLocations2012-Joensuu.xy</filename>
+        <nicename>Mopsi</nicename>
+        <description></description>
+        <url>http://cs.joensuu.fi/sipu/datasets/</url>
+    </pointset>
+    <pointset>
+        <filename>world.xy</filename>
+        <nicename>World</nicename>
+        <description>Coordinates of all locations in the world that are registered as populated cities or towns, as well as several research bases in Antarctica.</description>
+        <url>http://www.math.uwaterloo.ca/tsp/</url>
+    </pointset>
+    <pointset>
+        <filename>VSLI.xy</filename>
+        <nicename>VSLI</nicename>
+        <description>VSLI coordinates for LRB744710.</description>
+        <url>http://www.math.uwaterloo.ca/tsp/</url>
+    </pointset>
+
+</pointsets>

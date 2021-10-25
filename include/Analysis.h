@@ -18,7 +18,7 @@ namespace spanners {
 
 namespace analysis {
 
-    double X_PLOT_SCALE = 1000.0;
+    double X_PLOT_SCALE = 1000000.0;
     double Y_PLOT_SCALE = 1.0;
 
     using namespace std;
@@ -124,20 +124,21 @@ namespace analysis {
                             return contains(tdPlots, elem.first);
                         });
 
-                string caption = distributionName;
-                caption += "-";
-                caption += "TD";
+                if( !tdResults.empty()) {
+                    string caption = distributionName;
+                    caption += "-";
+                    caption += "TD";
 
-                string plotName("document-plot-");
-                plotName += removeSpaces(caption);
-                plotName += "-";
-                plotName += "runtime";
+                    string plotName("document-plot-");
+                    plotName += removeSpaces(caption);
+                    plotName += "-";
+                    plotName += "runtime";
 
-                PgfplotPrinter tdPlot("./", plotName);
-                tdPlot.setCaption(caption);
-                tdPlot.plotAxis("runtime", tdResults, X_PLOT_SCALE, Y_PLOT_SCALE, false);
-                document.addToDocument(tdPlot);
-
+                    PgfplotPrinter tdPlot("./", plotName);
+                    tdPlot.setCaption(caption);
+                    tdPlot.plotAxis("runtime", tdResults, X_PLOT_SCALE, Y_PLOT_SCALE, false);
+                    document.addToDocument(tdPlot);
+                }
                 set<string> nontdPlots;
                 std::copy_if(ALGORITHM_NAMES.begin(), ALGORITHM_NAMES.end(),
                              inserter(nontdPlots, nontdPlots.end()),
@@ -150,21 +151,21 @@ namespace analysis {
                             return contains(nontdPlots, elem.first);
                         });
 
+                if( !nontdResults.empty()) {
+                    string caption = distributionName;
+                    caption += "-";
+                    caption += "nonTD";
 
-                caption = distributionName;
-                caption += "-";
-                caption += "nonTD";
+                    string plotName = "document-plot-";
+                    plotName += removeSpaces(caption);
+                    plotName += "-";
+                    plotName += "runtime";
 
-                plotName = "document-plot-";
-                plotName += removeSpaces(caption);
-                plotName += "-";
-                plotName += "runtime";
-
-                PgfplotPrinter nontdPlot("./", plotName);
-                nontdPlot.setCaption(caption);
-                nontdPlot.plotAxis("runtime", nontdResults, X_PLOT_SCALE, Y_PLOT_SCALE, false);
-                document.addToDocument(nontdPlot);
-
+                    PgfplotPrinter nontdPlot("./", plotName);
+                    nontdPlot.setCaption(caption);
+                    nontdPlot.plotAxis("runtime", nontdResults, X_PLOT_SCALE, Y_PLOT_SCALE, false);
+                    document.addToDocument(nontdPlot);
+                }
 
                 for (const auto &iv: ANALYSIS_IVs) {
                     string caption = distributionName;
@@ -201,12 +202,12 @@ namespace analysis {
                 const auto& frontRow = distribution.second.begin()->second;
                 std::transform(frontRow.begin(), frontRow.end(), back_inserter(levels),
                                [](const auto& elem){
-                                   return std::to_string(elem.first);
+                                   return std::to_string(elem.first / X_PLOT_SCALE) + mathrm("M");
                                });
 
                 vector<vector<string>> ivValues;
                 for(auto spanner : distribution.second) {
-                    headers.push_back(spanner.first);
+                    headers.push_back(texttt(spanner.first));
                     ivValues.push_back({});
                     std::transform(spanner.second.begin(), spanner.second.end(), back_inserter(ivValues.back()),
                                    [iv](const auto& elem){
@@ -229,7 +230,7 @@ namespace analysis {
 
                 table.tabulate();
 
-                document.addRawText("\\subsection{" + caption + "}\n\n");
+                document.addRawText(subsection(caption) + "\n\n");
                 document.addToDocument(table);
             }
         }
@@ -325,7 +326,7 @@ namespace analysis {
                 ivValues.front().push_back(std::to_string(level.first));
             }
             for(auto spanner : summary) {
-                headers.push_back("\\texttt{" + spanner.first + "}");
+                headers.push_back(texttt(spanner.first));
                 ivValues.push_back({});
                 for(auto level : spanner.second) {
                     ivValues.back().push_back(std::to_string(level.second.getIV<double>(iv)));
@@ -336,7 +337,7 @@ namespace analysis {
             }
             table.tabulate();
 
-            document.addRawText("\\subsection{" + caption + "}\n\n");
+            document.addRawText(subsection(caption) + "\n\n");
             document.addToDocument(table);
         }
     }
@@ -350,7 +351,11 @@ namespace analysis {
 
         vector<vector<string>> body;
         body.push_back({});
-        transform(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),back_inserter(body.back()),
+        copy_if(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(), back_inserter(body.back()),
+            [&](const string& name){
+                return contains(summary,name);
+            });
+        transform(body.back().begin(),body.back().end(),body.back().begin(),
             [](const string& name) {
                 return "\\texttt{" + name + "}";
             });
@@ -360,7 +365,8 @@ namespace analysis {
 
             body.push_back({});
             for(auto spanner : ALGORITHM_NAMES) {
-                body.back().push_back(std::to_string(summary.at(spanner).template getIV<double>(iv)));
+                if(contains(summary,spanner))
+                    body.back().push_back(std::to_string(summary.at(spanner).template getIV<double>(iv)));
             }
         }
         string caption = "Spanner Summary";
@@ -372,7 +378,7 @@ namespace analysis {
         }
         table.tabulate();
 
-        document.addRawText("\\subsection{" + caption + "}\n\n");
+        document.addRawText(subsection(caption) +  + "\n\n");
         document.addToDocument(table);
     }
 

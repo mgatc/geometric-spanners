@@ -17,6 +17,16 @@ namespace spanners {
 
     using namespace std;
 
+    string texttt(const string& input) {
+        return "\\texttt{" + input + "}";
+    }
+    string subsection(const string& input) {
+        return "\\subsection{" + input + "}";
+    }
+    string mathrm(const string& input) {
+        return "\\mathrm{" + input + "}";
+    }
+
     class LatexPrinter {
     public:
         typedef pair<string,string> Option;
@@ -44,7 +54,7 @@ namespace spanners {
                     + m_documentType
                     + "}\n\n"
                       + "\\usepackage[table]{xcolor}\n"
-                    + "\\usepackage{tikz,pgfplots,amsmath}\n"
+                    + "\\usepackage{tikz,pgfplots,amsmath,fullpage}\n"
                     + "\\usetikzlibrary{shapes}\n"
                     + "\\pgfplotsset{compat=1.15}\n\n"
                     + getColorDefinitions()

@@ -31,8 +31,8 @@ namespace spanners {
             assert(abs(xScale) > 0 && abs(yScale) > 0);
 
             if(m_algorithmMarkers.empty())
-                for(const auto& spanner : ALGORITHM_NAMES)
-                    addNewMarker(spanner);
+                for(const auto& spannerName : ALGORITHM_NAMES) // provides the ordering we want
+                    addNewMarker(spannerName);
 
 
             // build axis header
@@ -40,7 +40,7 @@ namespace spanners {
 
             // build the plot
             for( const auto& name : ALGORITHM_NAMES ) {
-                if( results.find(name) != results.end() ) {
+                if( contains(results,name) ) {
                     const auto &spanner = results.at(name);
                     string ivPlot = getPlotHeader(name);//
                     for (const auto &level: spanner) {
@@ -100,7 +100,7 @@ namespace spanners {
             if(!m_caption.empty()) axisHeader += "title={" + m_caption + "},";
             string legendText = "legend to name=" + removeSpaces(m_caption)
                     + "-legend, legend columns={3}, ";
-            axisHeader += string("scaled ticks=false,grid=major,xlabel={$n$ (in thousands)}, ")
+            axisHeader += string("scaled ticks=false,grid=major,xlabel={$n$ (in millions)}, ")
                           + (first ? legendText : "")
                           + "xtick={";
             string xTicks = "";
@@ -186,8 +186,11 @@ namespace spanners {
     // Palette generated using https://coolors.co/
     vector<string> PgfplotPrinter::Colors = {
             "264653",
-            "2a9d8f",
-            "e9c46a",
+            //"287271",
+            "1789a6",
+            "33c1b1",
+//            "2a9d8f",
+//            "e9c46a",
             //"f4a261",
             "e76f51"
     };

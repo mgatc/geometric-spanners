@@ -116,8 +116,25 @@ namespace analysis {
             if(summary.find(distributionName)!=summary.end()){
                 const auto &distribution = summary.at(distributionName);
                 set<string> tdPlots = {"BGHP2010", "KPT2017"};
-                // split distribution.second into containers for td and non-td
-                SpannerReducedLevelResultMap tdResults, nontdResults;
+                set<string> linfPlots = {"BKPX2015"};
+                set<string> l2Plots;
+                copy_if(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),
+                        inserter(l2Plots,l2Plots.end()),
+                        [&](const string& name){
+                            return !(contains(tdPlots,name) || contains(linfPlots,name));
+                        });
+
+                set<string> nontdPlots;
+                copy_if(ALGORITHM_NAMES.begin(), ALGORITHM_NAMES.end(),
+                        inserter(nontdPlots, nontdPlots.end()),
+                        [&tdPlots](const string &name) { // return true if name is not in tdPlots
+                            return !contains(tdPlots, name);
+                        });
+                // split distribution.second into containers for td and non-td, l2 and nonl2
+                //SpannerReducedLevelResultMap tdResults, nontdResults, linfResults, l2Results;
+
+                // TD plots
+                SpannerReducedLevelResultMap tdResults;
                 copy_if(distribution.begin(), distribution.end(),
                         inserter(tdResults, tdResults.end()),
                         [&tdPlots](const auto &elem) {
@@ -139,12 +156,9 @@ namespace analysis {
                     tdPlot.plotAxis("runtime", tdResults, X_PLOT_SCALE, Y_PLOT_SCALE, false);
                     document.addToDocument(tdPlot);
                 }
-                set<string> nontdPlots;
-                std::copy_if(ALGORITHM_NAMES.begin(), ALGORITHM_NAMES.end(),
-                             inserter(nontdPlots, nontdPlots.end()),
-                             [&tdPlots](const string &name) { // return true if name is not in tdPlots
-                                 return !contains(tdPlots, name);
-                             });
+
+                // non td plots
+                SpannerReducedLevelResultMap nontdResults;
                 copy_if(distribution.begin(), distribution.end(),
                         inserter(nontdResults, nontdResults.end()),
                         [&nontdPlots](const auto &elem) {
@@ -165,6 +179,58 @@ namespace analysis {
                     nontdPlot.setCaption(caption);
                     nontdPlot.plotAxis("runtime", nontdResults, X_PLOT_SCALE, Y_PLOT_SCALE, false);
                     document.addToDocument(nontdPlot);
+                }
+
+                // Linf plot
+                SpannerReducedLevelResultMap linfResults;
+                copy_if(distribution.begin(), distribution.end(),
+                        inserter(linfResults, linfResults.end()),
+                        [&linfPlots](const auto &elem) {
+                            return contains(linfPlots, elem.first);
+                        });
+
+                if( !linfResults.empty()) {
+                    string caption = distributionName;
+                    caption += "-";
+
+                    string plotName("document-plot-");
+                    plotName += removeSpaces(caption);
+                    plotName += "Linf";
+                    plotName += "-";
+                    plotName += "runtime";
+
+                    caption += "$L_\\infty$";
+
+                    PgfplotPrinter linfPlot("./", plotName);
+                    linfPlot.setCaption(caption);
+                    linfPlot.plotAxis("runtime", linfResults, X_PLOT_SCALE, Y_PLOT_SCALE, false);
+                    document.addToDocument(linfPlot);
+                }
+
+                // L2 plot
+                SpannerReducedLevelResultMap l2Results;
+                copy_if(distribution.begin(), distribution.end(),
+                        inserter(l2Results, l2Results.end()),
+                        [&l2Plots](const auto &elem) {
+                            return contains(l2Plots, elem.first);
+                        });
+
+                if( !l2Results.empty()) {
+                    string caption = distributionName;
+                    caption += "-";
+
+                    string plotName("document-plot-");
+                    plotName += removeSpaces(caption);
+                    plotName += "L2";
+                    plotName += "-";
+                    plotName += "runtime";
+
+                    caption += "$L_2$";
+
+                    PgfplotPrinter l2Plot("./", plotName);
+                    l2Plot.setCaption(caption);
+                    l2Plot.plotAxis("runtime", l2Results, X_PLOT_SCALE, Y_PLOT_SCALE, false);
+                    document.addToDocument(l2Plot);
                 }
 
                 for (const auto &iv: ANALYSIS_IVs) {
@@ -322,9 +388,12 @@ namespace analysis {
 
             headers.push_back(N_SYMBOL);
             ivValues.push_back({});
-            for(auto level : summary.begin()->second) {
-                ivValues.front().push_back(std::to_string(level.first));
-            }
+
+            const auto& frontRow = summary.begin()->second;
+            std::transform(frontRow.begin(), frontRow.end(),back_inserter(ivValues.front()),
+                           [](const auto& elem){
+                               return std::to_string(elem.first / X_PLOT_SCALE) + mathrm("M");
+                           });
             for(auto spanner : summary) {
                 headers.push_back(texttt(spanner.first));
                 ivValues.push_back({});

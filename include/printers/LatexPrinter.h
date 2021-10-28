@@ -17,6 +17,25 @@ namespace spanners {
 
     using namespace std;
 
+    struct SetPrecision {
+        int value;
+        string operator()(const string& val) const {
+            if(value < 0)
+                return val;
+            try {
+                double numVal = stod(val);
+                stringstream str;
+                str << fixed;
+                str << setprecision(value);
+                str << numVal;
+
+                return str.str();
+            } catch(invalid_argument& ia) {
+                return val;
+            }
+        }
+    };
+
     string texttt(const string& input) {
         return "\\texttt{" + input + "}";
     }

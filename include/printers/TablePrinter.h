@@ -31,13 +31,16 @@ namespace spanners {
         void ignoreIV(unsigned iv) {
             m_ignore.insert(iv);
         }
-        void addColumn(string header, const vector<string>& values, int priority = -1) {
+        void addColumn(string header, const vector<string>& values, int precision = -1, int priority = -1) {
+            auto valuesCopy(values);
+            SetPrecision precisionSetter{precision};
+            transform(valuesCopy.begin(),valuesCopy.end(),valuesCopy.begin(),precisionSetter);
             if( priority < 0 ) {
                 priority = 0;
                 while (contains(m_added, priority))
                     ++priority;
             }
-            m_added.emplace(priority,make_pair(header,values));
+            m_added.emplace(priority,make_pair(header,valuesCopy));
         }
         void tabulate(TablePrinter::CellHighlightStyle highlightStyle = TablePrinter::CellHighlightStyle::None) {
             m_body = Body{getTableHeader(),
@@ -151,9 +154,9 @@ namespace spanners {
 //        boost::erase_all(filename, "(");
 //
 //        TablePrinter table(addToPrinter->m_directory,filename);
-//        table.addColumn( ALGORITHM_SYMBOL, ALGORITHM_NAMES, 0 );
-//        table.addColumn(DEGREE_BOUND_SYMBOL, DEGREE_BOUND_PER_ALGORITHM, 1);
-//        table.addColumn(STRETCH_FACTOR_BOUND_SYMBOL, STRETCH_FACTOR_BOUND_PER_ALGORITHM, 4);
+//        table.addColumn( ALGORITHM_SYMBOL, ALGORITHM_NAMES, -1,0 );
+//        table.addColumn(DEGREE_BOUND_SYMBOL, DEGREE_BOUND_PER_ALGORITHM,0,1);
+//        table.addColumn(STRETCH_FACTOR_BOUND_SYMBOL, STRETCH_FACTOR_BOUND_PER_ALGORITHM,-1,4);
 //
 //        size_t col = 0;
 //
@@ -169,7 +172,7 @@ namespace spanners {
 //                stream << row.second.IV.at(IV_NAMES.at(iv));
 //                singleColumn.push_back(stream.str());
 //            }
-//            table.addColumn( IV_SYMBOLS.at(iv),singleColumn);
+//            table.addColumn( IV_SYMBOLS.at(iv),singleColumn,6);
 //        }
 //        table.tabulate(TablePrinter::CellHighlightStyle::MaxInColumn);
 //        addToPrinter->addToDocument(table, PRECOMPILE_SUBDOCUMENTS);
@@ -225,8 +228,8 @@ namespace spanners {
 //            TablePrinter singleTabulater(addToPrinter->m_directory, filename);
 //            //singleTabulater.setCaption(caption);
 //            size_t i=0;
-//            singleTabulater.addColumn("Point set", names, i++);
-//            singleTabulater.addColumn(N_SYMBOL, nLevels, i++);
+//            singleTabulater.addColumn("Point set", names, -1,i++);
+//            singleTabulater.addColumn(N_SYMBOL, nLevels, 0,i++);
 //
 //            vector<string> AlgorithmNamesSmallText(ALGORITHM_NAMES);
 ////            transform(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),back_inserter(AlgorithmNamesSmallText),
@@ -238,7 +241,7 @@ namespace spanners {
 //                alg!=BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast; ++alg ) {
 //                vector<string> singleColumn;
 //                getSingleIVColumn( iv, BoundedDegreePlaneSpannerAlgorithm(alg), results, singleColumn);
-//                singleTabulater.addColumn(AlgorithmNamesSmallText[alg], singleColumn, i++);
+//                singleTabulater.addColumn(AlgorithmNamesSmallText[alg], singleColumn, -1,i++);
 //            }
 //            singleTabulater.tabulate(TablePrinter::CellHighlightStyle::MaxInRow);
 //            addToPrinter->addToDocument(singleTabulater, PRECOMPILE_SUBDOCUMENTS);
@@ -283,7 +286,7 @@ namespace spanners {
 //            TablePrinter singleTabulater(addToPrinter->m_directory, filename);
 //            //singleTabulater.setCaption(caption);
 //            size_t i=0;
-//            singleTabulater.addColumn(N_SYMBOL, nLevels, i++);
+//            singleTabulater.addColumn(N_SYMBOL, nLevels,0, i++);
 //
 //            vector<string> AlgorithmNamesSmallText(ALGORITHM_NAMES);
 ////            transform(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),back_inserter(AlgorithmNamesSmallText),
@@ -295,7 +298,7 @@ namespace spanners {
 //                alg!=BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast; ++alg ) {
 //                vector<string> singleColumn;
 //                getSingleIVColumn( iv, BoundedDegreePlaneSpannerAlgorithm(alg), results, singleColumn);
-//                singleTabulater.addColumn(AlgorithmNamesSmallText[alg], singleColumn, i++);
+//                singleTabulater.addColumn(AlgorithmNamesSmallText[alg], singleColumn, -1,i++);
 //            }
 //            singleTabulater.tabulate(TablePrinter::CellHighlightStyle::MaxInRow);
 //            addToPrinter->addToDocument(singleTabulater, PRECOMPILE_SUBDOCUMENTS);

@@ -266,19 +266,20 @@ namespace analysis {
                 vector<string> headers;
                 vector<string> levels;
                 const auto& frontRow = distribution.second.begin()->second;
-                std::transform(frontRow.begin(), frontRow.end(), back_inserter(levels),
-                               [](const auto& elem){
-                                   return std::to_string(elem.first / X_PLOT_SCALE) + mathrm("M");
-                               });
+                SetPrecision precisionSetter{1};
+                transform(frontRow.begin(), frontRow.end(), back_inserter(levels),
+                    [precisionSetter](const auto& elem){
+                        return precisionSetter(std::to_string(elem.first / X_PLOT_SCALE)) + mathrm("M");
+                    });
 
                 vector<vector<string>> ivValues;
                 for(auto spanner : distribution.second) {
                     headers.push_back(texttt(spanner.first));
                     ivValues.push_back({});
-                    std::transform(spanner.second.begin(), spanner.second.end(), back_inserter(ivValues.back()),
-                                   [iv](const auto& elem){
-                                       return std::to_string(elem.second.template getIV<double>(iv));
-                                   });
+                    transform(spanner.second.begin(), spanner.second.end(), back_inserter(ivValues.back()),
+                        [iv](const auto& elem){
+                            return std::to_string(elem.second.template getIV<double>(iv));
+                        });
                 }
 
                 string caption(distribution.first + " x " + iv);
@@ -288,10 +289,10 @@ namespace analysis {
                 TablePrinter table("./", tableName);
 
                 // add columns
-                table.addColumn(N_SYMBOL,levels,0);
+                table.addColumn(N_SYMBOL,levels,-1,0);
 
                 for(size_t i=0; i<headers.size();++i){
-                    table.addColumn( headers.at(i), ivValues.at(i),i+1);
+                    table.addColumn( headers.at(i), ivValues.at(i),6,i+1);
                 }
 
                 table.tabulate();
@@ -390,10 +391,11 @@ namespace analysis {
             ivValues.push_back({});
 
             const auto& frontRow = summary.begin()->second;
-            std::transform(frontRow.begin(), frontRow.end(),back_inserter(ivValues.front()),
-                           [](const auto& elem){
-                               return std::to_string(elem.first / X_PLOT_SCALE) + mathrm("M");
-                           });
+            SetPrecision precisionSetter{1};
+            transform(frontRow.begin(), frontRow.end(),back_inserter(ivValues.front()),
+                [precisionSetter](const auto& elem){
+                    return precisionSetter(std::to_string(elem.first / X_PLOT_SCALE)) + mathrm("M");
+                });
             for(auto spanner : summary) {
                 headers.push_back(texttt(spanner.first));
                 ivValues.push_back({});
@@ -401,8 +403,10 @@ namespace analysis {
                     ivValues.back().push_back(std::to_string(level.second.getIV<double>(iv)));
                 }
             }
-            for(size_t i=0; i<headers.size();++i){
-                table.addColumn( headers.at(i), ivValues.at(i),i);
+
+            for(size_t i=0; i<headers.size(); ++i){
+                int precision = i==0 ? -1 : 6;
+                table.addColumn( headers.at(i), ivValues.at(i),precision,i);
             }
             table.tabulate();
 
@@ -443,7 +447,7 @@ namespace analysis {
         TablePrinter table("./", tableName);
 
         for(size_t i=0; i<body.size(); i++) {
-            table.addColumn(header[i], body[i],i);
+            table.addColumn(header[i], body[i],6,i);
         }
         table.tabulate();
 
@@ -532,7 +536,7 @@ void BoundedDegreePlaneSpannerAnalysis(const string filename) {
 //        // add columns
 //
 //        for(size_t i=0; i<headers.size();++i){
-//            table.addColumn( headers.at(i), ivValues.at(i),i);
+//            table.addColumn( headers.at(i), ivValues.at(i),6,i);
 //        }
 //
 //        table.tabulate();
@@ -573,7 +577,7 @@ void BoundedDegreePlaneSpannerAnalysis(const string filename) {
 //
 //        for(auto header : headers) {
 //            if(contains(body,header))
-//                table.addColumn(header, body[header] );
+//                table.addColumn(header, body[header],6);
 //        }
 //        table.tabulate();
 //        document.addToDocument(table);

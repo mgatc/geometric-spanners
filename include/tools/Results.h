@@ -264,7 +264,7 @@ namespace spanners {
 
             const bool degreePasses = get<index_t>(degree) <= degreeBound;
             const bool stretchFactorPasses = stretchFactor < sfBound || abs(stretchFactor - sfBound) < EPSILON;
-            const bool isBCC6 = algorithm == Bcc2012_6;
+            const bool isBCC6 = false;//algorithm == Bcc2012_6;
 
             return lite || (degreePasses && stretchFactorPasses) || isBCC6;
         }

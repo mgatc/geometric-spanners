@@ -14,7 +14,7 @@ include_directories(/usr/lib/gcc/x86_64-linux-gnu/7/include)
 
 add_executable(spanners
 
-#        include/algorithms/Degree3.h
+        include/algorithms/Degree3.h
 
         include/algorithms/BCC2012.h
         include/algorithms/BGHP2010.h

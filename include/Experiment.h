@@ -59,42 +59,42 @@ namespace spanners {
         Timer tim;
 
         switch (algorithm) {
-            case BoundedDegreePlaneSpannerAlgorithm::Bgs2005:
-                BGS2005(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Lw2004:
-                LW2004(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Bsx2009:
-                BSX2009(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Kpx2010:
-                KPX2010(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Kx2012:
-                KX2012(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Bcc2012_7:
-                BCC2012<7>(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Bcc2012_6:
-                BCC2012<6>(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
-                BHS2018(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Bgs2005:
+//                BGS2005(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Lw2004:
+//                LW2004(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Bsx2009:
+//                BSX2009(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Kpx2010:
+//                KPX2010(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Kx2012:
+//                KX2012(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Bcc2012_7:
+//                BCC2012<7>(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Bcc2012_6:
+//                BCC2012<6>(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
+//                BHS2018(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
             case BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
                 BKPX2015(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
-            case BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
-                BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
-                KPT2017(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-//            case BoundedDegreePlaneSpannerAlgorithm::Degree3:
-//                DEG3(pointsBegin, pointsEnd, back_inserter(spanner));
+//            case BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
+//                BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
 //                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
+//                KPT2017(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+            case BoundedDegreePlaneSpannerAlgorithm::Degree3:
+                DEG3(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
             case BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast:
                 assert(false);
         }
@@ -205,7 +205,7 @@ namespace spanners {
     // An experiment from n_start to n_end with a single distribution
     void SyntheticExperimentInputSizeLoop(SyntheticDistribution dist,
                                           size_t n_start, size_t n_end, size_t increment, ofstream& expOut, bool measureStretchFactor = true ) {
-        measureStretchFactor = false;
+        //measureStretchFactor = false;
         for (size_t n = n_start; n <= n_end; n += increment) {
             // SET POINTS
             vector<Point> points;

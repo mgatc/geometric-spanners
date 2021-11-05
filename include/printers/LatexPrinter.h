@@ -22,17 +22,23 @@ namespace spanners {
         string operator()(const string& val) const {
             if(value < 0)
                 return val;
+
             try {
                 double numVal = stod(val);
-                stringstream str;
-                str << fixed;
-                str << setprecision(value);
-                str << numVal;
-
-                return str.str();
+                return (*this)(numVal);
             } catch(invalid_argument& ia) {
                 return val;
             }
+        }
+        string operator()(const double& val) const {
+            if(value < 0) {
+                return std::to_string(val);
+            }
+            stringstream str;
+            str << fixed;
+            str << setprecision(value);
+            str << val;
+            return str.str();
         }
     };
 
@@ -73,7 +79,7 @@ namespace spanners {
                     + m_documentType
                     + "}\n\n"
                       + "\\usepackage[table]{xcolor}\n"
-                    + "\\usepackage{tikz,pgfplots,amsmath,fullpage}\n"
+                    + "\\usepackage{tikz,pgfplots,amsmath,fullpage,subfig}\n"
                     + "\\usetikzlibrary{shapes}\n"
                     + "\\pgfplotsset{compat=1.15}\n\n"
                     + getColorDefinitions()
@@ -85,23 +91,31 @@ namespace spanners {
             return "\\end{document}";
         }
         // Figure getters
-        static string getFigureHeader(string options = "") {
-            string header = "\\begin{figure}[h]";
-            if(!options.empty()){
-                header += "[" + options + "]";
+        static string getFigureHeader(bool subfigure = false, string options = "") {
+            string header;
+            if(subfigure) {
+                 header = string( "\\subfloat[") + options + "]{";
+            } else {
+                header = string("\\begin{figure}[h]");
+                if(!options.empty()){
+                    header += "[" + options + "]";
+                }
+                header += "\n\\centering\n\n";
             }
-            header += "\n\\centering\n\n";
             return header;
         }
-        string getFigureFooter() const {
-            string footer;
-            if( !m_caption.empty() ) {
-                footer += string("")
-                    + "\\caption{"
-                    + m_caption
-                    + "}\n";
+        string getFigureFooter(bool subfigure = false) const {
+            if(subfigure) {
+                return "}";
             }
-            footer += "\\end{figure}\n\n";
+            string footer;
+//            if( !m_caption.empty() ) {
+//                footer += string("")
+//                    + "\\caption{"
+//                    + m_caption
+//                    + "}\n";
+//            }
+            footer += string("\\end{figure}\n\n");
             return footer;
         }
         // Figure captions
@@ -159,6 +173,12 @@ namespace spanners {
                 addRawText(caption);
 
             addRawText(getFigureFooter());
+        }
+        void addToDocumentAsSubfigure(const LatexPrinter& printer, string caption="", bool precompile = false) {
+            addRawText(getFigureHeader(true, caption));
+            addToDocument(printer,precompile);
+            addRawText(getFigureFooter(true));
+            addRawText("\\quad");
         }
         void addInput(const string& name) {
             m_body.content += "\\input{" + name + "}\n\n";

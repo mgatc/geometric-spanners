@@ -98,6 +98,7 @@ namespace spanners {
         double avgStretchFactor = 0.0;
         double maxStretchFactor = 0.0;
         double lightness = 0.0;
+        bool lite = false;
 
         BoundedDegreeSpannerAnalysisResult() = default;
         BoundedDegreeSpannerAnalysisResult(const BoundedDegreeSpannerAnalysisResult& other) = default;
@@ -113,6 +114,12 @@ namespace spanners {
             avgStretchFactor = getStretchFactor(row);
             maxStretchFactor = avgStretchFactor;
             lightness = getLightness(row);
+            lite = degree == 0
+                    && abs(degreeAvg) < EPSILON
+                    && abs(avgDegreePerPoint) < EPSILON
+                    && abs(avgStretchFactor) < EPSILON
+                    && abs(maxStretchFactor) < EPSILON
+                    && abs(lightness) < EPSILON;
         }
 
         template<typename T>
@@ -153,7 +160,8 @@ namespace spanners {
                 lhs.runtime + rhs.runtime,
                 std::max(lhs.degree, rhs.degree),
                 lhs.degreeAvg + rhs.degreeAvg,
-                (lhs.avgDegreePerPoint * lhs.n + rhs.avgDegreePerPoint * rhs.n)/(lhs.n+rhs.n),
+                (lhs.avgDegreePerPoint * lhs.n + rhs.avgDegreePerPoint * rhs.n)
+                    / (lhs.n+int(!(lhs.lite||rhs.lite))*rhs.n), // only include in denom if not lite
                 lhs.avgStretchFactor + rhs.avgStretchFactor,
                 std::max(lhs.maxStretchFactor, rhs.maxStretchFactor),
                 lhs.lightness + rhs.lightness
@@ -163,17 +171,19 @@ namespace spanners {
     operator/(const BoundedDegreeSpannerAnalysisResult& lhs,
               const size_t divisor ) {
         auto realDivisor = static_cast<double>(divisor);
+        auto effectiveDivisor = lhs.lite ? 1.0 : realDivisor;
+
         return {
                 lhs.distribution,
                 lhs.algorithm,
                 static_cast<size_t>(lhs.n / realDivisor),
                 lhs.runtime / realDivisor,
                 lhs.degree,
-                lhs.degreeAvg / realDivisor,
+                lhs.degreeAvg / effectiveDivisor,
                 lhs.avgDegreePerPoint,
-                lhs.avgStretchFactor / realDivisor,
+                lhs.avgStretchFactor / effectiveDivisor,
                 lhs.maxStretchFactor,
-                lhs.lightness / realDivisor
+                lhs.lightness / effectiveDivisor
         };
     }
     ostream&
@@ -226,7 +236,9 @@ namespace spanners {
                                              runtime,
                                              (lite ? 0 : spanners::degree(edgesBegin, edgesEnd)),
                                              (lite ? 0.0 : spanners::degreeAvg(edgesBegin, edgesEnd)),
-                                             (lite ? 0.0 : StretchFactorExpDijk(pointsBegin, pointsEnd, edgesBegin, edgesEnd)),
+                                             (lite ? 0.0 :
+                                                StretchFactorDijkstraReduction(pointsBegin, pointsEnd, edgesBegin, edgesEnd)),
+//                                                StretchFactorExpDijk(pointsBegin, pointsEnd, edgesBegin, edgesEnd)),
                                              (lite ? 0.0 : getLightness(pointsBegin, pointsEnd, edgesBegin, edgesEnd)),
                                              lite) {}
 

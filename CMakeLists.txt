@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-fopenmp -fexceptions -frounding-math -Wall -Wextra -Wno-unused")
 
 ## UNCOMMENT FOR RELEASE
-set(CMAKE_CXX_FLAGS "-O3 -fopenmp -fexceptions -frounding-math -Wall -Wextra -Wno-unused")
-set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_CXX_FLAGS "-O3 -fopenmp -fexceptions -frounding-math -Wall -Wextra -Wno-unused")
+#set(CMAKE_BUILD_TYPE Release)
 
 include_directories(/usr/include)
 include_directories(include)

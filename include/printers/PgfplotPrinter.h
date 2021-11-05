@@ -18,7 +18,7 @@ namespace spanners {
     public:
         PgfplotPrinter(string directory, string filename, string documentType = "standalone")
                 : TikzPrinter(directory,filename,documentType){
-            m_body = Body{getTikzHeader(),
+            m_body = Body{getTikzHeader("scale=0.55"),
                           "",
                           getTikzFooter() };
             for(auto color : Colors){
@@ -26,9 +26,9 @@ namespace spanners {
             }
         }
         template<class PlotMap>
-        void plotAxis(const string& iv, const PlotMap& results, const double xScale = 1.0, const double yScale = 1.0, const bool isFirst = true) {
+        void plotAxis(const string& iv, const PlotMap& results, const double xScale = 1.0, const string xScaleUnit= "", const bool isFirst = true) {
 
-            assert(abs(xScale) > 0 && abs(yScale) > 0);
+            assert(abs(xScale) > 0);
 
             if(m_algorithmMarkers.empty())
                 for(const auto& spannerName : ALGORITHM_NAMES) // provides the ordering we want
@@ -36,7 +36,7 @@ namespace spanners {
 
 
             // build axis header
-            string allPlotsOfAxis = getAxisHeader(iv, results, xScale, isFirst);
+            string allPlotsOfAxis = getAxisHeader(iv, results, xScale, xScaleUnit, isFirst);
 
             // build the plot
             for( const auto& name : ALGORITHM_NAMES ) {
@@ -45,7 +45,7 @@ namespace spanners {
                     string ivPlot = getPlotHeader(name);//
                     for (const auto &level: spanner) {
                         auto xValue = static_cast<double>(level.first) / xScale;
-                        auto yValue = level.second.template getIV<double>(iv) / yScale;
+                        auto yValue = level.second.template getIV<double>(iv);
                         string entry = "("
                                        + std::to_string(xValue)
                                        + ","
@@ -93,14 +93,16 @@ namespace spanners {
             return plotFooter;
         }
         template<class ResultMap>
-        string getAxisHeader(const string& iv, const ResultMap& results, const double xScale = 1.0, bool first = true) {
+        string getAxisHeader(const string& iv, const ResultMap& results, const double xScale = 1.0,
+                             const string xScaleUnit = "", bool first = true) {
 
             string axisHeader = string("")
                                 + "\\begin{axis}[";
             if(!m_caption.empty()) axisHeader += "title={" + m_caption + "},";
             string legendText = "legend to name=" + removeSpaces(m_caption)
                     + "-legend, legend columns={3}, ";
-            axisHeader += string("scaled ticks=false,grid=major,xlabel={$n$ (in millions)}, ")
+            axisHeader += string("scaled ticks=false,grid=major,xlabel={$n$")
+                          + (xScaleUnit.empty() ? "" : string(" (in ") + xScaleUnit + ")}, ")
                           + (first ? legendText : "")
                           + "xtick={";
             string xTicks = "";
@@ -181,18 +183,18 @@ namespace spanners {
     map<string,string> PgfplotPrinter::m_algorithmMarkers;
     vector<string> PgfplotPrinter::Marks = {
             //"otimes*",
-            "*", "triangle*", "square*",  "pentagon*", "diamond*"
+            "o", "triangle", "pentagon", "square",  "diamond"
     };
     // Palette generated using https://coolors.co/
     vector<string> PgfplotPrinter::Colors = {
             "264653",
-            //"287271",
             "1789a6",
+            "e76f51",
             "33c1b1",
+            //"287271",
 //            "2a9d8f",
 //            "e9c46a",
             //"f4a261",
-            "e76f51"
     };
     size_t PgfplotPrinter::m_markIndex = 0;
     size_t PgfplotPrinter::m_colorIndex = 0;

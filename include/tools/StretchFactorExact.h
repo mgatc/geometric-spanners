@@ -96,7 +96,7 @@ namespace spanners {
         number_t t_max = 0.0;
 
         // calculate euclidean getDistance between all pairs
-//#pragma omp parallel for reduction( max: t_max ) num_threads(numberOfThreads) default( shared ) // <-- UNCOMMENT FOR PARALLEL, ALSO LINE 9
+#pragma omp parallel for reduction( max: t_max ) num_threads(numberOfThreads) default( shared ) // <-- UNCOMMENT FOR PARALLEL, ALSO LINE 9
         for (index_t i = 0; i < n; ++i) {
             // Euclidean distances
             std::vector<number_t> D(n, INF);

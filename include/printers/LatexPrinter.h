@@ -178,7 +178,7 @@ namespace spanners {
             addRawText(getFigureHeader(true, caption));
             addToDocument(printer,precompile);
             addRawText(getFigureFooter(true));
-            addRawText("\\quad");
+            addRawText("\\qquad");
         }
         void addInput(const string& name) {
             m_body.content += "\\input{" + name + "}\n\n";

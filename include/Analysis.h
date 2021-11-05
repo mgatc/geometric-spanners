@@ -49,7 +49,7 @@ namespace analysis {
     typedef map<distribution_t, ReducedLevelResultMap> DistributionReducedLevelResultMap;
     typedef map<distribution_t, result_t> DistributionSummaryMap;
 
-    const std::array<string,7> ANALYSIS_IVs = {
+    std::vector<string> ANALYSIS_IVs = {
         "runtime","degree","degreeAvg","avgDegreePerPoint",
         "avgStretchFactor","maxStretchFactor","lightness"
     };
@@ -112,206 +112,6 @@ namespace analysis {
         return reduced;
     }
 
-    void plot(const DistributionSpannerReducedLevelResultMap &summary,
-              LatexPrinter &document) {
-
-        set<string> tdPlots = {"BGHP2010", "KPT2017"};
-        set<string> linfPlots = {"BKPX2015"};
-        set<string> l2Plots;
-        copy_if(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),
-                inserter(l2Plots,l2Plots.end()),
-                [&](const string& name){
-                    return !(contains(tdPlots,name) || contains(linfPlots,name));
-                });
-
-        set<string> nontdPlots;
-        copy_if(ALGORITHM_NAMES.begin(), ALGORITHM_NAMES.end(),
-                inserter(nontdPlots, nontdPlots.end()),
-                [&tdPlots](const string &name) { // return true if name is not in tdPlots
-                    return !contains(tdPlots, name);
-                });
-
-
-        for(const auto& distributionName : SYNTHETIC_DISTRIBUTION_NAMES ) {
-            if(summary.find(distributionName)!=summary.end()){
-                const auto &distribution = summary.at(distributionName);
-
-                string figureName("document-plot-");
-                figureName += removeSpaces(distributionName);
-                figureName += "-";
-                string runtimeFigureName = figureName + "runtime-subfigure";
-                LatexPrinter runtimeFigure(OUTPUT_DIRECTORY, runtimeFigureName);
-
-                // split distribution.second into containers for td and non-td, l2 and nonl2
-
-                // TD plots
-                SpannerReducedLevelResultMap tdResults;
-                copy_if(distribution.begin(), distribution.end(),
-                        inserter(tdResults, tdResults.end()),
-                        [&tdPlots](const auto &elem) {
-                            return contains(tdPlots, elem.first);
-                        });
-
-                if( !tdResults.empty()) {
-                    string caption = distributionName;
-                    caption += "-";
-                    caption += "TD";
-
-                    string plotName("document-plot-");
-                    plotName += removeSpaces(caption);
-                    plotName += "-";
-                    plotName += "runtime";
-
-                    PgfplotPrinter tdPlot(OUTPUT_DIRECTORY, plotName);
-                    tdPlot.setCaption(caption);
-                    tdPlot.plotAxis("runtime", tdResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                    runtimeFigure.addToDocumentAsSubfigure(tdPlot);
-                }
-
-                // non td plots
-                SpannerReducedLevelResultMap nontdResults;
-                copy_if(distribution.begin(), distribution.end(),
-                        inserter(nontdResults, nontdResults.end()),
-                        [&nontdPlots](const auto &elem) {
-                            return contains(nontdPlots, elem.first);
-                        });
-
-                if( !nontdResults.empty()) {
-                    string caption = distributionName;
-                    caption += "-";
-                    caption += "nonTD";
-
-                    string plotName = "document-plot-";
-                    plotName += removeSpaces(caption);
-                    plotName += "-";
-                    plotName += "runtime";
-
-                    PgfplotPrinter nontdPlot(OUTPUT_DIRECTORY, plotName);
-                    nontdPlot.setCaption(caption);
-                    nontdPlot.plotAxis("runtime", nontdResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                    runtimeFigure.addToDocumentAsSubfigure(nontdPlot);
-                }
-
-                // Linf plot
-                SpannerReducedLevelResultMap linfResults;
-                copy_if(distribution.begin(), distribution.end(),
-                        inserter(linfResults, linfResults.end()),
-                        [&linfPlots](const auto &elem) {
-                            return contains(linfPlots, elem.first);
-                        });
-
-                if( !linfResults.empty()) {
-                    string caption = distributionName;
-                    caption += "-";
-
-                    string plotName("document-plot-");
-                    plotName += removeSpaces(caption);
-                    plotName += "Linf";
-                    plotName += "-";
-                    plotName += "runtime";
-
-                    caption += "$L_\\infty$";
-
-                    PgfplotPrinter linfPlot(OUTPUT_DIRECTORY, plotName);
-                    linfPlot.setCaption(caption);
-                    linfPlot.plotAxis("runtime", linfResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                    runtimeFigure.addToDocumentAsSubfigure(linfPlot);
-                }
-
-                // L2 plot
-                SpannerReducedLevelResultMap l2Results;
-                copy_if(distribution.begin(), distribution.end(),
-                        inserter(l2Results, l2Results.end()),
-                        [&l2Plots](const auto &elem) {
-                            return contains(l2Plots, elem.first);
-                        });
-
-                if( !l2Results.empty()) {
-                    string caption = distributionName;
-                    caption += "-";
-
-                    string plotName("document-plot-");
-                    plotName += removeSpaces(caption);
-                    plotName += "L2";
-                    plotName += "-";
-                    plotName += "runtime";
-
-                    caption += "$L_2$";
-
-                    PgfplotPrinter l2Plot(OUTPUT_DIRECTORY, plotName);
-                    l2Plot.setCaption(caption);
-                    l2Plot.plotAxis("runtime", l2Results, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                    runtimeFigure.addToDocumentAsSubfigure(l2Plot);
-                }
-                document.addToDocumentAsFigure(runtimeFigure);
-
-                string otherIVFigureName = figureName + "-other";
-                LatexPrinter otherIVsFigure(OUTPUT_DIRECTORY,otherIVFigureName);
-
-                for (const auto &iv: ANALYSIS_IVs) {
-                    string caption = distributionName;
-
-                    string plotName("document-plot-");
-                    plotName += removeSpaces(caption);
-                    plotName += "-";
-                    plotName += iv;
-
-                    PgfplotPrinter plot(OUTPUT_DIRECTORY, plotName);
-                    plot.setCaption(caption);
-                    plot.plotAxis(iv, distribution, X_PLOT_SCALE, X_PLOT_SCALE_UNIT);
-                    otherIVsFigure.addToDocumentAsSubfigure(plot);
-                }
-                document.addToDocumentAsFigure(otherIVsFigure);
-                document.clearpage();
-        }
-        }
-    }
-
-    void
-    tabulate(DistributionSpannerReducedLevelResultMap& spannerSummary,
-             LatexPrinter& document) {
-        for(auto distribution : spannerSummary) {
-            for(auto iv : ANALYSIS_IVs) {
-                vector<string> headers;
-                vector<string> levels;
-                const auto& frontRow = distribution.second.begin()->second;
-                SetPrecision precisionSetter{int(X_PLOT_SCALE==1000000)};
-                transform(frontRow.begin(), frontRow.end(), back_inserter(levels),
-                    [precisionSetter](const auto& elem){
-                        return precisionSetter(std::to_string(elem.first / X_PLOT_SCALE)) + mathrm(X_PLOT_SCALE_SHORT_UNIT);
-                    });
-
-                vector<vector<string>> ivValues;
-                for(auto spanner : distribution.second) {
-                    headers.push_back(texttt(spanner.first));
-                    ivValues.push_back({});
-                    transform(spanner.second.begin(), spanner.second.end(), back_inserter(ivValues.back()),
-                        [iv](const auto& elem){
-                            return std::to_string(elem.second.template getIV<double>(iv));
-                        });
-                }
-
-                string caption(distribution.first + " x " + iv);
-                string tableName("document-table-");
-                tableName += removeSpaces(caption);
-                TablePrinter table(OUTPUT_DIRECTORY, tableName);
-
-                // add columns
-                table.addColumn(N_SYMBOL,levels,-1,0);
-
-                for(size_t i=0; i<headers.size();++i){
-                    int precision = iv == "degree" ? 0 : 3;
-                    table.addColumn( headers.at(i), ivValues.at(i),precision,i+1);
-                }
-
-                table.tabulate();
-
-                document.addRawText(subsection(caption) + "\n\n");
-                document.addToDocument(table);
-            }
-        }
-    }
-
     SpannerLevelResultMap
     getSpannerLevelResults(const vector<vector<string>>& rawResults) {
         SpannerLevelResultMap results;
@@ -365,9 +165,165 @@ namespace analysis {
         return summary;
     }
 
-    void
-    plot(const SpannerReducedLevelResultMap& summary,
-         LatexPrinter& document ) {
+
+
+    void plot(const DistributionSpannerReducedLevelResultMap &summary,
+              LatexPrinter &document, bool lite = false) {
+
+        set<string> tdPlots = {"BGHP2010", "KPT2017"};
+        set<string> linfPlots = {"BKPX2015"};
+        set<string> l2Plots;
+        copy_if(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),
+                inserter(l2Plots,l2Plots.end()),
+                [&](const string& name){
+                    return !(contains(tdPlots,name) || contains(linfPlots,name));
+                });
+
+        set<string> nontdPlots;
+        copy_if(ALGORITHM_NAMES.begin(), ALGORITHM_NAMES.end(),
+                inserter(nontdPlots, nontdPlots.end()),
+                [&tdPlots](const string &name) { // return true if name is not in tdPlots
+                    return !contains(tdPlots, name);
+                });
+
+
+        for(const auto& distributionName : SYNTHETIC_DISTRIBUTION_NAMES ) {
+            if(summary.find(distributionName)!=summary.end()){
+                const auto &distribution = summary.at(distributionName);
+
+                string figureName("document-plot-");
+                figureName += removeSpaces(distributionName);
+                figureName += "-";
+                string runtimeFigureName = figureName + "runtime-subfigure";
+                LatexPrinter runtimeFigure(OUTPUT_DIRECTORY, runtimeFigureName);
+
+                // split distribution.second into containers for td and non-td, l2 and nonl2
+
+                // all results
+                SpannerReducedLevelResultMap allResults;
+                copy(distribution.begin(), distribution.end(),
+                     inserter(allResults, allResults.end()));
+
+                if( !lite && !allResults.empty()) {
+                    string caption = distributionName;
+                    caption += "-";
+                    caption += "all";
+
+                    string plotName("document-plot-");
+                    plotName += removeSpaces(caption);
+                    plotName += "-";
+                    plotName += "runtime";
+
+                    PgfplotPrinter tdPlot(OUTPUT_DIRECTORY, plotName);
+                    tdPlot.setCaption(caption);
+                    tdPlot.plotAxis("runtime", allResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+                    runtimeFigure.addToDocumentAsSubfigure(tdPlot);
+                }
+
+                // non td plots
+                SpannerReducedLevelResultMap nontdResults;
+                copy_if(distribution.begin(), distribution.end(),
+                        inserter(nontdResults, nontdResults.end()),
+                        [&nontdPlots](const auto &elem) {
+                            return contains(nontdPlots, elem.first);
+                        });
+
+                if( !nontdResults.empty()) {
+                    string caption = distributionName;
+                    caption += "-";
+                    caption += "nonTD";
+
+                    string plotName = "document-plot-";
+                    plotName += removeSpaces(caption);
+                    plotName += "-";
+                    plotName += "runtime";
+
+                    PgfplotPrinter nontdPlot(OUTPUT_DIRECTORY, plotName);
+                    nontdPlot.setCaption(caption);
+                    nontdPlot.plotAxis("runtime", nontdResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+                    runtimeFigure.addToDocumentAsSubfigure(nontdPlot);
+                }
+
+                // Linf plot
+                SpannerReducedLevelResultMap linfResults;
+                copy_if(distribution.begin(), distribution.end(),
+                        inserter(linfResults, linfResults.end()),
+                        [&linfPlots](const auto &elem) {
+                            return contains(linfPlots, elem.first);
+                        });
+
+                if( !linfResults.empty()) {
+                    string caption = distributionName;
+                    caption += "-";
+
+                    string plotName("document-plot-");
+                    plotName += removeSpaces(caption);
+                    plotName += "Linf";
+                    plotName += "-";
+                    plotName += "runtime";
+
+                    caption += "$L_\\infty$";
+
+                    PgfplotPrinter linfPlot(OUTPUT_DIRECTORY, plotName);
+                    linfPlot.setCaption(caption);
+                    linfPlot.plotAxis("runtime", linfResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+                    //runtimeFigure.addToDocumentAsSubfigure(linfPlot);
+                }
+
+                // L2 plot
+                SpannerReducedLevelResultMap l2Results;
+                copy_if(distribution.begin(), distribution.end(),
+                        inserter(l2Results, l2Results.end()),
+                        [&l2Plots](const auto &elem) {
+                            return contains(l2Plots, elem.first);
+                        });
+
+                if( !l2Results.empty()) {
+                    string caption = distributionName;
+                    caption += "-";
+
+                    string plotName("document-plot-");
+                    plotName += removeSpaces(caption);
+                    plotName += "L2";
+                    plotName += "-";
+                    plotName += "runtime";
+
+                    caption += "$L_2$";
+
+                    PgfplotPrinter l2Plot(OUTPUT_DIRECTORY, plotName);
+                    l2Plot.setCaption(caption);
+                    l2Plot.plotAxis("runtime", l2Results, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+                    runtimeFigure.addToDocumentAsSubfigure(l2Plot);
+                }
+                document.addToDocumentAsFigure(runtimeFigure);
+
+                if(!lite) {
+                    string otherIVFigureName = figureName + "other";
+                    LatexPrinter otherIVsFigure(OUTPUT_DIRECTORY, otherIVFigureName);
+
+                    for (const auto &iv: ANALYSIS_IVs) {
+                        string caption = distributionName;
+
+                        if (iv == "runtime") continue;
+
+                        string plotName("document-plot-");
+                        plotName += removeSpaces(caption);
+                        plotName += "-";
+                        plotName += iv;
+
+                        PgfplotPrinter plot(OUTPUT_DIRECTORY, plotName);
+                        plot.setCaption(caption);
+                        plot.plotAxis(iv, distribution, X_PLOT_SCALE, X_PLOT_SCALE_UNIT);
+                        otherIVsFigure.addToDocumentAsSubfigure(plot);
+                    }
+                    document.addToDocumentAsFigure(otherIVsFigure);
+                }
+            }
+        }
+    }
+
+    void plot(const SpannerReducedLevelResultMap& summary,
+         LatexPrinter& document, bool lite = false ) {
         bool isFirst = true;
 
         set<string> tdPlots = {"BGHP2010", "KPT2017"};
@@ -385,136 +341,187 @@ namespace analysis {
                 [&tdPlots](const string &name) { // return true if name is not in tdPlots
                     return !contains(tdPlots, name);
                 });
-        LatexPrinter figure(OUTPUT_DIRECTORY,"document-plot-summary-subfigure");
 
-        for(const auto& iv : ANALYSIS_IVs) {
-            string figureName("document-plot-summary");
-            string runtimeFigureName = figureName + "runtime-subfigure";
-            LatexPrinter runtimeFigure(OUTPUT_DIRECTORY, runtimeFigureName);
 
-            // split distribution.second into containers for td and non-td, l2 and nonl2
+        LatexPrinter runtimeFigure(OUTPUT_DIRECTORY, "document-plot-summary-runtime-subfigure");
 
-            // TD plots
-            SpannerReducedLevelResultMap tdResults;
-            copy_if(summary.begin(), summary.end(),
-                    inserter(tdResults, tdResults.end()),
-                    [&tdPlots](const auto &elem) {
-                        return contains(tdPlots, elem.first);
-                    });
+        // all plots
+        SpannerReducedLevelResultMap allResults;
+        copy(summary.begin(), summary.end(),
+             inserter(allResults, allResults.end()));
 
-            if( !tdResults.empty()) {
-                string caption = "summary";
-                caption += "-";
-                caption += "TD";
+        if( !lite && !allResults.empty()) {
+            string caption = "summary";
+            caption += "-";
+            caption += "all";
 
-                string plotName("document-plot-");
-                plotName += removeSpaces(caption);
-                plotName += "-";
-                plotName += "runtime";
+            string plotName("document-plot-");
+            plotName += removeSpaces(caption);
+            plotName += "-";
+            plotName += "runtime";
 
-                PgfplotPrinter tdPlot(OUTPUT_DIRECTORY, plotName);
-                tdPlot.setCaption(caption);
-                tdPlot.plotAxis("runtime", tdResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                runtimeFigure.addToDocumentAsSubfigure(tdPlot);
-            }
-
-            // non td plots
-            SpannerReducedLevelResultMap nontdResults;
-            copy_if(summary.begin(), summary.end(),
-                    inserter(nontdResults, nontdResults.end()),
-                    [&nontdPlots](const auto &elem) {
-                        return contains(nontdPlots, elem.first);
-                    });
-
-            if( !nontdResults.empty()) {
-                string caption = "summary";
-                caption += "-";
-                caption += "nonTD";
-
-                string plotName = "document-plot-";
-                plotName += removeSpaces(caption);
-                plotName += "-";
-                plotName += "runtime";
-
-                PgfplotPrinter nontdPlot(OUTPUT_DIRECTORY, plotName);
-                nontdPlot.setCaption(caption);
-                nontdPlot.plotAxis("runtime", nontdResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                runtimeFigure.addToDocumentAsSubfigure(nontdPlot);
-            }
-
-            // Linf plot
-            SpannerReducedLevelResultMap linfResults;
-            copy_if(summary.begin(), summary.end(),
-                    inserter(linfResults, linfResults.end()),
-                    [&linfPlots](const auto &elem) {
-                        return contains(linfPlots, elem.first);
-                    });
-
-            if( !linfResults.empty()) {
-                string caption = "summary";
-                caption += "-";
-
-                string plotName("document-plot-");
-                plotName += removeSpaces(caption);
-                plotName += "Linf";
-                plotName += "-";
-                plotName += "runtime";
-
-                caption += "$L_\\infty$";
-
-                PgfplotPrinter linfPlot(OUTPUT_DIRECTORY, plotName);
-                linfPlot.setCaption(caption);
-                linfPlot.plotAxis("runtime", linfResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                runtimeFigure.addToDocumentAsSubfigure(linfPlot);
-            }
-
-            // L2 plot
-            SpannerReducedLevelResultMap l2Results;
-            copy_if(summary.begin(), summary.end(),
-                    inserter(l2Results, l2Results.end()),
-                    [&l2Plots](const auto &elem) {
-                        return contains(l2Plots, elem.first);
-                    });
-
-            if( !l2Results.empty()) {
-                string caption = "summary";
-                caption += "-";
-
-                string plotName("document-plot-");
-                plotName += removeSpaces(caption);
-                plotName += "L2";
-                plotName += "-";
-                plotName += "runtime";
-
-                caption += "$L_2$";
-
-                PgfplotPrinter l2Plot(OUTPUT_DIRECTORY, plotName);
-                l2Plot.setCaption(caption);
-                l2Plot.plotAxis("runtime", l2Results, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                runtimeFigure.addToDocumentAsSubfigure(l2Plot);
-            }
-            document.addToDocumentAsFigure(runtimeFigure);
-
-            string plotName("document-plot-summary-");
-            plotName += iv;
-            string caption = "Summary";
-
-            PgfplotPrinter plot(OUTPUT_DIRECTORY, plotName);
-            plot.setCaption(caption);
-            plot.plotAxis(iv, summary, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, isFirst);
-
-            figure.addToDocumentAsSubfigure(plot);
-
-            if (isFirst) {
-                isFirst = false;
-            }
+            PgfplotPrinter tdPlot(OUTPUT_DIRECTORY, plotName);
+            tdPlot.setCaption(caption);
+            tdPlot.plotAxis("runtime", allResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+            runtimeFigure.addToDocumentAsSubfigure(tdPlot);
         }
-        document.addToDocumentAsFigure(figure);
+
+        // non td plots
+        SpannerReducedLevelResultMap nontdResults;
+        copy_if(summary.begin(), summary.end(),
+                inserter(nontdResults, nontdResults.end()),
+                [&nontdPlots](const auto &elem) {
+                    return contains(nontdPlots, elem.first);
+                });
+
+        if( !nontdResults.empty()) {
+            string caption = "summary";
+            caption += "-";
+            caption += "nonTD";
+
+            string plotName = "document-plot-";
+            plotName += removeSpaces(caption);
+            plotName += "-";
+            plotName += "runtime";
+
+            PgfplotPrinter nontdPlot(OUTPUT_DIRECTORY, plotName);
+            nontdPlot.setCaption(caption);
+            nontdPlot.plotAxis("runtime", nontdResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+            runtimeFigure.addToDocumentAsSubfigure(nontdPlot);
+        }
+
+        // Linf plot
+        SpannerReducedLevelResultMap linfResults;
+        copy_if(summary.begin(), summary.end(),
+                inserter(linfResults, linfResults.end()),
+                [&linfPlots](const auto &elem) {
+                    return contains(linfPlots, elem.first);
+                });
+
+        if( !linfResults.empty()) {
+            string caption = "summary";
+            caption += "-";
+
+            string plotName("document-plot-");
+            plotName += removeSpaces(caption);
+            plotName += "Linf";
+            plotName += "-";
+            plotName += "runtime";
+
+            caption += "$L_\\infty$";
+
+            PgfplotPrinter linfPlot(OUTPUT_DIRECTORY, plotName);
+            linfPlot.setCaption(caption);
+            linfPlot.plotAxis("runtime", linfResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+            //runtimeFigure.addToDocumentAsSubfigure(linfPlot);
+        }
+
+        // L2 plot
+        SpannerReducedLevelResultMap l2Results;
+        copy_if(summary.begin(), summary.end(),
+                inserter(l2Results, l2Results.end()),
+                [&l2Plots](const auto &elem) {
+                    return contains(l2Plots, elem.first);
+                });
+
+        if( !l2Results.empty()) {
+            string caption = "summary";
+            caption += "-";
+
+            string plotName("document-plot-");
+            plotName += removeSpaces(caption);
+            plotName += "L2";
+            plotName += "-";
+            plotName += "runtime";
+
+            caption += "$L_2$";
+
+            PgfplotPrinter l2Plot(OUTPUT_DIRECTORY, plotName);
+            l2Plot.setCaption(caption);
+            l2Plot.plotAxis("runtime", l2Results, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+            runtimeFigure.addToDocumentAsSubfigure(l2Plot);
+        }
+        document.addToDocumentAsFigure(runtimeFigure);
+
+        if(!lite) {
+            LatexPrinter figure(OUTPUT_DIRECTORY, "document-plot-summary-subfigure");
+            string plotLegendText;
+            for (const auto &iv: ANALYSIS_IVs) {
+
+                if (iv == "runtime")
+                    continue;
+
+                string plotName("document-plot-summary-");
+                plotName += iv;
+                string caption = "Summary";
+
+                PgfplotPrinter plot(OUTPUT_DIRECTORY, plotName);
+                plot.setCaption(caption);
+                plot.plotAxis(iv, summary, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, isFirst);
+
+                figure.addToDocumentAsSubfigure(plot);
+
+                if (isFirst) {
+                    isFirst = false;
+                    plotLegendText = plot.getLegend();
+                }
+            }
+            document.addToDocumentAsFigure(figure);
+            LatexPrinter legend(OUTPUT_DIRECTORY,"document-plot-legend");
+            legend.addRawText(plotLegendText);
+            document.addToDocumentAsFigure(legend);
+        }
     }
 
-    void
-    tabulate(const SpannerReducedLevelResultMap& summary,
-             LatexPrinter& document) {
+
+
+    void tabulate(DistributionSpannerReducedLevelResultMap& spannerSummary,
+             LatexPrinter& document, bool lite = false) {
+
+        for(auto distribution : spannerSummary) {
+            for(auto iv : ANALYSIS_IVs) {
+                vector<string> headers;
+                vector<string> levels;
+                const auto& frontRow = distribution.second.begin()->second;
+                SetPrecision precisionSetter{int(X_PLOT_SCALE==1000000)};
+                transform(frontRow.begin(), frontRow.end(), back_inserter(levels),
+                          [precisionSetter](const auto& elem){
+                              return precisionSetter(std::to_string(elem.first / X_PLOT_SCALE)) + mathrm(X_PLOT_SCALE_SHORT_UNIT);
+                          });
+
+                vector<vector<string>> ivValues;
+                for(auto spanner : distribution.second) {
+                    headers.push_back(texttt(spanner.first));
+                    ivValues.push_back({});
+                    transform(spanner.second.begin(), spanner.second.end(), back_inserter(ivValues.back()),
+                              [iv](const auto& elem){
+                                  return std::to_string(elem.second.template getIV<double>(iv));
+                              });
+                }
+
+                string caption(distribution.first + " x " + iv);
+                string tableName("document-table-");
+                tableName += removeSpaces(caption);
+                TablePrinter table(OUTPUT_DIRECTORY, tableName);
+
+                // add columns
+                table.addColumn(N_SYMBOL,levels,-1,0);
+
+                for(size_t i=0; i<headers.size();++i){
+                    int precision = iv == "degree" ? 0 : 3;
+                    table.addColumn( headers.at(i), ivValues.at(i),precision,i+1);
+                }
+
+                table.tabulate();
+
+                document.addRawText(subsection(caption) + "\n\n");
+                document.addToDocument(table);
+            }
+        }
+    }
+
+    void tabulate(const SpannerReducedLevelResultMap& summary,
+             LatexPrinter& document, bool lite = false) {
         for(auto iv : ANALYSIS_IVs) {
 
             string caption(iv);
@@ -555,9 +562,11 @@ namespace analysis {
         }
     }
 
-    void
-    tabulate(const SpannerResultMap& summary,
-             LatexPrinter& document) {
+    void tabulate(const SpannerResultMap& summary,
+             LatexPrinter& document, bool lite = false) {
+        if(lite)
+            return;
+
         vector<string> header;
         header.push_back(ALGORITHM_SYMBOL);
         copy(next(ANALYSIS_IVs.begin()),ANALYSIS_IVs.end(),back_inserter(header));
@@ -611,15 +620,17 @@ void BoundedDegreePlaneSpannerAnalysisSynthetic(const string& filename) {
 
     int firstLevelInResults = stod(*next(raw.front().begin()));
 
-    if(firstLevelInResults >= 1e3) {
-        X_PLOT_SCALE = 1e3;
-        X_PLOT_SCALE_UNIT = "thousands";
-        X_PLOT_SCALE_SHORT_UNIT = "K";
-    }
-    if(firstLevelInResults >= 1e6) {
+    bool isLargeExperiment = firstLevelInResults >= 1e5;
+
+    if(isLargeExperiment) {
         X_PLOT_SCALE = 1e6;
         X_PLOT_SCALE_UNIT = "millions";
         X_PLOT_SCALE_SHORT_UNIT = "M";
+        ANALYSIS_IVs.resize(1);
+    } else {
+        X_PLOT_SCALE = 1e3;
+        X_PLOT_SCALE_UNIT = "thousands";
+        X_PLOT_SCALE_SHORT_UNIT = "K";
     }
 
     DistributionSpannerLevelResultMap distributionSpannerLevelResults = getDistributionSpannerLevelResults(raw);
@@ -634,17 +645,21 @@ void BoundedDegreePlaneSpannerAnalysisSynthetic(const string& filename) {
 
     cout<<"Finding average per level for all distributions..."<<endl;
     document.addRawText("\\section{Overall Summary}\n\n");
-    SpannerReducedLevelResultMap spannerLevelSummary = calculateSpannerLevelSummary(spannerLevelResults);
-    plot(spannerLevelSummary, document);
-    tabulate(spannerLevelSummary, document);
 
+    SpannerReducedLevelResultMap spannerLevelSummary = calculateSpannerLevelSummary(spannerLevelResults);
     SpannerResultMap spannerSummary = calculateSpannerSummary(spannerLevelSummary);
-    tabulate(spannerSummary,document);
+
+    tabulate(spannerSummary, document, isLargeExperiment);
+    plot(spannerLevelSummary, document, isLargeExperiment);
+    tabulate(spannerLevelSummary, document, isLargeExperiment);
+
+    if(!isLargeExperiment) document.clearpage();
 
     cout<< "Finding summaries for each spanner algorithm within each distribution..."<<endl;
     document.addRawText("\\section{Distribution Summaries}\n\n");
-    plot(distributionSpannerSummary, document);
-    tabulate(distributionSpannerSummary, document);
+
+    plot(distributionSpannerSummary, document, isLargeExperiment);
+    tabulate(distributionSpannerSummary, document, isLargeExperiment);
 
 
 
@@ -654,8 +669,8 @@ void BoundedDegreePlaneSpannerAnalysisSynthetic(const string& filename) {
 //    document.clearpage();
 
     //tabulateOverallSummary(spannerLevelResults, document);
-
-    document.display();
+    document.save();
+    //document.display();
 }
 
 void BoundedDegreePlaneSpannerAnalysisReal(const string& filename) {

@@ -19,7 +19,13 @@ namespace spanners {
 
 namespace analysis {
 
-    string OUTPUT_DIRECTORY = "/tmp/";
+    enum {
+        SyntheticExperiment,
+        RealExperiment,
+        NoExperimentType,
+    } EXPERIMENT_TYPE = NoExperimentType;
+
+    string OUTPUT_DIRECTORY = "/tmp/spanners/";
 
     string X_PLOT_SCALE_UNIT = "";
     string X_PLOT_SCALE_SHORT_UNIT = "";
@@ -51,8 +57,10 @@ namespace analysis {
 
     std::vector<string> ANALYSIS_IVs = {
         "runtime","degree","degreeAvg","avgDegreePerPoint",
-        "avgStretchFactor","maxStretchFactor","lightness"
+        "maxStretchFactor","avgStretchFactor","lightness"
     };
+
+
 
     vector<vector<string>>
     readFileIntoVector(const string &filename) {
@@ -61,6 +69,7 @@ namespace analysis {
         if (!expIn.is_open()) assert(!"Error opening file");
 
         vector<vector<string>> results;
+        // skips first line! usually headers
         auto row = getNextLineAndSplitIntoTokens(expIn);
         while (!(row = getNextLineAndSplitIntoTokens(expIn)).empty()) {
             results.push_back(row);
@@ -70,16 +79,12 @@ namespace analysis {
         return results;
     }
 
+
+
     DistributionSpannerLevelResultMap
     getDistributionSpannerLevelResults(const vector<vector<string>> &rawResults) {
         DistributionSpannerLevelResultMap results;
-        auto headerRow = rawResults.front();
-        bool isFirst = true;
         for (auto row : rawResults) {
-            if(isFirst) {
-                isFirst = false;
-                continue;
-            }
             result_t result;
             result.loadRow(row);
 
@@ -89,6 +94,22 @@ namespace analysis {
         }
         return results;
     }
+
+    SpannerLevelResultMap
+    getSpannerLevelResults(const vector<vector<string>>& rawResults) {
+        SpannerLevelResultMap results;
+
+        for(auto row : rawResults) {
+            result_t result;
+            result.loadRow(row);
+
+            results[result.algorithm]
+            [result.n].push_back(result);
+        }
+        return results;
+    }
+
+
 
     DistributionSpannerReducedLevelResultMap
     calculateDistributionSpannerSummary(const DistributionSpannerLevelResultMap &results) {
@@ -112,27 +133,6 @@ namespace analysis {
         return reduced;
     }
 
-    SpannerLevelResultMap
-    getSpannerLevelResults(const vector<vector<string>>& rawResults) {
-        SpannerLevelResultMap results;
-        auto headerRow = rawResults.front();
-
-        bool isFirst = true;
-
-        for(auto row : rawResults) {
-            if(isFirst) {
-                isFirst = false;
-                continue;
-            }
-            result_t result;
-            result.loadRow(row);
-
-            results[result.algorithm]
-                   [result.n].push_back(result);
-        }
-        return results;
-    }
-
     SpannerReducedLevelResultMap
     calculateSpannerLevelSummary(const SpannerLevelResultMap& results) {
         SpannerReducedLevelResultMap summary;
@@ -140,7 +140,8 @@ namespace analysis {
         for(const auto& spanner : results) {
             for(const auto& level : spanner.second) {
                 result_t sum = std::accumulate(level.second.begin(),level.second.end(),result_t());
-                result_t avg = sum / level.second.size();
+                size_t divisor = EXPERIMENT_TYPE == SyntheticExperiment ? level.second.size() : 1;
+                result_t avg = sum / divisor;
 
                 summary[spanner.first]
                 [level.first] = avg;
@@ -159,6 +160,7 @@ namespace analysis {
                 [](const result_t& sum, const auto& addend) {
                     return sum + addend.second;
                 });
+
             auto avg = sum / spanner.second.size();
             summary[spanner.first] = avg;
         }
@@ -171,7 +173,7 @@ namespace analysis {
               LatexPrinter &document, bool lite = false) {
 
         set<string> tdPlots = {"BGHP2010", "KPT2017"};
-        set<string> linfPlots = {"BKPX2015"};
+        set<string> linfPlots = {"BKPX2015", "Degree3"};
         set<string> l2Plots;
         copy_if(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),
                 inserter(l2Plots,l2Plots.end()),
@@ -192,11 +194,12 @@ namespace analysis {
                 const auto &distribution = summary.at(distributionName);
 
                 string figureName("document-plot-");
-                figureName += removeSpaces(distributionName);
-                figureName += "-";
-                string runtimeFigureName = figureName + "runtime-subfigure";
-                LatexPrinter runtimeFigure(OUTPUT_DIRECTORY, runtimeFigureName);
+                string caption = distributionName + " Distribution Results";
+                figureName += removeSpaces(caption);
+                figureName += "-subfigure";
 
+                LatexPrinter parentFigure(OUTPUT_DIRECTORY, figureName);
+                parentFigure.setCaption(caption);
                 // split distribution.second into containers for td and non-td, l2 and nonl2
 
                 // all results
@@ -217,7 +220,7 @@ namespace analysis {
                     PgfplotPrinter tdPlot(OUTPUT_DIRECTORY, plotName);
                     tdPlot.setCaption(caption);
                     tdPlot.plotAxis("runtime", allResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                    runtimeFigure.addToDocumentAsSubfigure(tdPlot);
+                    parentFigure.addToDocumentAsSubfigure(tdPlot);
                 }
 
                 // non td plots
@@ -241,7 +244,7 @@ namespace analysis {
                     PgfplotPrinter nontdPlot(OUTPUT_DIRECTORY, plotName);
                     nontdPlot.setCaption(caption);
                     nontdPlot.plotAxis("runtime", nontdResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                    runtimeFigure.addToDocumentAsSubfigure(nontdPlot);
+                    parentFigure.addToDocumentAsSubfigure(nontdPlot);
                 }
 
                 // Linf plot
@@ -267,7 +270,7 @@ namespace analysis {
                     PgfplotPrinter linfPlot(OUTPUT_DIRECTORY, plotName);
                     linfPlot.setCaption(caption);
                     linfPlot.plotAxis("runtime", linfResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                    //runtimeFigure.addToDocumentAsSubfigure(linfPlot);
+                    //parentFigure.addToDocumentAsSubfigure(linfPlot);
                 }
 
                 // L2 plot
@@ -293,14 +296,10 @@ namespace analysis {
                     PgfplotPrinter l2Plot(OUTPUT_DIRECTORY, plotName);
                     l2Plot.setCaption(caption);
                     l2Plot.plotAxis("runtime", l2Results, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                    runtimeFigure.addToDocumentAsSubfigure(l2Plot);
+                    parentFigure.addToDocumentAsSubfigure(l2Plot);
                 }
-                document.addToDocumentAsFigure(runtimeFigure);
 
                 if(!lite) {
-                    string otherIVFigureName = figureName + "other";
-                    LatexPrinter otherIVsFigure(OUTPUT_DIRECTORY, otherIVFigureName);
-
                     for (const auto &iv: ANALYSIS_IVs) {
                         string caption = distributionName;
 
@@ -314,10 +313,10 @@ namespace analysis {
                         PgfplotPrinter plot(OUTPUT_DIRECTORY, plotName);
                         plot.setCaption(caption);
                         plot.plotAxis(iv, distribution, X_PLOT_SCALE, X_PLOT_SCALE_UNIT);
-                        otherIVsFigure.addToDocumentAsSubfigure(plot);
+                        parentFigure.addToDocumentAsSubfigure(plot);
                     }
-                    document.addToDocumentAsFigure(otherIVsFigure);
                 }
+                document.addToDocumentAsFigure(parentFigure);
             }
         }
     }
@@ -327,7 +326,7 @@ namespace analysis {
         bool isFirst = true;
 
         set<string> tdPlots = {"BGHP2010", "KPT2017"};
-        set<string> linfPlots = {"BKPX2015"};
+        set<string> linfPlots = {"BKPX2015", "Degree3"};
         set<string> l2Plots;
         copy_if(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),
                 inserter(l2Plots,l2Plots.end()),
@@ -343,7 +342,12 @@ namespace analysis {
                 });
 
 
-        LatexPrinter runtimeFigure(OUTPUT_DIRECTORY, "document-plot-summary-runtime-subfigure");
+        string caption("Summary Results");
+        string filename("document-plot-");
+        filename += removeSpaces(caption) + "-subfigure";
+
+        LatexPrinter parentFigure(OUTPUT_DIRECTORY, filename);
+        parentFigure.setCaption(caption);
 
         // all plots
         SpannerReducedLevelResultMap allResults;
@@ -363,7 +367,7 @@ namespace analysis {
             PgfplotPrinter tdPlot(OUTPUT_DIRECTORY, plotName);
             tdPlot.setCaption(caption);
             tdPlot.plotAxis("runtime", allResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-            runtimeFigure.addToDocumentAsSubfigure(tdPlot);
+            parentFigure.addToDocumentAsSubfigure(tdPlot);
         }
 
         // non td plots
@@ -387,7 +391,7 @@ namespace analysis {
             PgfplotPrinter nontdPlot(OUTPUT_DIRECTORY, plotName);
             nontdPlot.setCaption(caption);
             nontdPlot.plotAxis("runtime", nontdResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-            runtimeFigure.addToDocumentAsSubfigure(nontdPlot);
+            parentFigure.addToDocumentAsSubfigure(nontdPlot);
         }
 
         // Linf plot
@@ -413,7 +417,7 @@ namespace analysis {
             PgfplotPrinter linfPlot(OUTPUT_DIRECTORY, plotName);
             linfPlot.setCaption(caption);
             linfPlot.plotAxis("runtime", linfResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-            //runtimeFigure.addToDocumentAsSubfigure(linfPlot);
+            //parentFigure.addToDocumentAsSubfigure(linfPlot);
         }
 
         // L2 plot
@@ -439,12 +443,10 @@ namespace analysis {
             PgfplotPrinter l2Plot(OUTPUT_DIRECTORY, plotName);
             l2Plot.setCaption(caption);
             l2Plot.plotAxis("runtime", l2Results, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-            runtimeFigure.addToDocumentAsSubfigure(l2Plot);
+            parentFigure.addToDocumentAsSubfigure(l2Plot);
         }
-        document.addToDocumentAsFigure(runtimeFigure);
 
         if(!lite) {
-            LatexPrinter figure(OUTPUT_DIRECTORY, "document-plot-summary-subfigure");
             string plotLegendText;
             for (const auto &iv: ANALYSIS_IVs) {
 
@@ -459,14 +461,15 @@ namespace analysis {
                 plot.setCaption(caption);
                 plot.plotAxis(iv, summary, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, isFirst);
 
-                figure.addToDocumentAsSubfigure(plot);
+                parentFigure.addToDocumentAsSubfigure(plot);
 
                 if (isFirst) {
                     isFirst = false;
                     plotLegendText = plot.getLegend();
                 }
             }
-            document.addToDocumentAsFigure(figure);
+            document.addToDocumentAsFigure(parentFigure);
+
             LatexPrinter legend(OUTPUT_DIRECTORY,"document-plot-legend");
             legend.addRawText(plotLegendText);
             document.addToDocumentAsFigure(legend);
@@ -480,7 +483,6 @@ namespace analysis {
 
         for(auto distribution : spannerSummary) {
             for(auto iv : ANALYSIS_IVs) {
-                vector<string> headers;
                 vector<string> levels;
                 const auto& frontRow = distribution.second.begin()->second;
                 SetPrecision precisionSetter{int(X_PLOT_SCALE==1000000)};
@@ -489,14 +491,18 @@ namespace analysis {
                               return precisionSetter(std::to_string(elem.first / X_PLOT_SCALE)) + mathrm(X_PLOT_SCALE_SHORT_UNIT);
                           });
 
+                vector<string> headers;
                 vector<vector<string>> ivValues;
-                for(auto spanner : distribution.second) {
-                    headers.push_back(texttt(spanner.first));
-                    ivValues.push_back({});
-                    transform(spanner.second.begin(), spanner.second.end(), back_inserter(ivValues.back()),
-                              [iv](const auto& elem){
-                                  return std::to_string(elem.second.template getIV<double>(iv));
-                              });
+                for(auto name : ALGORITHM_NAMES) {
+                    if( contains(distribution.second, name)) {
+                        auto& spanner = distribution.second[name];
+                        headers.push_back(texttt(name));
+                        ivValues.push_back({});
+                        transform(spanner.begin(), spanner.end(), back_inserter(ivValues.back()),
+                                  [iv](const auto& elem){
+                                      return std::to_string(elem.second.template getIV<double>(iv));
+                                  });
+                    }
                 }
 
                 string caption(distribution.first + " x " + iv);
@@ -542,13 +548,18 @@ namespace analysis {
                 [precisionSetter](const auto& elem){
                     return precisionSetter(std::to_string(elem.first / X_PLOT_SCALE)) + mathrm(X_PLOT_SCALE_SHORT_UNIT);
                 });
-            for(auto spanner : summary) {
-                headers.push_back(texttt(spanner.first));
-                ivValues.push_back({});
-                for(auto level : spanner.second) {
-                    ivValues.back().push_back(std::to_string(level.second.getIV<double>(iv)));
+
+            for(auto name : ALGORITHM_NAMES) {
+                if( contains(summary, name)) {
+                    auto& spanner = summary.at(name);
+                    headers.push_back(texttt(name));
+                    ivValues.push_back({});
+                    for(auto level : spanner) {
+                        ivValues.back().push_back(std::to_string(level.second.getIV<double>(iv)));
+                    }
                 }
             }
+
 
             for(size_t i=0; i<headers.size(); ++i){
                 int precision = i==0 ? -1 :
@@ -569,7 +580,11 @@ namespace analysis {
 
         vector<string> header;
         header.push_back(ALGORITHM_SYMBOL);
-        copy(next(ANALYSIS_IVs.begin()),ANALYSIS_IVs.end(),back_inserter(header));
+        transform(next(ANALYSIS_IVs.begin()),ANALYSIS_IVs.end(),back_inserter(header),
+            [](const auto& iv){
+                return TablePrinter::m_ivNiceNames.find(iv) == TablePrinter::m_ivNiceNames.end() ?
+                        iv : TablePrinter::m_ivNiceNames.at(iv);
+            });
 
         vector<vector<string>> body;
         body.push_back({});
@@ -596,7 +611,7 @@ namespace analysis {
         TablePrinter table(OUTPUT_DIRECTORY, tableName);
 
         for(size_t i=0; i<body.size(); i++) {
-            int precision = header[i] == "degree" ? 0 : 3;
+            int precision = header[i] == TablePrinter::m_ivNiceNames["degree"] ? 0 : 3;
             table.addColumn(header[i], body[i],precision,i);
         }
         table.tabulate();
@@ -681,7 +696,6 @@ void BoundedDegreePlaneSpannerAnalysisReal(const string& filename) {
     LatexPrinter document(OUTPUT_DIRECTORY, "document");
     vector<vector<string>> raw = readFileIntoVector(filename);
 
-
 //    cout<< "Finding summaries for each spanner algorithm within each distribution..."<<endl;
 //    DistributionSpannerLevelResultMap distributionSpannerLevelResults = getDistributionSpannerLevelResults(raw);
 //    DistributionSpannerReducedLevelResultMap distributionSpannerSummary = calculateDistributionSpannerSummary(distributionSpannerLevelResults);
@@ -712,7 +726,7 @@ void BoundedDegreePlaneSpannerAnalysisReal(const string& filename) {
 
     //tabulateOverallSummary(spannerLevelResults, document);
 
-    document.display();
+    document.save();
 }
 
 } // analysis
@@ -733,8 +747,10 @@ void BoundedDegreePlaneSpannerAnalysis(const string& filename) {
     cout << experimentType << endl;
 
     if(experimentType == "synthetic") {
+        EXPERIMENT_TYPE = SyntheticExperiment;
         BoundedDegreePlaneSpannerAnalysisSynthetic(filename);
     } else if(experimentType == "real") {
+        EXPERIMENT_TYPE = RealExperiment;
         BoundedDegreePlaneSpannerAnalysisReal(filename);
     } else {
         cout<< "Invalid experiment type. Exiting...";

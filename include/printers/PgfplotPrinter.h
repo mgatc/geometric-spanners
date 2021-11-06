@@ -98,9 +98,10 @@ namespace spanners {
 
             string axisHeader = string("")
                                 + "\\begin{axis}[";
-            if(!m_caption.empty()) axisHeader += "title={" + m_caption + "},";
+//            if(!m_caption.empty()) axisHeader += "title={" + m_caption + "},";
             string legendText = "legend to name=" + removeSpaces(m_caption)
                     + "-legend, legend columns={3}, ";
+            axisHeader += "yticklabel style={rotate=90,anchor=base,yshift=0.2cm}, ";
             axisHeader += string("scaled ticks=false,grid=major,xlabel={$n$")
                           + (xScaleUnit.empty() ? "" : string(" (in ") + xScaleUnit + ")}, ")
                           + (first ? legendText : "")
@@ -129,7 +130,7 @@ namespace spanners {
             axisHeader += xTicks
                           + "\n}"
                           + ", ylabel near ticks,ylabel={"
-                          + iv
+                          + m_ivNiceNames.at(iv)
                           + "}, legend pos=north west,"
                           + "xmin="
                           + std::to_string(xMin)
@@ -178,6 +179,7 @@ namespace spanners {
         }
 
 
+        static map<string,string> m_ivNiceNames;
     }; // class PgfplotsPrinter
 
     map<string,string> PgfplotPrinter::m_algorithmMarkers;
@@ -187,17 +189,31 @@ namespace spanners {
     };
     // Palette generated using https://coolors.co/
     vector<string> PgfplotPrinter::Colors = {
-            "264653",
-            "1789a6",
-            "e76f51",
-            "33c1b1",
+            "22dddd",
+            "2222dd",
+            "dd22dd",
+//            "264653",
+//            "1789a6",
+//            "e76f51",
+//            "33c1b1",
             //"287271",
 //            "2a9d8f",
 //            "e9c46a",
             //"f4a261",
+
     };
     size_t PgfplotPrinter::m_markIndex = 0;
-    size_t PgfplotPrinter::m_colorIndex = 0;
+    size_t PgfplotPrinter::m_colorIndex = 1;
+
+    map<string,string> PgfplotPrinter::m_ivNiceNames = {
+            {"runtime",             "Average execution time (s)"},
+            {"degree",              "Maximum observed degree"},
+            {"degreeAvg",           "Average observed degree per spanner"},
+            {"avgDegreePerPoint",   "Average observed degree per point"},
+            {"maxStretchFactor",    "Maximum observed stretch-factor"},
+            {"avgStretchFactor",    "Average observed stretch-factor"},
+            {"lightness",           "Average lightness"},
+    };
 
 
 } // namespace spanners

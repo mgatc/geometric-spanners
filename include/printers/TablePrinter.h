@@ -4,11 +4,14 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "printers/LatexPrinter.h"
 #include "tools/Utilities.h"
 
 namespace spanners {
+
+    using namespace std;
 
     const string TABLE_COLOR_1 = "ffffff";
     const string TABLE_COLOR_2 = "cccccc";
@@ -112,10 +115,10 @@ namespace spanners {
 
             //for(int cell = 0; cell < (int) m_added.size(); ++cell) { //auto attr : colHeaders )
             for( auto column : m_added ){
-                tableHeader += "$\\textbf{" + column.second.first + "}$ &";
+                tableHeader += column.second.first + " & ";
             }
 
-            tableHeader = tableHeader.substr( 0, tableHeader.size()-1 ); // remove trailing character (&)
+            tableHeader = tableHeader.substr( 0, tableHeader.size()-2 ); // remove trailing character (&)
             tableHeader += "\\\\";
 
             tableHeader += "\n\n\\hline\n";
@@ -128,182 +131,22 @@ namespace spanners {
                                       + "\\end{tabular}\n\n";
             return tableFooter;
         }
+        static map<string,string> m_ivNiceNames;
     protected:
         set<unsigned> m_ignore;
         map<int,pair<string,vector<string>>> m_added;
+
     };
 
-
-
-
-
-//    void tabulateSummaryResults(const string& dist, const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter) {
-//
-//        string distributionNameNoSpaces(dist);
-//        boost::erase_all(distributionNameNoSpaces, " ");
-//        string tableFilename = string("exp-table")
-//                               + distributionNameNoSpaces;
-//
-////                TablePrinter table(tableFilename);
-////
-//        string tableCaption = dist + " Summary";
-////                table.setCaption(tableCaption);
-//        string filename = string("exp-table_summary-") + tableCaption;
-//        boost::erase_all(filename, " ");
-//        boost::erase_all(filename, ")");
-//        boost::erase_all(filename, "(");
-//
-//        TablePrinter table(addToPrinter->m_directory,filename);
-//        table.addColumn( ALGORITHM_SYMBOL, ALGORITHM_NAMES, -1,0 );
-//        table.addColumn(DEGREE_BOUND_SYMBOL, DEGREE_BOUND_PER_ALGORITHM,0,1);
-//        table.addColumn(STRETCH_FACTOR_BOUND_SYMBOL, STRETCH_FACTOR_BOUND_PER_ALGORITHM,-1,4);
-//
-//        size_t col = 0;
-//
-//        // skip runtime for summary table by starting at 1
-//        for( int iv=1; iv<(int)IV_SYMBOLS.size(); ++iv) { //auto attr : colHeaders ){
-//            //if( iv == 0 ) continue;
-//
-//            vector<string> singleColumn;
-//            for(auto row : results.m_reducedLevels) {
-//                ostringstream stream;
-//                stream << fixed;
-//                stream << setprecision(IV_PRECISION.at(iv));
-//                stream << row.second.IV.at(IV_NAMES.at(iv));
-//                singleColumn.push_back(stream.str());
-//            }
-//            table.addColumn( IV_SYMBOLS.at(iv),singleColumn,6);
-//        }
-//        table.tabulate(TablePrinter::CellHighlightStyle::MaxInColumn);
-//        addToPrinter->addToDocument(table, PRECOMPILE_SUBDOCUMENTS);
-//    }
-
-
-//    void getSingleIVColumn(size_t iv, BoundedDegreePlaneSpannerAlgorithm alg, const BoundedDegreeSpannerResultSet &results,  vector<string>& singleColumn) {
-//        for( const auto& level : results.m_reducedSamples.at(alg) ) {
-//            ostringstream stream;
-//            stream << fixed;
-//            stream << setprecision(IV_PRECISION.at(iv));
-//            stream << level.second.IV.at(IV_NAMES.at(iv));
-//            singleColumn.push_back(stream.str());
-//        }
-//    }
-//
-//    void tabulateIVsFromConfigExperiment(const string& dist, const BoundedDegreeSpannerResultSet &results, const map<index_t,string>& REAL_POINTSET_NAMES, LatexPrinter* addToPrinter) {
-//        // Create table names
-//        vector<string> tableNames;
-//        transform(PGFPLOT_NAMES.begin(),
-//                  PGFPLOT_NAMES.end(),
-//                  back_inserter(tableNames),
-//                  [&dist](const string& str) {
-//                      string tableName = str + " (" + dist + ")";
-//                      //cout<<tableName;
-//                      return tableName;
-//                  });
-//
-//        // get levels of n
-//        vector<string> nLevels;
-//        //for( const auto& alg :  ) {
-//        for( const auto& level : results.m_reducedSamples.begin()->second ) {
-//            nLevels.push_back(std::to_string(level.first));
-//        }
-//        //}
-//        vector<string> names(REAL_POINTSET_NAMES.size());
-//        transform(REAL_POINTSET_NAMES.begin(),REAL_POINTSET_NAMES.end(),names.begin(),
-//            [](const auto& entry) -> string {
-//                return "\\text{" + entry.second + "}";
-//        });
-//
-//        auto tableNameIt = tableNames.begin();
-//        //bool first = true;
-//        for( unsigned iv=0;iv<IV_NAMES.size();++iv) {
-//            //for( const auto& iv : IV_NAMES ) {
-//            //assert(tableNameIt != plotNames.end());
-//            string caption = *tableNameIt++;
-//            string filename = string("exp-table_iv-") + caption;
-//            boost::erase_all(filename, " ");
-//            boost::erase_all(filename, ")");
-//            boost::erase_all(filename, "(");
-//
-//            TablePrinter singleTabulater(addToPrinter->m_directory, filename);
-//            //singleTabulater.setCaption(caption);
-//            size_t i=0;
-//            singleTabulater.addColumn("Point set", names, -1,i++);
-//            singleTabulater.addColumn(N_SYMBOL, nLevels, 0,i++);
-//
-//            vector<string> AlgorithmNamesSmallText(ALGORITHM_NAMES);
-////            transform(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),back_inserter(AlgorithmNamesSmallText),
-////                [](const auto& text){
-////                    return "\\tiny{" + text + "}";
-////            });
-//
-//            for(int alg=BoundedDegreePlaneSpannerAlgorithm::AlgorithmFirst;
-//                alg!=BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast; ++alg ) {
-//                vector<string> singleColumn;
-//                getSingleIVColumn( iv, BoundedDegreePlaneSpannerAlgorithm(alg), results, singleColumn);
-//                singleTabulater.addColumn(AlgorithmNamesSmallText[alg], singleColumn, -1,i++);
-//            }
-//            singleTabulater.tabulate(TablePrinter::CellHighlightStyle::MaxInRow);
-//            addToPrinter->addToDocument(singleTabulater, PRECOMPILE_SUBDOCUMENTS);
-//        }
-//    }
-//
-//
-//
-//
-//    void tabulateIVs(const string& dist, const BoundedDegreeSpannerResultSet &results, LatexPrinter* addToPrinter) {
-//
-//        // Create table names
-//        vector<string> tableNames;
-//        transform(PGFPLOT_NAMES.begin(),
-//                  PGFPLOT_NAMES.end(),
-//                  back_inserter(tableNames),
-//                  [&dist](const string& str) {
-//                      string tableName = str + " (" + dist + ")";
-//                      //cout<<tableName;
-//                      return tableName;
-//                  });
-//
-//        // get levels of n
-//        vector<string> nLevels;
-//        //for( const auto& alg :  ) {
-//            for( const auto& level : results.m_reducedSamples.begin()->second ) {
-//                nLevels.push_back(std::to_string(level.first));
-//            }
-//        //}
-//
-//        auto tableNameIt = tableNames.begin();
-//        //bool first = true;
-//        for( unsigned iv=0;iv<IV_NAMES.size();++iv) {
-//            //for( const auto& iv : IV_NAMES ) {
-//            //assert(tableNameIt != plotNames.end());
-//            string caption = *tableNameIt++;
-//            string filename = string("exp-table_iv-") + caption;
-//            boost::erase_all(filename, " ");
-//            boost::erase_all(filename, ")");
-//            boost::erase_all(filename, "(");
-//
-//            TablePrinter singleTabulater(addToPrinter->m_directory, filename);
-//            //singleTabulater.setCaption(caption);
-//            size_t i=0;
-//            singleTabulater.addColumn(N_SYMBOL, nLevels,0, i++);
-//
-//            vector<string> AlgorithmNamesSmallText(ALGORITHM_NAMES);
-////            transform(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),back_inserter(AlgorithmNamesSmallText),
-////                [](const auto& text){
-////                    return "\\tiny{" + text + "}";
-////            });
-//
-//            for(int alg=BoundedDegreePlaneSpannerAlgorithm::AlgorithmFirst;
-//                alg!=BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast; ++alg ) {
-//                vector<string> singleColumn;
-//                getSingleIVColumn( iv, BoundedDegreePlaneSpannerAlgorithm(alg), results, singleColumn);
-//                singleTabulater.addColumn(AlgorithmNamesSmallText[alg], singleColumn, -1,i++);
-//            }
-//            singleTabulater.tabulate(TablePrinter::CellHighlightStyle::MaxInRow);
-//            addToPrinter->addToDocument(singleTabulater, PRECOMPILE_SUBDOCUMENTS);
-//        }
-//    }
+    map<string,string> TablePrinter::m_ivNiceNames = {
+            {"runtime",             "$\\mathrm{runtime (s)}$"},
+            {"degree",              "$\\Delta$"},
+            {"degreeAvg",           "$\\Delta_\\mathrm{avg}$"},
+            {"avgDegreePerPoint",   "$\\Delta_\\mathrm{point}$"},
+            {"maxStretchFactor",    "$t_\\mathrm{max}$"},
+            {"avgStretchFactor",    "$t_\\mathrm{avg}$"},
+            {"lightness",           "$\\ell$"},
+    };
 
 }
 

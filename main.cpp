@@ -3,8 +3,8 @@
 #include <vector>
 
 #include "Analysis.h"
-#include "Experiment.h"
-#include "Scratch.h"
+//#include "Experiment.h"
+//#include "Scratch.h"
 
 using namespace std;
 using namespace spanners;
@@ -34,35 +34,36 @@ int main(int argc, char *argv[]) {
             if(extension == "csv") {
                 BoundedDegreePlaneSpannerAnalysis(filename);
                 break;
-            } else if(extension == "xy") {
-                scratch(filename);
-                break;
             }
+//            else if(extension == "xy") {
+//                scratch(filename);
+//                break;
+//            }
             [[fallthrough]];
-        case NO_ARGS_AMOUNT: // run a real-world experiment with default args
-        case 3:
-            if(extension == "xml") {
-                ExperimentFromConfigurationFile(filename,n);
-            }
-            break;
+//        case NO_ARGS_AMOUNT: // run a real-world experiment with default args
+//        case 3:
+//            if(extension == "xml") {
+//                ExperimentFromConfigurationFile(filename,n);
+//            }
+//            break;
 //        case NO_ARGS_AMOUNT: // run a synthetic experiment with default args
-        case 5: // run a synthetic experiment with given args
-            for (size_t arg = 1;
-                 arg < std::min(size_t(argc), experimentParameters.size() + 1);
-                 ++arg) {
-                try {
-                    experimentParameters[arg - 1] = stoul(argv[arg]);
-                    cout << "Parameter " << (arg - 1) << " = " << experimentParameters[arg - 1] << "\n";
-                }
-                catch (invalid_argument &ia) {
-                    cout << "Invalid parameter '" << arg << "'... exiting\n";
-                }
-            }
-            SyntheticExperiment(experimentParameters[0],
-                                experimentParameters[1],
-                                experimentParameters[2],
-                                experimentParameters[3]);
-            break;
+//        case 5: // run a synthetic experiment with given args
+//            for (size_t arg = 1;
+//                 arg < std::min(size_t(argc), experimentParameters.size() + 1);
+//                 ++arg) {
+//                try {
+//                    experimentParameters[arg - 1] = stoul(argv[arg]);
+//                    cout << "Parameter " << (arg - 1) << " = " << experimentParameters[arg - 1] << "\n";
+//                }
+//                catch (invalid_argument &ia) {
+//                    cout << "Invalid parameter '" << arg << "'... exiting\n";
+//                }
+//            }
+//            SyntheticExperiment(experimentParameters[0],
+//                                experimentParameters[1],
+//                                experimentParameters[2],
+//                                experimentParameters[3]);
+//            break;
         default:
             cout<<"Invalid arguments... try again."<<endl;
             return EXIT_FAILURE;

@@ -96,7 +96,7 @@ namespace spanners {
             if(subfigure) {
                  header = string( "\\subfloat[") + options + "]{";
             } else {
-                header = string("\\begin{figure}[h]");
+                header = string("\\begin{figure}[ht]");
                 if(!options.empty()){
                     header += "[" + options + "]";
                 }
@@ -174,11 +174,18 @@ namespace spanners {
 
             addRawText(getFigureFooter());
         }
+        int m_numSubfigs = 0;
         void addToDocumentAsSubfigure(const LatexPrinter& printer, string caption="", bool precompile = false) {
             addRawText(getFigureHeader(true, caption));
             addToDocument(printer,precompile);
             addRawText(getFigureFooter(true));
-            addRawText("\\qquad");
+
+            ++m_numSubfigs;
+            int numCols = 3;
+
+            string separator = m_numSubfigs % numCols == 0 ? "\n\n" : "\\qquad";
+            addRawText(separator);
+
         }
         void addInput(const string& name) {
             m_body.content += "\\input{" + name + "}\n\n";

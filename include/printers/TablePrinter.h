@@ -45,10 +45,10 @@ namespace spanners {
             }
             m_added.emplace(priority,make_pair(header,valuesCopy));
         }
-        void tabulate(TablePrinter::CellHighlightStyle highlightStyle = TablePrinter::CellHighlightStyle::None) {
-            m_body = Body{getTableHeader(),
+        void tabulate(bool sideways = false, TablePrinter::CellHighlightStyle highlightStyle = TablePrinter::CellHighlightStyle::None) {
+            m_body = Body{getTableHeader(sideways),
                           getTableBody(highlightStyle),
-                          getTableFooter() };
+                          getTableFooter(sideways) };
         }
         string getTableBody(TablePrinter::CellHighlightStyle highlightStyle) {
             assert(!m_added.empty());
@@ -97,11 +97,12 @@ namespace spanners {
             }
             return table;
         }
-        string getTableHeader() {
+        string getTableHeader(bool sideways = false) {
 
             std::string tableHeader = "\\rowcolors{1}{"
                                       + TABLE_COLOR_1 + "}{"
                                       + TABLE_COLOR_2 + "}\n\n"
+                                      + (sideways ? "\\begin{sidewaystable}\n\n" : "")
                                       + "\\begin{tabular}{|";
             unsigned tableCols = m_added.size();
             tableCols -= m_ignore.size();
@@ -125,10 +126,11 @@ namespace spanners {
             tableHeader += "\n\n\\hline\n";
             return tableHeader;
         }
-        string getTableFooter() {
+        string getTableFooter(bool sideways = false) {
             std::string tableFooter = std::string("")
                                       + "\\hline\n"
-                                      + "\\end{tabular}\n\n";
+                                      + "\\end{tabular}\n\n"
+                                      + (sideways ? "\\end{sidewaystable}\n\n" : "");
             return tableFooter;
         }
         static map<string,string> m_ivNiceNames;

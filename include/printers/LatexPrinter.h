@@ -79,7 +79,7 @@ namespace spanners {
                     + m_documentType
                     + "}\n\n"
                       + "\\usepackage[table]{xcolor}\n"
-                    + "\\usepackage{tikz,pgfplots,amsmath,fullpage,subfig}\n"
+                    + "\\usepackage{tikz,pgfplots,amsmath,fullpage,rotating}\n"
                     + "\\usetikzlibrary{shapes}\n"
                     + "\\pgfplotsset{compat=1.15}\n\n"
                     + getColorDefinitions()
@@ -91,10 +91,11 @@ namespace spanners {
             return "\\end{document}";
         }
         // Figure getters
-        static string getFigureHeader(bool subfigure = false, string options = "") {
+        static string getFigureHeader(bool subfigure = false, double ratioOfLineWidth = 1.0, string options = "") {
             string header;
             if(subfigure) {
-                 header = string( "\\subfloat[") + options + "]{";
+                header = string("\\begin{minipage}{")
+                        + to_string(ratioOfLineWidth) + "\\linewidth}";
             } else {
                 header = string("\\begin{figure}[ht]");
                 if(!options.empty()){
@@ -105,17 +106,18 @@ namespace spanners {
             return header;
         }
         string getFigureFooter(bool subfigure = false) const {
-            if(subfigure) {
-                return "}";
-            }
             string footer;
+            if(subfigure) {
+                footer += string("\\end{minipage}");
+            } else {
+                footer += string("\\end{figure}\n");
+            }
 //            if( !m_caption.empty() ) {
 //                footer += string("")
 //                    + "\\caption{"
 //                    + m_caption
 //                    + "}\n";
 //            }
-            footer += string("\\end{figure}\n\n");
             return footer;
         }
         // Figure captions
@@ -161,7 +163,7 @@ namespace spanners {
         /** Add the contents of a LatexPrinter object to this document as a figure. */
         void addToDocumentAsFigure(const LatexPrinter& printer, const bool precompile = false, const bool captionAbove = true) {
 
-            addRawText(getFigureHeader());
+            addRawText(getFigureHeader(false));
 
             string caption = printer.getCaption();
             if(!caption.empty() && captionAbove)
@@ -172,18 +174,18 @@ namespace spanners {
             if(!caption.empty() && !captionAbove)
                 addRawText(caption);
 
-            addRawText(getFigureFooter());
+            addRawText(getFigureFooter(false));
         }
         int m_numSubfigs = 0;
-        void addToDocumentAsSubfigure(const LatexPrinter& printer, string caption="", bool precompile = false) {
-            addRawText(getFigureHeader(true, caption));
+        void addToDocumentAsSubfigure(const LatexPrinter& printer, int numCols = 3, string caption="", bool precompile = false) {
+
+            addRawText(getFigureHeader(true, 0.95/numCols, caption));
             addToDocument(printer,precompile);
             addRawText(getFigureFooter(true));
 
             ++m_numSubfigs;
-            int numCols = 3;
 
-            string separator = m_numSubfigs % numCols == 0 ? "\n\n" : "\\qquad";
+            string separator = m_numSubfigs % numCols == 0 ? "\n\n" : "\n\\hfill\n";
             addRawText(separator);
 
         }

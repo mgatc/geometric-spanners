@@ -102,7 +102,7 @@ namespace spanners {
             string legendText = "legend to name=" + removeSpaces(m_caption)
                     + "-legend, legend columns={3}, ";
             axisHeader += "yticklabel style={rotate=90,anchor=base,yshift=0.2cm}, ";
-            axisHeader += string("scaled ticks=false,grid=major,xlabel={$n$")
+            axisHeader += string("scaled ticks=false,grid=none,xlabel={$n$")
                           + (xScaleUnit.empty() ? "" : string(" (in ") + xScaleUnit + ")}, ")
                           + (first ? legendText : "")
                           + "xtick={";
@@ -148,6 +148,7 @@ namespace spanners {
             return axisFooter;
         }
     private:
+        static vector<string> MarkStyles;
         static vector<string> Marks;
         static size_t m_markIndex; // a valid index of Marks
         static string getMark() {
@@ -163,12 +164,19 @@ namespace spanners {
             m_colorIndex = (m_colorIndex+1) % Colors.size();
             return Colors.at(currentColor);
         }
+        static int m_markStyleCurrent;
+        static string getMarkStyle() {
+            string currentStyle = MarkStyles[m_markStyleCurrent];
+            m_markStyleCurrent = (m_markStyleCurrent+1) % MarkStyles.size();
+            return currentStyle;
+        }
         static void addNewMarker(const string& algorithm) {
-            string color = getColor();
+//            string color = getColor();
             string markerText;
-            markerText += "mark=" + getMark() + ","
-                    + "mark color=" + color + ","
-                    + "color=" + color;
+//            markerText += "mark=" + getMark() + ","
+//                    + "mark color=" + color + ","
+//                    + "color=" + color;
+            markerText = getMarkStyle();
             m_algorithmMarkers[algorithm] = markerText;
         }
         static map<string,string> m_algorithmMarkers;
@@ -182,16 +190,34 @@ namespace spanners {
         static map<string,string> m_ivNiceNames;
     }; // class PgfplotsPrinter
 
+    int PgfplotPrinter::m_markStyleCurrent = 0;
     map<string,string> PgfplotPrinter::m_algorithmMarkers;
+    vector<string> PgfplotPrinter::MarkStyles = {
+            "color=black,mark options={fill=black},mark=square*",
+            "color=black,mark options={fill=black},mark=pentagon*",
+            "color=black,mark options={fill=black},mark=diamond*",
+            "color=black,mark options={fill=black},mark=*",
+            "color=black,mark options={fill=black},mark=triangle*",
+            "color=black,mark=square",
+            "color=black,mark=pentagon",
+            "color=black,mark=diamond",
+            "color=black,mark=o",
+            "color=black,mark=otimes",
+            "color=black,mark=triangle",
+            "color=black,mark=oplus",
+    };
     vector<string> PgfplotPrinter::Marks = {
-            //"otimes*",
+            "otimes*",
+            "oplus*",
             "o", "triangle", "pentagon", "square",  "diamond"
     };
     // Palette generated using https://coolors.co/
     vector<string> PgfplotPrinter::Colors = {
-            "22dddd",
-            "2222dd",
-            "dd22dd",
+            "000000",
+            "2288DD"
+//            "22dddd",
+//            "2222dd",
+//            "dd22dd",
 //            "264653",
 //            "1789a6",
 //            "e76f51",

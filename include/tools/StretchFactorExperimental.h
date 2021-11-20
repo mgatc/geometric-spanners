@@ -137,8 +137,8 @@ namespace spanners {
                     }
                 }
 
-                while(!frontier.empty()) {
-                    assert(!open.empty());
+                while(!frontier.empty() && !open.empty()) {
+                    //assert(!open.empty());
                     auto nextShortestPath = open.begin();
                     index_t v = nextShortestPath->second;
                     shortestPathLength[v] = nextShortestPath->first;

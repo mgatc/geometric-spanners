@@ -70,8 +70,15 @@ namespace analysis {
 
         vector<vector<string>> results;
         // skips first line! usually headers
+
         auto row = getNextLineAndSplitIntoTokens(expIn);
-        while (!(row = getNextLineAndSplitIntoTokens(expIn)).empty()) {
+        try {
+            stoi(row[1]); // second column should have a numeric value
+            results.push_back(row);
+        } catch( invalid_argument& ia) {
+            cout<< "Throwing out header row";
+        }
+        while( !(row = getNextLineAndSplitIntoTokens(expIn)).empty()) {
             results.push_back(row);
         }
         expIn.close();
@@ -188,6 +195,8 @@ namespace analysis {
                     return !contains(tdPlots, name);
                 });
 
+        int numCols = 2 + int(!lite);
+
 
         for(const auto& distributionName : SYNTHETIC_DISTRIBUTION_NAMES ) {
             if(summary.find(distributionName)!=summary.end()){
@@ -220,7 +229,7 @@ namespace analysis {
                     PgfplotPrinter tdPlot(OUTPUT_DIRECTORY, plotName);
                     tdPlot.setCaption(caption);
                     tdPlot.plotAxis("runtime", allResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                    parentFigure.addToDocumentAsSubfigure(tdPlot);
+                    parentFigure.addToDocumentAsSubfigure(tdPlot, numCols);
                 }
 
                 // non td plots
@@ -244,7 +253,7 @@ namespace analysis {
                     PgfplotPrinter nontdPlot(OUTPUT_DIRECTORY, plotName);
                     nontdPlot.setCaption(caption);
                     nontdPlot.plotAxis("runtime", nontdResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                    parentFigure.addToDocumentAsSubfigure(nontdPlot);
+                    parentFigure.addToDocumentAsSubfigure( nontdPlot, numCols);
                 }
 
                 // Linf plot
@@ -296,7 +305,7 @@ namespace analysis {
                     PgfplotPrinter l2Plot(OUTPUT_DIRECTORY, plotName);
                     l2Plot.setCaption(caption);
                     l2Plot.plotAxis("runtime", l2Results, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-                    parentFigure.addToDocumentAsSubfigure(l2Plot);
+                    parentFigure.addToDocumentAsSubfigure(l2Plot, numCols);
                 }
 
                 if(!lite) {
@@ -313,7 +322,7 @@ namespace analysis {
                         PgfplotPrinter plot(OUTPUT_DIRECTORY, plotName);
                         plot.setCaption(caption);
                         plot.plotAxis(iv, distribution, X_PLOT_SCALE, X_PLOT_SCALE_UNIT);
-                        parentFigure.addToDocumentAsSubfigure(plot);
+                        parentFigure.addToDocumentAsSubfigure(plot, numCols);
                     }
                 }
                 document.addToDocumentAsFigure(parentFigure);
@@ -324,6 +333,8 @@ namespace analysis {
     void plot(const SpannerReducedLevelResultMap& summary,
          LatexPrinter& document, bool lite = false ) {
         bool isFirst = true;
+
+        int numCols = 2 + int(!lite);
 
         set<string> tdPlots = {"BGHP2010", "KPT2017"};
         set<string> linfPlots = {"BKPX2015", "Degree3"};
@@ -367,7 +378,7 @@ namespace analysis {
             PgfplotPrinter tdPlot(OUTPUT_DIRECTORY, plotName);
             tdPlot.setCaption(caption);
             tdPlot.plotAxis("runtime", allResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-            parentFigure.addToDocumentAsSubfigure(tdPlot);
+            parentFigure.addToDocumentAsSubfigure(tdPlot, numCols);
         }
 
         // non td plots
@@ -391,7 +402,7 @@ namespace analysis {
             PgfplotPrinter nontdPlot(OUTPUT_DIRECTORY, plotName);
             nontdPlot.setCaption(caption);
             nontdPlot.plotAxis("runtime", nontdResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-            parentFigure.addToDocumentAsSubfigure(nontdPlot);
+            parentFigure.addToDocumentAsSubfigure( nontdPlot, numCols);
         }
 
         // Linf plot
@@ -417,7 +428,7 @@ namespace analysis {
             PgfplotPrinter linfPlot(OUTPUT_DIRECTORY, plotName);
             linfPlot.setCaption(caption);
             linfPlot.plotAxis("runtime", linfResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-            //parentFigure.addToDocumentAsSubfigure(linfPlot);
+//            parentFigure.addToDocumentAsSubfigure(linfPlot);
         }
 
         // L2 plot
@@ -443,7 +454,7 @@ namespace analysis {
             PgfplotPrinter l2Plot(OUTPUT_DIRECTORY, plotName);
             l2Plot.setCaption(caption);
             l2Plot.plotAxis("runtime", l2Results, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
-            parentFigure.addToDocumentAsSubfigure(l2Plot);
+            parentFigure.addToDocumentAsSubfigure(l2Plot, numCols);
         }
 
         if(!lite) {
@@ -461,19 +472,19 @@ namespace analysis {
                 plot.setCaption(caption);
                 plot.plotAxis(iv, summary, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, isFirst);
 
-                parentFigure.addToDocumentAsSubfigure(plot);
+                parentFigure.addToDocumentAsSubfigure(plot, numCols);
 
                 if (isFirst) {
                     isFirst = false;
                     plotLegendText = plot.getLegend();
                 }
             }
-            document.addToDocumentAsFigure(parentFigure);
 
             LatexPrinter legend(OUTPUT_DIRECTORY,"document-plot-legend");
             legend.addRawText(plotLegendText);
             document.addToDocumentAsFigure(legend);
         }
+        document.addToDocumentAsFigure(parentFigure);
     }
 
 
@@ -482,6 +493,9 @@ namespace analysis {
              LatexPrinter& document, bool lite = false) {
 
         for(auto distribution : spannerSummary) {
+
+            int tableCount = 0;
+
             for(auto iv : ANALYSIS_IVs) {
                 vector<string> levels;
                 const auto& frontRow = distribution.second.begin()->second;
@@ -515,19 +529,24 @@ namespace analysis {
 
                 for(size_t i=0; i<headers.size();++i){
                     int precision = iv == "degree" ? 0 : 3;
-                    table.addColumn( headers.at(i), ivValues.at(i),precision,i+1);
+                    table.addColumn(headers.at(i), ivValues.at(i), precision, i+1);
                 }
 
-                table.tabulate();
+                table.tabulate(true);
 
-                document.addRawText(subsection(caption) + "\n\n");
+                table.setCaption(caption);
                 document.addToDocument(table);
+
+                tableCount++;
+
             }
+            document.clearpage();
         }
     }
 
     void tabulate(const SpannerReducedLevelResultMap& summary,
              LatexPrinter& document, bool lite = false) {
+        int tableCount = 0;
         for(auto iv : ANALYSIS_IVs) {
 
             string caption(iv);
@@ -566,9 +585,9 @@ namespace analysis {
                         iv == "degree" ? 0 : 3;
                 table.addColumn( headers.at(i), ivValues.at(i),precision,i);
             }
-            table.tabulate();
+            table.tabulate(true);
+            table.setCaption(caption);
 
-            document.addRawText(subsection(caption) + "\n\n");
             document.addToDocument(table);
         }
     }
@@ -678,8 +697,6 @@ void BoundedDegreePlaneSpannerAnalysisSynthetic(const string& filename) {
 
 
 
-//    tabulateDistributionSummaries(distributionSpannerSummary, document);
-    //plotDistributionSummaries();
 
 //    document.clearpage();
 

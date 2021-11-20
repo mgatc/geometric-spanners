@@ -59,39 +59,39 @@ namespace spanners {
         Timer tim;
 
         switch (algorithm) {
-            case BoundedDegreePlaneSpannerAlgorithm::Bgs2005:
-                BGS2005(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Lw2004:
-                LW2004(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Bsx2009:
-                BSX2009(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Kpx2010:
-                KPX2010(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Kx2012:
-                KX2012(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Bcc2012_7:
-                BCC2012<7>(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Bcc2012_6:
-                BCC2012<6>(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
-                BHS2018(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Bgs2005:
+//                BGS2005(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Lw2004:
+//                LW2004(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Bsx2009:
+//                BSX2009(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Kpx2010:
+//                KPX2010(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Kx2012:
+//                KX2012(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Bcc2012_7:
+//                BCC2012<7>(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Bcc2012_6:
+//                BCC2012<6>(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
+//                BHS2018(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
             case BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
                 BKPX2015(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
-            case BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
-                BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
-                KPT2017(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
+//                BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
+//                KPT2017(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
             case BoundedDegreePlaneSpannerAlgorithm::Degree3:
                 DEG3(pointsBegin, pointsEnd, back_inserter(spanner));
                 break;
@@ -165,35 +165,38 @@ namespace spanners {
         PointGenerator_2 pointGenerator;
 
         switch(dist) {
-            case UniformInsideSquare:
-                pointGenerator.generatePointsInsideASquare(n,width,points);
-                break;
-            case UniformInsideDisc:
-                pointGenerator.generatePointsInsideADisc(n,width,points);
-                break;
-//        case UniformOnSquare:
-//            pointGenerator.generatePointsOnASquare(n,width,points);
-//            break;
-//            case UniformOnCircle:
-//                pointGenerator.generatePointsOnACircle(n, width, points);
+//            case UniformInsideSquare:
+//                pointGenerator.insideSquare(n,width,points);
 //                break;
-            case NormalInsideSquare:
-                pointGenerator.generatePointsInsideASquareNormal(n,1,points);
-                break;
-            case NormalClustersInsideSquare:
-                pointGenerator.generatePointsInsideASquareNormal(n/10, 10, points);
-                break;
-            case ContiguousGrid:
-                pointGenerator.generateContiguousPointsOnAGrid(n, points);
-                break;
-            case UniformRandomGrid:
-                pointGenerator.generateRandomPointsOnAGrid(n, points);
-                break;
-            case UniformInsideAnnulus:
-                pointGenerator.generateRandomInsideAnnulus(n, width, width*0.8, points);
-                break;
-            case Galaxy:
-                pointGenerator.generatePointsInGalaxy(n, 5, points);
+//            case UniformInsideDisc:
+//                pointGenerator.insideDisc(n,width,points);
+//                break;
+//            case UniformOnSquare:
+//                pointGenerator.onSquare(n,width,points);
+//                break;
+//            case UniformOnCircle:
+//                pointGenerator.onCircle(n, width, points);
+//                break;
+//            case NormalInsideSquare:
+//                pointGenerator.insideSquareNormal(n,1,points);
+//                break;
+//            case NormalClustersInsideSquare:
+//                pointGenerator.insideSquareNormal(n/10, 10, points);
+//                break;
+//            case ContiguousGrid:
+//                pointGenerator.contiguousOnGrid(n, points);
+//                break;
+//            case UniformRandomGrid:
+//                pointGenerator.randomOnGrid(n, points);
+//                break;
+//            case UniformInsideAnnulus:
+//                pointGenerator.insideAnnulus(n, width, width*0.8, points);
+//                break;
+//            case Galaxy:
+//                pointGenerator.inGalaxy(n, 5, points);
+//                break;
+            case ConvexHullInDisc:
+                pointGenerator.onConvexHullInDisc(n, width, points);
                 break;
             case SyntheticDistributionLast:
             default:

@@ -41,16 +41,16 @@ namespace spanners {
     };
 
     const vector<string> SYNTHETIC_DISTRIBUTION_NAMES = {
-//            "Uniform Inside Square",
-//            "Uniform Inside Disc",
-////            "Uniform On Square",
-////            "Uniform On Circle",
-//            "Normal Inside Square",
-//            "Normal Inside Square with Clusters",
-//            "Contiguous Grid",
-//            "Uniform Random Grid",
-//            "Uniform Inside Annulus",
-//            "Galaxy",
+            "Uniform Inside Square",
+            "Uniform Inside Disc",
+//            "Uniform On Square",
+//            "Uniform On Circle",
+            "Normal Inside Square",
+            "Normal Inside Square with Clusters",
+            "Contiguous Grid",
+            "Uniform Random Grid",
+            "Uniform Inside Annulus",
+            "Galaxy",
             "Convex Hull In Disc",
     };
     vector<string> REAL_POINTSET_NAMES;

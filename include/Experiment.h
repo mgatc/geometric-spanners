@@ -83,9 +83,9 @@ namespace spanners {
 //            case BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
 //                BHS2018(pointsBegin, pointsEnd, back_inserter(spanner));
 //                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
-                BKPX2015(pointsBegin, pointsEnd, back_inserter(spanner));
-                break;
+//            case BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
+//                BKPX2015(pointsBegin, pointsEnd, back_inserter(spanner));
+//                break;
 //            case BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
 //                BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
 //                break;
@@ -101,6 +101,10 @@ namespace spanners {
 
         number_t runtime = tim.stop();
 
+
+        GraphPrinter tikz("/tmp/", "deg3");
+        tikz.autoscale(points.begin(), points.end());
+
         BoundedDegreeSpannerResult result(distributionType, distribution,
                                           algorithm, runtime,
                                           points.begin(), points.end(),
@@ -114,6 +118,21 @@ namespace spanners {
             filename += ALGORITHM_NAMES.at(algorithm);
             filename += ".xy";
             writePointsToFile(points.begin(),points.end(),filename);
+
+
+            GraphPrinter::OptionsList edgeOptions = { // active edge options
+                    {"color",      tikz.activeEdgeColor},
+                    {"line width", to_string(tikz.inactiveEdgeWidth/2)}
+            };
+
+            tikz.drawEdges(spanner.begin(),spanner.end(),points,edgeOptions);
+
+
+
+            tikz.drawVertices(points.begin(), points.end(), tikz.activeVertexOptions);
+
+
+            tikz.display();
 
             cout<< "\n"
                 << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"

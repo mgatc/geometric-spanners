@@ -32,9 +32,9 @@ namespace spanners {
 //        Bcc2012_7,
 //        Bcc2012_6,
 //        Bghp2010,
-        Bkpx2015 = AlgorithmFirst,
+//        Bkpx2015,
 //        Kpt2017,
-        Degree3,
+        Degree3 = AlgorithmFirst,
         AlgorithmLast
     };
     const string ALGORITHM_SYMBOL = "Algorithm";
@@ -48,7 +48,7 @@ namespace spanners {
 //            "BCC2012-7",
 //            "BCC2012-6",
 //            "BGHP2010",
-            "BKPX2015",
+//            "BKPX2015",
 //            "KPT2017",
             "Degree3"
     };
@@ -56,7 +56,7 @@ namespace spanners {
     const vector<string> DEGREE_BOUND_PER_ALGORITHM = {
 //            "27",
 //            "23", "17", "14", "11", "8", "7", "6", "6",
-            "4",
+//            "4",
 //            "4",
             "3"
     };
@@ -64,7 +64,7 @@ namespace spanners {
     const vector<string> STRETCH_FACTOR_BOUND_PER_ALGORITHM = {
 //            "8.27",
 //            "6.44", "23.6", "2.92", "2.86", "4.41", "11.7", "81.7", "6",
-            "157" ,
+//            "157" ,
 //            "20",
             "INF"
     };

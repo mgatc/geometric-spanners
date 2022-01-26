@@ -15,6 +15,7 @@
 
 #include "algorithms/BoundedDegreePlaneSpanners.h"
 
+#include "printers/GraphPrinter.h"
 #include "printers/LatexPrinter.h"
 #include "printers/PgfplotPrinter.h"
 #include "printers/TablePrinter.h"
@@ -32,15 +33,15 @@ namespace spanners {
     void scratch(const vector<Point>& points) {
 
         using namespace std;
-        //spanners::bcc2012::tikz.autoscale(points.begin(), points.end());
+        GraphPrinter tikz("/tmp/", "deg3");
+        tikz.autoscale(points.begin(), points.end());
 
 
 //        for(auto p : points)
 //            if(p.x()>4.35)
 //                spanners::bcc2012::POINT_COLLECTOR.emplace(p.x()-4.75,p.y());
 
-//        writePointsToFile(spanners::bcc2012::POINT_COLLECTOR.begin(),
-//                          spanners::bcc2012::POINT_COLLECTOR.end(),"truncated");
+        writePointsToFile(points.begin(), points.end(),"galaxy");
 
         cout << points.size();
         cout << "\n";
@@ -59,7 +60,8 @@ namespace spanners {
 //            KPT2017(points.begin(), points.end(), back_inserter(result));
 //            BKPX2015(points.begin(), points.end(), back_inserter(result));
 //            BGHP2010(points.begin(), points.end(), back_inserter(result));
-            KX2012(points.begin(), points.end(), back_inserter(result));
+//            KX2012(points.begin(), points.end(), back_inserter(result));
+//            DEG3(points.begin(),points.end(),back_inserter(result));
 //            delaunay_testing( points.begin(), points.end(), back_inserter(result));
         }
 
@@ -82,64 +84,47 @@ namespace spanners {
         }
         cout<<"  t="<<t_exp<<";\n";
 
-//        GraphPrinter::OptionsList edgeOptions = { // active edge options
-//                {"color",      tikz.activeEdgeColor},
-//                {"line width", to_string(tikz.inactiveEdgeWidth/2)}
-//        };
-//
-//        tikz.drawEdges(result.begin(),result.end(),points,edgeOptions);
-//
-//
-//
-//        tikz.drawVertices(points.begin(), points.end(), tikz.activeVertexOptions);
+        GraphPrinter::OptionsList edgeOptions = { // active edge options
+                {"color",      tikz.activeEdgeColor},
+                {"line width", to_string(tikz.inactiveEdgeWidth/2)}
+        };
+
+        tikz.drawEdges(result.begin(),result.end(),points,edgeOptions);
+
+
+
+        tikz.drawVertices(points.begin(), points.end(), tikz.activeVertexOptions);
 
 
 
 
-//        list<Edge> WorstPath;
-//        SFWorstPath( points.begin(),points.end(),result.begin(), result.end(),
-//                     make_optional(inserter(WorstPath,WorstPath.begin())) );
-//
-//        // PRODUCE A LaTeX / TiKz DOCUMENT AND DISPLAY
-//
-//        tikz.addLatexComment("worst path edges");
+        list<Edge> WorstPath;
+        SFWorstPath( points.begin(),points.end(),result.begin(), result.end(),
+                     make_optional(inserter(WorstPath,WorstPath.begin())) );
+
+        // PRODUCE A LaTeX / TiKz DOCUMENT AND DISPLAY
+
+        tikz.addLatexComment("worst path edges");
 //        tikz.drawEdges(WorstPath.begin(),WorstPath.end(), points, tikz.highlightEdgeOptions);
 
 
-//        tikz.display();
-
-
-
-        cout<< "EXACT: time=";
-        number_t t_exact = INF;
-        {
-            Timer tim;
-            t_exact = StretchFactorDijkstraReduction(points.begin(),points.end(),result.begin(),result.end());
-        }
-        cout<<"  t="<<t_exact<<";    ";
-
-
-//        cout<<"\nWorst path: ";
-//        for( auto e : WorstPath) {
-//            cout<<e.first<<"-"<<e.second<<", ";
-//        }
-
+        tikz.display();
 
 
         cout << "\n";
     }
 
-    void scratch(size_t n) {
+    void scratchN(size_t n) {
         double width = 10;
 
         vector<Point> points;
 
         PointGenerator_2 generator;
-        generator.generatePointsInGalaxy(n,5,points);
+        generator.inGalaxy(n,5,points);
 
         scratch(points);
     }
-    void scratch(string filename) {
+    void scratchFile(string filename) {
         vector<Point> points;
         readPointsFromFile( back_inserter( points ), filename );
         scratch(points);

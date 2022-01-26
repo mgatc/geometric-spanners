@@ -1,10 +1,15 @@
+/**
+ *
+ */
+
 #include <algorithm> // min
 #include <iostream>
+#include <string>
 #include <vector>
 
 #include "Analysis.h"
 #include "Experiment.h"
-//#include "Scratch.h"
+#include "Scratch.h"
 
 using namespace std;
 using namespace spanners;
@@ -31,22 +36,34 @@ int main(int argc, char *argv[]) {
 
     switch(argc) {
         case 2:
+            cout<< "Checking file extension...";
             if(extension == "csv") {
+                cout<< extension <<"\n";
                 BoundedDegreePlaneSpannerAnalysis(filename);
-                break;
             }
-//            else if(extension == "xy") {
-//                scratch(filename);
-//                break;
-//            }
-            [[fallthrough]];
+            else if(extension == "xy") {
+                cout<< extension <<"\n";
+                scratchFile(filename);
+            }
+            else {
+                try {
+                    cout<< "none found, trying to parse as integer...";
+                    size_t n_scratch = std::stoi(argv[1]);
+                    cout<< n_scratch<<"\n";
+                    scratchN(n_scratch);
+                } catch( invalid_argument& ia) {
+                    cout<< "couldn't parse arguments. \n\nExiting...\n";
+                    return EXIT_FAILURE;
+                }
+            }
+            break;
 //        case NO_ARGS_AMOUNT: // run a real-world experiment with default args
         case 3:
             if(extension == "xml") {
                 ExperimentFromConfigurationFile(filename,n);
             }
             break;
-        case NO_ARGS_AMOUNT: // run a synthetic experiment with default args
+//        case NO_ARGS_AMOUNT: // run a synthetic experiment with default args
         case 5: // run a synthetic experiment with given args
             for (size_t arg = 1;
                  arg < std::min(size_t(argc), experimentParameters.size() + 1);
@@ -65,7 +82,8 @@ int main(int argc, char *argv[]) {
                                 experimentParameters[3]);
             break;
         default:
-            cout<<"Invalid arguments... try again."<<endl;
+            cout<<"Invalid arguments... try again.\n"
+                  "Usage:\n"<<endl;
             return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;

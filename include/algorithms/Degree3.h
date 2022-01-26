@@ -988,133 +988,134 @@ namespace spanners {
                         }
 
                     }
-
-                    else {
-
-                        optional<SpannerEdge> candidateAdd = nullopt;
-                        number_t stretchBound = MAX_STRETCH_CONSTRAINT;
-
-                        for (auto cone : H8[u_id]) {
-
-                            auto e = cone.front();
-                            index_t goal = (e.first == u) ? e.second->storage_site().info() : e.first->storage_site().info();
-
-                            auto q = (e.first == u) ? e.second : e.first;
-                            SpannerEdge edge = std::make_pair(u, q);
-
-                            index_t q_id = q->storage_site().info();
-
-                            VertexCirculator middle = DT.incident_vertices(q);
-
-                            if (DT.is_infinite(middle)) {++middle;}
-                            auto endpt = middle;
-
-                            optional<number_t> stretch = nullopt;
-
-                            do {
-
-                                if (DT.is_infinite(middle)) {continue;}
-
-                                index_t middle_id = middle->storage_site().info();
-                                size_t currentCone = getCone(q, middle);
-
-                                bool actualEdge = inEdgeList(H8[q_id][currentCone], q, middle) || inEdgeList(H8[middle_id][(currentCone+2)%4], q, middle);
-                                size_t neighborDegree = accumulate(H8[middle_id].begin(), H8[middle_id].end(), 0, [](size_t sum, auto value) {
-                                    return sum + value.size(); });
-
-                                bool possible = !actualEdge && neighborDegree < 3;
-
-                                if (possible) {
-
-                                    SpannerEdge proposed = std::make_pair(q, middle);
-
-                                    if (middle != pointFans[q_id][currentCone].first && middle != pointFans[q_id][currentCone].second) {
-
-                                        auto previous = middle,
-                                                next = middle;
-                                        --previous;
-                                        ++next;
-
-                                        index_t previous_id = previous->storage_site().info();
-                                        index_t next_id = next->storage_site().info();
-
-                                        size_t previousCone = getCone(previous, middle);
-                                        size_t nextCone = getCone(next, middle);
-
-                                        bool edgePair = (yaoEdges[previous_id][previousCone].first == middle && yaoEdges[middle_id][(previousCone+2)%4].first != previous
-                                                         && anchorEdges[previous_id][previousCone].first != middle && anchorEdges[middle_id][(previousCone+2)%4].first != previous)
-                                                        && (yaoEdges[next_id][nextCone].first == middle && yaoEdges[middle_id][(nextCone+2)%4].first != next
-                                                            && anchorEdges[next_id][nextCone].first != middle && anchorEdges[middle_id][(nextCone+2)%4].first != next);
-
-                                        possible &= !edgePair;
-
-                                    }
-
-                                    if (possible) {
-
-                                        H8[q_id][currentCone].push_back(proposed);
-                                        H8[middle_id][(currentCone+2)%4].push_back(proposed);
-
-                                        stretch = AStar(handles, H8, u_id, goal, stretchBound);
-
-                                        if (stretch) {
-
-                                            if (*stretch < stretchBound) {
-                                                stretchBound = *stretch;
-                                                candidateRemove = make_optional(edge);
-                                                candidateAdd = make_optional(proposed);
-                                            }
-                                        }
-
-                                        SpannerEdge reversed = std::make_pair(proposed.second, proposed.first);
-
-                                        for (auto &edges : H8[q_id]) {
-                                            edges.erase(remove(edges.begin(), edges.end(), proposed), edges.end());
-                                            edges.erase(remove(edges.begin(), edges.end(), reversed), edges.end());
-                                        }
-
-                                        for (auto &edges : H8[middle_id]) {
-                                            edges.erase(remove(edges.begin(), edges.end(), proposed), edges.end());
-                                            edges.erase(remove(edges.begin(), edges.end(), reversed), edges.end());
-                                        }
-                                    }
-                                }
-
-                            } while (++middle != endpt && !stretch);
-
-                        }
-
-                        if (candidateRemove) {
-
-                            auto p = (*candidateRemove).first;
-                            auto q = (*candidateRemove).second;
-
-                            index_t p_id = p->storage_site().info();
-                            index_t q_id = q->storage_site().info();
-
-                            SpannerEdge standardRemove = std::make_pair(p, q);
-                            SpannerEdge reversedRemove = std::make_pair(q, p);
-
-                            for (auto &edges : H8[p_id]) {
-                                edges.erase(remove(edges.begin(), edges.end(), standardRemove), edges.end());
-                                edges.erase(remove(edges.begin(), edges.end(), reversedRemove), edges.end());
-                            }
-
-                            for (auto &edges : H8[q_id]) {
-                                edges.erase(remove(edges.begin(), edges.end(), standardRemove), edges.end());
-                                edges.erase(remove(edges.begin(), edges.end(), reversedRemove), edges.end());
-                            }
-
-                            auto v = ((*candidateAdd).first == q) ? (*candidateAdd).second : (*candidateAdd).first;
-                            index_t v_id = v->storage_site().info();
-
-                            size_t addedCone = getCone(q, v);
-
-                            H8[q_id][addedCone].push_back(*candidateAdd);
-                            H8[v_id][(addedCone+2)%4].push_back(*candidateAdd);
-
-                        }
-                    }
+//
+//                    else {
+//
+//                        optional<SpannerEdge> candidateAdd = nullopt;
+//                        number_t stretchBound = MAX_STRETCH_CONSTRAINT;
+//
+//                        for (auto cone : H8[u_id]) {
+//
+//                            auto e = cone.front();
+//                            index_t goal = (e.first == u) ? e.second->storage_site().info() : e.first->storage_site().info();
+//
+//                            auto q = (e.first == u) ? e.second : e.first;
+//                            SpannerEdge edge = std::make_pair(u, q);
+//
+//                            index_t q_id = q->storage_site().info();
+//
+//                            VertexCirculator middle = DT.incident_vertices(q);
+//
+//                            if (DT.is_infinite(middle)) {++middle;}
+//                            auto endpt = middle;
+//
+//                            optional<number_t> stretch = nullopt;
+//
+//                            do {
+//
+//                                if (DT.is_infinite(middle)) {continue;}
+//
+//                                index_t middle_id = middle->storage_site().info();
+//                                size_t currentCone = getCone(q, middle);
+//
+//                                bool actualEdge = inEdgeList(H8[q_id][currentCone], q, middle) || inEdgeList(H8[middle_id][(currentCone+2)%4], q, middle);
+//                                size_t neighborDegree = accumulate(H8[middle_id].begin(), H8[middle_id].end(), 0, [](size_t sum, auto value) {
+//                                    return sum + value.size(); });
+//
+//                                bool possible = !actualEdge && neighborDegree < 3;
+//
+//                                if (possible) {
+//
+//                                    SpannerEdge proposed = std::make_pair(q, middle);
+//
+//                                    if (middle != pointFans[q_id][currentCone].first && middle != pointFans[q_id][currentCone].second) {
+//
+//                                        auto previous = middle,
+//                                                next = middle;
+//                                        --previous;
+//                                        ++next;
+//
+//                                        index_t previous_id = previous->storage_site().info();
+//                                        index_t next_id = next->storage_site().info();
+//
+//                                        size_t previousCone = getCone(previous, middle);
+//                                        size_t nextCone = getCone(next, middle);
+//
+//                                        bool edgePair = (yaoEdges[previous_id][previousCone].first == middle && yaoEdges[middle_id][(previousCone+2)%4].first != previous
+//                                                         && anchorEdges[previous_id][previousCone].first != middle && anchorEdges[middle_id][(previousCone+2)%4].first != previous)
+//                                                        && (yaoEdges[next_id][nextCone].first == middle && yaoEdges[middle_id][(nextCone+2)%4].first != next
+//                                                            && anchorEdges[next_id][nextCone].first != middle && anchorEdges[middle_id][(nextCone+2)%4].first != next);
+//
+//                                        possible &= !edgePair;
+//
+//                                    }
+//
+//                                    if (possible) {
+//
+//                                        H8[q_id][currentCone].push_back(proposed);
+//                                        H8[middle_id][(currentCone+2)%4].push_back(proposed);
+//
+//                                        stretch = AStar(handles, H8, u_id, goal, stretchBound);
+//
+//                                        if (stretch) {
+//
+//                                            if (*stretch < stretchBound) {
+//                                                stretchBound = *stretch;
+//                                                candidateRemove = make_optional(edge);
+//                                                candidateAdd = make_optional(proposed);
+//                                            }
+//                                        }
+//
+//                                        SpannerEdge reversed = std::make_pair(proposed.second, proposed.first);
+//
+//                                        for (auto &edges : H8[q_id]) {
+//                                            edges.erase(remove(edges.begin(), edges.end(), proposed), edges.end());
+//                                            edges.erase(remove(edges.begin(), edges.end(), reversed), edges.end());
+//                                        }
+//
+//                                        for (auto &edges : H8[middle_id]) {
+//                                            edges.erase(remove(edges.begin(), edges.end(), proposed), edges.end());
+//                                            edges.erase(remove(edges.begin(), edges.end(), reversed), edges.end());
+//                                        }
+//                                    }
+//                                }
+//
+//                            } while (++middle != endpt && !stretch);
+//
+//                        }
+//
+//                        if (candidateRemove) {
+//
+//                            auto p = (*candidateRemove).first;
+//                            auto q = (*candidateRemove).second;
+//
+//                            index_t p_id = p->storage_site().info();
+//                            index_t q_id = q->storage_site().info();
+//
+//                            SpannerEdge standardRemove = std::make_pair(p, q);
+//                            SpannerEdge reversedRemove = std::make_pair(q, p);
+//
+//                            for (auto &edges : H8[p_id]) {
+//                                edges.erase(remove(edges.begin(), edges.end(), standardRemove), edges.end());
+//                                edges.erase(remove(edges.begin(), edges.end(), reversedRemove), edges.end());
+//                            }
+//
+//                            for (auto &edges : H8[q_id]) {
+//                                edges.erase(remove(edges.begin(), edges.end(), standardRemove), edges.end());
+//                                edges.erase(remove(edges.begin(), edges.end(), reversedRemove), edges.end());
+//                            }
+//
+//                            auto v = ((*candidateAdd).first == q) ? (*candidateAdd).second : (*candidateAdd).first;
+//                            index_t v_id = v->storage_site().info();
+//
+//                            size_t addedCone = getCone(q, v);
+//
+//                            H8[q_id][addedCone].push_back(*candidateAdd);
+//                            H8[v_id][(addedCone+2)%4].push_back(*candidateAdd);
+//
+//                        }
+//                    }
+//
                 }
             }
 

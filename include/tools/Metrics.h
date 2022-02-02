@@ -43,7 +43,7 @@ using namespace std;
         typedef typename RandomAccessIterator::value_type EdgeType;
         typedef typename EdgeType::first_type VertexType;
 
-        std::vector<EdgeType> edges(edgesBegin, edgesEnd);
+        const std::vector<EdgeType> edges(edgesBegin, edgesEnd);
         std::unordered_map<VertexType, unordered_set<VertexType>> adj;
         // for each edge
         for (auto e : edges) {
@@ -67,7 +67,7 @@ using namespace std;
         typedef typename RandomAccessIterator::value_type EdgeType;
         typedef typename EdgeType::first_type VertexType;
 
-        std::vector<EdgeType> edges(edgesBegin, edgesEnd);
+        const std::vector<EdgeType> edges(edgesBegin, edgesEnd);
         std::unordered_map<VertexType, unordered_set<VertexType>> adj;
         // for each edge
         for (auto e : edges) {
@@ -92,7 +92,7 @@ using namespace std;
                 Point_2;
 
         // fill a vector with edges so we can call the range-based degree function
-        std::vector<pair<Point_2, Point_2>> edges;
+        const std::vector<pair<Point_2, Point_2>> edges;
         edges.reserve(T.number_of_vertices());
 
         for (auto e = T.finite_edges_begin(); e != T.finite_edges_end(); ++e) {
@@ -113,7 +113,7 @@ using namespace std;
                      VertexIterator pointsEnd,
                      EdgeIterator edgesBegin,
                      EdgeIterator edgesEnd ) {
-        vector<Point> P(pointsBegin,pointsEnd);
+        const vector<Point> P(pointsBegin,pointsEnd);
 
         number_t w = 0;
         index_t p,q;

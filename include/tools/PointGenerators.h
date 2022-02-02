@@ -6,7 +6,11 @@
 #include <chrono>
 #include <cmath>
 #include <random>
+#include <string>
 #include <unordered_set>
+#include <utility>
+
+#include <boost/functional/hash.hpp>
 
 #include <CGAL/point_generators_2.h>
 #include <CGAL/random_convex_set_2.h>
@@ -26,32 +30,32 @@ namespace spanners {
 
     enum SyntheticDistribution {
         SyntheticDistributionFirst=0,
-//        UniformInsideSquare = SyntheticDistributionFirst,
+//        UniformInsideSquare,
 //        UniformInsideDisc,
 ////        UniformOnSquare,
 ////        UniformOnCircle,
 //        NormalInsideSquare,
-//        NormalClustersInsideSquare,
+        NormalClustersInsideSquare = SyntheticDistributionFirst,
 //        ContiguousGrid,
 //        UniformRandomGrid,
 //        UniformInsideAnnulus,
 //        Galaxy,
-        ConvexHullInDisc = SyntheticDistributionFirst,
+//        ConvexHullInDisc,// = SyntheticDistributionFirst,
         SyntheticDistributionLast
     };
 
-    const vector<string> SYNTHETIC_DISTRIBUTION_NAMES = {
-            "Uniform Inside Square",
-            "Uniform Inside Disc",
-//            "Uniform On Square",
-//            "Uniform On Circle",
-            "Normal Inside Square",
+    const std::vector<std::string> SYNTHETIC_DISTRIBUTION_NAMES = {
+//            "Uniform Inside Square",
+//            "Uniform Inside Disc",
+////            "Uniform On Square",
+////            "Uniform On Circle",
+//            "Normal Inside Square",
             "Normal Inside Square with Clusters",
-            "Contiguous Grid",
-            "Uniform Random Grid",
-            "Uniform Inside Annulus",
-            "Galaxy",
-            "Convex Hull In Disc",
+//            "Contiguous Grid",
+//            "Uniform Random Grid",
+//            "Uniform Inside Annulus",
+//            "Galaxy",
+//            "Convex Hull In Disc"
     };
     vector<string> REAL_POINTSET_NAMES;
 

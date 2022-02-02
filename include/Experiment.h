@@ -5,6 +5,7 @@
 #include <list>
 #include <optional>
 #include <random>
+#include <string>
 #include <utility>
 
 #include <boost/property_tree/ptree.hpp>
@@ -26,10 +27,10 @@ namespace spanners {
 
     const bool USE_EXPERIMENTAL_STRETCH_FACTOR = true;
 
-    const string INPUT_DATA_DIRECTORY = "../input/";
-    const string OUTPUT_DATA_DIRECTORY = "./";
-    const string OUTPUT_EXTENSION = ".csv";
-    const string DELIMITER = ",";
+    const char * INPUT_DATA_DIRECTORY = "../input/";
+    const char * OUTPUT_DATA_DIRECTORY = "./";
+    const char *OUTPUT_EXTENSION = ".csv";
+    const char *DELIMITER = ",";
 
     using std::to_string;
 
@@ -83,9 +84,9 @@ namespace spanners {
 //            case BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
 //                BHS2018(pointsBegin, pointsEnd, back_inserter(spanner));
 //                break;
-//            case BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
-//                BKPX2015(pointsBegin, pointsEnd, back_inserter(spanner));
-//                break;
+            case BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
+                BKPX2015(pointsBegin, pointsEnd, back_inserter(spanner));
+                break;
 //            case BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
 //                BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
 //                break;
@@ -102,8 +103,6 @@ namespace spanners {
         number_t runtime = tim.stop();
 
 
-        GraphPrinter tikz("/tmp/", "deg3");
-        tikz.autoscale(points.begin(), points.end());
 
         BoundedDegreeSpannerResult result(distributionType, distribution,
                                           algorithm, runtime,
@@ -114,11 +113,14 @@ namespace spanners {
         expOut << result;
 
         if(!result.verify()) {
-            string filename = "breaks";
+            std::string filename("breaks");
             filename += ALGORITHM_NAMES.at(algorithm);
             filename += ".xy";
             writePointsToFile(points.begin(),points.end(),filename);
 
+
+            GraphPrinter tikz("/tmp/", "deg3");
+            tikz.autoscale(points.begin(), points.end());
 
             GraphPrinter::OptionsList edgeOptions = { // active edge options
                     {"color",      tikz.activeEdgeColor},
@@ -129,7 +131,7 @@ namespace spanners {
 
 
 
-            tikz.drawVertices(points.begin(), points.end(), tikz.activeVertexOptions);
+            tikz.drawVerticesWithInfo(points.begin(), points.end(), tikz.activeVertexOptions);
 
 
             tikz.display();
@@ -190,18 +192,18 @@ namespace spanners {
 //            case UniformInsideDisc:
 //                pointGenerator.insideDisc(n,width,points);
 //                break;
-//            case UniformOnSquare:
-//                pointGenerator.onSquare(n,width,points);
-//                break;
-//            case UniformOnCircle:
-//                pointGenerator.onCircle(n, width, points);
-//                break;
+////            case UniformOnSquare:
+////                pointGenerator.onSquare(n,width,points);
+////                break;
+////            case UniformOnCircle:
+////                pointGenerator.onCircle(n, width, points);
+////                break;
 //            case NormalInsideSquare:
 //                pointGenerator.insideSquareNormal(n,1,points);
 //                break;
-//            case NormalClustersInsideSquare:
-//                pointGenerator.insideSquareNormal(n/10, 10, points);
-//                break;
+            case NormalClustersInsideSquare:
+                pointGenerator.insideSquareNormal(n/5, 5, points);
+                break;
 //            case ContiguousGrid:
 //                pointGenerator.contiguousOnGrid(n, points);
 //                break;
@@ -214,9 +216,9 @@ namespace spanners {
 //            case Galaxy:
 //                pointGenerator.inGalaxy(n, 5, points);
 //                break;
-            case ConvexHullInDisc:
-                pointGenerator.onConvexHullInDisc(n, width, points);
-                break;
+//            case ConvexHullInDisc:
+//                pointGenerator.onConvexHullInDisc(n, width, points);
+//                break;
             case SyntheticDistributionLast:
             default:
                 assert(!"Invalid distribution type!");

@@ -61,7 +61,7 @@ namespace spanners {
 //            BKPX2015(points.begin(), points.end(), back_inserter(result));
 //            BGHP2010(points.begin(), points.end(), back_inserter(result));
 //            KX2012(points.begin(), points.end(), back_inserter(result));
-//            DEG3(points.begin(),points.end(),back_inserter(result));
+            DEG3(points.begin(),points.end(),back_inserter(result));
 //            delaunay_testing( points.begin(), points.end(), back_inserter(result));
         }
 

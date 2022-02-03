@@ -11,71 +11,69 @@
 #include <unordered_set>
 #include <utility>
 
-namespace spanners {
+namespace bdps_experiment {
 
     const bool PRECOMPILE_SUBDOCUMENTS = true;
 
-    using namespace std;
-
     struct SetPrecision {
         int value;
-        string operator()(const string& val) const {
+        std::string operator()(const std::string& val) const {
             if(value < 0)
                 return val;
 
             try {
                 double numVal = stod(val);
                 return (*this)(numVal);
-            } catch(invalid_argument& ia) {
+            } catch(std::invalid_argument& ia) {
                 return val;
             }
         }
-        string operator()(const double& val) const {
+        std::string operator()(const double& val) const {
             if(value < 0) {
                 return std::to_string(val);
             }
-            stringstream str;
-            str << fixed;
-            str << setprecision(value);
+            std::stringstream str;
+            str << std::fixed;
+            str << std::setprecision(value);
             str << val;
             return str.str();
         }
     };
 
-    string texttt(const string& input) {
+    std::string texttt(const std::string& input) {
         return "\\texttt{" + input + "}";
     }
-    string subsection(const string& input) {
+    std::string subsection(const std::string& input) {
         return "\\subsection{" + input + "}";
     }
-    string mathrm(const string& input) {
+    std::string mathrm(const std::string& input) {
         return "\\mathrm{" + input + "}";
     }
 
     class LatexPrinter {
     public:
-        typedef pair<string,string> Option;
-        typedef vector<Option> OptionsList;
+        typedef std::pair<std::string,std::string> Option;
+        typedef std::vector<Option> OptionsList;
 
-        string m_directory = "";
+        std::string m_directory = "";
 
-        explicit LatexPrinter(string directory, string filename, string documentType = "article")
+        explicit LatexPrinter(std::string directory, std::string filename, std::string documentType = "article")
             : m_directory(directory), m_filename(std::move(filename)), m_documentType(std::move(documentType)) {}
 
         // Document-level getters
-        string getName() const {
+        std::string getName() const {
             return m_filename;
         }
-        string getFullDocumentText() const {
+        std::string getFullDocumentText() const {
             return getDocumentHeader()
                    + getBodyText()
                    + getDocumentFooter();
         }
-        string getBodyText() const {
+        std::string getBodyText() const {
             return m_body.header + m_body.content + m_body.footer;
         }
-        string getDocumentHeader() const {
-            string header = "\\documentclass{"
+        std::string getDocumentHeader() const {
+            std::string header = "\\documentclass{"
                     + m_documentType
                     + "}\n\n"
                       + "\\usepackage[table]{xcolor}\n"
@@ -87,17 +85,17 @@ namespace spanners {
                     + "\\begin{document}\n\n";
             return header;
         }
-        static string getDocumentFooter() {
+        static std::string getDocumentFooter() {
             return "\\end{document}";
         }
         // Figure getters
-        static string getFigureHeader(bool subfigure = false, double ratioOfLineWidth = 1.0, string options = "") {
-            string header;
+        static std::string getFigureHeader(bool subfigure = false, double ratioOfLineWidth = 1.0, std::string options = "") {
+            std::string header;
             if(subfigure) {
-                header = string("\\begin{minipage}{")
-                        + to_string(ratioOfLineWidth) + "\\linewidth}";
+                header = std::string("\\begin{minipage}{")
+                        + std::to_string(ratioOfLineWidth) + "\\linewidth}";
             } else {
-                header = string("\\begin{figure}[ht]");
+                header = std::string("\\begin{figure}[ht]");
                 if(!options.empty()){
                     header += "[" + options + "]";
                 }
@@ -105,12 +103,12 @@ namespace spanners {
             }
             return header;
         }
-        string getFigureFooter(bool subfigure = false) const {
-            string footer;
+        std::string getFigureFooter(bool subfigure = false) const {
+            std::string footer;
             if(subfigure) {
-                footer += string("\\end{minipage}");
+                footer += std::string("\\end{minipage}");
             } else {
-                footer += string("\\end{figure}\n");
+                footer += std::string("\\end{figure}\n");
             }
 //            if( !m_caption.empty() ) {
 //                footer += string("")
@@ -121,12 +119,12 @@ namespace spanners {
             return footer;
         }
         // Figure captions
-        string getCaption() const {
+        std::string getCaption() const {
             return "\\caption{"
                 + m_caption
                 + "}\n";
         }
-        void setCaption(const string& caption ) {
+        void setCaption(const std::string& caption ) {
             m_caption = caption;
             addLatexComment(caption);
         }
@@ -135,7 +133,7 @@ namespace spanners {
             setter.setCaption(this);
         }
         static void clearCaptionFile() {
-            string captionFilename = "captions.txt";
+            std::string captionFilename = "captions.txt";
 
             FILE *fp = fopen(captionFilename.c_str(), "w");
             fprintf(fp, "%s", "");
@@ -144,7 +142,7 @@ namespace spanners {
         // Adding to the document's body
         /** Add the contents of a LatexPrinter object to this document*/
         void addToDocument(const LatexPrinter& printer, const bool precompile = false) {
-            string includeName = printer.getName();
+            std::string includeName = printer.getName();
             if(precompile) {
                 printer.compile();
                 includeName += ".pdf";
@@ -165,7 +163,7 @@ namespace spanners {
 
             addRawText(getFigureHeader(false));
 
-            string caption = printer.getCaption();
+            std::string caption = printer.getCaption();
             if(!caption.empty() && captionAbove)
                 addRawText(caption);
 
@@ -177,7 +175,7 @@ namespace spanners {
             addRawText(getFigureFooter(false));
         }
         int m_numSubfigs = 0;
-        void addToDocumentAsSubfigure(const LatexPrinter& printer, int numCols = 3, string caption="", bool precompile = false) {
+        void addToDocumentAsSubfigure(const LatexPrinter& printer, int numCols = 3, std::string caption="", bool precompile = false) {
 
             addRawText(getFigureHeader(true, 0.95/numCols, caption));
             addToDocument(printer,precompile);
@@ -185,96 +183,96 @@ namespace spanners {
 
             ++m_numSubfigs;
 
-            string separator = m_numSubfigs % numCols == 0 ? "\n\n" : "\n\\hfill\n";
+            std::string separator = m_numSubfigs % numCols == 0 ? "\n\n" : "\n\\hfill\n";
             addRawText(separator);
 
         }
-        void addInput(const string& name) {
+        void addInput(const std::string& name) {
             m_body.content += "\\input{" + name + "}\n\n";
         }
 
-        void addGraphic(const string& name) {
+        void addGraphic(const std::string& name) {
             m_body.content += "\\includegraphics{" + name + "}\n\n";
         }
-        void addRawText(const string& text) {
+        void addRawText(const std::string& text) {
             m_body.content += text;
         }
         void clearpage() {
             addRawText("\\clearpage\n\n");
         }
-        void addLatexComment( const string& comment ) {
+        void addLatexComment( const std::string& comment ) {
             addRawText("% " + comment + "\n");
         }
 
         void save() const {
-            string texFilename = m_directory + getTexFilename();
-            cout<<"Saving file "<<texFilename<<"..."<<flush;
+            std::string texFilename = m_directory + getTexFilename();
+            std::cout<<"Saving file "<<texFilename<<"..."<<std::flush;
 
             FILE *fileOut = fopen(texFilename.c_str(), "w");
 
             fprintf(fileOut, "%s", getFullDocumentText().c_str());
 
             fclose(fileOut);
-            cout<<"done."<<endl;
+            std::cout<<"done."<<std::endl;
         }
         void saveBody() const {
-            string texFilename = m_directory + getTexFilenameForBody();
-            cout<<"Saving file "<<texFilename<<"..."<<flush;
+            std::string texFilename = m_directory + getTexFilenameForBody();
+            std::cout<<"Saving file "<<texFilename<<"..."<<std::flush;
 
             FILE *fileOut = fopen(texFilename.c_str(), "w");
 
             fprintf(fileOut, "%s", getBodyText().c_str());
 
             fclose(fileOut);
-            cout<<"done."<<endl;
+            std::cout<<"done."<<std::endl;
         }
         void compile() const {
             save();
 
-            cout<<"Compiling "<< getTexFilename()<<"..."<<flush;
-            string command = "pdflatex -output-directory=" + m_directory
+            std::cout<<"Compiling "<< getTexFilename()<<"..."<<std::flush;
+            std::string command = "pdflatex -output-directory=" + m_directory
                             + " " + m_directory + getTexFilename() + " > /dev/null";
-            ignore = system(command.c_str());
-            cout<<"done."<<endl;
+            std::ignore = system(command.c_str());
+            std::cout<<"done."<<std::endl;
         }
         void display() const {
             compile();
 
-            cout<<"Opening "<<getPdfFilename()<<" for viewing."<<endl;
-            string command = "evince " + m_directory + getPdfFilename() + " &";
-            ignore = system(command.c_str());
-            ignore = system(command.c_str());
+            std::cout<<"Opening "<<getPdfFilename()<<" for viewing."<<std::endl;
+            std::string command = "evince " + m_directory + getPdfFilename() + " &";
+            std::ignore = system(command.c_str());
+            std::ignore = system(command.c_str());
         }
         /** Define a hex rgb color for use in the document. */
-        void defineColor( const string& hex ) {
+        void defineColor( const std::string& hex ) {
             // add color to colormap
             m_colors.insert( hex );
         }
 
     protected:
         struct Body {
-            string header;
-            string content;
-            string footer;
+            std::string header;
+            std::string content;
+            std::string footer;
         };
         Body m_body;
-        string m_filename;
-        string m_documentType;
-        string m_caption;
-        unordered_set<string> m_colors;
-        string m_bodySuffix = "_body";
+        std::string m_filename;
+        std::string m_documentType;
+        std::string m_caption;
+        std::unordered_set<std::string> m_colors;
+        std::string m_bodySuffix = "_body";
 
-        string getTexFilename() const {
+        std::string getTexFilename() const {
             return m_filename + ".tex";
         }
-        string getTexFilenameForBody() const {
+        std::string getTexFilenameForBody() const {
             return getName() + "_body.tex";
         }
-        string getPdfFilename() const {
+        std::string getPdfFilename() const {
             return m_filename + ".pdf";
         }
-        static string expandOptions( const OptionsList& options ) {
-            string optionsString;
+        static std::string expandOptions( const OptionsList& options ) {
+            std::string optionsString;
             for( auto& o : options ) {
                 optionsString += o.first
                                  + ( !o.second.empty()?("=" + o.second):"") // include second param if given
@@ -284,26 +282,26 @@ namespace spanners {
             return optionsString.substr( 0, optionsString.size()-1 );
         }
 
-        string getColorDefinitions() const {
-            string definitions;
+        std::string getColorDefinitions() const {
+            std::string definitions;
             for( const auto& hex : m_colors ) {
                 // parse the hex value
-                vector<size_t> color = parseHexRGB( hex );
+                std::vector<size_t> color = parseHexRGB( hex );
                 // add color to document
                 definitions += "\\definecolor{"
                                +  hex + "}{RGB}{ "
-                               +  to_string(color.at(0)) + ", "
-                               +  to_string(color.at(1)) + ", "
-                               +  to_string(color.at(2))
+                               +  std::to_string(color.at(0)) + ", "
+                               +  std::to_string(color.at(1)) + ", "
+                               +  std::to_string(color.at(2))
                                + " }\n";
             }
             definitions += "\n";
             return definitions;
         }
-        static vector<size_t> parseHexRGB( const string& hex_str ) {
+        static std::vector<size_t> parseHexRGB( const std::string& hex_str ) {
             // the hex string should contain 6 digits
             // three 2-digit hex numbers
-            vector<size_t> rgb(3, 0);
+            std::vector<size_t> rgb(3, 0);
             // parse each 2-digit number and convert to base 10
             for( size_t i=0; i<3&&i<hex_str.size()/2; ++i ) {
                 rgb[i] = stoi( hex_str.substr(2*i, 2), 0, 16 );
@@ -312,6 +310,6 @@ namespace spanners {
         }
     };
 
-} // spanners
+} // bdps_experiment
 
 #endif //SPANNERS_LATEXPRINTER_H

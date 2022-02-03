@@ -10,7 +10,7 @@
 
 #include "Utilities.h"
 
-namespace spanners {
+namespace bdps_experiment {
 
     template<typename VertexContainer, typename AdjacencyList>
     void Dijkstra(const index_t i,
@@ -139,10 +139,10 @@ namespace spanners {
         using std::unordered_set;
         using std::vector;
 
-        vector<Point_2> V(pointsBegin, pointsEnd); // container for vertices
+        std::vector<Point_2> V(pointsBegin, pointsEnd); // container for vertices
         const index_t n = V.size();
 
-        vector<unordered_set<index_t> > G(n, unordered_set<index_t>()); // adjacency list
+        std::vector<std::unordered_set<index_t> > G(n, std::unordered_set<index_t>()); // adjacency list
 
         // Create list of vertices, map to their indices, and adjacency list
         for (auto eit = edgesBegin; eit != edgesEnd; ++eit) {
@@ -155,20 +155,20 @@ namespace spanners {
         //vector<double> T( n, INF );
         number_t t_max = 0.0;
 
-        vector<index_t> MaxParents;
+        std::vector<index_t> MaxParents;
         index_t i_max = 0, j_max = 1;
 
         // calculate euclidean getDistance between all pairs
         for (index_t i = 0; i < n; ++i) {
             // Euclidean distances
-            vector<number_t> D(n, INF);
+            std::vector<number_t> D(n, INF);
             for (index_t j = 0; j < n; ++j) {
                 D.at(j) =
                         i == j ? 0 : getDistance(V.at(i), V.at(j));
             }
             // Shortest paths
-            vector<number_t> ShortestPaths(n, INF);
-            vector<index_t> Parents(n);
+            std::vector<number_t> ShortestPaths(n, INF);
+            std::vector<index_t> Parents(n);
             Dijkstra(i, V, G, ShortestPaths, Parents);
 
             // Divide each shortest path getDistance by the euclidean distance between the vertices.
@@ -204,6 +204,6 @@ namespace spanners {
         return t_max;
     }
 
-} // spanners
+} // bdps_experiment
 
 #endif //STRETCHFACTOR_STRETCHFACTOREXACT_H

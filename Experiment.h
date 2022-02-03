@@ -11,11 +11,11 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
-#include "algorithms/BoundedDegreePlaneSpanners.h"
+#include "libspanner/BoundedDegreePlaneSpanners.h"
 
-#include "printers/LatexPrinter.h"
-#include "printers/PgfplotPrinter.h"
-#include "printers/TablePrinter.h"
+#include "tools/printers/LatexPrinter.h"
+#include "tools/printers/PgfplotPrinter.h"
+#include "tools/printers/TablePrinter.h"
 
 #include "tools/Metrics.h"
 #include "tools/PointGenerators.h"
@@ -23,7 +23,7 @@
 #include "tools/Utilities.h"
 
 
-namespace spanners {
+namespace bdps_experiment {
 
     const bool USE_EXPERIMENTAL_STRETCH_FACTOR = true;
 
@@ -44,15 +44,15 @@ namespace spanners {
      * then writes the result to the expOut file. Due to its
      */
     template <typename DistributionSubTypeEnum>
-    void BoundedDegreePlaneSpannerTest(const BoundedDegreePlaneSpannerAlgorithm algorithm,
+    void BoundedDegreePlaneSpannerTest(const spanner::BoundedDegreePlaneSpannerAlgorithm algorithm,
                                        const DistributionType distributionType,
                                        const DistributionSubTypeEnum distribution,
-                                       const vector<Point> &points,
+                                       const spanner::bdps::input_t &points,
                                        ofstream& expOut,
                                        bool measureStretchFactor = true) {
         using namespace std;
 
-        list<pair<size_t, size_t> > spanner;
+        spanner::bdps::output_t output;
 
         auto pointsBegin = points.begin(),
                 pointsEnd = points.end();
@@ -60,43 +60,43 @@ namespace spanners {
         Timer tim;
 
         switch (algorithm) {
-//            case BoundedDegreePlaneSpannerAlgorithm::Bgs2005:
-//                BGS2005(pointsBegin, pointsEnd, back_inserter(spanner));
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bgs2005:
+//                spanner::BGS2005(points, output);
 //                break;
-//            case BoundedDegreePlaneSpannerAlgorithm::Lw2004:
-//                LW2004(pointsBegin, pointsEnd, back_inserter(spanner));
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Lw2004:
+//                spanner::LW2004(points, output);
 //                break;
-//            case BoundedDegreePlaneSpannerAlgorithm::Bsx2009:
-//                BSX2009(pointsBegin, pointsEnd, back_inserter(spanner));
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bsx2009:
+//                spanner::BSX2009(points, output);
 //                break;
-//            case BoundedDegreePlaneSpannerAlgorithm::Kpx2010:
-//                KPX2010(pointsBegin, pointsEnd, back_inserter(spanner));
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kpx2010:
+//                spanner::KPX2010(points, output);
 //                break;
-//            case BoundedDegreePlaneSpannerAlgorithm::Kx2012:
-//                KX2012(pointsBegin, pointsEnd, back_inserter(spanner));
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kx2012:
+//                spanner::KX2012(points, output);
 //                break;
-//            case BoundedDegreePlaneSpannerAlgorithm::Bcc2012_7:
-//                BCC2012<7>(pointsBegin, pointsEnd, back_inserter(spanner));
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bcc2012_7:
+//                spanner::BCC2012<7>(points, output);
 //                break;
-//            case BoundedDegreePlaneSpannerAlgorithm::Bcc2012_6:
-//                BCC2012<6>(pointsBegin, pointsEnd, back_inserter(spanner));
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bcc2012_6:
+//                spanner::BCC2012<6>(points, output);
 //                break;
-//            case BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
-//                BHS2018(pointsBegin, pointsEnd, back_inserter(spanner));
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
+//                spanner::BHS2018(points, output);
 //                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
-                BKPX2015(pointsBegin, pointsEnd, back_inserter(spanner));
+            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
+                spanner::BKPX2015(points,output);
                 break;
-//            case BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
-//                BGHP2010(pointsBegin, pointsEnd, back_inserter(spanner));
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
+//                spanner::BGHP2010(points, output);
 //                break;
-//            case BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
-//                KPT2017(pointsBegin, pointsEnd, back_inserter(spanner));
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
+//                spanner::KPT2017(points, output);
 //                break;
-            case BoundedDegreePlaneSpannerAlgorithm::Degree3:
-                DEG3(pointsBegin, pointsEnd, back_inserter(spanner));
+            case spanner::BoundedDegreePlaneSpannerAlgorithm::Degree3:
+                spanner::DEG3(points, output);
                 break;
-            case BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast:
+            case spanner::BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast:
                 assert(false);
         }
 
@@ -107,14 +107,14 @@ namespace spanners {
         BoundedDegreeSpannerResult result(distributionType, distribution,
                                           algorithm, runtime,
                                           points.begin(), points.end(),
-                                          spanner.begin(), spanner.end(),
+                                          output.begin(), output.end(),
                                           !measureStretchFactor);
         cout << result;
         expOut << result;
 
         if(!result.verify()) {
             std::string filename("breaks");
-            filename += ALGORITHM_NAMES.at(algorithm);
+            filename += spanner::bdps::ALGORITHM_NAMES.at(algorithm);
             filename += ".xy";
             writePointsToFile(points.begin(),points.end(),filename);
 
@@ -127,7 +127,7 @@ namespace spanners {
                     {"line width", to_string(tikz.inactiveEdgeWidth/2)}
             };
 
-            tikz.drawEdges(spanner.begin(),spanner.end(),points,edgeOptions);
+            tikz.drawEdges(output.begin(),output.end(),points,edgeOptions);
 
 
 
@@ -164,9 +164,9 @@ namespace spanners {
 
         cout<< "Starting trial..."<<endl<<endl;
 
-        for(int alg=BoundedDegreePlaneSpannerAlgorithm::AlgorithmFirst;
-            alg != BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast; ++alg ) {
-            auto algorithm = static_cast<BoundedDegreePlaneSpannerAlgorithm>(alg);
+        for(int alg=spanner::BoundedDegreePlaneSpannerAlgorithm::AlgorithmFirst;
+            alg != spanner::BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast; ++alg ) {
+            auto algorithm = static_cast<spanner::BoundedDegreePlaneSpannerAlgorithm>(alg);
             list<pair<size_t, size_t> > spanner;
 
             BoundedDegreePlaneSpannerTest(algorithm, distributionType, distribution, points, expOut, measureStretchFactor);
@@ -361,6 +361,6 @@ namespace spanners {
     }
 
 
-} // spanners
+} // bdps_experiment
 
 #endif //SPANNERS_EXPERIMENT_H

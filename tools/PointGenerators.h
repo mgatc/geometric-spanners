@@ -17,9 +17,7 @@
 
 #include "Utilities.h"
 
-namespace spanners {
-
-    using namespace std;
+namespace bdps_experiment {
 
     enum DistributionType {
         DistributionTypeFirst = 0,
@@ -57,14 +55,14 @@ namespace spanners {
 //            "Galaxy",
 //            "Convex Hull In Disc"
     };
-    vector<string> REAL_POINTSET_NAMES;
+    std::vector<std::string> REAL_POINTSET_NAMES;
 
     class PointGenerator_2 {
 
     public:
         PointGenerator_2() : m_randCgal(std::rand()) {}
 
-        void loadFromFile(const string filename, vector<Point> &P) {
+        void loadFromFile(const std::string filename, std::vector<Point> &P) {
             std::ifstream in(filename);
 
             if (!in.is_open())
@@ -79,11 +77,11 @@ namespace spanners {
             perturb(P, m_perturbationValue);
         }
 
-        void insideSquare(const index_t n, const double sizeOfSquare, vector<Point> &P) {
+        void insideSquare(const index_t n, const double sizeOfSquare, std::vector<Point> &P) {
             typedef CGAL::Random_points_in_square_2<Point, CGAL::Creator_uniform_2<number_t, Point> > Point_generator;
             Point_generator g(sizeOfSquare / 2, m_randCgal);
 
-            unordered_set<Point> P_unique;
+            std::unordered_set<Point> P_unique;
             size_t remaining;
             while((remaining = n - P_unique.size()) > 0)
                 std::copy_n(g, n, inserter(P_unique, P_unique.end()));
@@ -91,22 +89,22 @@ namespace spanners {
             std::copy(P_unique.begin(),P_unique.end(),back_inserter(P));
             perturb(P, m_perturbationValue);
         }
-        void onSquare(const index_t n, const double sizeOfSquare, vector<Point> &P) {
+        void onSquare(const index_t n, const double sizeOfSquare, std::vector<Point> &P) {
             typedef CGAL::Random_points_on_square_2<Point, CGAL::Creator_uniform_2<number_t, Point> > Point_generator;
             Point_generator g(sizeOfSquare / 2, m_randCgal);
 
-            unordered_set<Point> P_unique;
+            std::unordered_set<Point> P_unique;
             size_t remaining;
             while((remaining = n - P_unique.size()) > 0)
                 std::copy_n(g, n, inserter(P_unique, P_unique.end()));
 
             std::copy(P_unique.begin(),P_unique.end(),back_inserter(P));
         }
-        void onCircle(const index_t n, const double sizeOfSquare, vector<Point> &P) {
+        void onCircle(const index_t n, const double sizeOfSquare, std::vector<Point> &P) {
             typedef CGAL::Random_points_on_circle_2<Point, CGAL::Creator_uniform_2<number_t, Point> > Point_generator;
             Point_generator g(sizeOfSquare / 2, m_randCgal);
 
-            unordered_set<Point> P_unique;
+            std::unordered_set<Point> P_unique;
             size_t remaining;
             while((remaining = n - P_unique.size()) > 0)
                 std::copy_n(g, n, inserter(P_unique, P_unique.end()));
@@ -114,11 +112,11 @@ namespace spanners {
             std::copy(P_unique.begin(),P_unique.end(),back_inserter(P));
         }
 
-        void onSpokes(const index_t n, const unsigned numSpokes, vector<Point> &P) {
+        void onSpokes(const index_t n, const unsigned numSpokes, std::vector<Point> &P) {
             //srand(seed());
             double spokeAngle = 2*PI / numSpokes;
 
-            unordered_set<Point> P_unique;
+            std::unordered_set<Point> P_unique;
 
             while( P_unique.size() < n ) {
                 double distance = randFloat();
@@ -128,9 +126,9 @@ namespace spanners {
                                  sin(angle) * distance);
             }
 
-            copy(P_unique.begin(),P_unique.end(),back_inserter(P));
+            std::copy(P_unique.begin(),P_unique.end(),back_inserter(P));
         }
-        void inGalaxy(const index_t n, const unsigned numSpokes, vector<Point> &P) {
+        void inGalaxy(const index_t n, const unsigned numSpokes, std::vector<Point> &P) {
             // see https://itinerantgames.tumblr.com/post/78592276402/a-2d-procedural-galaxy-with-c
             //srand(seed());
             const double spokeAngle = 2*PI / numSpokes,
@@ -138,7 +136,7 @@ namespace spanners {
                     rotationFactor = 5,
                     perturbationValue = 0.02;
 
-            unordered_set<Point> P_unique;
+            std::unordered_set<Point> P_unique;
 
             while( P_unique.size() < n ) {
                 //for(index_t i=0; i<n; ++i) {
@@ -163,15 +161,15 @@ namespace spanners {
                                  sin(angle) * distance);
             }
 
-            copy(P_unique.begin(),P_unique.end(),back_inserter(P));
+            std::copy(P_unique.begin(),P_unique.end(),back_inserter(P));
             perturb(P, perturbationValue);
         }
 
-        void insideDisc(const index_t n, const double radiusOfDisk, vector<Point> &P) {
+        void insideDisc(const index_t n, const double radiusOfDisk, std::vector<Point> &P) {
             typedef CGAL::Random_points_in_disc_2<Point, CGAL::Creator_uniform_2<number_t, Point> > Point_generator;
             Point_generator g(radiusOfDisk, m_randCgal);
 
-            unordered_set<Point> P_unique;
+            std::unordered_set<Point> P_unique;
             size_t remaining;
             while((remaining = n - P_unique.size()) > 0)
                 std::copy_n(g, n, inserter(P_unique, P_unique.end()));
@@ -181,14 +179,14 @@ namespace spanners {
         }
 
         void onConvexHullInDisc(const index_t n,
-                                      const double radius,
-                                      vector<Point> &P) {
+                                const double radius,
+                                std::vector<Point> &P) {
             typedef CGAL::Random_points_in_disc_2<Point, CGAL::Creator_uniform_2<number_t, Point> > Point_generator;
-            unordered_set<Point> P_unique;
+            std::unordered_set<Point> P_unique;
             size_t remaining;
 
             while((remaining = n - P_unique.size()) > 0)
-                random_convex_set_2(remaining,inserter(P_unique, P_unique.end()),Point_generator(radius, m_randCgal));
+                CGAL::random_convex_set_2(remaining,inserter(P_unique, P_unique.end()),Point_generator(radius, m_randCgal));
 
             std::copy(P_unique.begin(),P_unique.end(),back_inserter(P));
             perturb(P, m_perturbationValue);
@@ -196,10 +194,10 @@ namespace spanners {
 
 
         void insideSquareNormal(const index_t pointsInACuster,
-                                               const index_t numberOfClusters,
-                                               vector<Point> &P,
-                                               const number_t xStdDev = 2.0,
-                                               const number_t yStdDev = 2.0) {
+                                const index_t numberOfClusters,
+                                std::vector<Point> &P,
+                                const number_t xStdDev = 2.0,
+                                const number_t yStdDev = 2.0) {
             std::mt19937 rngX(seed());
             std::mt19937 rngY(seed());
             std::default_random_engine generatorX(rngX()), generatorY(rngY());
@@ -210,9 +208,9 @@ namespace spanners {
             std::uniform_int_distribution shiftDistribution(0, INT32_MAX);
 
             index_t shiftX, shiftY;
-            unordered_set<pair<index_t, index_t>, boost::hash<pair<index_t, index_t>>> S;
+            std::unordered_set<std::pair<index_t, index_t>, boost::hash<std::pair<index_t, index_t>>> S;
 
-            unordered_set<Point> P_unique;
+            std::unordered_set<Point> P_unique;
 
             for (index_t c = 0; c < numberOfClusters; c++) {
                 if (c != 0) {
@@ -239,14 +237,14 @@ namespace spanners {
             perturb(P, m_perturbationValue);
         }
 
-        void contiguousOnGrid(const index_t n, vector<Point> &P) {
-            points_on_square_grid_2(ceil(std::sqrt(n)), n, std::back_inserter(P), CGAL::Creator_uniform_2<number_t, Point>());
+        void contiguousOnGrid(const index_t n, std::vector<Point> &P) {
+            CGAL::points_on_square_grid_2(ceil(std::sqrt(n)), n, std::back_inserter(P), CGAL::Creator_uniform_2<number_t, Point>());
             perturb(P, m_perturbationValue);
         }
 
-        void randomOnGrid(const index_t n, vector<Point> &P) {
-            unordered_set<pair<int, int>, boost::hash<pair<int, int>>> S;
-            unordered_set<Point> P_unique;
+        void randomOnGrid(const index_t n, std::vector<Point> &P) {
+            std::unordered_set<pair<int, int>, boost::hash<pair<int, int>>> S;
+            std::unordered_set<Point> P_unique;
 
             std::mt19937 rngX(seed());
             std::mt19937 rngY(seed());
@@ -264,13 +262,13 @@ namespace spanners {
                 }
             }
 
-            std::copy(P_unique.begin(),P_unique.end(),back_inserter(P));
+            std::copy(P_unique.begin(),P_unique.end(),std::back_inserter(P));
             perturb(P, m_perturbationValue);
         }
 
-        void insideAnnulus(const index_t n, const double r2, const double r1, vector<Point> &P) {
+        void insideAnnulus(const index_t n, const double r2, const double r1, std::vector<Point> &P) {
             assert(r2 > r1);
-            unordered_set<Point> P_unique;
+            std::unordered_set<Point> P_unique;
 
             std::default_random_engine generator(seed());
             std::uniform_real_distribution<double> distributionR(r1, r2), distributionT(0, 1);
@@ -297,10 +295,10 @@ namespace spanners {
         }
         template<class Container>
         void perturb(Container &P, number_t val) {
-            perturb_points_2(P.begin(), P.end(), val, val,m_randCgal);
+            CGAL::perturb_points_2(P.begin(), P.end(), val, val,m_randCgal);
         }
     };
 
-} // spanners
+} // bdps_experiment
 
 #endif //SPANNERS_POINTGENERATORS_H

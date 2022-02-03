@@ -11,9 +11,9 @@
 #include <CGAL/squared_distance_2.h>
 #include <CGAL/utils.h>
 
-#include "DelaunayL2.h"
+#include "libspanner/delaunay/DelaunayL2.h"
 
-namespace spanners {
+namespace bdps_experiment {
 
 using namespace std;
 
@@ -34,28 +34,28 @@ optional<N> min( const optional<N>& ij, const pair< optional<N>,optional<N> >& i
 
 } // namespace floyd_warshall
 
-void FloydWarshall( const DelaunayGraph& G,
-                    const VertexMap<size_t>& index,
-                    vector< vector< optional<number_t> > >& distances ) {
+void FloydWarshall( const spanner::DelaunayGraph& G,
+                    const spanner::VertexMap<size_t>& index,
+                    std::vector< std::vector< std::optional<number_t> > >& distances ) {
     using namespace floyd_warshall;
-    size_t N = G.n();
+    size_t N = G.size();
 
     // Create an NxN table to hold distances.
-    vector< vector< optional<number_t> > > dist( N, vector< optional<number_t> >( N, nullopt ) );
+    std::vector< std::vector< std::optional<number_t> > > dist( N, vector< optional<number_t> >( N, nullopt ) );
     // container constructor should initialize optionals using default constructor, aka nullopt, aka infinity
 
     // Set all i==j to 0 (getDistance to self)
     for( size_t i=0; i<N; ++i )
-        dist.at(i).at(i) = make_optional( number_t(0) );
+        dist.at(i).at(i) = std::make_optional( number_t(0) );
 
     //assert( index.size() == N );
 
     // Add getDistance of each edge (u,v) in G._E to dist[u][v]
     // using indices of u and v mapped in index
     for( const auto& adjacent : G.m_E ) {
-        VertexHandle u = adjacent.first; // get vertex handle
-        for( const VertexHandle &v : adjacent.second )
-            dist.at(index.at(u)).at(index.at(v)) = make_optional( CGAL::sqrt( CGAL::squared_distance( u->point(), v->point() ) ) );
+        auto u = adjacent.first; // get vertex handle
+        for( const auto &v : adjacent.second )
+            dist.at(index.at(u)).at(index.at(v)) = std::make_optional( CGAL::sqrt( CGAL::squared_distance( u->point(), v->point() ) ) );
 
     }
 
@@ -69,10 +69,10 @@ void FloydWarshall( const DelaunayGraph& G,
                 );
 
     // swap the addresses for array we built with the address given in parameters
-    swap( dist, distances );
+    std::swap( dist, distances );
 }
 
-} // namespace spanners
+} // namespace bdps_experiment
 
 
 #endif // SPANNERS_FLOYDWARSHALL_H

@@ -10,13 +10,11 @@
 #include "../Results.h"
 #include "../Utilities.h"
 
-namespace spanners {
-
-    using namespace std;
+namespace bdps_experiment {
 
     class PgfplotPrinter : public TikzPrinter {
     public:
-        PgfplotPrinter(string directory, string filename, string documentType = "standalone")
+        PgfplotPrinter(std::string directory, std::string filename, std::string documentType = "standalone")
                 : TikzPrinter(directory,filename,documentType){
             m_body = Body{getTikzHeader("scale=0.55"),
                           "",
@@ -26,27 +24,27 @@ namespace spanners {
             }
         }
         template<class PlotMap>
-        void plotAxis(const string& iv, const PlotMap& results, const double xScale = 1.0, const string xScaleUnit= "", const bool isFirst = true) {
+        void plotAxis(const std::string& iv, const PlotMap& results, const double xScale = 1.0, const std::string xScaleUnit= "", const bool isFirst = true) {
 
             assert(abs(xScale) > 0);
 
             if(m_algorithmMarkers.empty())
-                for(const auto& spannerName : ALGORITHM_NAMES) // provides the ordering we want
+                for(const auto& spannerName : spanner::bdps::ALGORITHM_NAMES) // provides the ordering we want
                     addNewMarker(spannerName);
 
 
             // build axis header
-            string allPlotsOfAxis = getAxisHeader(iv, results, xScale, xScaleUnit, isFirst);
+            std::string allPlotsOfAxis = getAxisHeader(iv, results, xScale, xScaleUnit, isFirst);
 
             // build the plot
-            for( const auto& name : ALGORITHM_NAMES ) {
+            for( const auto& name : spanner::bdps::ALGORITHM_NAMES ) {
                 if( contains(results,name) ) {
                     const auto &spanner = results.at(name);
-                    string ivPlot = getPlotHeader(name);//
+                    std::string ivPlot = getPlotHeader(name);//
                     for (const auto &level: spanner) {
                         auto xValue = static_cast<double>(level.first) / xScale;
                         auto yValue = level.second.template getIV<double>(iv);
-                        string entry = "("
+                        std::string entry = "("
                                        + std::to_string(xValue)
                                        + ","
                                        + std::to_string(yValue)
@@ -63,21 +61,21 @@ namespace spanners {
             allPlotsOfAxis += getAxisFooter(m_filename);
             m_body.content = allPlotsOfAxis;
         }
-        string getLegend() {
-            string refOpener("\\ref{");
-            string refText = removeSpaces(m_caption) + "-legend";
-            string refCloser("}");
+        std::string getLegend() {
+            std::string refOpener("\\ref{");
+            std::string refText = removeSpaces(m_caption) + "-legend";
+            std::string refCloser("}");
 
             return refOpener + refText + refCloser;
         }
-        string getLegendEntry(const string& legendText) {
-            string legendEntry = "\\addlegendentry{\\texttt{"
+        std::string getLegendEntry(const std::string& legendText) {
+            std::string legendEntry = "\\addlegendentry{\\texttt{"
                                  + legendText
                                  + "}}";
             return legendEntry;
         }
-        string getPlotHeader(const string& algorithm) {
-            string plotHeader = "\n\n\\addplot[";
+        std::string getPlotHeader(const std::string& algorithm) {
+            std::string plotHeader = "\n\n\\addplot[";
 
             auto color = getColor();
 
@@ -88,25 +86,25 @@ namespace spanners {
             plotHeader += " coordinates {\n";
             return plotHeader;
         }
-        string getPlotFooter() {
-            string plotFooter("}node [pos=1.15, above left] {};\n\n");
+        std::string getPlotFooter() {
+            std::string plotFooter("}node [pos=1.15, above left] {};\n\n");
             return plotFooter;
         }
         template<class ResultMap>
-        string getAxisHeader(const string& iv, const ResultMap& results, const double xScale = 1.0,
-                             const string xScaleUnit = "", bool first = true) {
+        std::string getAxisHeader(const std::string& iv, const ResultMap& results, const double xScale = 1.0,
+                             const std::string xScaleUnit = "", bool first = true) {
 
-            string axisHeader = string("")
+            std::string axisHeader = std::string("")
                                 + "\\begin{axis}[";
 //            if(!m_caption.empty()) axisHeader += "title={" + m_caption + "},";
-            string legendText = "legend to name=" + removeSpaces(m_caption)
+            std::string legendText = "legend to name=" + removeSpaces(m_caption)
                     + "-legend, legend columns={3}, ";
             axisHeader += "yticklabel style={rotate=90,anchor=base,yshift=0.2cm}, ";
-            axisHeader += string("scaled ticks=false,grid=none,xlabel={$n$")
-                          + (xScaleUnit.empty() ? "" : string(" (in ") + xScaleUnit + ")}, ")
+            axisHeader += std::string("scaled ticks=false,grid=none,xlabel={$n$")
+                          + (xScaleUnit.empty() ? "" : std::string(" (in ") + xScaleUnit + ")}, ")
                           + (first ? legendText : "")
                           + "xtick={";
-            string xTicks = "";
+            std::string xTicks = "";
 
             for( auto level : results.begin()->second ){
                 xTicks += std::to_string(static_cast<double>(level.first) / xScale);
@@ -140,59 +138,59 @@ namespace spanners {
             axisHeader += "]"; // close axis environment attributes
             return axisHeader;
         }
-        string getAxisFooter(const string& plotLabel = "") {
-            string axisFooter("\n\n\\end{axis}\n\n");
+        std::string getAxisFooter(const std::string& plotLabel = "") {
+            std::string axisFooter("\n\n\\end{axis}\n\n");
             axisFooter += "\\label{plots:"
                           + plotLabel
                           + "}";
             return axisFooter;
         }
     private:
-        static vector<string> MarkStyles;
-        static vector<string> Marks;
+        static std::vector<std::string> MarkStyles;
+        static std::vector<std::string> Marks;
         static size_t m_markIndex; // a valid index of Marks
-        static string getMark() {
+        static std::string getMark() {
             auto currentMark = m_markIndex;
             m_markIndex = (m_markIndex+1) % Marks.size();
             return Marks.at(currentMark);
         }
 
-        static vector<string> Colors;
+        static std::vector<std::string> Colors;
         static size_t m_colorIndex;
-        static string getColor() {
+        static std::string getColor() {
             auto currentColor = m_colorIndex;
             m_colorIndex = (m_colorIndex+1) % Colors.size();
             return Colors.at(currentColor);
         }
         static int m_markStyleCurrent;
-        static string getMarkStyle() {
-            string currentStyle = MarkStyles[m_markStyleCurrent];
+        static std::string getMarkStyle() {
+            std::string currentStyle = MarkStyles[m_markStyleCurrent];
             m_markStyleCurrent = (m_markStyleCurrent+1) % MarkStyles.size();
             return currentStyle;
         }
-        static void addNewMarker(const string& algorithm) {
+        static void addNewMarker(const std::string& algorithm) {
 //            string color = getColor();
-            string markerText;
+            std::string markerText;
 //            markerText += "mark=" + getMark() + ","
 //                    + "mark color=" + color + ","
 //                    + "color=" + color;
             markerText = getMarkStyle();
             m_algorithmMarkers[algorithm] = markerText;
         }
-        static map<string,string> m_algorithmMarkers;
-        static string getMarkerText(const string& algorithm) {
+        static std::map<std::string,std::string> m_algorithmMarkers;
+        static std::string getMarkerText(const std::string& algorithm) {
             if(m_algorithmMarkers.find(algorithm) == m_algorithmMarkers.end())
                 addNewMarker(algorithm);
             return m_algorithmMarkers.at(algorithm);
         }
 
 
-        static map<string,string> m_ivNiceNames;
+        static std::map<std::string,std::string> m_ivNiceNames;
     }; // class PgfplotsPrinter
 
     int PgfplotPrinter::m_markStyleCurrent = 0;
-    map<string,string> PgfplotPrinter::m_algorithmMarkers;
-    vector<string> PgfplotPrinter::MarkStyles = {
+    std::map<std::string,std::string> PgfplotPrinter::m_algorithmMarkers;
+    std::vector<std::string> PgfplotPrinter::MarkStyles = {
             "color=black,mark options={fill=black},mark=square*",
             "color=black,mark options={fill=black},mark=pentagon*",
             "color=black,mark options={fill=black},mark=diamond*",
@@ -206,13 +204,13 @@ namespace spanners {
             "color=black,mark=triangle",
             "color=black,mark=oplus",
     };
-    vector<string> PgfplotPrinter::Marks = {
+    std::vector<std::string> PgfplotPrinter::Marks = {
             "otimes*",
             "oplus*",
             "o", "triangle", "pentagon", "square",  "diamond"
     };
     // Palette generated using https://coolors.co/
-    vector<string> PgfplotPrinter::Colors = {
+    std::vector<std::string> PgfplotPrinter::Colors = {
             "000000",
             "2288DD"
 //            "22dddd",
@@ -231,7 +229,7 @@ namespace spanners {
     size_t PgfplotPrinter::m_markIndex = 0;
     size_t PgfplotPrinter::m_colorIndex = 1;
 
-    map<string,string> PgfplotPrinter::m_ivNiceNames = {
+    std::map<std::string,std::string> PgfplotPrinter::m_ivNiceNames = {
             {"runtime",             "Average execution time (s)"},
             {"degree",              "Maximum observed degree"},
             {"degreeAvg",           "Average observed degree per spanner"},
@@ -242,7 +240,7 @@ namespace spanners {
     };
 
 
-} // namespace spanners
+} // namespace bdps_experiment
 
 
 #endif //SPANNERS_PGFPLOTSPRINTER_H

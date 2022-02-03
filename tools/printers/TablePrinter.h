@@ -9,12 +9,10 @@
 #include "LatexPrinter.h"
 #include "../Utilities.h"
 
-namespace spanners {
+namespace bdps_experiment {
 
-    using namespace std;
-
-    const string TABLE_COLOR_1 = "ffffff";
-    const string TABLE_COLOR_2 = "cccccc";
+    const std::string TABLE_COLOR_1 = "ffffff";
+    const std::string TABLE_COLOR_2 = "cccccc";
 
 
     class TablePrinter : public LatexPrinter {
@@ -26,7 +24,7 @@ namespace spanners {
             MaxInRow
         };
 
-        TablePrinter(string directory, string filename, string documentType = "standalone")
+        TablePrinter(std::string directory, std::string filename, std::string documentType = "standalone")
         : LatexPrinter(directory,filename,documentType){
             defineColor(TABLE_COLOR_1);
             defineColor(TABLE_COLOR_2);
@@ -34,10 +32,10 @@ namespace spanners {
         void ignoreIV(unsigned iv) {
             m_ignore.insert(iv);
         }
-        void addColumn(string header, const vector<string>& values, int precision = -1, int priority = -1) {
+        void addColumn(std::string header, const std::vector<std::string>& values, int precision = -1, int priority = -1) {
             auto valuesCopy(values);
             SetPrecision precisionSetter{precision};
-            transform(valuesCopy.begin(),valuesCopy.end(),valuesCopy.begin(),precisionSetter);
+            std::transform(valuesCopy.begin(),valuesCopy.end(),valuesCopy.begin(),precisionSetter);
             if( priority < 0 ) {
                 priority = 0;
                 while (contains(m_added, priority))
@@ -50,18 +48,18 @@ namespace spanners {
                           getTableBody(highlightStyle),
                           getTableFooter(sideways) };
         }
-        string getTableBody(TablePrinter::CellHighlightStyle highlightStyle) {
+        std::string getTableBody(TablePrinter::CellHighlightStyle highlightStyle) {
             assert(!m_added.empty());
             typedef TablePrinter::CellHighlightStyle CellHighlightStyle;
 
-            string table;
+            std::string table;
             size_t numRows = m_added.begin()->second.second.size();
 
-            vector<string> highlightCols;
+            std::vector<std::string> highlightCols;
             if(highlightStyle==CellHighlightStyle::MaxInColumn) {
                 // first column has algorithm names, skip
-                transform(next(m_added.begin()),m_added.end(),back_inserter(highlightCols),
-                    [](const auto& column) -> string {
+                std::transform(next(m_added.begin()),m_added.end(),back_inserter(highlightCols),
+                    [](const auto& column) -> std::string {
 
                         return *min_element(column.second.second.cbegin(),column.second.second.cend(),
                             []( const auto& lhs, const auto& rhs ) -> bool {
@@ -70,19 +68,19 @@ namespace spanners {
                 });
             }
             for(size_t row=0; row<numRows; ++row) {
-                optional<string> highlightValue;
+                std::optional<std::string> highlightValue;
                 if(highlightStyle==CellHighlightStyle::MaxInRow) {
                     // first column has n levels, skip
-                    highlightValue = make_optional(min_element(next(m_added.begin()),m_added.end(),
+                    highlightValue = std::make_optional(min_element(next(m_added.begin()),m_added.end(),
                   [row](auto &column1, auto &column2){
                             return stod(column1.second.second.at(row)) < stod(column2.second.second.at(row));
                         })->second.second.at(row));
                 }
                 int columnNum = -1; // 0 is the first index of the column highlight-data but we want to skip the first col (names)
                 for(const auto& cell : m_added ) { //auto attr : colHeaders )
-                    string cellValue = cell.second.second.at(row);
-                    string prefix = "$";
-                    string suffix = "$ &";
+                    std::string cellValue = cell.second.second.at(row);
+                    std::string prefix = "$";
+                    std::string suffix = "$ &";
                     if( (highlightValue && *highlightValue == cellValue )
                       ||(!highlightCols.empty() && highlightCols[columnNum] == cellValue )) {
                         prefix += "\\textbf{";
@@ -97,7 +95,7 @@ namespace spanners {
             }
             return table;
         }
-        string getTableHeader(bool sideways = false) {
+        std::string getTableHeader(bool sideways = false) {
 
             std::string tableHeader = "\\rowcolors{1}{"
                                       + TABLE_COLOR_1 + "}{"
@@ -126,21 +124,21 @@ namespace spanners {
             tableHeader += "\n\n\\hline\n";
             return tableHeader;
         }
-        string getTableFooter(bool sideways = false) {
+        std::string getTableFooter(bool sideways = false) {
             std::string tableFooter = std::string("")
                                       + "\\hline\n"
                                       + "\\end{tabular}\n\n"
                                       + (sideways ? "\\end{sidewaystable}\n\n" : "");
             return tableFooter;
         }
-        static map<string,string> m_ivNiceNames;
+        static std::map<std::string,std::string> m_ivNiceNames;
     protected:
-        set<unsigned> m_ignore;
-        map<int,pair<string,vector<string>>> m_added;
+        std::set<unsigned> m_ignore;
+        std::map<int,std::pair<std::string,std::vector<std::string>>> m_added;
 
     };
 
-    map<string,string> TablePrinter::m_ivNiceNames = {
+    std::map<std::string,std::string> TablePrinter::m_ivNiceNames = {
             {"runtime",             "$\\mathrm{runtime (s)}$"},
             {"degree",              "$\\Delta$"},
             {"degreeAvg",           "$\\Delta_\\mathrm{avg}$"},
@@ -152,4 +150,4 @@ namespace spanners {
 
 }
 
-#endif //SPANNERS_TABLEPRINTER_H
+#endif //LIBSPANNER_TABLEPRINTER_H

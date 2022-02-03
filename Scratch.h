@@ -13,24 +13,24 @@
 
 
 
-#include "algorithms/BoundedDegreePlaneSpanners.h"
+#include "libspanner/BoundedDegreePlaneSpanners.h"
 
-#include "printers/GraphPrinter.h"
-#include "printers/LatexPrinter.h"
-#include "printers/PgfplotPrinter.h"
-#include "printers/TablePrinter.h"
+#include "tools/printers/GraphPrinter.h"
+#include "tools/printers/LatexPrinter.h"
+#include "tools/printers/PgfplotPrinter.h"
+#include "tools/printers/TablePrinter.h"
 
 #include "tools/Metrics.h"
 #include "tools/PointGenerators.h"
 #include "tools/Results.h"
 #include "tools/Utilities.h"
 
-namespace spanners {
+namespace bdps_experiment {
 
-    const string SCRATCH_DIRECTORY = "../scratch/";
+    const std::string SCRATCH_DIRECTORY = "../scratch/";
 
 
-    void scratch(const vector<Point>& points) {
+    void scratch(const spanner::bdps::input_t& points) {
 
         using namespace std;
         GraphPrinter tikz("/tmp/", "deg3");
@@ -39,30 +39,30 @@ namespace spanners {
 
 //        for(auto p : points)
 //            if(p.x()>4.35)
-//                spanners::bcc2012::POINT_COLLECTOR.emplace(p.x()-4.75,p.y());
+//                bdps_experiment::bcc2012::POINT_COLLECTOR.emplace(p.x()-4.75,p.y());
 
         writePointsToFile(points.begin(), points.end(),"galaxy");
 
         cout << points.size();
         cout << "\n";
 
-        list<pair<size_t, size_t> > result;
+        spanner::bdps::output_t result;
 
         { // RUN THE ALGORITHM(S) /////////////////////////////////////
 //            Timer tim;
-//            LW2004( points.begin(), points.end(), back_inserter(result));
-//            BSX2009( points.begin(), points.end(), back_inserter(result), 2*PI/3);
-//            BGS2005( points.begin(), points.end(), back_inserter(result));
-//            KPX2010( points.begin(), points.end(), back_inserter(result), 18);
-//            BCC2012<6>( points.begin(), points.end(), back_inserter(result));
-//            BCC2012<7>( points.begin(), points.end(), back_inserter(result));
-//            BHS2018(points.begin(), points.end(), back_inserter(result));
-//            KPT2017(points.begin(), points.end(), back_inserter(result));
-//            BKPX2015(points.begin(), points.end(), back_inserter(result));
-//            BGHP2010(points.begin(), points.end(), back_inserter(result));
-//            KX2012(points.begin(), points.end(), back_inserter(result));
-            DEG3(points.begin(),points.end(),back_inserter(result));
-//            delaunay_testing( points.begin(), points.end(), back_inserter(result));
+//            spanner::LW2004( points, result);
+//            spanner::BSX2009( points, result, 2*PI/3);
+//            spanner::BGS2005( points, result);
+//            spanner::KPX2010( points, result, 18);
+//            spanner::BCC2012<6>( points, result);
+//            spanner::BCC2012<7>( points, result);
+//            spanner::BHS2018(points, result);
+//            spanner::KPT2017(points, result);
+//            spanner::BKPX2015(points, result);
+//            spanner::BGHP2010(points, result);
+//            spanner::KX2012(points, result);
+            spanner::DEG3(points,result);
+//            delaunay_testing( points, result);
         }
 
         cout << degree(result.begin(), result.end()) << endl;
@@ -117,7 +117,7 @@ namespace spanners {
     void scratchN(size_t n) {
         double width = 10;
 
-        vector<Point> points;
+        spanner::bdps::input_t points;
 
         PointGenerator_2 generator;
         generator.inGalaxy(n,5,points);
@@ -125,11 +125,11 @@ namespace spanners {
         scratch(points);
     }
     void scratchFile(string filename) {
-        vector<Point> points;
+        spanner::bdps::input_t points;
         readPointsFromFile( back_inserter( points ), filename );
         scratch(points);
     }
 
-} // spanners
+} // bdps_experiment
 
 #endif //SPANNERS_SCRATCH_H

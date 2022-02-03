@@ -12,7 +12,7 @@
 #include "Scratch.h"
 
 using namespace std;
-using namespace spanners;
+using namespace bdps_experiment;
 
 int main(int argc, char *argv[]) {
 

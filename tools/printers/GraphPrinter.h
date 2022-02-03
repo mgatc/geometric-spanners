@@ -16,10 +16,10 @@
 #include <boost/algorithm/string.hpp>
 
 #include "LatexPrinter.h"
-#include "../DelaunayL2.h"
-#include "../Utilities.h"
+#include "libspanner/delaunay/DelaunayL2.h"
+#include "tools/Utilities.h"
 
-namespace spanners {
+namespace bdps_experiment {
 
 using namespace std;
 
@@ -272,7 +272,7 @@ public:
                           + "};\n";
     }
 
-    void drawEdges( const DelaunayGraph& DG, const OptionsList& options = {} ) {
+    void drawEdges( const spanner::DelaunayGraph& DG, const OptionsList& options = {} ) {
         for( const auto &el : DG.m_E ) {
             for( const auto& v : el.second ) {
                 //std::cout << el.first->point() << " " << v->point() << "\n";
@@ -340,6 +340,6 @@ private:
 }; // class GraphPrinter
 
 
-} // namespace spanners
+} // namespace bdps_experiment
 
 #endif // SPANNERS_GRAPHPRINTER_H

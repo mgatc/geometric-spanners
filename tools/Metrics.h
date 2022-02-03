@@ -27,16 +27,14 @@
 
 #include <omp.h>
 
-#include "DelaunayL2.h"
+#include "libspanner/delaunay/DelaunayL2.h"
+
 #include "FloydWarshall.h"
 #include "StretchFactorExact.h"
 #include "StretchFactorExperimental.h"
 #include "Utilities.h"
 
-namespace spanners {
-
-using namespace std;
-
+namespace bdps_experiment {
 
     template<typename RandomAccessIterator>
     size_t degree(RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd) {
@@ -48,11 +46,11 @@ using namespace std;
         // for each edge
         for (auto e : edges) {
             auto first = adj.begin();
-            tie(first, ignore) = adj.emplace(e.first, unordered_set<VertexType>());
+            std::tie(first, ignore) = adj.emplace(e.first, unordered_set<VertexType>());
             (*first).second.insert(e.second);
 
             auto second = adj.begin();
-            tie(second, ignore) = adj.emplace(e.second, unordered_set<VertexType>());
+            std::tie(second, ignore) = adj.emplace(e.second, unordered_set<VertexType>());
             (*second).second.insert(e.first);
         }
         auto max_el = max_element(adj.begin(), adj.end(), [&](const auto &lhs, const auto &rhs) {
@@ -62,21 +60,22 @@ using namespace std;
 
         return max_el->second.size();
     }
+
     template<typename RandomAccessIterator>
     number_t degreeAvg(RandomAccessIterator edgesBegin, RandomAccessIterator edgesEnd) {
         typedef typename RandomAccessIterator::value_type EdgeType;
         typedef typename EdgeType::first_type VertexType;
 
         const std::vector<EdgeType> edges(edgesBegin, edgesEnd);
-        std::unordered_map<VertexType, unordered_set<VertexType>> adj;
+        std::unordered_map<VertexType, std::unordered_set<VertexType>> adj;
         // for each edge
         for (auto e : edges) {
             auto first = adj.begin();
-            tie(first, ignore) = adj.emplace(e.first, unordered_set<VertexType>());
+            std::tie(first, ignore) = adj.emplace(e.first, unordered_set<VertexType>());
             (*first).second.insert(e.second);
 
             auto second = adj.begin();
-            tie(second, ignore) = adj.emplace(e.second, unordered_set<VertexType>());
+            std::tie(second, ignore) = adj.emplace(e.second, unordered_set<VertexType>());
             (*second).second.insert(e.first);
         }
         auto avg = std::accumulate(adj.begin(), adj.end(), 0.0, [&](const number_t &sum, const auto &current) {
@@ -86,34 +85,34 @@ using namespace std;
         return avg;
     }
 
-    template<typename Triangulation>
-    size_t degree(const Triangulation &T) {
-        typedef typename Triangulation::Point
-                Point_2;
-
-        // fill a vector with edges so we can call the range-based degree function
-        const std::vector<pair<Point_2, Point_2>> edges;
-        edges.reserve(T.number_of_vertices());
-
-        for (auto e = T.finite_edges_begin(); e != T.finite_edges_end(); ++e) {
-            auto p = make_pair(
-                    e->first->vertex((e->second + 1) % 3)->point(),
-                    e->first->vertex((e->second + 2) % 3)->point()
-            );
-            // Add both in and out edges
-            forBoth(p, [&](Point a, Point b) {
-                edges.emplace_back(a, b);
-            });
-        }
-        return degree(edges.begin(), edges.end());
-    }
+//    template<typename Triangulation>
+//    size_t degree(const Triangulation &T) {
+//        typedef typename Triangulation::Point
+//                Point_2;
+//
+//        // fill a vector with edges so we can call the range-based degree function
+//        const std::vector<std::pair<Point_2, Point_2>> edges;
+//        edges.reserve(T.number_of_vertices());
+//
+//        for (auto e = T.finite_edges_begin(); e != T.finite_edges_end(); ++e) {
+//            auto p = make_pair(
+//                    e->first->vertex((e->second + 1) % 3)->point(),
+//                    e->first->vertex((e->second + 2) % 3)->point()
+//            );
+//            // Add both in and out edges
+//            forBoth(p, [&](Point a, Point b) {
+//                edges.emplace_back(a, b);
+//            });
+//        }
+//        return degree(edges.begin(), edges.end());
+//    }
 
     template< class VertexIterator, class EdgeIterator>
     number_t weight( VertexIterator pointsBegin,
                      VertexIterator pointsEnd,
                      EdgeIterator edgesBegin,
                      EdgeIterator edgesEnd ) {
-        const vector<Point> P(pointsBegin,pointsEnd);
+        const std::vector<Point> P(pointsBegin,pointsEnd);
 
         number_t w = 0;
         index_t p,q;
@@ -124,18 +123,18 @@ using namespace std;
         return w;
     }
 
-    template<typename Triangulation>
-    number_t weight(const Triangulation &T) {
-        number_t w = 0;
-        for (auto e = T.finite_edges_begin(); e != T.finite_edges_end(); ++e) {
-            auto p = make_pair(
-                    e->first->vertex((e->second + 1) % 3)->point(),
-                    e->first->vertex((e->second + 2) % 3)->point()
-            );
-            w += getDistance(p.first, p.second);
-        }
-        return w;
-    }
+//    template<typename Triangulation>
+//    number_t weight(const Triangulation &T) {
+//        number_t w = 0;
+//        for (auto e = T.finite_edges_begin(); e != T.finite_edges_end(); ++e) {
+//            auto p = std::make_pair(
+//                    e->first->vertex((e->second + 1) % 3)->point(),
+//                    e->first->vertex((e->second + 2) % 3)->point()
+//            );
+//            w += getDistance(p.first, p.second);
+//        }
+//        return w;
+//    }
 
     template<typename VertexContainer, typename AdjacencyList>
     optional<number_t> AStar(VertexContainer V, AdjacencyList G_prime, index_t start, index_t goal) {
@@ -152,16 +151,16 @@ using namespace std;
         EuclideanDistanceToPoint h = {V.at(goal)->point()}; // initialize heuristic functor
 
         Heap open;
-        unordered_map<index_t, HeapHandle> handleToHeap(n);
+        std::unordered_map<index_t, HeapHandle> handleToHeap(n);
         handleToHeap[start] = open.emplace(h(startPoint), start);
 
         //unordered_set<size_t> closed(n);
-        vector<index_t> parents(n);
+        std::vector<index_t> parents(n);
 
-        vector<number_t> g(n, INF);
+        std::vector<number_t> g(n, INF);
         g[start] = 0;
 
-        vector<number_t> f(n, INF);
+        std::vector<number_t> f(n, INF);
         f[start] = h(startPoint);
 
         DistanceIndexPair current = open.top(); // initialize current vertex to start
@@ -334,7 +333,7 @@ void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_pr
             EdgeDescriptor ed = *it;
             VertexDescriptor p = source(ed, G),
                              q = target(ed, G);
-            *out = make_pair(p,q);
+            *out = std::make_pair(p,q);
         }
     }
     template< class VertexIterator, class EdgeIterator>
@@ -342,9 +341,9 @@ void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_pr
                            VertexIterator pointsEnd,
                            EdgeIterator edgesBegin,
                            EdgeIterator edgesEnd ) {
-        vector<Point> P(pointsBegin,pointsEnd);
-        vector<Edge> E(edgesBegin,edgesEnd);
-        list<Edge> MST;
+        std::vector<Point> P(pointsBegin,pointsEnd);
+        std::vector<Edge> E(edgesBegin,edgesEnd);
+        std::list<Edge> MST;
         getMST( P.begin(), P.end(), E.begin(), E.end(), back_inserter(MST) );
         number_t weightOfMST = weight(P.begin(), P.end(), MST.begin(), MST.end() ),
                  weightOfG   = weight(P.begin(), P.end(), E.begin(), E.end() ),
@@ -374,7 +373,7 @@ void AStar( const VertexContainer& V, const VertexMap& vMap, AdjacencyList& G_pr
         CGAL::Real_timer m_clock;
     };
 
-} // namespace spanners
+} // namespace bdps_experiment
 
 
 #endif // UNF_SPANNERS_METRICS_H

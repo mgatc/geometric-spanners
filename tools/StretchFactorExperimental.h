@@ -19,11 +19,11 @@
 
 #include <omp.h>
 
+#include "libspanner/delaunay/DelaunayL2.h"
+
 #include "Utilities.h"
 
-namespace spanners {
-
-    using namespace std;
+namespace bdps_experiment {
 
     template<typename PointIterator, typename EdgeIterator>
     number_t StretchFactorExpDijk(PointIterator pointsBegin,
@@ -31,11 +31,11 @@ namespace spanners {
                                   EdgeIterator edgesBegin,
                                   EdgeIterator edgesEnd,
                                   const size_t numberOfThreads = 4) {
-        vector<Point> P(pointsBegin, pointsEnd);
-        const vector<Edge> E(edgesBegin, edgesEnd);
+        std::vector<Point> P(pointsBegin, pointsEnd);
+        const std::vector<Edge> E(edgesBegin, edgesEnd);
 
         const index_t n = P.size();
-        vector<unordered_set<index_t>> G(n),
+        std::vector<std::unordered_set<index_t>> G(n),
                 DelG(n);
 
 
@@ -45,26 +45,26 @@ namespace spanners {
             G[e.second].insert(e.first);
         }
 
-        vector<Edge> edgesOfDT;
-        vector<index_t> index;
+        std::vector<Edge> edgesOfDT;
+        std::vector<index_t> index;
         spatialSort<K>(P, index);
 
         //Step 1: Construct Delaunay triangulation
-        DelaunayL2 DT; //DelaunayTriangulationSFH DT(P, edgesOfDT);
+        spanner::DelaunayL2 DT; //DelaunayTriangulationSFH DT(P, edgesOfDT);
         /*Add IDs to the vertex handle. IDs are the number associated to the vertex, also maped as an index in handles.
           (i.e. Vertex with the ID of 10 will be in location [10] of handles.)*/
-        FaceHandle hint;
+        spanner::FaceHandle hint;
         //cout<<"del:";
         for (size_t entry : index) {
             auto vh = DT.insert(P[entry], hint);
             hint = vh->face();
             vh->info() = entry;
         }
-        VertexHandle v_inf = DT.infinite_vertex();
+        spanner::VertexHandle v_inf = DT.infinite_vertex();
 
         // Convert DT to adjacency list
         for(auto vit=DT.finite_vertices_begin(); vit != DT.finite_vertices_end(); ++vit) {
-            VertexCirculator N = DT.incident_vertices(vit),
+            spanner::VertexCirculator N = DT.incident_vertices(vit),
                     done(N);
             do {
                 if( N != v_inf )
@@ -86,9 +86,9 @@ namespace spanners {
         typedef ShortestPathsQueue::iterator SPQHandle;
 
 
-        vector<number_t> stretchFactorOfG(numberOfThreads,0.0);
-        vector<pair<index_t, index_t>> worstPairOfG(numberOfThreads);
-        vector<unordered_map<index_t,number_t>> tracker(n);
+        std::vector<number_t> stretchFactorOfG(numberOfThreads,0.0);
+        std::vector<std::pair<index_t, index_t>> worstPairOfG(numberOfThreads);
+        std::vector<std::unordered_map<index_t,number_t>> tracker(n);
 
 #pragma omp parallel for num_threads(numberOfThreads)
         for( index_t u = 0; u < n; u++ ) {
@@ -98,17 +98,17 @@ namespace spanners {
             size_t lvl = 0;
             BfsQueue bfs;
             bfs.emplace_back(u,lvl);
-            unordered_set<index_t> frontier;
-            vector<bool> known(n,false);
+            std::unordered_set<index_t> frontier;
+            std::vector<bool> known(n,false);
             known[u] = true;
 
             // Dijkstra variables ////////////////////
 
-            unordered_map<index_t, number_t> shortestPathLength(n);
+            std::unordered_map<index_t, number_t> shortestPathLength(n);
             shortestPathLength[u] = 0.0;
 
             ShortestPathsQueue open;
-            unordered_map<index_t, SPQHandle> openHandle(n);
+            std::unordered_map<index_t, SPQHandle> openHandle(n);
             openHandle[u] = open.emplace(shortestPathLength[u], u);
 
             // Iterative Deepening Loop
@@ -189,6 +189,6 @@ namespace spanners {
         return *std::max_element(stretchFactorOfG.begin(),stretchFactorOfG.end());
     }
 
-} // spanners
+} // bdps_experiment
 
 #endif //STRETCHFACTOR_STRETCHFACTOREXPERIMENTAL_H

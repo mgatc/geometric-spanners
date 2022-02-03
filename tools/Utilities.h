@@ -23,10 +23,7 @@
 #include <CGAL/Spatial_sort_traits_adapter_2.h>
 
 
-namespace spanners {
-
-    using namespace std;
-
+namespace bdps_experiment {
 
     typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 
@@ -36,13 +33,13 @@ namespace spanners {
     typedef K::FT number_t;
     typedef size_t index_t;
     typedef size_t cone_t;
-    typedef variant<index_t,number_t> mixed_t;
+    typedef std::variant<index_t,number_t> mixed_t;
 
-    typedef pair<index_t, index_t> index_tPair;
+    typedef std::pair<index_t, index_t> index_tPair;
     typedef index_tPair Edge;
     typedef boost::hash<index_tPair> index_tPairHash;
-    typedef unordered_set<index_tPair, index_tPairHash> index_tPairSet;
-    typedef unordered_map<index_tPair, bool, index_tPairHash> index_tPairMap;
+    typedef std::unordered_set<index_tPair, index_tPairHash> index_tPairSet;
+    typedef std::unordered_map<index_tPair, bool, index_tPairHash> index_tPairMap;
 
     const number_t EPSILON = 0.000001;
     const number_t INF = std::numeric_limits<double>::infinity();
@@ -100,13 +97,13 @@ namespace spanners {
 
     template<typename T>
     inline std::pair<T, T> makeNormalizedPair(const T &i, const T &j) {
-        return make_pair(
+        return std::make_pair(
                 CGAL::min(i, j),
                 CGAL::max(i, j)
         );
     }
     template< class T >
-    inline std::pair<T, T> normalize_pair( const pair<T,T>& toNormalize ) {
+    inline std::pair<T, T> normalize_pair( const std::pair<T,T>& toNormalize ) {
         return makeNormalizedPair( toNormalize.first, toNormalize.second );
     }
 
@@ -147,21 +144,21 @@ namespace spanners {
     template<class... Ts> overload(Ts...) -> overload<Ts...>;
     // END
 
-    ostream& operator<<(ostream &os, mixed_t value) {
+    std::ostream& operator<<(std::ostream &os, mixed_t value) {
         visit( overload{
                 [&](index_t& val ){ os<<val; },
                 [&](number_t& val ){ os<<val; }
         }, value );
         return os;
     }
-    string to_string(mixed_t value) {
-        ostringstream oss;
+    std::string to_string(mixed_t value) {
+        std::ostringstream oss;
         oss<<std::move(value);
         return oss.str();
     }
 
 
-    string removeSpaces(string str) {
+    std::string removeSpaces(std::string str) {
         str.erase(std::remove_if(str.begin(), str.end(),
                                  [](auto x) { return std::isspace(x); }), str.end());
         return str;
@@ -191,8 +188,8 @@ namespace spanners {
 
 
     template< class OutputIterator >
-    void readPointsFromFile( OutputIterator out, const string& outputFileName, const size_t n=SIZE_T_MAX ) {
-        ifstream in(outputFileName);
+    void readPointsFromFile( OutputIterator out, const std::string& outputFileName, const size_t n=SIZE_T_MAX ) {
+        std::ifstream in(outputFileName);
         if (in.is_open()) {
             double x,y;
             size_t i = 0;
@@ -206,18 +203,18 @@ namespace spanners {
     }
 
     template<class InputIterator>
-    bool writePointsToFile(InputIterator begin, InputIterator end, string name="") {
-        vector<Point> points(begin,end);
-        ofstream out;
+    bool writePointsToFile(InputIterator begin, InputIterator end, std::string name="") {
+        std::vector<Point> points(begin,end);
+        std::ofstream out;
         if(name.empty())
             name = "data-" + to_string(points.size()) + ".xy";
-        out.open( name, ios::trunc );
+        out.open( name, std::ios::trunc );
 
         if(!out.is_open())
             return false;
 
         for( Point p : points )
-            out << p << endl;
+            out << p << std::endl;
 
         out.close();
         return points.size() > 0;
@@ -348,7 +345,7 @@ namespace spanners {
     };
 
     struct PointConeHash {
-        size_t operator()(const pair<index_t, cone_t> &PC) const noexcept {
+        size_t operator()(const std::pair<index_t, cone_t> &PC) const noexcept {
             size_t seed = 31;
             boost::hash_combine(seed, PC.first);
             boost::hash_combine(seed, PC.second);
@@ -357,13 +354,13 @@ namespace spanners {
     };
 
     struct PointConeComparator {
-        bool operator()(const pair<index_t, cone_t> &lhs, const pair<index_t, cone_t> &rhs) const noexcept {
+        bool operator()(const std::pair<index_t, cone_t> &lhs, const std::pair<index_t, cone_t> &rhs) const noexcept {
             return lhs.first == rhs.first && lhs.second == rhs.second;
         }
     };
 
     template<class K>
-    void spatialSort(vector<typename K::Point_2> &P, vector<index_t> &index) {
+    void spatialSort(std::vector<typename K::Point_2> &P, std::vector<index_t> &index) {
         typedef CGAL::Spatial_sort_traits_adapter_2<K,
                 typename CGAL::Pointer_property_map<typename K::Point_2>::type> SearchTraits;
 
@@ -397,10 +394,10 @@ namespace spanners {
         const index_t n = T.number_of_vertices();
 
         Heap H;
-        vector<HeapHandle> handleToHeap(n);
+        std::vector<HeapHandle> handleToHeap(n);
         //vector<size_t> piIndexedByV(n);
-        vector<index_t> ordering(n);
-        vector<unordered_set<index_t>> currentNeighbors(n);
+        std::vector<index_t> ordering(n);
+        std::vector<std::unordered_set<index_t>> currentNeighbors(n);
 
         // Initialize the vector currentNeighbors with appropriate neighbors for every vertex
         for (auto it = T.finite_vertices_begin();
@@ -430,7 +427,7 @@ namespace spanners {
             for (index_t neighbor : currentNeighbors.at(p.second)) {
                 currentNeighbors.at(neighbor).erase(p.second);
                 HeapHandle h = handleToHeap.at(neighbor);
-                index_tPair q = make_pair(currentNeighbors.at(neighbor).size(), neighbor);
+                index_tPair q = std::make_pair(currentNeighbors.at(neighbor).size(), neighbor);
                 H.update(h, q);
                 H.update(h);
             }
@@ -472,13 +469,13 @@ namespace spanners {
         //Timer t(",");
         typedef typename DelaunayTriangulation::Vertex_handle VertexHandle;
         typedef typename DelaunayTriangulation::Vertex_circulator VertexCirculator;
-        typedef unordered_set<VertexHandle> VertexHash;
+        typedef std::unordered_set<VertexHandle> VertexHash;
 
         VertexHash onOuterFace, complete;
-        queue<VertexHandle> ready;
+        std::queue<VertexHandle> ready;
         index_t i = DT.number_of_vertices();
 
-        vector<VertexHandle> ordering(i);
+        std::vector<VertexHandle> ordering(i);
 
         VertexCirculator v_convexHull = DT.incident_vertices(DT.infinite_vertex() ), // create a circulator of the convex hull
             done(v_convexHull );
@@ -529,6 +526,6 @@ namespace spanners {
     }
 
 
-} // namespace spanners
+} // namespace bdps_experiment
 
 #endif // UNF_SPANNERS_UTILITIES_H

@@ -6,16 +6,16 @@
 #include <string>
 #include <vector>
 
-#include "algorithms/BoundedDegreePlaneSpanners.h"
+#include "libspanner/BoundedDegreePlaneSpanners.h"
 
-#include "printers/LatexPrinter.h"
-#include "printers/PgfplotPrinter.h"
-#include "printers/TablePrinter.h"
+#include "tools/printers/LatexPrinter.h"
+#include "tools/printers/PgfplotPrinter.h"
+#include "tools/printers/TablePrinter.h"
 
 #include "tools/Results.h"
 #include "tools/Utilities.h"
 
-namespace spanners {
+namespace bdps_experiment {
 
 namespace analysis {
 
@@ -25,7 +25,7 @@ namespace analysis {
         NoExperimentType,
     } EXPERIMENT_TYPE = NoExperimentType;
 
-    string OUTPUT_DIRECTORY = "/tmp/spanners/";
+    string OUTPUT_DIRECTORY = "/tmp/bdps_experiment/";
 
     string X_PLOT_SCALE_UNIT = "";
     string X_PLOT_SCALE_SHORT_UNIT = "";
@@ -182,14 +182,14 @@ namespace analysis {
         set<string> tdPlots = {"BGHP2010", "KPT2017"};
         set<string> linfPlots = {"BKPX2015", "Degree3"};
         set<string> l2Plots;
-        copy_if(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),
+        copy_if(spanner::bdps::ALGORITHM_NAMES.begin(),spanner::bdps::ALGORITHM_NAMES.end(),
                 inserter(l2Plots,l2Plots.end()),
                 [&](const string& name){
                     return !(contains(tdPlots,name) || contains(linfPlots,name));
                 });
 
         set<string> nontdPlots;
-        copy_if(ALGORITHM_NAMES.begin(), ALGORITHM_NAMES.end(),
+        copy_if(spanner::bdps::ALGORITHM_NAMES.begin(), spanner::bdps::ALGORITHM_NAMES.end(),
                 inserter(nontdPlots, nontdPlots.end()),
                 [&tdPlots](const string &name) { // return true if name is not in tdPlots
                     return !contains(tdPlots, name);
@@ -339,14 +339,14 @@ namespace analysis {
         set<string> tdPlots = {"BGHP2010", "KPT2017"};
         set<string> linfPlots = {"BKPX2015", "Degree3"};
         set<string> l2Plots;
-        copy_if(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(),
+        copy_if(spanner::bdps::ALGORITHM_NAMES.begin(),spanner::bdps::ALGORITHM_NAMES.end(),
                 inserter(l2Plots,l2Plots.end()),
                 [&](const string& name){
                     return !(contains(tdPlots,name) || contains(linfPlots,name));
                 });
 
         set<string> nontdPlots;
-        copy_if(ALGORITHM_NAMES.begin(), ALGORITHM_NAMES.end(),
+        copy_if(spanner::bdps::ALGORITHM_NAMES.begin(), spanner::bdps::ALGORITHM_NAMES.end(),
                 inserter(nontdPlots, nontdPlots.end()),
                 [&tdPlots](const string &name) { // return true if name is not in tdPlots
                     return !contains(tdPlots, name);
@@ -507,7 +507,7 @@ namespace analysis {
 
                 vector<string> headers;
                 vector<vector<string>> ivValues;
-                for(auto name : ALGORITHM_NAMES) {
+                for(auto name : spanner::bdps::ALGORITHM_NAMES) {
                     if( contains(distribution.second, name)) {
                         auto& spanner = distribution.second[name];
                         headers.push_back(texttt(name));
@@ -568,7 +568,7 @@ namespace analysis {
                     return precisionSetter(std::to_string(elem.first / X_PLOT_SCALE)) + mathrm(X_PLOT_SCALE_SHORT_UNIT);
                 });
 
-            for(auto name : ALGORITHM_NAMES) {
+            for(auto name : spanner::bdps::ALGORITHM_NAMES) {
                 if( contains(summary, name)) {
                     auto& spanner = summary.at(name);
                     headers.push_back(texttt(name));
@@ -598,7 +598,7 @@ namespace analysis {
             return;
 
         vector<string> header;
-        header.push_back(ALGORITHM_SYMBOL);
+        header.push_back(spanner::bdps::ALGORITHM_SYMBOL);
         transform(next(ANALYSIS_IVs.begin()),ANALYSIS_IVs.end(),back_inserter(header),
             [](const auto& iv){
                 return TablePrinter::m_ivNiceNames.find(iv) == TablePrinter::m_ivNiceNames.end() ?
@@ -607,7 +607,7 @@ namespace analysis {
 
         vector<vector<string>> body;
         body.push_back({});
-        copy_if(ALGORITHM_NAMES.begin(),ALGORITHM_NAMES.end(), back_inserter(body.back()),
+        copy_if(spanner::bdps::ALGORITHM_NAMES.begin(),spanner::bdps::ALGORITHM_NAMES.end(), back_inserter(body.back()),
             [&](const string& name){
                 return contains(summary,name);
             });
@@ -620,7 +620,7 @@ namespace analysis {
             if(iv == "runtime") continue;
 
             body.push_back({});
-            for(auto spanner : ALGORITHM_NAMES) {
+            for(auto spanner : spanner::bdps::ALGORITHM_NAMES) {
                 if(contains(summary,spanner))
                     body.back().push_back(std::to_string(summary.at(spanner).template getIV<double>(iv)));
             }
@@ -644,7 +644,7 @@ namespace analysis {
 
 
 void BoundedDegreePlaneSpannerAnalysisSynthetic(const string& filename) {
-    using namespace spanners::analysis;
+    using namespace bdps_experiment::analysis;
 
     cout << "Starting synthetic analysis..."<<endl;
 
@@ -706,7 +706,7 @@ void BoundedDegreePlaneSpannerAnalysisSynthetic(const string& filename) {
 }
 
 void BoundedDegreePlaneSpannerAnalysisReal(const string& filename) {
-    using namespace spanners::analysis;
+    using namespace bdps_experiment::analysis;
 
     cout << "Starting real analysis..."<<endl;
 
@@ -775,7 +775,7 @@ void BoundedDegreePlaneSpannerAnalysis(const string& filename) {
 }
 
 
-} // spanners
+} // bdps_experiment
 
 
 

@@ -8,7 +8,7 @@
 
 #include <omp.h> // <-- UNCOMMENT FOR PARALLEL, ALSO LINE 98
 
-#include "tools/Utilities.h"
+#include "Utilities.h"
 
 namespace spanners {
 

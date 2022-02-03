@@ -19,7 +19,7 @@
 
 #include <omp.h>
 
-#include "tools/Utilities.h"
+#include "Utilities.h"
 
 namespace spanners {
 

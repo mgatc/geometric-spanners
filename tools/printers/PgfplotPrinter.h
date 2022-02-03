@@ -6,9 +6,9 @@
 #include <optional>
 #include <vector>
 
-#include "printers/GraphPrinter.h"
-#include "tools/Results.h"
-#include "tools/Utilities.h"
+#include "GraphPrinter.h"
+#include "../Results.h"
+#include "../Utilities.h"
 
 namespace spanners {
 

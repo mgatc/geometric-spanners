@@ -13,9 +13,9 @@
 
 #include "algorithms/BoundedDegreePlaneSpanners.h"
 
-#include "tools/Metrics.h"
-#include "tools/PointGenerators.h"
-#include "tools/Utilities.h"
+#include "Metrics.h"
+#include "PointGenerators.h"
+#include "Utilities.h"
 
 namespace spanners {
     using namespace std;

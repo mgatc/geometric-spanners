@@ -4,18 +4,18 @@
 #include <string>
 #include <vector>
 
-#include "algorithms/Degree3.h"
+#include "Degree3.h"
 
-#include "algorithms/BCC2012.h"
-#include "algorithms/BGHP2010.h"
-#include "algorithms/BGS2005.h"
-#include "algorithms/BHS2018.h"
-#include "algorithms/BKPX2015.h"
-#include "algorithms/BSX2009.h"
-#include "algorithms/KPT2017.h"
-#include "algorithms/KPX2010.h"
-#include "algorithms/KX2012.h"
-#include "algorithms/LW2004.h"
+#include "BCC2012.h"
+#include "BGHP2010.h"
+#include "BGS2005.h"
+#include "BHS2018.h"
+#include "BKPX2015.h"
+#include "BSX2009.h"
+#include "KPT2017.h"
+#include "KPX2010.h"
+#include "KX2012.h"
+#include "LW2004.h"
 
 namespace spanners {
 

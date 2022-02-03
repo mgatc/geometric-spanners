@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
-#include "printers/LatexPrinter.h"
-#include "tools/Utilities.h"
+#include "LatexPrinter.h"
+#include "../Utilities.h"
 
 namespace spanners {
 

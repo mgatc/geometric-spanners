@@ -15,9 +15,9 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "printers/LatexPrinter.h"
-#include "tools/DelaunayL2.h"
-#include "tools/Utilities.h"
+#include "LatexPrinter.h"
+#include "../DelaunayL2.h"
+#include "../Utilities.h"
 
 namespace spanners {
 

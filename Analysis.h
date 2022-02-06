@@ -13,7 +13,7 @@
 #include "tools/printers/TablePrinter.h"
 
 #include "tools/Results.h"
-#include "tools/Utilities.h"
+#include "libspanner/utilities.h"
 
 namespace bdps_experiment {
 
@@ -56,7 +56,7 @@ namespace analysis {
     typedef map<distribution_t, result_t> DistributionSummaryMap;
 
     std::vector<string> ANALYSIS_IVs = {
-        "runtime","degree","degreeAvg","avgDegreePerPoint",
+        "runtime","degree","avgDegreePerPoint","avgDegreePerPoint",
         "maxStretchFactor","avgStretchFactor","lightness"
     };
 
@@ -71,14 +71,14 @@ namespace analysis {
         vector<vector<string>> results;
         // skips first line! usually headers
 
-        auto row = getNextLineAndSplitIntoTokens(expIn);
+        auto row = spanner::getNextLineAndSplitIntoTokens(expIn);
         try {
             stoi(row[1]); // second column should have a numeric value
             results.push_back(row);
         } catch( invalid_argument& ia) {
             cout<< "Throwing out header row";
         }
-        while( !(row = getNextLineAndSplitIntoTokens(expIn)).empty()) {
+        while( !(row = spanner::getNextLineAndSplitIntoTokens(expIn)).empty()) {
             results.push_back(row);
         }
         expIn.close();
@@ -185,26 +185,26 @@ namespace analysis {
         copy_if(spanner::bdps::ALGORITHM_NAMES.begin(),spanner::bdps::ALGORITHM_NAMES.end(),
                 inserter(l2Plots,l2Plots.end()),
                 [&](const string& name){
-                    return !(contains(tdPlots,name) || contains(linfPlots,name));
+                    return !(spanner::contains(tdPlots,name) || spanner::contains(linfPlots,name));
                 });
 
         set<string> nontdPlots;
         copy_if(spanner::bdps::ALGORITHM_NAMES.begin(), spanner::bdps::ALGORITHM_NAMES.end(),
                 inserter(nontdPlots, nontdPlots.end()),
                 [&tdPlots](const string &name) { // return true if name is not in tdPlots
-                    return !contains(tdPlots, name);
+                    return !spanner::contains(tdPlots, name);
                 });
 
         int numCols = 2 + int(!lite);
 
 
-        for(const auto& distributionName : SYNTHETIC_DISTRIBUTION_NAMES ) {
+        for(const auto& distributionName : spanner::SYNTHETIC_DISTRIBUTION_NAMES ) {
             if(summary.find(distributionName)!=summary.end()){
                 const auto &distribution = summary.at(distributionName);
 
                 string figureName("document-plot-");
                 string caption = distributionName + " Distribution Results";
-                figureName += removeSpaces(caption);
+                figureName += spanner::removeSpaces(caption);
                 figureName += "-subfigure";
 
                 LatexPrinter parentFigure(OUTPUT_DIRECTORY, figureName);
@@ -222,7 +222,7 @@ namespace analysis {
                     caption += "all";
 
                     string plotName("document-plot-");
-                    plotName += removeSpaces(caption);
+                    plotName += spanner::removeSpaces(caption);
                     plotName += "-";
                     plotName += "runtime";
 
@@ -237,7 +237,7 @@ namespace analysis {
                 copy_if(distribution.begin(), distribution.end(),
                         inserter(nontdResults, nontdResults.end()),
                         [&nontdPlots](const auto &elem) {
-                            return contains(nontdPlots, elem.first);
+                            return spanner::contains(nontdPlots, elem.first);
                         });
 
                 if( !nontdResults.empty()) {
@@ -246,7 +246,7 @@ namespace analysis {
                     caption += "nonTD";
 
                     string plotName = "document-plot-";
-                    plotName += removeSpaces(caption);
+                    plotName += spanner::removeSpaces(caption);
                     plotName += "-";
                     plotName += "runtime";
 
@@ -261,7 +261,7 @@ namespace analysis {
                 copy_if(distribution.begin(), distribution.end(),
                         inserter(linfResults, linfResults.end()),
                         [&linfPlots](const auto &elem) {
-                            return contains(linfPlots, elem.first);
+                            return spanner::contains(linfPlots, elem.first);
                         });
 
                 if( !linfResults.empty()) {
@@ -269,7 +269,7 @@ namespace analysis {
                     caption += "-";
 
                     string plotName("document-plot-");
-                    plotName += removeSpaces(caption);
+                    plotName += spanner::removeSpaces(caption);
                     plotName += "Linf";
                     plotName += "-";
                     plotName += "runtime";
@@ -287,7 +287,7 @@ namespace analysis {
                 copy_if(distribution.begin(), distribution.end(),
                         inserter(l2Results, l2Results.end()),
                         [&l2Plots](const auto &elem) {
-                            return contains(l2Plots, elem.first);
+                            return spanner::contains(l2Plots, elem.first);
                         });
 
                 if( !l2Results.empty()) {
@@ -295,7 +295,7 @@ namespace analysis {
                     caption += "-";
 
                     string plotName("document-plot-");
-                    plotName += removeSpaces(caption);
+                    plotName += spanner::removeSpaces(caption);
                     plotName += "L2";
                     plotName += "-";
                     plotName += "runtime";
@@ -315,7 +315,7 @@ namespace analysis {
                         if (iv == "runtime") continue;
 
                         string plotName("document-plot-");
-                        plotName += removeSpaces(caption);
+                        plotName += spanner::removeSpaces(caption);
                         plotName += "-";
                         plotName += iv;
 
@@ -342,20 +342,20 @@ namespace analysis {
         copy_if(spanner::bdps::ALGORITHM_NAMES.begin(),spanner::bdps::ALGORITHM_NAMES.end(),
                 inserter(l2Plots,l2Plots.end()),
                 [&](const string& name){
-                    return !(contains(tdPlots,name) || contains(linfPlots,name));
+                    return !(spanner::contains(tdPlots,name) || spanner::contains(linfPlots,name));
                 });
 
         set<string> nontdPlots;
         copy_if(spanner::bdps::ALGORITHM_NAMES.begin(), spanner::bdps::ALGORITHM_NAMES.end(),
                 inserter(nontdPlots, nontdPlots.end()),
                 [&tdPlots](const string &name) { // return true if name is not in tdPlots
-                    return !contains(tdPlots, name);
+                    return !spanner::contains(tdPlots, name);
                 });
 
 
         string caption("Summary Results");
         string filename("document-plot-");
-        filename += removeSpaces(caption) + "-subfigure";
+        filename += spanner::removeSpaces(caption) + "-subfigure";
 
         LatexPrinter parentFigure(OUTPUT_DIRECTORY, filename);
         parentFigure.setCaption(caption);
@@ -371,7 +371,7 @@ namespace analysis {
             caption += "all";
 
             string plotName("document-plot-");
-            plotName += removeSpaces(caption);
+            plotName += spanner::removeSpaces(caption);
             plotName += "-";
             plotName += "runtime";
 
@@ -386,7 +386,7 @@ namespace analysis {
         copy_if(summary.begin(), summary.end(),
                 inserter(nontdResults, nontdResults.end()),
                 [&nontdPlots](const auto &elem) {
-                    return contains(nontdPlots, elem.first);
+                    return spanner::contains(nontdPlots, elem.first);
                 });
 
         if( !nontdResults.empty()) {
@@ -395,7 +395,7 @@ namespace analysis {
             caption += "nonTD";
 
             string plotName = "document-plot-";
-            plotName += removeSpaces(caption);
+            plotName += spanner::removeSpaces(caption);
             plotName += "-";
             plotName += "runtime";
 
@@ -410,7 +410,7 @@ namespace analysis {
         copy_if(summary.begin(), summary.end(),
                 inserter(linfResults, linfResults.end()),
                 [&linfPlots](const auto &elem) {
-                    return contains(linfPlots, elem.first);
+                    return spanner::contains(linfPlots, elem.first);
                 });
 
         if( !linfResults.empty()) {
@@ -418,7 +418,7 @@ namespace analysis {
             caption += "-";
 
             string plotName("document-plot-");
-            plotName += removeSpaces(caption);
+            plotName += spanner::removeSpaces(caption);
             plotName += "Linf";
             plotName += "-";
             plotName += "runtime";
@@ -436,7 +436,7 @@ namespace analysis {
         copy_if(summary.begin(), summary.end(),
                 inserter(l2Results, l2Results.end()),
                 [&l2Plots](const auto &elem) {
-                    return contains(l2Plots, elem.first);
+                    return spanner::contains(l2Plots, elem.first);
                 });
 
         if( !l2Results.empty()) {
@@ -444,7 +444,7 @@ namespace analysis {
             caption += "-";
 
             string plotName("document-plot-");
-            plotName += removeSpaces(caption);
+            plotName += spanner::removeSpaces(caption);
             plotName += "L2";
             plotName += "-";
             plotName += "runtime";
@@ -508,7 +508,7 @@ namespace analysis {
                 vector<string> headers;
                 vector<vector<string>> ivValues;
                 for(auto name : spanner::bdps::ALGORITHM_NAMES) {
-                    if( contains(distribution.second, name)) {
+                    if( spanner::contains(distribution.second, name)) {
                         auto& spanner = distribution.second[name];
                         headers.push_back(texttt(name));
                         ivValues.push_back({});
@@ -521,7 +521,7 @@ namespace analysis {
 
                 string caption(distribution.first + " x " + iv);
                 string tableName("document-table-");
-                tableName += removeSpaces(caption);
+                tableName += spanner::removeSpaces(caption);
                 TablePrinter table(OUTPUT_DIRECTORY, tableName);
 
                 // add columns
@@ -551,7 +551,7 @@ namespace analysis {
 
             string caption(iv);
             string tableName("document-table-summary");
-            tableName += removeSpaces(caption);
+            tableName += spanner::removeSpaces(caption);
             TablePrinter table(OUTPUT_DIRECTORY, tableName);
 
             // add columns
@@ -569,7 +569,7 @@ namespace analysis {
                 });
 
             for(auto name : spanner::bdps::ALGORITHM_NAMES) {
-                if( contains(summary, name)) {
+                if( spanner::contains(summary, name)) {
                     auto& spanner = summary.at(name);
                     headers.push_back(texttt(name));
                     ivValues.push_back({});
@@ -609,7 +609,7 @@ namespace analysis {
         body.push_back({});
         copy_if(spanner::bdps::ALGORITHM_NAMES.begin(),spanner::bdps::ALGORITHM_NAMES.end(), back_inserter(body.back()),
             [&](const string& name){
-                return contains(summary,name);
+                return spanner::contains(summary,name);
             });
         transform(body.back().begin(),body.back().end(),body.back().begin(),
             [](const string& name) {
@@ -621,7 +621,7 @@ namespace analysis {
 
             body.push_back({});
             for(auto spanner : spanner::bdps::ALGORITHM_NAMES) {
-                if(contains(summary,spanner))
+                if(spanner::contains(summary,spanner))
                     body.back().push_back(std::to_string(summary.at(spanner).template getIV<double>(iv)));
             }
         }
@@ -844,7 +844,7 @@ void BoundedDegreePlaneSpannerAnalysis(const string& filename) {
 //                });
 //            body[headers[1]].push_back(std::to_string(maxDegree));
 //
-//            // add max degreeMax, avg degreeMax, avg degreeAvg
+//            // add max degreeMax, avg degreeMax, avg avgDegreePerPoint
 //        }
 //
 //        TablePrinter table(OUTPUT_DIRECTORY,"document-table-overall");

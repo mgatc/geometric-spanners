@@ -13,15 +13,21 @@
 
 #include "libspanner/BoundedDegreePlaneSpanners.h"
 
+#include "libspanner/measure/degree.h"
+#include "libspanner/measure/stretchfactor.h"
+#include "libspanner/measure/timer.h"
+#include "libspanner/measure/weight.h"
+
+#include "libspanner/points/generators.h"
+#include "libspanner/types.h"
+#include "libspanner/utilities.h"
+
+
 #include "tools/printers/LatexPrinter.h"
 #include "tools/printers/PgfplotPrinter.h"
 #include "tools/printers/TablePrinter.h"
 
-#include "tools/Metrics.h"
-#include "tools/PointGenerators.h"
 #include "tools/Results.h"
-#include "tools/Utilities.h"
-
 
 namespace bdps_experiment {
 
@@ -34,7 +40,7 @@ namespace bdps_experiment {
 
     using std::to_string;
 
-    const number_t INPUT_WIDTH = 1000;
+    const spanner::number_t INPUT_WIDTH = 1000;
 
     size_t EXP_COUNT = 0;
 
@@ -45,7 +51,7 @@ namespace bdps_experiment {
      */
     template <typename DistributionSubTypeEnum>
     void BoundedDegreePlaneSpannerTest(const spanner::BoundedDegreePlaneSpannerAlgorithm algorithm,
-                                       const DistributionType distributionType,
+                                       const spanner::DistributionType distributionType,
                                        const DistributionSubTypeEnum distribution,
                                        const spanner::bdps::input_t &points,
                                        ofstream& expOut,
@@ -57,42 +63,42 @@ namespace bdps_experiment {
         auto pointsBegin = points.begin(),
                 pointsEnd = points.end();
 
-        Timer tim;
+        spanner::Timer tim;
 
         switch (algorithm) {
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bgs2005:
-//                spanner::BGS2005(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Lw2004:
-//                spanner::LW2004(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bsx2009:
-//                spanner::BSX2009(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kpx2010:
-//                spanner::KPX2010(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kx2012:
-//                spanner::KX2012(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bcc2012_7:
-//                spanner::BCC2012<7>(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bcc2012_6:
-//                spanner::BCC2012<6>(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
-//                spanner::BHS2018(points, output);
-//                break;
+            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bgs2005:
+                spanner::BGS2005(points, output);
+                break;
+            case spanner::BoundedDegreePlaneSpannerAlgorithm::Lw2004:
+                spanner::LW2004(points, output);
+                break;
+            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bsx2009:
+                spanner::BSX2009(points, output);
+                break;
+            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kpx2010:
+                spanner::KPX2010(points, output);
+                break;
+            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kx2012:
+                spanner::KX2012(points, output);
+                break;
+            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bcc2012_7:
+                spanner::BCC2012<7>(points, output);
+                break;
+            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bcc2012_6:
+                spanner::BCC2012<6>(points, output);
+                break;
+            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
+                spanner::BHS2018(points, output);
+                break;
             case spanner::BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
                 spanner::BKPX2015(points,output);
                 break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
-//                spanner::BGHP2010(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
-//                spanner::KPT2017(points, output);
-//                break;
+            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
+                spanner::BGHP2010(points, output);
+                break;
+            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
+                spanner::KPT2017(points, output);
+                break;
             case spanner::BoundedDegreePlaneSpannerAlgorithm::Degree3:
                 spanner::DEG3(points, output);
                 break;
@@ -100,7 +106,7 @@ namespace bdps_experiment {
                 assert(false);
         }
 
-        number_t runtime = tim.stop();
+        spanner::number_t runtime = tim.stop();
 
 
 
@@ -116,7 +122,7 @@ namespace bdps_experiment {
             std::string filename("breaks");
             filename += spanner::bdps::ALGORITHM_NAMES.at(algorithm);
             filename += ".xy";
-            writePointsToFile(points.begin(),points.end(),filename);
+            spanner::writePointsToFile(points.begin(),points.end(),filename);
 
 
             GraphPrinter tikz("/tmp/", "deg3");
@@ -155,9 +161,9 @@ namespace bdps_experiment {
 
     // An experiment featuring multiple graphs on the same point set
     template<typename DistributionSubTypeEnum>
-    void BoundedDegreePlaneSpannerAlgorithmLoop(const DistributionType distributionType,
+    void BoundedDegreePlaneSpannerAlgorithmLoop(const spanner::DistributionType distributionType,
                                                 const DistributionSubTypeEnum distribution,
-                                                const vector<Point>& points,
+                                                const vector<spanner::Point>& points,
                                                 ofstream& expOut,
                                                 const bool measureStretchFactor = true ){
         const size_t n = points.size();
@@ -179,10 +185,12 @@ namespace bdps_experiment {
     }
 
     // Generates a random point set from the given distribution and runs an experiment with multiple graphs on the point set
-    void generateRandomPointSet(const SyntheticDistribution dist,
+    void generateRandomPointSet(const spanner::SyntheticDistribution dist,
                                 const size_t n,
                                 const double width,
-                                vector<Point>& points){
+                                std::vector<spanner::Point>& points){
+        using namespace spanner;
+
         PointGenerator_2 pointGenerator;
 
         switch(dist) {
@@ -227,25 +235,25 @@ namespace bdps_experiment {
     }
 
     // An experiment from n_start to n_end with a single distribution
-    void SyntheticExperimentInputSizeLoop(SyntheticDistribution dist,
+    void SyntheticExperimentInputSizeLoop(spanner::SyntheticDistribution dist,
                                           size_t n_start, size_t n_end, size_t increment, ofstream& expOut, bool measureStretchFactor = true ) {
         //measureStretchFactor = false;
         for (size_t n = n_start; n <= n_end; n += increment) {
             // SET POINTS
-            vector<Point> points;
+            vector<spanner::Point> points;
             generateRandomPointSet(dist, n, INPUT_WIDTH, points);
-            BoundedDegreePlaneSpannerAlgorithmLoop(DistributionType::Synthetic,dist,points,expOut,measureStretchFactor);
+            BoundedDegreePlaneSpannerAlgorithmLoop(spanner::DistributionType::Synthetic,dist,points,expOut,measureStretchFactor);
         }
     }
 
     // An experiment of numRuns trials for a single distribution
-    void SyntheticExperimentRepetitionLoop(SyntheticDistribution dist,
+    void SyntheticExperimentRepetitionLoop(spanner::SyntheticDistribution dist,
                                            size_t numRuns,
                                            size_t n_start,
                                            size_t n_end,
                                            size_t increment,
                                            ofstream& expOut ) {
-        string distName = SYNTHETIC_DISTRIBUTION_NAMES.at(dist);
+        string distName = spanner::SYNTHETIC_DISTRIBUTION_NAMES.at(dist);
         srand(0);
         for (size_t trial = 0; trial < numRuns; ++trial) {
             cout<< "Starting trial "<< trial << " of "<<distName<<"\n\n";
@@ -259,11 +267,11 @@ namespace bdps_experiment {
                                              size_t n_end,
                                              size_t increment,
                                              ofstream& expOut) {
-        const number_t width = 10;
+        const spanner::number_t width = 10;
 
-        for(int dist=SyntheticDistributionFirst; dist != SyntheticDistributionLast; ++dist ) {
-            auto distributionType = static_cast<SyntheticDistribution>(dist);
-            string distName = SYNTHETIC_DISTRIBUTION_NAMES.at(dist);
+        for(int dist=spanner::SyntheticDistributionFirst; dist != spanner::SyntheticDistributionLast; ++dist ) {
+            auto distributionType = static_cast<spanner::SyntheticDistribution>(dist);
+            string distName = spanner::SYNTHETIC_DISTRIBUTION_NAMES.at(dist);
 
             cout<< "!! Starting  "<< distName << "distribution trials !!\n"<<endl<<endl;
 
@@ -293,7 +301,7 @@ namespace bdps_experiment {
                << "spannerAlg" << DELIMITER
                << "runtime" << DELIMITER
                << "degree" << DELIMITER
-               << "degreeAvg" << DELIMITER
+               << "avgDegreePerPoint" << DELIMITER
                << "avgStretchFactor" << DELIMITER
                << "lightness" << DELIMITER
                << "\n";
@@ -336,19 +344,19 @@ namespace bdps_experiment {
 
             cout<<fullname<<endl;
 
-            vector<Point> P;
-            PointGenerator_2 generator;
+            vector<spanner::Point> P;
+            spanner::PointGenerator_2 generator;
             generator.loadFromFile(fullname,P);
-            const index_t n = P.size();
+            const spanner::index_t n = P.size();
 
             string pointsetName = pointset.second.get_child("nicename").data();
-            REAL_POINTSET_NAMES.push_back(pointsetName);
+            spanner::REAL_POINTSET_NAMES.push_back(pointsetName);
 
             cout<< "!! Starting  "<< pointsetName << " trials !!\n"
                 << "Added "<< n <<" points from file\n\n";
 
             for (size_t trial = 0; trial < numRuns; ++trial) {
-                BoundedDegreePlaneSpannerAlgorithmLoop(DistributionType::Real, pointSetID, P, expOut, trial == 0);
+                BoundedDegreePlaneSpannerAlgorithmLoop(spanner::DistributionType::Real, pointSetID, P, expOut, trial == 0);
             }
 
             cout<< "!! Ending  "<< pointsetName << " trials !!\n"

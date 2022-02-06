@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "LatexPrinter.h"
-#include "../Utilities.h"
+#include "libspanner/utilities.h"
 
 namespace bdps_experiment {
 
@@ -38,7 +38,7 @@ namespace bdps_experiment {
             std::transform(valuesCopy.begin(),valuesCopy.end(),valuesCopy.begin(),precisionSetter);
             if( priority < 0 ) {
                 priority = 0;
-                while (contains(m_added, priority))
+                while (spanner::contains(m_added, priority))
                     ++priority;
             }
             m_added.emplace(priority,make_pair(header,valuesCopy));
@@ -141,7 +141,7 @@ namespace bdps_experiment {
     std::map<std::string,std::string> TablePrinter::m_ivNiceNames = {
             {"runtime",             "$\\mathrm{runtime (s)}$"},
             {"degree",              "$\\Delta$"},
-            {"degreeAvg",           "$\\Delta_\\mathrm{avg}$"},
+            {"avgDegreePerPoint",           "$\\Delta_\\mathrm{avg}$"},
             {"avgDegreePerPoint",   "$\\Delta_\\mathrm{point}$"},
             {"maxStretchFactor",    "$t_\\mathrm{max}$"},
             {"avgStretchFactor",    "$t_\\mathrm{avg}$"},

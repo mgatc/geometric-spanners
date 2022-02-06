@@ -16,8 +16,9 @@
 #include <boost/algorithm/string.hpp>
 
 #include "LatexPrinter.h"
+#include "libspanner/constants.h"
 #include "libspanner/delaunay/DelaunayL2.h"
-#include "tools/Utilities.h"
+#include "libspanner/utilities.h"
 
 namespace bdps_experiment {
 
@@ -316,7 +317,7 @@ public:
                sizingFactor = length / orientationLength,
                x = xTranslated*sizingFactor + xCenter,
                y = yTranslated*sizingFactor + yCenter,
-               theta = 2*PI / numCones;
+               theta = 2*spanner::PI / numCones;
 
         for( size_t i=0; i<numCones; ++i) {
             drawLine(x,y,xCenter,yCenter,options);

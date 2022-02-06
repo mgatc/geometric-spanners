@@ -9,8 +9,8 @@ set(CMAKE_CXX_FLAGS "-fopenmp -fexceptions -frounding-math -Wall -Wextra -Wno-un
 #set(CMAKE_BUILD_TYPE Release)
 
 include_directories(.)
-include_directories(/usr/include)
 include_directories(include)
+include_directories(/usr/include)
 include_directories(/usr/lib/gcc/x86_64-linux-gnu/7/include)
 
 add_executable(spanners
@@ -21,19 +21,16 @@ add_executable(spanners
         tools/printers/LatexPrinter.h
         tools/printers/TablePrinter.h
 
-        tools/FloydWarshall.h
-        tools/Metrics.h
-        tools/PointGenerators.h
+        include/libspanner/shortest_paths/FloydWarshall.h
+        include/libspanner/points/generators.h
         tools/Results.h
-        tools/StretchFactorExact.h
-        tools/StretchFactorExperimental.h
         tools/Utilities.h
 #
         Analysis.h
         Experiment.h
         Scratch.h
 
-        main.cpp )
+        main.cpp include/libspanner/geometry.h)
 
 target_link_libraries(spanners gmp)
 target_link_libraries(spanners mpfr)

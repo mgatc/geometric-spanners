@@ -8,7 +8,8 @@
 
 #include "GraphPrinter.h"
 #include "../Results.h"
-#include "../Utilities.h"
+#include "libspanner/utilities.h"
+
 
 namespace bdps_experiment {
 
@@ -38,7 +39,7 @@ namespace bdps_experiment {
 
             // build the plot
             for( const auto& name : spanner::bdps::ALGORITHM_NAMES ) {
-                if( contains(results,name) ) {
+                if( spanner::contains(results,name) ) {
                     const auto &spanner = results.at(name);
                     std::string ivPlot = getPlotHeader(name);//
                     for (const auto &level: spanner) {
@@ -63,7 +64,7 @@ namespace bdps_experiment {
         }
         std::string getLegend() {
             std::string refOpener("\\ref{");
-            std::string refText = removeSpaces(m_caption) + "-legend";
+            std::string refText = spanner::removeSpaces(m_caption) + "-legend";
             std::string refCloser("}");
 
             return refOpener + refText + refCloser;
@@ -97,7 +98,7 @@ namespace bdps_experiment {
             std::string axisHeader = std::string("")
                                 + "\\begin{axis}[";
 //            if(!m_caption.empty()) axisHeader += "title={" + m_caption + "},";
-            std::string legendText = "legend to name=" + removeSpaces(m_caption)
+            std::string legendText = "legend to name=" + spanner::removeSpaces(m_caption)
                     + "-legend, legend columns={3}, ";
             axisHeader += "yticklabel style={rotate=90,anchor=base,yshift=0.2cm}, ";
             axisHeader += std::string("scaled ticks=false,grid=none,xlabel={$n$")
@@ -232,7 +233,7 @@ namespace bdps_experiment {
     std::map<std::string,std::string> PgfplotPrinter::m_ivNiceNames = {
             {"runtime",             "Average execution time (s)"},
             {"degree",              "Maximum observed degree"},
-            {"degreeAvg",           "Average observed degree per spanner"},
+            {"avgDegreePerPoint",           "Average observed degree per spanner"},
             {"avgDegreePerPoint",   "Average observed degree per point"},
             {"maxStretchFactor",    "Maximum observed stretch-factor"},
             {"avgStretchFactor",    "Average observed stretch-factor"},

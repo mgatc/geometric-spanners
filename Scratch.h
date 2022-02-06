@@ -15,15 +15,21 @@
 
 #include "libspanner/BoundedDegreePlaneSpanners.h"
 
-#include "tools/printers/GraphPrinter.h"
+#include "libspanner/measure/degree.h"
+#include "libspanner/measure/stretchfactor.h"
+#include "libspanner/measure/timer.h"
+#include "libspanner/measure/weight.h"
+
+#include "libspanner/points/generators.h"
+#include "libspanner/types.h"
+#include "libspanner/utilities.h"
+
+
 #include "tools/printers/LatexPrinter.h"
 #include "tools/printers/PgfplotPrinter.h"
 #include "tools/printers/TablePrinter.h"
 
-#include "tools/Metrics.h"
-#include "tools/PointGenerators.h"
 #include "tools/Results.h"
-#include "tools/Utilities.h"
 
 namespace bdps_experiment {
 
@@ -32,7 +38,8 @@ namespace bdps_experiment {
 
     void scratch(const spanner::bdps::input_t& points) {
 
-        using namespace std;
+        using namespace spanner;
+
         GraphPrinter tikz("/tmp/", "deg3");
         tikz.autoscale(points.begin(), points.end());
 
@@ -46,22 +53,22 @@ namespace bdps_experiment {
         cout << points.size();
         cout << "\n";
 
-        spanner::bdps::output_t result;
+        bdps::output_t result;
 
         { // RUN THE ALGORITHM(S) /////////////////////////////////////
 //            Timer tim;
-//            spanner::LW2004( points, result);
-//            spanner::BSX2009( points, result, 2*PI/3);
-//            spanner::BGS2005( points, result);
-//            spanner::KPX2010( points, result, 18);
-//            spanner::BCC2012<6>( points, result);
-//            spanner::BCC2012<7>( points, result);
-//            spanner::BHS2018(points, result);
-//            spanner::KPT2017(points, result);
-//            spanner::BKPX2015(points, result);
-//            spanner::BGHP2010(points, result);
-//            spanner::KX2012(points, result);
-            spanner::DEG3(points,result);
+//            LW2004( points, result);
+//            BSX2009( points, result, 2*PI/3);
+//            BGS2005( points, result);
+//            KPX2010( points, result, 18);
+//            BCC2012<6>( points, result);
+//            BCC2012<7>( points, result);
+//            BHS2018(points, result);
+//            KPT2017(points, result);
+//            BKPX2015(points, result);
+//            BGHP2010(points, result);
+//            KX2012(points, result);
+            DEG3(points,result);
 //            delaunay_testing( points, result);
         }
 
@@ -80,7 +87,7 @@ namespace bdps_experiment {
         number_t t_exp = INF;
         {
             Timer tim;
-            t_exp = StretchFactorExpDijk(points.begin(),points.end(),result.begin(),result.end());
+            t_exp = spanner::StretchFactorExpDijk(points.begin(),points.end(),result.begin(),result.end());
         }
         cout<<"  t="<<t_exp<<";\n";
 
@@ -98,8 +105,8 @@ namespace bdps_experiment {
 
 
 
-        list<Edge> WorstPath;
-        SFWorstPath( points.begin(),points.end(),result.begin(), result.end(),
+        std::list<Edge> WorstPath;
+        spanner::SFWorstPath( points.begin(),points.end(),result.begin(), result.end(),
                      make_optional(inserter(WorstPath,WorstPath.begin())) );
 
         // PRODUCE A LaTeX / TiKz DOCUMENT AND DISPLAY
@@ -119,14 +126,14 @@ namespace bdps_experiment {
 
         spanner::bdps::input_t points;
 
-        PointGenerator_2 generator;
+        spanner::PointGenerator_2 generator;
         generator.inGalaxy(n,5,points);
 
         scratch(points);
     }
     void scratchFile(string filename) {
         spanner::bdps::input_t points;
-        readPointsFromFile( back_inserter( points ), filename );
+        spanner::readPointsFromFile( back_inserter( points ), filename );
         scratch(points);
     }
 

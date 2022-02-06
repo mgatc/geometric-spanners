@@ -12,11 +12,22 @@
 #include <vector>
 
 #include "libspanner/BoundedDegreePlaneSpanners.h"
-#include "libspanner/types.h"
 
-#include "Metrics.h"
-#include "PointGenerators.h"
-#include "Utilities.h"
+#include "libspanner/measure/degree.h"
+#include "libspanner/measure/stretchfactor.h"
+#include "libspanner/measure/timer.h"
+#include "libspanner/measure/weight.h"
+
+#include "libspanner/points/generators.h"
+#include "libspanner/types.h"
+#include "libspanner/utilities.h"
+
+
+#include "tools/printers/LatexPrinter.h"
+#include "tools/printers/PgfplotPrinter.h"
+#include "tools/printers/TablePrinter.h"
+
+#include "tools/Results.h"
 
 namespace bdps_experiment {
 
@@ -26,7 +37,7 @@ namespace bdps_experiment {
     const std::vector<std::string> IV_NAMES = {
             "runtime",
             "degreeMax",
-            "degreeAvg",
+            "avgDegreePerPoint",
             "avgStretchFactor",
             "lightness"
     };
@@ -115,11 +126,11 @@ namespace bdps_experiment {
             maxStretchFactor = avgStretchFactor;
             lightness = getLightness(row);
             lite = degree == 0
-                    && abs(degreeAvg) < EPSILON
-                    && abs(avgDegreePerPoint) < EPSILON
-                    && abs(avgStretchFactor) < EPSILON
-                    && abs(maxStretchFactor) < EPSILON
-                    && abs(lightness) < EPSILON;
+                    && abs(degreeAvg) < spanner::EPSILON
+                    && abs(avgDegreePerPoint) < spanner::EPSILON
+                    && abs(avgStretchFactor) < spanner::EPSILON
+                    && abs(maxStretchFactor) < spanner::EPSILON
+                    && abs(lightness) < spanner::EPSILON;
         }
 
         template<typename T>
@@ -128,7 +139,7 @@ namespace bdps_experiment {
                 return runtime;
             else if(ivName == "degree")
                 return degree;
-            else if(ivName == "degreeAvg")
+            else if(ivName == "avgDegreePerPoint")
                 return degreeAvg;
             else if(ivName == "avgDegreePerPoint")
                 return avgDegreePerPoint;
@@ -204,26 +215,26 @@ namespace bdps_experiment {
 
     template <typename DistributionSubTypeEnum>
     struct BoundedDegreeSpannerResult {
-        DistributionType distributionType;
+        spanner::DistributionType distributionType;
         DistributionSubTypeEnum distribution;
         spanner::BoundedDegreePlaneSpannerAlgorithm algorithm;
-        index_t n;
-        number_t runtime;
-        mixed_t degree;
-        number_t degreeAvg;
-        number_t stretchFactor;
-        number_t lightness;
+        spanner::index_t n;
+        spanner::number_t runtime;
+        spanner::mixed_t degree;
+        spanner::number_t degreeAvg;
+        spanner::number_t stretchFactor;
+        spanner::number_t lightness;
         //index_t numberOfIVs = 5;
-        std::map<std::string, mixed_t> IV;
+        std::map<std::string, spanner::mixed_t> IV;
         bool lite;
 
         BoundedDegreeSpannerResult() = default;
 
         template<class VertexIterator, class EdgeIterator>
-        BoundedDegreeSpannerResult(const DistributionType distributionType,
+        BoundedDegreeSpannerResult(const spanner::DistributionType distributionType,
                                    const DistributionSubTypeEnum distribution,
                                    const spanner::BoundedDegreePlaneSpannerAlgorithm algorithm,
-                                   const number_t runtime,
+                                   const spanner::number_t runtime,
                                    VertexIterator pointsBegin,
                                    VertexIterator pointsEnd,
                                    EdgeIterator edgesBegin,
@@ -234,23 +245,23 @@ namespace bdps_experiment {
                                              algorithm,
                                              std::distance(pointsBegin, pointsEnd),
                                              runtime,
-                                             (lite ? 0 : bdps_experiment::degree(edgesBegin, edgesEnd)),
-                                             (lite ? 0.0 : bdps_experiment::degreeAvg(edgesBegin, edgesEnd)),
+                                             (lite ? 0 : spanner::degree(edgesBegin, edgesEnd)),
+                                             (lite ? 0.0 : spanner::avgDegreePerPoint(edgesBegin, edgesEnd)),
                                              (lite ? 0.0 :
-                                                StretchFactorDijkstraReduction(pointsBegin, pointsEnd, edgesBegin, edgesEnd)),
+                                                spanner::StretchFactorDijkstraReduction(pointsBegin, pointsEnd, edgesBegin, edgesEnd)),
 //                                                StretchFactorExpDijk(pointsBegin, pointsEnd, edgesBegin, edgesEnd)),
-                                             (lite ? 0.0 : getLightness(pointsBegin, pointsEnd, edgesBegin, edgesEnd)),
+                                             (lite ? 0.0 : spanner::getLightness(pointsBegin, pointsEnd, edgesBegin, edgesEnd)),
                                              lite) {}
 
-        BoundedDegreeSpannerResult(const DistributionType distributionType,
+        BoundedDegreeSpannerResult(const spanner::DistributionType distributionType,
                                    const DistributionSubTypeEnum distribution,
                                    const spanner::BoundedDegreePlaneSpannerAlgorithm algorithm,
-                                   const index_t n,
-                                   number_t runtime,
-                                   mixed_t degree,
-                                   const number_t degreeAvg,
-                                   const number_t stretchFactor,
-                                   const number_t lightness,
+                                   const spanner::index_t n,
+                                   spanner::number_t runtime,
+                                   spanner::mixed_t degree,
+                                   const spanner::number_t degreeAvg,
+                                   const spanner::number_t stretchFactor,
+                                   const spanner::number_t lightness,
                                    bool lite = false)
                 : distributionType(distributionType),
                   distribution(distribution),
@@ -271,11 +282,11 @@ namespace bdps_experiment {
         }
 
         bool verify() {
-            const auto degreeBound = static_cast<size_t>(stoi(spanner::bdps::DEGREE_BOUND_PER_ALGORITHM.at(algorithm)));
-            const auto sfBound = static_cast<double>(stod(spanner::bdps::STRETCH_FACTOR_BOUND_PER_ALGORITHM.at(algorithm)));
+            const auto degreeBound = static_cast<size_t>(std::stoi(spanner::bdps::DEGREE_BOUND_PER_ALGORITHM.at(algorithm)));
+            const auto sfBound = static_cast<double>(std::stod(spanner::bdps::STRETCH_FACTOR_BOUND_PER_ALGORITHM.at(algorithm)));
 
             const bool degreePasses = std::get<spanner::index_t>(degree) <= degreeBound;
-            const bool stretchFactorPasses = stretchFactor < sfBound || abs(stretchFactor - sfBound) < EPSILON;
+            const bool stretchFactorPasses = stretchFactor < sfBound || abs(stretchFactor - sfBound) < spanner::EPSILON;
             const bool isBCC6 = false;//algorithm == Bcc2012_6;
 
             return lite || (degreePasses && stretchFactorPasses) || isBCC6;
@@ -287,7 +298,7 @@ namespace bdps_experiment {
                              + spanner::bdps::ALGORITHM_NAMES.at(algorithm)
                              + "}: "
                              + "$\\Delta = "
-                             + bdps_experiment::to_string(degree);
+                             + spanner::to_string(degree);
 
             caption += ",\\ avgStretchFactor = "
                        + std::to_string(stretchFactor);
@@ -299,8 +310,9 @@ namespace bdps_experiment {
 
         //friend ostream& operator<<(ostream &os, const BoundedDegreeSpannerResult &result);
         friend std::ostream &operator<<(std::ostream &os, const BoundedDegreeSpannerResult &result) {
-            const std::vector<std::string>& distributionNames = result.distributionType == DistributionType::Synthetic ?
-                    SYNTHETIC_DISTRIBUTION_NAMES : REAL_POINTSET_NAMES;
+            const std::vector<std::string>& distributionNames = result.distributionType == spanner::DistributionType::Synthetic ?
+                                                                spanner::SYNTHETIC_DISTRIBUTION_NAMES : spanner::REAL_POINTSET_NAMES;
+            using spanner::operator<<;
 
             os << distributionNames.at(result.distribution) << ","
                << result.n << ","
@@ -316,8 +328,6 @@ namespace bdps_experiment {
         }
 
     };
-
-
 
 } // bdps_experiment
 

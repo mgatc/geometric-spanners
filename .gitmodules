@@ -1,0 +1,3 @@
+[submodule "include/libspanner"]
+	path = include/libspanner
+	url = https://github.com/mgatc/libspanner.git

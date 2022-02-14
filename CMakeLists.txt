@@ -16,11 +16,6 @@ include_directories(/usr/lib/gcc/x86_64-linux-gnu/7/include)
 add_executable(spanners
 
 
-        tools/printers/GraphPrinter.h
-        tools/printers/PgfplotPrinter.h
-        tools/printers/LatexPrinter.h
-        tools/printers/TablePrinter.h
-
         include/libspanner/shortest_paths/FloydWarshall.h
         include/libspanner/points/generators.h
         tools/Results.h

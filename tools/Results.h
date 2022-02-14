@@ -22,10 +22,7 @@
 #include "libspanner/types.h"
 #include "libspanner/utilities.h"
 
-
-#include "tools/printers/LatexPrinter.h"
-#include "tools/printers/PgfplotPrinter.h"
-#include "tools/printers/TablePrinter.h"
+#include "cpptex/cpptex.h"
 
 #include "tools/Results.h"
 
@@ -67,7 +64,7 @@ namespace bdps_experiment {
             2, 2, 2, 2, 2
     };
 
-    double getDouble(const std::vector<string>& row, const size_t i) {
+    double getDouble(const std::vector<std::string>& row, const size_t i) {
         return std::stod(row[i]);
     }
     int getInt(const std::vector<std::string>& row, const size_t i) {
@@ -99,8 +96,8 @@ namespace bdps_experiment {
     }
 
     struct BoundedDegreeSpannerAnalysisResult {
-        string distribution = "";
-        string algorithm = "";
+        std::string distribution = "";
+        std::string algorithm = "";
         size_t n = 0;
         double runtime = 0.0;
         size_t degree = 0;

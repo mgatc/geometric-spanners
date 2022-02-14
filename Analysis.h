@@ -6,14 +6,11 @@
 #include <string>
 #include <vector>
 
+#include "cpptex/cpptex.h"
 #include "libspanner/BoundedDegreePlaneSpanners.h"
-
-#include "tools/printers/LatexPrinter.h"
-#include "tools/printers/PgfplotPrinter.h"
-#include "tools/printers/TablePrinter.h"
+#include "libspanner/utilities.h"
 
 #include "tools/Results.h"
-#include "libspanner/utilities.h"
 
 namespace bdps_experiment {
 
@@ -25,10 +22,10 @@ namespace analysis {
         NoExperimentType,
     } EXPERIMENT_TYPE = NoExperimentType;
 
-    string OUTPUT_DIRECTORY = "/tmp/bdps_experiment/";
+    std::string OUTPUT_DIRECTORY = "/tmp/";
 
-    string X_PLOT_SCALE_UNIT = "";
-    string X_PLOT_SCALE_SHORT_UNIT = "";
+    std::string X_PLOT_SCALE_UNIT = "";
+    std::string X_PLOT_SCALE_SHORT_UNIT = "";
     double X_PLOT_SCALE = 1.0;
     double Y_PLOT_SCALE = 1.0;
 
@@ -55,15 +52,15 @@ namespace analysis {
     typedef map<distribution_t, ReducedLevelResultMap> DistributionReducedLevelResultMap;
     typedef map<distribution_t, result_t> DistributionSummaryMap;
 
-    std::vector<string> ANALYSIS_IVs = {
+    std::vector<std::string> ANALYSIS_IVs = {
         "runtime","degree","avgDegreePerPoint","avgDegreePerPoint",
         "maxStretchFactor","avgStretchFactor","lightness"
     };
 
 
 
-    vector<vector<string>>
-    readFileIntoVector(const string &filename) {
+    std::vector<std::vector<std::string>>
+    readFileIntoVector(const std::string &filename) {
         ifstream expIn;
         expIn.open(filename, ios_base::in);
         if (!expIn.is_open()) assert(!"Error opening file");
@@ -174,10 +171,25 @@ namespace analysis {
         return summary;
     }
 
+    void
+    convertToResultMatrix(cpptex::PgfplotPrinter::ResultMatrix& out,
+                          const std::string& iv,
+                          const SpannerReducedLevelResultMap& results,
+                          const double xScale = 1.0) {
 
+        for( const auto& name : spanner::bdps::ALGORITHM_NAMES ) {
+            if( spanner::contains(results,name) ) {
+                out.emplace_back();
+                for (const auto &level: results.at(name)) {
+                    out.back().emplace_back(static_cast<double>(level.first) / xScale,
+                                            level.second.getIV<double>(iv));
+                }
+            }
+        }
+    }
 
     void plot(const DistributionSpannerReducedLevelResultMap &summary,
-              LatexPrinter &document, bool lite = false) {
+              cpptex::LatexPrinter &document, bool lite = false) {
 
         set<string> tdPlots = {"BGHP2010", "KPT2017"};
         set<string> linfPlots = {"BKPX2015", "Degree3"};
@@ -203,11 +215,12 @@ namespace analysis {
                 const auto &distribution = summary.at(distributionName);
 
                 string figureName("document-plot-");
-                string caption = distributionName + " Distribution Results";
+                string caption = distributionName;
+                caption += " Distribution Results";
                 figureName += spanner::removeSpaces(caption);
                 figureName += "-subfigure";
 
-                LatexPrinter parentFigure(OUTPUT_DIRECTORY, figureName);
+                cpptex::LatexPrinter parentFigure(OUTPUT_DIRECTORY + figureName);
                 parentFigure.setCaption(caption);
                 // split distribution.second into containers for td and non-td, l2 and nonl2
 
@@ -226,9 +239,11 @@ namespace analysis {
                     plotName += "-";
                     plotName += "runtime";
 
-                    PgfplotPrinter tdPlot(OUTPUT_DIRECTORY, plotName);
+                    cpptex::PgfplotPrinter tdPlot(OUTPUT_DIRECTORY + plotName);
                     tdPlot.setCaption(caption);
-                    tdPlot.plotAxis("runtime", allResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+                    cpptex::PgfplotPrinter::ResultMatrix resMatrix;
+                    convertToResultMatrix(resMatrix, "runtime", allResults, X_PLOT_SCALE);
+                    tdPlot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", "Average execution time", caption);
                     parentFigure.addToDocumentAsSubfigure(tdPlot, numCols);
                 }
 
@@ -250,9 +265,11 @@ namespace analysis {
                     plotName += "-";
                     plotName += "runtime";
 
-                    PgfplotPrinter nontdPlot(OUTPUT_DIRECTORY, plotName);
+                    cpptex::PgfplotPrinter nontdPlot(OUTPUT_DIRECTORY + plotName);
                     nontdPlot.setCaption(caption);
-                    nontdPlot.plotAxis("runtime", nontdResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+                    cpptex::PgfplotPrinter::ResultMatrix resMatrix;
+                    convertToResultMatrix(resMatrix, "runtime", nontdResults, X_PLOT_SCALE);
+                    nontdPlot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", "Average execution time", caption);
                     parentFigure.addToDocumentAsSubfigure( nontdPlot, numCols);
                 }
 
@@ -276,9 +293,11 @@ namespace analysis {
 
                     caption += "$L_\\infty$";
 
-                    PgfplotPrinter linfPlot(OUTPUT_DIRECTORY, plotName);
+                    cpptex::PgfplotPrinter linfPlot(OUTPUT_DIRECTORY + plotName);
                     linfPlot.setCaption(caption);
-                    linfPlot.plotAxis("runtime", linfResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+                    cpptex::PgfplotPrinter::ResultMatrix resMatrix;
+                    convertToResultMatrix(resMatrix, "runtime", linfResults, X_PLOT_SCALE);
+                    linfPlot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", "Average execution time", caption);
                     //parentFigure.addToDocumentAsSubfigure(linfPlot);
                 }
 
@@ -302,9 +321,11 @@ namespace analysis {
 
                     caption += "$L_2$";
 
-                    PgfplotPrinter l2Plot(OUTPUT_DIRECTORY, plotName);
+                    cpptex::PgfplotPrinter l2Plot(OUTPUT_DIRECTORY + plotName);
                     l2Plot.setCaption(caption);
-                    l2Plot.plotAxis("runtime", l2Results, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+                    cpptex::PgfplotPrinter::ResultMatrix resMatrix;
+                    convertToResultMatrix(resMatrix, "runtime", l2Results, X_PLOT_SCALE);
+                    l2Plot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", "Average execution time", caption);
                     parentFigure.addToDocumentAsSubfigure(l2Plot, numCols);
                 }
 
@@ -319,9 +340,11 @@ namespace analysis {
                         plotName += "-";
                         plotName += iv;
 
-                        PgfplotPrinter plot(OUTPUT_DIRECTORY, plotName);
+                        cpptex::PgfplotPrinter plot(OUTPUT_DIRECTORY + plotName);
                         plot.setCaption(caption);
-                        plot.plotAxis(iv, distribution, X_PLOT_SCALE, X_PLOT_SCALE_UNIT);
+                        cpptex::PgfplotPrinter::ResultMatrix resMatrix;
+                        convertToResultMatrix(resMatrix, iv, distribution, X_PLOT_SCALE);
+                        plot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", iv, caption);
                         parentFigure.addToDocumentAsSubfigure(plot, numCols);
                     }
                 }
@@ -331,7 +354,7 @@ namespace analysis {
     }
 
     void plot(const SpannerReducedLevelResultMap& summary,
-         LatexPrinter& document, bool lite = false ) {
+              cpptex::LatexPrinter& document, bool lite = false ) {
         bool isFirst = true;
 
         int numCols = 2 + int(!lite);
@@ -357,7 +380,7 @@ namespace analysis {
         string filename("document-plot-");
         filename += spanner::removeSpaces(caption) + "-subfigure";
 
-        LatexPrinter parentFigure(OUTPUT_DIRECTORY, filename);
+        cpptex::LatexPrinter parentFigure(OUTPUT_DIRECTORY + filename);
         parentFigure.setCaption(caption);
 
         // all plots
@@ -375,9 +398,11 @@ namespace analysis {
             plotName += "-";
             plotName += "runtime";
 
-            PgfplotPrinter tdPlot(OUTPUT_DIRECTORY, plotName);
+            cpptex::PgfplotPrinter tdPlot(OUTPUT_DIRECTORY + plotName);
             tdPlot.setCaption(caption);
-            tdPlot.plotAxis("runtime", allResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+            cpptex::PgfplotPrinter::ResultMatrix resMatrix;
+            convertToResultMatrix(resMatrix, "runtime", allResults, X_PLOT_SCALE);
+            tdPlot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", "Average execution time", caption);
             parentFigure.addToDocumentAsSubfigure(tdPlot, numCols);
         }
 
@@ -399,9 +424,11 @@ namespace analysis {
             plotName += "-";
             plotName += "runtime";
 
-            PgfplotPrinter nontdPlot(OUTPUT_DIRECTORY, plotName);
+            cpptex::PgfplotPrinter nontdPlot(OUTPUT_DIRECTORY + plotName);
             nontdPlot.setCaption(caption);
-            nontdPlot.plotAxis("runtime", nontdResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+            cpptex::PgfplotPrinter::ResultMatrix resMatrix;
+            convertToResultMatrix(resMatrix, "runtime", nontdResults, X_PLOT_SCALE);
+            nontdPlot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", "Average execution time", caption);
             parentFigure.addToDocumentAsSubfigure( nontdPlot, numCols);
         }
 
@@ -425,9 +452,11 @@ namespace analysis {
 
             caption += "$L_\\infty$";
 
-            PgfplotPrinter linfPlot(OUTPUT_DIRECTORY, plotName);
+            cpptex::PgfplotPrinter linfPlot(OUTPUT_DIRECTORY + plotName);
             linfPlot.setCaption(caption);
-            linfPlot.plotAxis("runtime", linfResults, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+            cpptex::PgfplotPrinter::ResultMatrix resMatrix;
+            convertToResultMatrix(resMatrix, "runtime", linfResults, X_PLOT_SCALE);
+            linfPlot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", "Average execution time", caption);
 //            parentFigure.addToDocumentAsSubfigure(linfPlot);
         }
 
@@ -451,9 +480,11 @@ namespace analysis {
 
             caption += "$L_2$";
 
-            PgfplotPrinter l2Plot(OUTPUT_DIRECTORY, plotName);
+            cpptex::PgfplotPrinter l2Plot(OUTPUT_DIRECTORY + plotName);
             l2Plot.setCaption(caption);
-            l2Plot.plotAxis("runtime", l2Results, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, false);
+            cpptex::PgfplotPrinter::ResultMatrix resMatrix;
+            convertToResultMatrix(resMatrix, "runtime", l2Results, X_PLOT_SCALE);
+            l2Plot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", "Average execution time", caption);
             parentFigure.addToDocumentAsSubfigure(l2Plot, numCols);
         }
 
@@ -468,9 +499,11 @@ namespace analysis {
                 plotName += iv;
                 string caption = "Summary";
 
-                PgfplotPrinter plot(OUTPUT_DIRECTORY, plotName);
+                cpptex::PgfplotPrinter plot(OUTPUT_DIRECTORY + plotName);
                 plot.setCaption(caption);
-                plot.plotAxis(iv, summary, X_PLOT_SCALE, X_PLOT_SCALE_UNIT, isFirst);
+                cpptex::PgfplotPrinter::ResultMatrix resMatrix;
+                convertToResultMatrix(resMatrix, iv, summary, X_PLOT_SCALE);
+                plot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", iv, caption);
 
                 parentFigure.addToDocumentAsSubfigure(plot, numCols);
 
@@ -480,7 +513,7 @@ namespace analysis {
                 }
             }
 
-            LatexPrinter legend(OUTPUT_DIRECTORY,"document-plot-legend");
+            cpptex::LatexPrinter legend(OUTPUT_DIRECTORY +"document-plot-legend");
             legend.addRawText(plotLegendText);
             document.addToDocumentAsFigure(legend);
         }
@@ -490,7 +523,7 @@ namespace analysis {
 
 
     void tabulate(DistributionSpannerReducedLevelResultMap& spannerSummary,
-             LatexPrinter& document, bool lite = false) {
+                  cpptex::LatexPrinter& document, bool lite = false) {
 
         for(auto distribution : spannerSummary) {
 
@@ -499,10 +532,10 @@ namespace analysis {
             for(auto iv : ANALYSIS_IVs) {
                 vector<string> levels;
                 const auto& frontRow = distribution.second.begin()->second;
-                SetPrecision precisionSetter{int(X_PLOT_SCALE==1000000)};
+                cpptex::SetPrecision precisionSetter{int(X_PLOT_SCALE==1000000)};
                 transform(frontRow.begin(), frontRow.end(), back_inserter(levels),
                           [precisionSetter](const auto& elem){
-                              return precisionSetter(std::to_string(elem.first / X_PLOT_SCALE)) + mathrm(X_PLOT_SCALE_SHORT_UNIT);
+                              return precisionSetter(std::to_string(elem.first / X_PLOT_SCALE)) + cpptex::mathrm(X_PLOT_SCALE_SHORT_UNIT);
                           });
 
                 vector<string> headers;
@@ -510,7 +543,7 @@ namespace analysis {
                 for(auto name : spanner::bdps::ALGORITHM_NAMES) {
                     if( spanner::contains(distribution.second, name)) {
                         auto& spanner = distribution.second[name];
-                        headers.push_back(texttt(name));
+                        headers.push_back(cpptex::texttt(name));
                         ivValues.push_back({});
                         transform(spanner.begin(), spanner.end(), back_inserter(ivValues.back()),
                                   [iv](const auto& elem){
@@ -522,7 +555,7 @@ namespace analysis {
                 string caption(distribution.first + " x " + iv);
                 string tableName("document-table-");
                 tableName += spanner::removeSpaces(caption);
-                TablePrinter table(OUTPUT_DIRECTORY, tableName);
+                cpptex::TablePrinter table(OUTPUT_DIRECTORY + tableName);
 
                 // add columns
                 table.addColumn(N_SYMBOL,levels,-1,0);
@@ -545,14 +578,14 @@ namespace analysis {
     }
 
     void tabulate(const SpannerReducedLevelResultMap& summary,
-             LatexPrinter& document, bool lite = false) {
+                  cpptex::LatexPrinter& document, bool lite = false) {
         int tableCount = 0;
         for(auto iv : ANALYSIS_IVs) {
 
             string caption(iv);
             string tableName("document-table-summary");
             tableName += spanner::removeSpaces(caption);
-            TablePrinter table(OUTPUT_DIRECTORY, tableName);
+            cpptex::TablePrinter table(OUTPUT_DIRECTORY + tableName);
 
             // add columns
             vector<string> headers;
@@ -562,16 +595,16 @@ namespace analysis {
             ivValues.push_back({});
 
             const auto& frontRow = summary.begin()->second;
-            SetPrecision precisionSetter{int(X_PLOT_SCALE==1000000)};
+            cpptex::SetPrecision precisionSetter{int(X_PLOT_SCALE==1000000)};
             transform(frontRow.begin(), frontRow.end(),back_inserter(ivValues.front()),
                 [precisionSetter](const auto& elem){
-                    return precisionSetter(std::to_string(elem.first / X_PLOT_SCALE)) + mathrm(X_PLOT_SCALE_SHORT_UNIT);
+                    return precisionSetter(std::to_string(elem.first / X_PLOT_SCALE)) + cpptex::mathrm(X_PLOT_SCALE_SHORT_UNIT);
                 });
 
             for(auto name : spanner::bdps::ALGORITHM_NAMES) {
                 if( spanner::contains(summary, name)) {
                     auto& spanner = summary.at(name);
-                    headers.push_back(texttt(name));
+                    headers.push_back(cpptex::texttt(name));
                     ivValues.push_back({});
                     for(auto level : spanner) {
                         ivValues.back().push_back(std::to_string(level.second.getIV<double>(iv)));
@@ -593,7 +626,7 @@ namespace analysis {
     }
 
     void tabulate(const SpannerResultMap& summary,
-             LatexPrinter& document, bool lite = false) {
+                  cpptex::LatexPrinter& document, bool lite = false) {
         if(lite)
             return;
 
@@ -601,8 +634,8 @@ namespace analysis {
         header.push_back(spanner::bdps::ALGORITHM_SYMBOL);
         transform(next(ANALYSIS_IVs.begin()),ANALYSIS_IVs.end(),back_inserter(header),
             [](const auto& iv){
-                return TablePrinter::m_ivNiceNames.find(iv) == TablePrinter::m_ivNiceNames.end() ?
-                        iv : TablePrinter::m_ivNiceNames.at(iv);
+                return cpptex::TablePrinter::m_ivNiceNames.find(iv) == cpptex::TablePrinter::m_ivNiceNames.end() ?
+                        iv : cpptex::TablePrinter::m_ivNiceNames.at(iv);
             });
 
         vector<vector<string>> body;
@@ -627,15 +660,15 @@ namespace analysis {
         }
         string caption = "Spanner Summary";
         string tableName("document-table-summary");
-        TablePrinter table(OUTPUT_DIRECTORY, tableName);
+        cpptex::TablePrinter table(OUTPUT_DIRECTORY + tableName);
 
         for(size_t i=0; i<body.size(); i++) {
-            int precision = header[i] == TablePrinter::m_ivNiceNames["degree"] ? 0 : 3;
+            int precision = header[i] == cpptex::TablePrinter::m_ivNiceNames["degree"] ? 0 : 3;
             table.addColumn(header[i], body[i],precision,i);
         }
         table.tabulate();
 
-        document.addRawText(subsection(caption) +  + "\n\n");
+        document.addRawText(cpptex::subsection(caption) +  + "\n\n");
         document.addToDocument(table);
     }
 
@@ -649,7 +682,7 @@ void BoundedDegreePlaneSpannerAnalysisSynthetic(const string& filename) {
     cout << "Starting synthetic analysis..."<<endl;
 
 
-    LatexPrinter document(OUTPUT_DIRECTORY, "document");
+    cpptex::LatexPrinter document("/tmp/bdps_analysis");
     vector<vector<string>> raw = readFileIntoVector(filename);
 
     int firstLevelInResults = stod(*next(raw.front().begin()));
@@ -710,7 +743,7 @@ void BoundedDegreePlaneSpannerAnalysisReal(const string& filename) {
 
     cout << "Starting real analysis..."<<endl;
 
-    LatexPrinter document(OUTPUT_DIRECTORY, "document");
+    cpptex::LatexPrinter document(OUTPUT_DIRECTORY + "document");
     vector<vector<string>> raw = readFileIntoVector(filename);
 
 //    cout<< "Finding summaries for each spanner algorithm within each distribution..."<<endl;
@@ -750,7 +783,7 @@ void BoundedDegreePlaneSpannerAnalysisReal(const string& filename) {
 
 
 
-void BoundedDegreePlaneSpannerAnalysis(const string& filename) {
+void BoundedDegreePlaneSpannerAnalysis(const std::string& filename) {
     using namespace analysis;
     cout << "Data analysis started... type: ";
 
@@ -805,7 +838,7 @@ void BoundedDegreePlaneSpannerAnalysis(const string& filename) {
 //        string caption(iv);
 //        string tableName("document-table-");
 //        tableName += removeSpaces(caption);
-//        TablePrinter table(OUTPUT_DIRECTORY, tableName);
+//        TablePrinter table(OUTPUT_DIRECTORY + tableName);
 //
 //        // add columns
 //
@@ -847,7 +880,7 @@ void BoundedDegreePlaneSpannerAnalysis(const string& filename) {
 //            // add max degreeMax, avg degreeMax, avg avgDegreePerPoint
 //        }
 //
-//        TablePrinter table(OUTPUT_DIRECTORY,"document-table-overall");
+//        TablePrinter table(OUTPUT_DIRECTORY +"document-table-overall");
 //
 //        for(auto header : headers) {
 //            if(contains(body,header))

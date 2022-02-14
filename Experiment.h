@@ -10,6 +10,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include <boost/algorithm/string/erase.hpp>
 
 #include "libspanner/BoundedDegreePlaneSpanners.h"
 
@@ -23,9 +24,7 @@
 #include "libspanner/utilities.h"
 
 
-#include "tools/printers/LatexPrinter.h"
-#include "tools/printers/PgfplotPrinter.h"
-#include "tools/printers/TablePrinter.h"
+#include "cpptex/cpptex.h"
 
 #include "tools/Results.h"
 
@@ -54,7 +53,7 @@ namespace bdps_experiment {
                                        const spanner::DistributionType distributionType,
                                        const DistributionSubTypeEnum distribution,
                                        const spanner::bdps::input_t &points,
-                                       ofstream& expOut,
+                                       std::ofstream& expOut,
                                        bool measureStretchFactor = true) {
         using namespace std;
 
@@ -115,7 +114,7 @@ namespace bdps_experiment {
                                           points.begin(), points.end(),
                                           output.begin(), output.end(),
                                           !measureStretchFactor);
-        cout << result;
+        std::cout << result;
         expOut << result;
 
         if(!result.verify()) {
@@ -125,10 +124,9 @@ namespace bdps_experiment {
             spanner::writePointsToFile(points.begin(),points.end(),filename);
 
 
-            GraphPrinter tikz("/tmp/", "deg3");
-            tikz.autoscale(points.begin(), points.end());
+            cpptex::GraphPrinter tikz("/tmp/deg3", points.begin(), points.end());
 
-            GraphPrinter::OptionsList edgeOptions = { // active edge options
+            cpptex::GraphPrinter::OptionsList edgeOptions = { // active edge options
                     {"color",      tikz.activeEdgeColor},
                     {"line width", to_string(tikz.inactiveEdgeWidth/2)}
             };
@@ -142,14 +140,14 @@ namespace bdps_experiment {
 
             tikz.display();
 
-            cout<< "\n"
+            std::cout<< "\n"
                 << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
                 << "!!!!!!!!!!!!!!!! ALGORITHM ERROR !!!!!!!!!!!!!!!!!!!!"
                 << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
 
             char userContinues = 'x';
             while( userContinues != 'y' && userContinues != 'n' ) {
-                cout<< "\n Do you wish to continue the experiment? (y/n) ";
+                std::cout<< "\n Do you wish to continue the experiment? (y/n) ";
                 cin>>userContinues;
             }
             if(userContinues=='n') assert(!"Experiment terminated by user.");
@@ -163,25 +161,25 @@ namespace bdps_experiment {
     template<typename DistributionSubTypeEnum>
     void BoundedDegreePlaneSpannerAlgorithmLoop(const spanner::DistributionType distributionType,
                                                 const DistributionSubTypeEnum distribution,
-                                                const vector<spanner::Point>& points,
-                                                ofstream& expOut,
+                                                const std::vector<spanner::Point>& points,
+                                                std::ofstream& expOut,
                                                 const bool measureStretchFactor = true ){
         const size_t n = points.size();
 
-        cout<< "Starting trial..."<<endl<<endl;
+        std::cout<< "Starting trial...\n"<<std::endl;
 
         for(int alg=spanner::BoundedDegreePlaneSpannerAlgorithm::AlgorithmFirst;
             alg != spanner::BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast; ++alg ) {
             auto algorithm = static_cast<spanner::BoundedDegreePlaneSpannerAlgorithm>(alg);
-            list<pair<size_t, size_t> > spanner;
+            std::list<std::pair<size_t, size_t> > spanner;
 
             BoundedDegreePlaneSpannerTest(algorithm, distributionType, distribution, points, expOut, measureStretchFactor);
 
             ++EXP_COUNT;
         }
 
-        cout<< "Finished trial...\n"
-            << "-----------------"<<endl;
+        std::cout<< "Finished trial...\n"
+            << "-----------------"<<std::endl;
     }
 
     // Generates a random point set from the given distribution and runs an experiment with multiple graphs on the point set
@@ -236,11 +234,11 @@ namespace bdps_experiment {
 
     // An experiment from n_start to n_end with a single distribution
     void SyntheticExperimentInputSizeLoop(spanner::SyntheticDistribution dist,
-                                          size_t n_start, size_t n_end, size_t increment, ofstream& expOut, bool measureStretchFactor = true ) {
+                                          size_t n_start, size_t n_end, size_t increment, std::ofstream& expOut, bool measureStretchFactor = true ) {
         //measureStretchFactor = false;
         for (size_t n = n_start; n <= n_end; n += increment) {
             // SET POINTS
-            vector<spanner::Point> points;
+            std::vector<spanner::Point> points;
             generateRandomPointSet(dist, n, INPUT_WIDTH, points);
             BoundedDegreePlaneSpannerAlgorithmLoop(spanner::DistributionType::Synthetic,dist,points,expOut,measureStretchFactor);
         }
@@ -252,13 +250,13 @@ namespace bdps_experiment {
                                            size_t n_start,
                                            size_t n_end,
                                            size_t increment,
-                                           ofstream& expOut ) {
-        string distName = spanner::SYNTHETIC_DISTRIBUTION_NAMES.at(dist);
+                                           std::ofstream& expOut ) {
+        std::string distName = spanner::SYNTHETIC_DISTRIBUTION_NAMES.at(dist);
         srand(0);
         for (size_t trial = 0; trial < numRuns; ++trial) {
-            cout<< "Starting trial "<< trial << " of "<<distName<<"\n\n";
+            std::cout<< "Starting trial "<< trial << " of "<<distName<<"\n\n";
             SyntheticExperimentInputSizeLoop(dist, n_start, n_end, increment, expOut);
-            cout<<"\n"<<endl;
+            std::cout<<"\n"<<std::endl;
         }
     }
 
@@ -266,19 +264,19 @@ namespace bdps_experiment {
                                              size_t n_start,
                                              size_t n_end,
                                              size_t increment,
-                                             ofstream& expOut) {
+                                             std::ofstream& expOut) {
         const spanner::number_t width = 10;
 
         for(int dist=spanner::SyntheticDistributionFirst; dist != spanner::SyntheticDistributionLast; ++dist ) {
             auto distributionType = static_cast<spanner::SyntheticDistribution>(dist);
-            string distName = spanner::SYNTHETIC_DISTRIBUTION_NAMES.at(dist);
+            std::string distName = spanner::SYNTHETIC_DISTRIBUTION_NAMES.at(dist);
 
-            cout<< "!! Starting  "<< distName << "distribution trials !!\n"<<endl<<endl;
+            std::cout<< "!! Starting  "<< distName << "distribution trials !!\n"<<std::endl;
 
             SyntheticExperimentRepetitionLoop(distributionType, numRuns, n_start, n_end, increment, expOut);
 
-            cout<< "!! Ending  "<< distName << "distribution trials !!\n"
-                << "-------------------------------------------"<<endl;
+            std::cout<< "!! Ending  "<< distName << "distribution trials !!\n"
+                << "-------------------------------------------"<<std::endl;
         }
     }
 
@@ -286,13 +284,13 @@ namespace bdps_experiment {
     void SyntheticExperiment(size_t numRuns, size_t n_start, size_t n_end, size_t increment ) {
 
         // get unix timestamp to use as experiment file name
-        string filename = "synthetic-";
+        std::string filename = "synthetic-";
         auto time = std::time(nullptr);
         filename += std::to_string(time)
                     + OUTPUT_EXTENSION;
 
-        ofstream expOut;
-        expOut.open(filename,ios_base::out);
+        std::ofstream expOut;
+        expOut.open(filename,std::ios_base::out);
 
         if(!expOut.is_open()) assert(!"ERROR OPENING OUTPUT FILE\n\n");
 
@@ -313,7 +311,7 @@ namespace bdps_experiment {
 
 
 
-    void ExperimentFromConfigurationFile(string configFilename, size_t numRuns=1) {
+    void ExperimentFromConfigurationFile(std::string configFilename, size_t numRuns=1) {
         using std::string, std::vector;
         namespace pt = boost::property_tree;
 
@@ -328,8 +326,8 @@ namespace bdps_experiment {
         filename += std::to_string(time)
                  + OUTPUT_EXTENSION;
 
-        ofstream expOut;
-        expOut.open(filename,ios_base::out);
+        std::ofstream expOut;
+        expOut.open(filename,std::ios_base::out);
 
         if(!expOut.is_open()) assert(!"ERROR OPENING OUTPUT FILE\n\n");
 
@@ -342,7 +340,7 @@ namespace bdps_experiment {
                    filenameNoExtension = filename;
             boost::erase_all(filenameNoExtension, ".xy");
 
-            cout<<fullname<<endl;
+            std::cout<<fullname<<std::endl;
 
             vector<spanner::Point> P;
             spanner::PointGenerator_2 generator;
@@ -352,15 +350,15 @@ namespace bdps_experiment {
             string pointsetName = pointset.second.get_child("nicename").data();
             spanner::REAL_POINTSET_NAMES.push_back(pointsetName);
 
-            cout<< "!! Starting  "<< pointsetName << " trials !!\n"
+            std::cout<< "!! Starting  "<< pointsetName << " trials !!\n"
                 << "Added "<< n <<" points from file\n\n";
 
             for (size_t trial = 0; trial < numRuns; ++trial) {
                 BoundedDegreePlaneSpannerAlgorithmLoop(spanner::DistributionType::Real, pointSetID, P, expOut, trial == 0);
             }
 
-            cout<< "!! Ending  "<< pointsetName << " trials !!\n"
-                << "-------------------------------------------"<<endl;
+            std::cout<< "!! Ending  "<< pointsetName << " trials !!\n"
+                << "-------------------------------------------"<<std::endl;
 
             pointSetID++;
         }

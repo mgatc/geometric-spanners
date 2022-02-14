@@ -25,9 +25,10 @@
 #include "libspanner/utilities.h"
 
 
-#include "tools/printers/LatexPrinter.h"
-#include "tools/printers/PgfplotPrinter.h"
-#include "tools/printers/TablePrinter.h"
+
+#include "cpptex/cpptex.h"
+
+
 
 #include "tools/Results.h"
 
@@ -40,8 +41,6 @@ namespace bdps_experiment {
 
         using namespace spanner;
 
-        GraphPrinter tikz("/tmp/", "deg3");
-        tikz.autoscale(points.begin(), points.end());
 
 
 //        for(auto p : points)
@@ -50,8 +49,8 @@ namespace bdps_experiment {
 
         writePointsToFile(points.begin(), points.end(),"galaxy");
 
-        cout << points.size();
-        cout << "\n";
+        std::cout << points.size();
+        std::cout << "\n";
 
         bdps::output_t result;
 
@@ -61,18 +60,18 @@ namespace bdps_experiment {
 //            BSX2009( points, result, 2*PI/3);
 //            BGS2005( points, result);
 //            KPX2010( points, result, 18);
-//            BCC2012<6>( points, result);
+            BCC2012<6>( points, result);
 //            BCC2012<7>( points, result);
 //            BHS2018(points, result);
 //            KPT2017(points, result);
 //            BKPX2015(points, result);
 //            BGHP2010(points, result);
 //            KX2012(points, result);
-            DEG3(points,result);
+//            DEG3(points,result);
 //            delaunay_testing( points, result);
         }
 
-        cout << degree(result.begin(), result.end()) << endl;
+        std::cout << degree(result.begin(), result.end()) << std::endl;
 //        for( auto edge : result ) {
 //            cout<<edge.first<<"("<<points.at(edge.first)<<") -- "
 //                <<edge.second<<"("<<points.at(edge.second)<<")\n";
@@ -83,23 +82,19 @@ namespace bdps_experiment {
 
 
 
-        cout<< "EXP: time=";
+        std::cout<< "EXP: time=";
         number_t t_exp = INF;
         {
             Timer tim;
             t_exp = spanner::StretchFactorExpDijk(points.begin(),points.end(),result.begin(),result.end());
         }
-        cout<<"  t="<<t_exp<<";\n";
-
-        GraphPrinter::OptionsList edgeOptions = { // active edge options
-                {"color",      tikz.activeEdgeColor},
-                {"line width", to_string(tikz.inactiveEdgeWidth/2)}
-        };
-
-        tikz.drawEdges(result.begin(),result.end(),points,edgeOptions);
+        std::cout<<"  t="<<t_exp<<";\n";
 
 
 
+        cpptex::GraphPrinter tikz("/tmp/scratch", points.begin(), points.end(), 10.0);
+
+        tikz.drawEdges(result.begin(),result.end(),points,tikz.activeEdgeOptions);
         tikz.drawVertices(points.begin(), points.end(), tikz.activeVertexOptions);
 
 
@@ -111,14 +106,14 @@ namespace bdps_experiment {
 
         // PRODUCE A LaTeX / TiKz DOCUMENT AND DISPLAY
 
-        tikz.addLatexComment("worst path edges");
-//        tikz.drawEdges(WorstPath.begin(),WorstPath.end(), points, tikz.highlightEdgeOptions);
+        tikz.addComment("worst path edges");
+        tikz.drawEdges(WorstPath.begin(),WorstPath.end(), points, tikz.highlightEdgeOptions);
 
 
         tikz.display();
 
 
-        cout << "\n";
+        std::cout << "\n";
     }
 
     void scratchN(size_t n) {
@@ -131,7 +126,7 @@ namespace bdps_experiment {
 
         scratch(points);
     }
-    void scratchFile(string filename) {
+    void scratchFile(std::string filename) {
         spanner::bdps::input_t points;
         spanner::readPointsFromFile( back_inserter( points ), filename );
         scratch(points);

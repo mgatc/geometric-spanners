@@ -1,6 +1,6 @@
-[submodule "include/libspanner"]
+[submodule "libspanner"]
 	path = include/libspanner
 	url = https://github.com/mgatc/libspanner.git
 [submodule "cpptex"]
-	path = cpptex
+	path = include/cpptex
 	url = https://github.com/mgatc/cpptex.git

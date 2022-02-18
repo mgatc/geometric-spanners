@@ -16,19 +16,16 @@ include_directories(/usr/lib/gcc/x86_64-linux-gnu/7/include)
 add_executable(spanners
 
 
-        include/libspanner/shortest_paths/FloydWarshall.h
-        include/libspanner/points/generators.h
         tools/Results.h
-        tools/Utilities.h
-#
+
         Analysis.h
         Experiment.h
         Scratch.h
 
-        main.cpp include/libspanner/geometry.h)
+        main.cpp)
 
 target_link_libraries(spanners gmp)
 target_link_libraries(spanners mpfr)
 target_link_libraries(spanners boost_system)
 target_link_libraries(spanners boost_thread)
-target_link_libraries(spanners stdc++fs)
+#target_link_libraries(spanners stdc++fs)

@@ -14,6 +14,7 @@
 
 
 #include "libspanner/BoundedDegreePlaneSpanners.h"
+#include "libspanner/greedy/DN97.h"
 
 #include "libspanner/measure/degree.h"
 #include "libspanner/measure/stretchfactor.h"
@@ -26,7 +27,7 @@
 
 
 
-#include "cpptex/cpptex.h"
+#include "libspanner/cpptex/cpptex.h"
 
 
 
@@ -60,7 +61,7 @@ namespace bdps_experiment {
 //            BSX2009( points, result, 2*PI/3);
 //            BGS2005( points, result);
 //            KPX2010( points, result, 18);
-            BCC2012<6>( points, result);
+//            BCC2012<6>( points, result);
 //            BCC2012<7>( points, result);
 //            BHS2018(points, result);
 //            KPT2017(points, result);
@@ -69,6 +70,7 @@ namespace bdps_experiment {
 //            KX2012(points, result);
 //            DEG3(points,result);
 //            delaunay_testing( points, result);
+            greedy::DN97(points, result);
         }
 
         std::cout << degree(result.begin(), result.end()) << std::endl;

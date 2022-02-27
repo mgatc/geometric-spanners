@@ -22,7 +22,7 @@
 #include "libspanner/types.h"
 #include "libspanner/utilities.h"
 
-#include "cpptex/cpptex.h"
+#include "libspanner/cpptex/cpptex.h"
 
 #include "tools/Results.h"
 

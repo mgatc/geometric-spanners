@@ -9,7 +9,6 @@ set(CMAKE_CXX_FLAGS "-fopenmp -fexceptions -frounding-math -Wall -Wextra -Wno-un
 #set(CMAKE_BUILD_TYPE Release)
 
 include_directories(.)
-include_directories(include)
 include_directories(/usr/include)
 include_directories(/usr/lib/gcc/x86_64-linux-gnu/7/include)
 

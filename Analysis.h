@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "cpptex/cpptex.h"
+#include "libspanner/cpptex/cpptex.h"
 #include "libspanner/BoundedDegreePlaneSpanners.h"
 #include "libspanner/utilities.h"
 

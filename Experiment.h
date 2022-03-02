@@ -65,44 +65,47 @@ namespace bdps_experiment {
         spanner::Timer tim;
 
         switch (algorithm) {
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bgs2005:
-                spanner::BGS2005(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Lw2004:
-                spanner::LW2004(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bsx2009:
-                spanner::BSX2009(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kpx2010:
-                spanner::KPX2010(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kx2012:
-                spanner::KX2012(points, output);
-                break;
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bgs2005:
+//                spanner::BGS2005(points, output);
+//                break;
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Lw2004:
+//                spanner::LW2004(points, output);
+//                break;
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bsx2009:
+//                spanner::BSX2009(points, output);
+//                break;
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kpx2010:
+//                spanner::KPX2010(points, output);
+//                break;
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kx2012:
+//                spanner::KX2012(points, output);
+//                break;
             case spanner::BoundedDegreePlaneSpannerAlgorithm::Bcc2012_7:
                 spanner::BCC2012<7>(points, output);
                 break;
             case spanner::BoundedDegreePlaneSpannerAlgorithm::Bcc2012_6:
                 spanner::BCC2012<6>(points, output);
                 break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
-                spanner::BHS2018(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
-                spanner::BKPX2015(points,output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
-                spanner::BGHP2010(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
-                spanner::KPT2017(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Degree3:
-                spanner::DEG3(points, output);
-                break;
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
+//                spanner::BHS2018(points, output);
+//                break;
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
+//                spanner::BKPX2015(points,output);
+//                break;
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
+//                spanner::BGHP2010(points, output);
+//                break;
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
+//                spanner::KPT2017(points, output);
+//                break;
+//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Degree3:
+//                spanner::DEG3(points, output);
+//                break;
             case spanner::BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast:
-                assert(false);
+            default:
+//                std::cout<< "Skip"<<std::endl;
+                tim.stop();
+                return;
         }
 
         spanner::number_t runtime = tim.stop();

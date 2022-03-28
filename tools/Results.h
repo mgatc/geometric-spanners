@@ -11,7 +11,7 @@
 #include <variant>
 #include <vector>
 
-#include "libspanner/BoundedDegreePlaneSpanners.h"
+#include "libspanner/GreedySpanners.h"
 
 #include "libspanner/measure/degree.h"
 #include "libspanner/measure/stretchfactor.h"
@@ -95,7 +95,7 @@ namespace bdps_experiment {
         return getDouble(row,7);
     }
 
-    struct BoundedDegreeSpannerAnalysisResult {
+    struct GreedySpannerAnalysisResult {
         std::string distribution = "";
         std::string algorithm = "";
         size_t n = 0;
@@ -108,8 +108,8 @@ namespace bdps_experiment {
         double lightness = 0.0;
         bool lite = false;
 
-        BoundedDegreeSpannerAnalysisResult() = default;
-        BoundedDegreeSpannerAnalysisResult(const BoundedDegreeSpannerAnalysisResult& other) = default;
+        GreedySpannerAnalysisResult() = default;
+        GreedySpannerAnalysisResult(const GreedySpannerAnalysisResult& other) = default;
 
         void loadRow(const std::vector<std::string>& row) {
             distribution = getDistribution(row);
@@ -152,15 +152,15 @@ namespace bdps_experiment {
         }
 
         //friend ostream& operator<<(ostream &os, const BoundedDegreeSpannerResult &result);
-        friend std::ostream &operator<<(std::ostream &os, const BoundedDegreeSpannerAnalysisResult &result);
-        friend BoundedDegreeSpannerAnalysisResult operator+(const BoundedDegreeSpannerAnalysisResult&,const BoundedDegreeSpannerAnalysisResult&);
-        friend BoundedDegreeSpannerAnalysisResult operator/(const BoundedDegreeSpannerAnalysisResult&,size_t);
+        friend std::ostream &operator<<(std::ostream &os, const GreedySpannerAnalysisResult &result);
+        friend GreedySpannerAnalysisResult operator+(const GreedySpannerAnalysisResult&,const GreedySpannerAnalysisResult&);
+        friend GreedySpannerAnalysisResult operator/(const GreedySpannerAnalysisResult&,size_t);
     };
 
 
-    BoundedDegreeSpannerAnalysisResult
-    operator+(const BoundedDegreeSpannerAnalysisResult& lhs,
-              const BoundedDegreeSpannerAnalysisResult& rhs) {
+    GreedySpannerAnalysisResult
+    operator+(const GreedySpannerAnalysisResult& lhs,
+              const GreedySpannerAnalysisResult& rhs) {
         return {
                 lhs.distribution == rhs.distribution ? lhs.distribution : "",
                 lhs.algorithm == rhs.algorithm ? lhs.algorithm : "",
@@ -175,8 +175,8 @@ namespace bdps_experiment {
                 lhs.lightness + rhs.lightness
         };
     }
-    BoundedDegreeSpannerAnalysisResult
-    operator/(const BoundedDegreeSpannerAnalysisResult& lhs,
+    GreedySpannerAnalysisResult
+    operator/(const GreedySpannerAnalysisResult& lhs,
               const size_t divisor ) {
         auto realDivisor = static_cast<double>(divisor);
         auto effectiveDivisor = lhs.lite ? 1.0 : realDivisor;
@@ -196,7 +196,7 @@ namespace bdps_experiment {
     }
     std::ostream&
     operator<<(std::ostream &os,
-               const BoundedDegreeSpannerAnalysisResult &result) {
+               const GreedySpannerAnalysisResult &result) {
         os << result.distribution << ","
            << result.n << ","
            << result.algorithm << ","
@@ -211,10 +211,10 @@ namespace bdps_experiment {
     }
 
     template <typename DistributionSubTypeEnum>
-    struct BoundedDegreeSpannerResult {
+    struct GreedySpannerResult {
         spanner::DistributionType distributionType;
         DistributionSubTypeEnum distribution;
-        spanner::BoundedDegreePlaneSpannerAlgorithm algorithm;
+        spanner::GreedySpannerAlgorithm algorithm;
         spanner::index_t n;
         spanner::number_t runtime;
         spanner::mixed_t degree;
@@ -225,19 +225,19 @@ namespace bdps_experiment {
         std::map<std::string, spanner::mixed_t> IV;
         bool lite;
 
-        BoundedDegreeSpannerResult() = default;
+        GreedySpannerResult() = default;
 
         template<class VertexIterator, class EdgeIterator>
-        BoundedDegreeSpannerResult(const spanner::DistributionType distributionType,
+        GreedySpannerResult(const spanner::DistributionType distributionType,
                                    const DistributionSubTypeEnum distribution,
-                                   const spanner::BoundedDegreePlaneSpannerAlgorithm algorithm,
+                                   const spanner::GreedySpannerAlgorithm algorithm,
                                    const spanner::number_t runtime,
                                    VertexIterator pointsBegin,
                                    VertexIterator pointsEnd,
                                    EdgeIterator edgesBegin,
                                    EdgeIterator edgesEnd,
                                    bool lite = false)
-                : BoundedDegreeSpannerResult(distributionType,
+                : GreedySpannerResult(distributionType,
                                              distribution,
                                              algorithm,
                                              std::distance(pointsBegin, pointsEnd),
@@ -250,9 +250,9 @@ namespace bdps_experiment {
                                              (lite ? 0.0 : spanner::getLightness(pointsBegin, pointsEnd, edgesBegin, edgesEnd)),
                                              lite) {}
 
-        BoundedDegreeSpannerResult(const spanner::DistributionType distributionType,
+        GreedySpannerResult(const spanner::DistributionType distributionType,
                                    const DistributionSubTypeEnum distribution,
-                                   const spanner::BoundedDegreePlaneSpannerAlgorithm algorithm,
+                                   const spanner::GreedySpannerAlgorithm algorithm,
                                    const spanner::index_t n,
                                    spanner::number_t runtime,
                                    spanner::mixed_t degree,
@@ -278,21 +278,14 @@ namespace bdps_experiment {
             IV.emplace(IV_NAMES[i++], lightness);
         }
 
-        bool verify() {
-            const auto degreeBound = static_cast<size_t>(std::stoi(spanner::bdps::DEGREE_BOUND_PER_ALGORITHM.at(algorithm)));
-            const auto sfBound = static_cast<double>(std::stod(spanner::bdps::STRETCH_FACTOR_BOUND_PER_ALGORITHM.at(algorithm)));
-
-            const bool degreePasses = std::get<spanner::index_t>(degree) <= degreeBound;
-            const bool stretchFactorPasses = stretchFactor < sfBound || abs(stretchFactor - sfBound) < spanner::EPSILON;
-            const bool isBCC6 = false;//algorithm == Bcc2012_6;
-
-            return lite || (degreePasses && stretchFactorPasses) || isBCC6;
+        bool verify(const spanner::number_t sfBound = spanner::INF) {
+            return stretchFactor < sfBound || abs(stretchFactor - sfBound) < spanner::EPSILON;
         }
 
         template<class Printer>
         void setCaption(Printer &printer) {
             std::string caption = std::string("\\textsc{")
-                             + spanner::bdps::ALGORITHM_NAMES.at(algorithm)
+                             + spanner::greedy::ALGORITHM_NAMES.at(algorithm)
                              + "}: "
                              + "$\\Delta = "
                              + spanner::to_string(degree);
@@ -306,7 +299,7 @@ namespace bdps_experiment {
 
 
         //friend ostream& operator<<(ostream &os, const BoundedDegreeSpannerResult &result);
-        friend std::ostream &operator<<(std::ostream &os, const BoundedDegreeSpannerResult &result) {
+        friend std::ostream &operator<<(std::ostream &os, const GreedySpannerResult &result) {
             const std::vector<std::string>& distributionNames = result.distributionType == spanner::DistributionType::Synthetic ?
                                                                 spanner::SYNTHETIC_DISTRIBUTION_NAMES : spanner::REAL_POINTSET_NAMES;
             using spanner::operator<<;

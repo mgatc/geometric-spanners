@@ -14,6 +14,9 @@
 
 
 #include "libspanner/BoundedDegreePlaneSpanners.h"
+#include "libspanner/delaunay/DelaunayL2.h"
+#include "libspanner/delaunay/DelaunayLinf.h"
+#include "libspanner/delaunay/DelaunayTD.h"
 #include "libspanner/greedy/DN97.h"
 
 #include "libspanner/measure/degree.h"
@@ -61,7 +64,7 @@ namespace bdps_experiment {
 //            BSX2009( points, result, 2*PI/3);
 //            BGS2005( points, result);
 //            KPX2010( points, result, 18);
-            BCC2012<6>( points, result);
+//            BCC2012<6>( points, result);
 //            BCC2012<7>( points, result);
 //            BHS2018(points, result);
 //            KPT2017(points, result);
@@ -71,6 +74,9 @@ namespace bdps_experiment {
 //            DEG3(points,result);
 //            delaunay_testing( points, result);
             //greedy::DN97(points, result);
+            DelaunayL2Spanner(points,result);
+//            DelaunayLinfSpanner(points,result);
+//            DelaunayTDSpanner(points,result);
         }
 
         std::cout << degree(result.begin(), result.end()) << std::endl;

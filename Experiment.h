@@ -12,7 +12,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/algorithm/string/erase.hpp>
 
-#include "libspanner/BoundedDegreePlaneSpanners.h"
+#include "libspanner/GreedySpanners.h"
 
 #include "libspanner/measure/degree.h"
 #include "libspanner/measure/stretchfactor.h"
@@ -49,15 +49,17 @@ namespace bdps_experiment {
      * then writes the result to the expOut file. Due to its
      */
     template <typename DistributionSubTypeEnum>
-    void BoundedDegreePlaneSpannerTest(const spanner::BoundedDegreePlaneSpannerAlgorithm algorithm,
+    void GreedySpannerTest(const spanner::GreedySpannerAlgorithm algorithm,
                                        const spanner::DistributionType distributionType,
                                        const DistributionSubTypeEnum distribution,
-                                       const spanner::bdps::input_t &points,
+                                       const spanner::greedy::input_t &points,
                                        std::ofstream& expOut,
                                        bool measureStretchFactor = true) {
         using namespace std;
 
-        spanner::bdps::output_t output;
+        spanner::number_t t(1.25);
+
+        spanner::greedy::output_t output;
 
         auto pointsBegin = points.begin(),
                 pointsEnd = points.end();
@@ -65,42 +67,9 @@ namespace bdps_experiment {
         spanner::Timer tim;
 
         switch (algorithm) {
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bgs2005:
-//                spanner::BGS2005(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Lw2004:
-//                spanner::LW2004(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bsx2009:
-//                spanner::BSX2009(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kpx2010:
-//                spanner::KPX2010(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kx2012:
-//                spanner::KX2012(points, output);
-//                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bcc2012_7:
-                spanner::BCC2012<7>(points, output);
+            case spanner::GreedySpannerAlgorithm::Dn97:
+                spanner::DN97(points,output, t);
                 break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bcc2012_6:
-                spanner::BCC2012<6>(points, output);
-                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
-//                spanner::BHS2018(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
-//                spanner::BKPX2015(points,output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
-//                spanner::BGHP2010(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
-//                spanner::KPT2017(points, output);
-//                break;
-//            case spanner::BoundedDegreePlaneSpannerAlgorithm::Degree3:
-//                spanner::DEG3(points, output);
-//                break;
             case spanner::BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast:
             default:
 //                std::cout<< "Skip"<<std::endl;
@@ -112,7 +81,7 @@ namespace bdps_experiment {
 
 
 
-        BoundedDegreeSpannerResult result(distributionType, distribution,
+        GreedySpannerResult result(distributionType, distribution,
                                           algorithm, runtime,
                                           points.begin(), points.end(),
                                           output.begin(), output.end(),
@@ -120,9 +89,9 @@ namespace bdps_experiment {
         std::cout << result;
         expOut << result;
 
-        if(!result.verify()) {
+        if(!result.verify(t)) {
             std::string filename("breaks");
-            filename += spanner::bdps::ALGORITHM_NAMES.at(algorithm);
+            filename += spanner::greedy::ALGORITHM_NAMES.at(algorithm);
             filename += ".xy";
             spanner::writePointsToFile(points.begin(),points.end(),filename);
 
@@ -162,7 +131,7 @@ namespace bdps_experiment {
 
     // An experiment featuring multiple graphs on the same point set
     template<typename DistributionSubTypeEnum>
-    void BoundedDegreePlaneSpannerAlgorithmLoop(const spanner::DistributionType distributionType,
+    void GreedySpannerAlgorithmLoop(const spanner::DistributionType distributionType,
                                                 const DistributionSubTypeEnum distribution,
                                                 const std::vector<spanner::Point>& points,
                                                 std::ofstream& expOut,
@@ -171,12 +140,12 @@ namespace bdps_experiment {
 
         std::cout<< "Starting trial...\n"<<std::endl;
 
-        for(int alg=spanner::BoundedDegreePlaneSpannerAlgorithm::AlgorithmFirst;
-            alg != spanner::BoundedDegreePlaneSpannerAlgorithm::AlgorithmLast; ++alg ) {
-            auto algorithm = static_cast<spanner::BoundedDegreePlaneSpannerAlgorithm>(alg);
+        for(int alg=spanner::GreedySpannerAlgorithm::GreedySpannerAlgorithmFirst;
+            alg != spanner::GreedySpannerAlgorithm::GreedySpannerAlgorithmLast; ++alg ) {
+            auto algorithm = static_cast<spanner::GreedySpannerAlgorithm>(alg);
             std::list<std::pair<size_t, size_t> > spanner;
 
-            BoundedDegreePlaneSpannerTest(algorithm, distributionType, distribution, points, expOut, measureStretchFactor);
+            GreedySpannerTest(algorithm, distributionType, distribution, points, expOut, measureStretchFactor);
 
             ++EXP_COUNT;
         }
@@ -243,7 +212,7 @@ namespace bdps_experiment {
             // SET POINTS
             std::vector<spanner::Point> points;
             generateRandomPointSet(dist, n, INPUT_WIDTH, points);
-            BoundedDegreePlaneSpannerAlgorithmLoop(spanner::DistributionType::Synthetic,dist,points,expOut,measureStretchFactor);
+            GreedySpannerAlgorithmLoop(spanner::DistributionType::Synthetic,dist,points,expOut,measureStretchFactor);
         }
     }
 
@@ -357,7 +326,7 @@ namespace bdps_experiment {
                 << "Added "<< n <<" points from file\n\n";
 
             for (size_t trial = 0; trial < numRuns; ++trial) {
-                BoundedDegreePlaneSpannerAlgorithmLoop(spanner::DistributionType::Real, pointSetID, P, expOut, trial == 0);
+                GreedySpannerAlgorithmLoop(spanner::DistributionType::Real, pointSetID, P, expOut, trial == 0);
             }
 
             std::cout<< "!! Ending  "<< pointsetName << " trials !!\n"

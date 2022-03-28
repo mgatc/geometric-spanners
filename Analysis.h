@@ -34,7 +34,7 @@ namespace analysis {
     typedef size_t level_t;
     typedef string spanner_t;
     typedef string distribution_t;
-    typedef BoundedDegreeSpannerAnalysisResult result_t;
+    typedef GreedySpannerAnalysisResult result_t;
 
     typedef vector<result_t> ResultContainer;
 

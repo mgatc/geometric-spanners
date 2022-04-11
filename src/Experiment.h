@@ -12,6 +12,8 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/algorithm/string/erase.hpp>
 
+#include "libspanner/BoundedDegreePlaneSpanners.h"
+
 #include "libspanner/measure/degree.h"
 #include "libspanner/measure/stretchfactor.h"
 #include "libspanner/measure/timer.h"
@@ -24,7 +26,7 @@
 
 #include "cpptex/cpptex.h"
 
-#include "tools/Results.h"
+#include "Results.h"
 
 namespace bdps_experiment {
 

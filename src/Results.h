@@ -24,8 +24,6 @@
 
 #include "cpptex/cpptex.h"
 
-#include "tools/Results.h"
-
 namespace bdps_experiment {
 
     const std::string N_SYMBOL = "$n$";

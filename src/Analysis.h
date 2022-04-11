@@ -10,7 +10,7 @@
 #include "libspanner/BoundedDegreePlaneSpanners.h"
 #include "libspanner/utilities.h"
 
-#include "tools/Results.h"
+#include "Results.h"
 
 namespace bdps_experiment {
 

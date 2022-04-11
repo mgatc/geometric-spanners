@@ -15,11 +15,10 @@ include_directories(/usr/lib/gcc/x86_64-linux-gnu/7/include)
 add_executable(spanners
 
 
-        tools/Results.h
-
-        Analysis.h
-        Experiment.h
-        Scratch.h
+        src/Results.h
+        src/Analysis.h
+        src/Experiment.h
+        src/Scratch.h
 
         main.cpp)
 

@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 
-#include "Analysis.h"
-#include "Experiment.h"
-#include "Scratch.h"
+#include "src/Analysis.h"
+#include "src/Experiment.h"
+#include "src/Scratch.h"
 
 using namespace std;
 using namespace bdps_experiment;
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
                   "    ./spanners [filename.csv] to analyze a csv file produced by an experiment from this program\n"
                   "    ./spanners [filename.xml] [repetitions] to run an experiment on real-world point sets\n"
                   "    ./spanners [repetitions] [start n] [finish n] [increment] to run a synthetic experiment\n\n"
-                  "See README"
+                  "See README for more detailed instructions.\n"
                   <<endl;
             return EXIT_FAILURE;
     }

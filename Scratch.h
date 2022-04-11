@@ -17,7 +17,6 @@
 #include "libspanner/delaunay/DelaunayL2.h"
 #include "libspanner/delaunay/DelaunayLinf.h"
 #include "libspanner/delaunay/DelaunayTD.h"
-#include "libspanner/greedy/DN97.h"
 
 #include "libspanner/measure/degree.h"
 #include "libspanner/measure/stretchfactor.h"
@@ -38,9 +37,6 @@
 
 namespace bdps_experiment {
 
-    const std::string SCRATCH_DIRECTORY = "../scratch/";
-
-
     void scratch(const spanner::bdps::input_t& points) {
 
         using namespace spanner;
@@ -51,7 +47,7 @@ namespace bdps_experiment {
 //            if(p.x()>4.35)
 //                bdps_experiment::bcc2012::POINT_COLLECTOR.emplace(p.x()-4.75,p.y());
 
-        writePointsToFile(points.begin(), points.end(),"galaxy");
+        writePointsToFile(points.begin(), points.end(),"scratch");
 
         std::cout << points.size();
         std::cout << "\n";
@@ -59,23 +55,19 @@ namespace bdps_experiment {
         bdps::output_t result;
 
         { // RUN THE ALGORITHM(S) /////////////////////////////////////
-//            Timer tim;
+            Timer tim;
 //            LW2004( points, result);
 //            BSX2009( points, result, 2*PI/3);
 //            BGS2005( points, result);
 //            KPX2010( points, result, 18);
 //            BCC2012<6>( points, result);
-//            BCC2012<7>( points, result);
+            BCC2012<7>( points, result);
 //            BHS2018(points, result);
 //            KPT2017(points, result);
 //            BKPX2015(points, result);
 //            BGHP2010(points, result);
 //            KX2012(points, result);
 //            DEG3(points,result);
-//            delaunay_testing( points, result);
-//            ClusterGraph(points, result);
-//            DN97(points, result);
-            GreedySpanner(points,result, 1.5);
 //            DelaunayL2Spanner(points,result);
 //            DelaunayLinfSpanner(points,result);
 //            DelaunayTDSpanner(points,result);

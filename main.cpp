@@ -82,8 +82,13 @@ int main(int argc, char *argv[]) {
                                 experimentParameters[3]);
             break;
         default:
-            cout<<"Invalid arguments... try again.\n"
-                  "Usage:\n"<<endl;
+            cout<<"Usage: \n"
+                  "    ./spanners [n|filename.xy] to produce a visualization of the algorithm configured in Scratch.h\n"
+                  "    ./spanners [filename.csv] to analyze a csv file produced by an experiment from this program\n"
+                  "    ./spanners [filename.xml] [repetitions] to run an experiment on real-world point sets\n"
+                  "    ./spanners [repetitions] [start n] [finish n] [increment] to run a synthetic experiment\n\n"
+                  "See README"
+                  <<endl;
             return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;

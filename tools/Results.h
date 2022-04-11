@@ -136,7 +136,7 @@ namespace bdps_experiment {
                 return runtime;
             else if(ivName == "degree")
                 return degree;
-            else if(ivName == "avgDegreePerPoint")
+            else if(ivName == "degreeAvg")
                 return degreeAvg;
             else if(ivName == "avgDegreePerPoint")
                 return avgDegreePerPoint;

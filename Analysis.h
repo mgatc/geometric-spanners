@@ -53,7 +53,7 @@ namespace analysis {
     typedef map<distribution_t, result_t> DistributionSummaryMap;
 
     std::vector<std::string> ANALYSIS_IVs = {
-        "runtime","degree","avgDegreePerPoint","avgDegreePerPoint",
+        "runtime","degree","degreeAvg","avgDegreePerPoint",
         "maxStretchFactor","avgStretchFactor","lightness"
     };
 
@@ -525,54 +525,200 @@ namespace analysis {
     void tabulate(DistributionSpannerReducedLevelResultMap& spannerSummary,
                   cpptex::LatexPrinter& document, bool lite = false) {
 
+
         for(auto distribution : spannerSummary) {
 
-            int tableCount = 0;
+            string caption = "Spanner Summary";
+            string tableName("document-table-summary-");
+            string distNoSpace = spanner::removeSpaces(distribution.first);
+            tableName += distNoSpace;
 
-            for(auto iv : ANALYSIS_IVs) {
-                vector<string> levels;
-                const auto& frontRow = distribution.second.begin()->second;
-                cpptex::SetPrecision precisionSetter{int(X_PLOT_SCALE==1000000)};
-                transform(frontRow.begin(), frontRow.end(), back_inserter(levels),
-                          [precisionSetter](const auto& elem){
-                              return precisionSetter(std::to_string(elem.first / X_PLOT_SCALE)) + cpptex::mathrm(X_PLOT_SCALE_SHORT_UNIT);
+
+                vector<string> degreeHeader;
+                degreeHeader.push_back(spanner::bdps::ALGORITHM_SYMBOL);
+                auto firstDegreeIv = find_if(ANALYSIS_IVs.begin(), ANALYSIS_IVs.end(), [](const auto& iv) {
+                    return iv.find(string("egree")) != std::string::npos;
+                });
+                auto lastDegreeIv = find_if(next(firstDegreeIv), ANALYSIS_IVs.end(), [](const auto& iv) {
+                   return iv.find("egree") == std::string::npos;
+                });
+                transform(firstDegreeIv, lastDegreeIv, back_inserter(degreeHeader),
+                          [](const auto &iv) {
+                              return cpptex::TablePrinter::m_ivNiceNames.find(iv) ==
+                                     cpptex::TablePrinter::m_ivNiceNames.end() ?
+                                     iv : cpptex::TablePrinter::m_ivNiceNames.at(iv);
                           });
 
-                vector<string> headers;
-                vector<vector<string>> ivValues;
-                for(auto name : spanner::bdps::ALGORITHM_NAMES) {
-                    if( spanner::contains(distribution.second, name)) {
-                        auto& spanner = distribution.second[name];
-                        headers.push_back(cpptex::texttt(name));
-                        ivValues.push_back({});
-                        transform(spanner.begin(), spanner.end(), back_inserter(ivValues.back()),
-                                  [iv](const auto& elem){
-                                      return std::to_string(elem.second.template getIV<double>(iv));
-                                  });
+                vector<vector<string>> degreeBody;
+                degreeBody.push_back({});
+                copy_if(spanner::bdps::ALGORITHM_NAMES.begin(), spanner::bdps::ALGORITHM_NAMES.end(),
+                        back_inserter(degreeBody.back()),
+                        [&](const string &name) {
+                            return spanner::contains(distribution.second, name);
+                        });
+                transform(degreeBody.back().begin(), degreeBody.back().end(), degreeBody.back().begin(),
+                          [](const string &name) {
+                              return "\\texttt{" + name + "}";
+                          });
+
+                for (auto ivit=firstDegreeIv; ivit!=lastDegreeIv; ++ivit) {
+                    auto iv = *ivit;
+                    if (iv == "runtime") continue;
+
+
+                    degreeBody.push_back({});
+
+                    for (auto name: spanner::bdps::ALGORITHM_NAMES) {
+                        if (spanner::contains(distribution.second, name)) {
+                            auto sum = accumulate(distribution.second.at(name).begin(),
+                                                  distribution.second.at(name).end(),
+                                                  result_t(),
+                                                  [](const result_t &sum, const auto &addend) {
+                                                      return sum + addend.second;
+                                                  });
+                            size_t total = distribution.second.at(name).size();
+                            degreeBody.back().push_back(std::to_string((sum / total).template getIV<double>(iv)));
+                        }
+                    }
+
+
+                }
+
+                auto degreeTableName = tableName + "-degree";
+                cpptex::TablePrinter degreeTable(OUTPUT_DIRECTORY + degreeTableName);
+
+                for (size_t i = 0; i < degreeBody.size(); i++) {
+                    int precision = degreeHeader[i] == cpptex::TablePrinter::m_ivNiceNames["degree"] ? 0 : 3;
+                    degreeTable.addColumn(degreeHeader[i], degreeBody[i], precision, i);
+                }
+                degreeTable.tabulate();
+
+                document.addToDocument(degreeTable);
+
+
+
+            vector<string> sfHeader;
+            sfHeader.push_back(spanner::bdps::ALGORITHM_SYMBOL);
+            auto firstSfIv = lastDegreeIv;
+            auto lastSfIv = find_if(next(firstSfIv), ANALYSIS_IVs.end(), [](const auto& iv) {
+                return iv.find("lightness") != std::string::npos;
+            });
+            transform(firstSfIv, lastSfIv, back_inserter(sfHeader),
+                      [](const auto &iv) {
+                          return cpptex::TablePrinter::m_ivNiceNames.find(iv) ==
+                                 cpptex::TablePrinter::m_ivNiceNames.end() ?
+                                 iv : cpptex::TablePrinter::m_ivNiceNames.at(iv);
+                      });
+
+            vector<vector<string>> sfBody;
+            sfBody.push_back({});
+            copy_if(spanner::bdps::ALGORITHM_NAMES.begin(), spanner::bdps::ALGORITHM_NAMES.end(),
+                    back_inserter(sfBody.back()),
+                    [&](const string &name) {
+                        return spanner::contains(distribution.second, name);
+                    });
+            transform(sfBody.back().begin(), sfBody.back().end(), sfBody.back().begin(),
+                      [](const string &name) {
+                          return "\\texttt{" + name + "}";
+                      });
+
+            for (auto ivit=firstSfIv; ivit!=lastSfIv; ++ivit) {
+                auto iv = *ivit;
+                if (iv == "runtime") continue;
+
+
+                sfBody.push_back({});
+
+                for (auto name: spanner::bdps::ALGORITHM_NAMES) {
+                    if (spanner::contains(distribution.second, name)) {
+                        auto sum = accumulate(distribution.second.at(name).begin(),
+                                              distribution.second.at(name).end(),
+                                              result_t(),
+                                              [](const result_t &sum, const auto &addend) {
+                                                  return sum + addend.second;
+                                              });
+                        size_t total = distribution.second.at(name).size();
+                        sfBody.back().push_back(std::to_string((sum / total).template getIV<double>(iv)));
                     }
                 }
 
-                string caption(distribution.first + " x " + iv);
-                string tableName("document-table-");
-                tableName += spanner::removeSpaces(caption);
-                cpptex::TablePrinter table(OUTPUT_DIRECTORY + tableName);
-
-                // add columns
-                table.addColumn(N_SYMBOL,levels,-1,0);
-
-                for(size_t i=0; i<headers.size();++i){
-                    int precision = iv == "degree" ? 0 : 3;
-                    table.addColumn(headers.at(i), ivValues.at(i), precision, i+1);
-                }
-
-                table.tabulate(true);
-
-                table.setCaption(caption);
-                document.addToDocument(table);
-
-                tableCount++;
 
             }
+
+            auto sfTableName = tableName + "-sf";
+            cpptex::TablePrinter sfTable(OUTPUT_DIRECTORY + sfTableName);
+
+            for (size_t i = 0; i < sfBody.size(); i++) {
+                int precision = sfHeader[i] == cpptex::TablePrinter::m_ivNiceNames["degree"] ? 0 : 3;
+                sfTable.addColumn(sfHeader[i], sfBody[i], precision, i);
+            }
+            sfTable.tabulate();
+
+            document.addToDocument(sfTable);
+
+
+
+
+
+            vector<string> lightnessHeader;
+            lightnessHeader.push_back(spanner::bdps::ALGORITHM_SYMBOL);
+            auto firstLightnessIv = lastSfIv;
+            auto lastLightnessIv = ANALYSIS_IVs.end();
+            transform(firstLightnessIv, lastLightnessIv, back_inserter(lightnessHeader),
+                      [](const auto &iv) {
+                          return cpptex::TablePrinter::m_ivNiceNames.find(iv) ==
+                                 cpptex::TablePrinter::m_ivNiceNames.end() ?
+                                 iv : cpptex::TablePrinter::m_ivNiceNames.at(iv);
+                      });
+
+            vector<vector<string>> lightnessBody;
+            lightnessBody.push_back({});
+            copy_if(spanner::bdps::ALGORITHM_NAMES.begin(), spanner::bdps::ALGORITHM_NAMES.end(),
+                    back_inserter(lightnessBody.back()),
+                    [&](const string &name) {
+                        return spanner::contains(distribution.second, name);
+                    });
+            transform(lightnessBody.back().begin(), lightnessBody.back().end(), lightnessBody.back().begin(),
+                      [](const string &name) {
+                          return "\\texttt{" + name + "}";
+                      });
+
+            for (auto ivit=firstLightnessIv; ivit!=lastLightnessIv; ++ivit) {
+                auto iv = *ivit;
+                if (iv == "runtime") continue;
+
+
+                lightnessBody.push_back({});
+
+                for (auto name: spanner::bdps::ALGORITHM_NAMES) {
+                    if (spanner::contains(distribution.second, name)) {
+                        auto sum = accumulate(distribution.second.at(name).begin(),
+                                              distribution.second.at(name).end(),
+                                              result_t(),
+                                              [](const result_t &sum, const auto &addend) {
+                                                  return sum + addend.second;
+                                              });
+                        size_t total = distribution.second.at(name).size();
+                        lightnessBody.back().push_back(std::to_string((sum / total).template getIV<double>(iv)));
+                    }
+                }
+
+
+            }
+
+            auto lightnessTableName = tableName + "-lightness";
+            cpptex::TablePrinter lightnessTable(OUTPUT_DIRECTORY + lightnessTableName);
+
+            for (size_t i = 0; i < lightnessBody.size(); i++) {
+                int precision = lightnessHeader[i] == cpptex::TablePrinter::m_ivNiceNames["degree"] ? 0 : 3;
+                lightnessTable.addColumn(lightnessHeader[i], lightnessBody[i], precision, i);
+            }
+            lightnessTable.tabulate();
+
+            document.addToDocument(lightnessTable);
+
+
+
             document.clearpage();
         }
     }
@@ -717,15 +863,15 @@ void BoundedDegreePlaneSpannerAnalysisSynthetic(const string& filename) {
     SpannerResultMap spannerSummary = calculateSpannerSummary(spannerLevelSummary);
 
     tabulate(spannerSummary, document, isLargeExperiment);
-    plot(spannerLevelSummary, document, isLargeExperiment);
-    tabulate(spannerLevelSummary, document, isLargeExperiment);
+//    plot(spannerLevelSummary, document, isLargeExperiment);
+//    tabulate(spannerLevelSummary, document, isLargeExperiment);
 
     if(!isLargeExperiment) document.clearpage();
 
     cout<< "Finding summaries for each spanner algorithm within each distribution..."<<endl;
     document.addRawText("\\section{Distribution Summaries}\n\n");
 
-    plot(distributionSpannerSummary, document, isLargeExperiment);
+//    plot(distributionSpannerSummary, document, isLargeExperiment);
     tabulate(distributionSpannerSummary, document, isLargeExperiment);
 
 

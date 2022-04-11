@@ -73,17 +73,25 @@ namespace bdps_experiment {
 //            KX2012(points, result);
 //            DEG3(points,result);
 //            delaunay_testing( points, result);
-            //greedy::DN97(points, result);
-            DelaunayL2Spanner(points,result);
+//            ClusterGraph(points, result);
+//            DN97(points, result);
+            GreedySpanner(points,result, 1.5);
+//            DelaunayL2Spanner(points,result);
 //            DelaunayLinfSpanner(points,result);
 //            DelaunayTDSpanner(points,result);
         }
 
-        std::cout << degree(result.begin(), result.end()) << std::endl;
-//        for( auto edge : result ) {
-//            cout<<edge.first<<"("<<points.at(edge.first)<<") -- "
-//                <<edge.second<<"("<<points.at(edge.second)<<")\n";
-//        }
+        std::cout << degree(result.begin(), result.end()) << std::endl<<std::endl;
+
+        std::sort(result.begin(),result.end(),[](const auto& a, const auto& b) {
+            return a.first < b.first || (a.first==b.first && a.second<b.second);
+        });
+
+        for( auto edge : result ) {
+            std::cout<<edge.first+1<<" "
+                     <<edge.second+1<<"\n";
+        }
+        std::cout<<std::endl;
 
 
 

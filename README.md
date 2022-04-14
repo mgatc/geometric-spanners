@@ -143,6 +143,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 * [David Wisnosky](https://github.com/Wisno33)
 * [Lucas Mougeot](https://github.com/lucasfuturist)
+* [Anirban Ghosh](https://github.com/ghoshanirban)
 * [Fred Anderson](https://github.com/TheDKG)
 
 <p align="right">(<a href="#top">back to top</a>)</p>

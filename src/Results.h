@@ -212,7 +212,7 @@ namespace bdps_experiment {
     struct BoundedDegreePlaneSpannerResult {
         spanner::DistributionType distributionType;
         DistributionSubTypeEnum distribution;
-        spanner::BoundedDegreePlaneSpannerAlgorithm algorithm;
+        spanner::DelaunayTriangulationVariant algorithm;
         spanner::index_t n;
         spanner::number_t runtime;
         spanner::mixed_t degree;
@@ -228,7 +228,7 @@ namespace bdps_experiment {
         template<class VertexIterator, class EdgeIterator>
         BoundedDegreePlaneSpannerResult(const spanner::DistributionType distributionType,
                                         const DistributionSubTypeEnum distribution,
-                                        const spanner::BoundedDegreePlaneSpannerAlgorithm algorithm,
+                                        const spanner::DelaunayTriangulationVariant algorithm,
                                         const spanner::number_t runtime,
                                         VertexIterator pointsBegin,
                                         VertexIterator pointsEnd,
@@ -250,7 +250,7 @@ namespace bdps_experiment {
 
         BoundedDegreePlaneSpannerResult(const spanner::DistributionType distributionType,
                                         const DistributionSubTypeEnum distribution,
-                                        const spanner::BoundedDegreePlaneSpannerAlgorithm algorithm,
+                                        const spanner::DelaunayTriangulationVariant algorithm,
                                         const spanner::index_t n,
                                         spanner::number_t runtime,
                                         spanner::mixed_t degree,

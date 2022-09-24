@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
 
     // DEFAULT ARGUMENTS IN THE EVENT COMMAND LINE INPUT IS NOT GIVEN
     const string defaultFilename = "../experiment.xml";
-    const size_t runs = 3;
+    const size_t runs = 5;
     const size_t n_begin = 10000;
     const size_t n_end = 100000;
     const size_t increment = 10000;
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
                 ExperimentFromConfigurationFile(filename,n);
             }
             break;
-//        case NO_ARGS_AMOUNT: // run a synthetic experiment with default args
+        case NO_ARGS_AMOUNT: // run a synthetic experiment with default args
         case 5: // run a synthetic experiment with given args
             for (size_t arg = 1;
                  arg < std::min(size_t(argc), experimentParameters.size() + 1);

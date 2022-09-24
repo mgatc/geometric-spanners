@@ -229,7 +229,7 @@ namespace analysis {
                 copy(distribution.begin(), distribution.end(),
                      inserter(allResults, allResults.end()));
 
-                if( !lite && !allResults.empty()) {
+                if( !allResults.empty()) {
                     string caption = distributionName;
                     caption += "-";
                     caption += "all";
@@ -239,115 +239,60 @@ namespace analysis {
                     plotName += "-";
                     plotName += "runtime";
 
-                    cpptex::PgfplotPrinter tdPlot(OUTPUT_DIRECTORY + plotName);
-                    tdPlot.setCaption(caption);
+                    cpptex::PgfplotPrinter dtPlot(OUTPUT_DIRECTORY + plotName);
+                    dtPlot.setCaption(caption);
                     cpptex::PgfplotPrinter::ResultMatrix resMatrix;
                     convertToResultMatrix(resMatrix, "runtime", allResults, X_PLOT_SCALE);
-                    tdPlot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", "Average execution time", caption);
-                    parentFigure.addToDocumentAsSubfigure(tdPlot, numCols);
+                    dtPlot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", "Average execution time", caption);
+                    parentFigure.addToDocumentAsSubfigure(dtPlot, numCols);
                 }
+//
+//                // non td plots
+//                SpannerReducedLevelResultMap nontdResults;
+//                copy_if(distribution.begin(), distribution.end(),
+//                        inserter(nontdResults, nontdResults.end()),
+//                        [&nontdPlots](const auto &elem) {
+//                            return spanner::contains(nontdPlots, elem.first);
+//                        });
+//
+//                if( !nontdResults.empty()) {
+//                    string caption = distributionName;
+//                    caption += "-";
+//                    caption += "nonTD";
+//
+//                    string plotName = "document-plot-";
+//                    plotName += spanner::removeSpaces(caption);
+//                    plotName += "-";
+//                    plotName += "runtime";
+//
+//                    cpptex::PgfplotPrinter nontdPlot(OUTPUT_DIRECTORY + plotName);
+//                    nontdPlot.setCaption(caption);
+//                    cpptex::PgfplotPrinter::ResultMatrix resMatrix;
+//                    convertToResultMatrix(resMatrix, "runtime", nontdResults, X_PLOT_SCALE);
+//                    nontdPlot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", "Average execution time", caption);
+//                    parentFigure.addToDocumentAsSubfigure( nontdPlot, numCols);
+//                }
 
-                // non td plots
-                SpannerReducedLevelResultMap nontdResults;
-                copy_if(distribution.begin(), distribution.end(),
-                        inserter(nontdResults, nontdResults.end()),
-                        [&nontdPlots](const auto &elem) {
-                            return spanner::contains(nontdPlots, elem.first);
-                        });
 
-                if( !nontdResults.empty()) {
-                    string caption = distributionName;
-                    caption += "-";
-                    caption += "nonTD";
-
-                    string plotName = "document-plot-";
-                    plotName += spanner::removeSpaces(caption);
-                    plotName += "-";
-                    plotName += "runtime";
-
-                    cpptex::PgfplotPrinter nontdPlot(OUTPUT_DIRECTORY + plotName);
-                    nontdPlot.setCaption(caption);
-                    cpptex::PgfplotPrinter::ResultMatrix resMatrix;
-                    convertToResultMatrix(resMatrix, "runtime", nontdResults, X_PLOT_SCALE);
-                    nontdPlot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", "Average execution time", caption);
-                    parentFigure.addToDocumentAsSubfigure( nontdPlot, numCols);
-                }
-
-                // Linf plot
-                SpannerReducedLevelResultMap linfResults;
-                copy_if(distribution.begin(), distribution.end(),
-                        inserter(linfResults, linfResults.end()),
-                        [&linfPlots](const auto &elem) {
-                            return spanner::contains(linfPlots, elem.first);
-                        });
-
-                if( !linfResults.empty()) {
-                    string caption = distributionName;
-                    caption += "-";
-
-                    string plotName("document-plot-");
-                    plotName += spanner::removeSpaces(caption);
-                    plotName += "Linf";
-                    plotName += "-";
-                    plotName += "runtime";
-
-                    caption += "$L_\\infty$";
-
-                    cpptex::PgfplotPrinter linfPlot(OUTPUT_DIRECTORY + plotName);
-                    linfPlot.setCaption(caption);
-                    cpptex::PgfplotPrinter::ResultMatrix resMatrix;
-                    convertToResultMatrix(resMatrix, "runtime", linfResults, X_PLOT_SCALE);
-                    linfPlot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", "Average execution time", caption);
-                    //parentFigure.addToDocumentAsSubfigure(linfPlot);
-                }
-
-                // L2 plot
-                SpannerReducedLevelResultMap l2Results;
-                copy_if(distribution.begin(), distribution.end(),
-                        inserter(l2Results, l2Results.end()),
-                        [&l2Plots](const auto &elem) {
-                            return spanner::contains(l2Plots, elem.first);
-                        });
-
-                if( !l2Results.empty()) {
-                    string caption = distributionName;
-                    caption += "-";
-
-                    string plotName("document-plot-");
-                    plotName += spanner::removeSpaces(caption);
-                    plotName += "L2";
-                    plotName += "-";
-                    plotName += "runtime";
-
-                    caption += "$L_2$";
-
-                    cpptex::PgfplotPrinter l2Plot(OUTPUT_DIRECTORY + plotName);
-                    l2Plot.setCaption(caption);
-                    cpptex::PgfplotPrinter::ResultMatrix resMatrix;
-                    convertToResultMatrix(resMatrix, "runtime", l2Results, X_PLOT_SCALE);
-                    l2Plot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", "Average execution time", caption);
-                    parentFigure.addToDocumentAsSubfigure(l2Plot, numCols);
-                }
-
-                if(!lite) {
-                    for (const auto &iv: ANALYSIS_IVs) {
-                        string caption = distributionName;
-
-                        if (iv == "runtime") continue;
-
-                        string plotName("document-plot-");
-                        plotName += spanner::removeSpaces(caption);
-                        plotName += "-";
-                        plotName += iv;
-
-                        cpptex::PgfplotPrinter plot(OUTPUT_DIRECTORY + plotName);
-                        plot.setCaption(caption);
-                        cpptex::PgfplotPrinter::ResultMatrix resMatrix;
-                        convertToResultMatrix(resMatrix, iv, distribution, X_PLOT_SCALE);
-                        plot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", iv, caption);
-                        parentFigure.addToDocumentAsSubfigure(plot, numCols);
-                    }
-                }
+//                if(!lite) {
+//                    for (const auto &iv: ANALYSIS_IVs) {
+//                        string caption = distributionName;
+//
+//                        if (iv == "runtime") continue;
+//
+//                        string plotName("document-plot-");
+//                        plotName += spanner::removeSpaces(caption);
+//                        plotName += "-";
+//                        plotName += iv;
+//
+//                        cpptex::PgfplotPrinter plot(OUTPUT_DIRECTORY + plotName);
+//                        plot.setCaption(caption);
+//                        cpptex::PgfplotPrinter::ResultMatrix resMatrix;
+//                        convertToResultMatrix(resMatrix, iv, distribution, X_PLOT_SCALE);
+//                        plot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", iv, caption);
+//                        parentFigure.addToDocumentAsSubfigure(plot, numCols);
+//                    }
+//                }
                 document.addToDocumentAsFigure(parentFigure);
             }
         }
@@ -488,35 +433,35 @@ namespace analysis {
             parentFigure.addToDocumentAsSubfigure(l2Plot, numCols);
         }
 
-        if(!lite) {
-            string plotLegendText;
-            for (const auto &iv: ANALYSIS_IVs) {
-
-                if (iv == "runtime")
-                    continue;
-
-                string plotName("document-plot-summary-");
-                plotName += iv;
-                string caption = "Summary";
-
-                cpptex::PgfplotPrinter plot(OUTPUT_DIRECTORY + plotName);
-                plot.setCaption(caption);
-                cpptex::PgfplotPrinter::ResultMatrix resMatrix;
-                convertToResultMatrix(resMatrix, iv, summary, X_PLOT_SCALE);
-                plot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", iv, caption);
-
-                parentFigure.addToDocumentAsSubfigure(plot, numCols);
-
-                if (isFirst) {
-                    isFirst = false;
-                    plotLegendText = plot.getLegend();
-                }
-            }
-
-            cpptex::LatexPrinter legend(OUTPUT_DIRECTORY +"document-plot-legend");
-            legend.addRawText(plotLegendText);
-            document.addToDocumentAsFigure(legend);
-        }
+//        if(!lite) {
+//            string plotLegendText;
+//            for (const auto &iv: ANALYSIS_IVs) {
+//
+//                if (iv == "runtime")
+//                    continue;
+//
+//                string plotName("document-plot-summary-");
+//                plotName += iv;
+//                string caption = "Summary";
+//
+//                cpptex::PgfplotPrinter plot(OUTPUT_DIRECTORY + plotName);
+//                plot.setCaption(caption);
+//                cpptex::PgfplotPrinter::ResultMatrix resMatrix;
+//                convertToResultMatrix(resMatrix, iv, summary, X_PLOT_SCALE);
+//                plot.plotAxis(resMatrix, spanner::bdps::ALGORITHM_NAMES, "$n$", iv, caption);
+//
+//                parentFigure.addToDocumentAsSubfigure(plot, numCols);
+//
+//                if (isFirst) {
+//                    isFirst = false;
+//                    plotLegendText = plot.getLegend();
+//                }
+//            }
+//
+//            cpptex::LatexPrinter legend(OUTPUT_DIRECTORY +"document-plot-legend");
+//            legend.addRawText(plotLegendText);
+//            document.addToDocumentAsFigure(legend);
+//        }
         document.addToDocumentAsFigure(parentFigure);
     }
 
@@ -862,8 +807,8 @@ void BoundedDegreePlaneSpannerAnalysisSynthetic(const string& filename) {
     SpannerReducedLevelResultMap spannerLevelSummary = calculateSpannerLevelSummary(spannerLevelResults);
     SpannerResultMap spannerSummary = calculateSpannerSummary(spannerLevelSummary);
 
-    tabulate(spannerSummary, document, isLargeExperiment);
-//    plot(spannerLevelSummary, document, isLargeExperiment);
+//    tabulate(spannerSummary, document, isLargeExperiment);
+    plot(spannerLevelSummary, document, isLargeExperiment);
 //    tabulate(spannerLevelSummary, document, isLargeExperiment);
 
     if(!isLargeExperiment) document.clearpage();
@@ -871,8 +816,8 @@ void BoundedDegreePlaneSpannerAnalysisSynthetic(const string& filename) {
     cout<< "Finding summaries for each spanner algorithm within each distribution..."<<endl;
     document.addRawText("\\section{Distribution Summaries}\n\n");
 
-//    plot(distributionSpannerSummary, document, isLargeExperiment);
-    tabulate(distributionSpannerSummary, document, isLargeExperiment);
+    plot(distributionSpannerSummary, document, isLargeExperiment);
+//    tabulate(distributionSpannerSummary, document, isLargeExperiment);
 
 
 

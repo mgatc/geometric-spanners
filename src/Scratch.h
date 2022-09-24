@@ -61,7 +61,7 @@ namespace bdps_experiment {
 //            BGS2005( points, result);
 //            KPX2010( points, result, 18);
 //            BCC2012<6>( points, result);
-            BCC2012<7>( points, result);
+//            BCC2012<7>( points, result);
 //            BHS2018(points, result);
 //            KPT2017(points, result);
 //            BKPX2015(points, result);

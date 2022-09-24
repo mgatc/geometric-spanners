@@ -49,7 +49,7 @@ namespace bdps_experiment {
      * then writes the result to the expOut file. Due to its
      */
     template <typename DistributionSubTypeEnum>
-    void BoundedDegreePlaneSpannerTest(const spanner::BoundedDegreePlaneSpannerAlgorithm algorithm,
+    void BoundedDegreePlaneSpannerTest(const spanner::DelaunayTriangulationVariant algorithm,
                                        const spanner::DistributionType distributionType,
                                        const DistributionSubTypeEnum distribution,
                                        const spanner::bdps::input_t &points,
@@ -67,43 +67,16 @@ namespace bdps_experiment {
         spanner::Timer tim;
 
         switch (algorithm) {
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bgs2005:
-                spanner::BGS2005(points, output);
+            case spanner::DelaunayTriangulationVariant::L2:
+                spanner::DelaunayL2Spanner(points, output);
                 break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Lw2004:
-                spanner::LW2004(points, output);
+            case spanner::DelaunayTriangulationVariant::Linf:
+                spanner::DelaunayLinfSpanner(points, output);
                 break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bsx2009:
-                spanner::BSX2009(points, output);
+            case spanner::DelaunayTriangulationVariant::TD:
+                spanner::DelaunayTDSpanner(points, output);
                 break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kpx2010:
-                spanner::KPX2010(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kx2012:
-                spanner::KX2012(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bcc2012_7:
-                spanner::BCC2012<7>(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bcc2012_6:
-                spanner::BCC2012<6>(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bhs2018:
-                spanner::BHS2018(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bkpx2015:
-                spanner::BKPX2015(points,output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Bghp2010:
-                spanner::BGHP2010(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Kpt2017:
-                spanner::KPT2017(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::Degree3:
-                spanner::DEG3(points, output);
-                break;
-            case spanner::BoundedDegreePlaneSpannerAlgorithm::BdpsAlgorithmLast:
+            case spanner::DelaunayTriangulationVariant::DelaunayTriangulationVariantLast:
             default:
 //                std::cout<< "Skip"<<std::endl;
                 tim.stop();
@@ -173,9 +146,9 @@ namespace bdps_experiment {
 
         std::cout<< "Starting trial...\n"<<std::endl;
 
-        for(int alg=spanner::BoundedDegreePlaneSpannerAlgorithm::BdpsAlgorithmFirst;
-            alg != spanner::BoundedDegreePlaneSpannerAlgorithm::BdpsAlgorithmLast; ++alg ) {
-            auto algorithm = static_cast<spanner::BoundedDegreePlaneSpannerAlgorithm>(alg);
+        for(int alg=spanner::DelaunayTriangulationVariant::DelaunayTriangulationVariantFirst;
+            alg != spanner::DelaunayTriangulationVariant::DelaunayTriangulationVariantLast; ++alg ) {
+            auto algorithm = static_cast<spanner::DelaunayTriangulationVariant>(alg);
             std::list<std::pair<size_t, size_t> > spanner;
 
             BoundedDegreePlaneSpannerTest(algorithm, distributionType, distribution, points, expOut, measureStretchFactor);
@@ -197,36 +170,36 @@ namespace bdps_experiment {
         PointGenerator_2 pointGenerator;
 
         switch(dist) {
-//            case UniformInsideSquare:
-//                pointGenerator.insideSquare(n,width,points);
-//                break;
-//            case UniformInsideDisc:
-//                pointGenerator.insideDisc(n,width,points);
-//                break;
-////            case UniformOnSquare:
-////                pointGenerator.onSquare(n,width,points);
-////                break;
-////            case UniformOnCircle:
-////                pointGenerator.onCircle(n, width, points);
-////                break;
-//            case NormalInsideSquare:
-//                pointGenerator.insideSquareNormal(n,1,points);
-//                break;
-            case NormalClustersInsideSquare:
-                pointGenerator.insideSquareNormal(n/5, 5, points);
+            case UniformInsideSquare:
+                pointGenerator.insideSquare(n,width,points);
                 break;
-//            case ContiguousGrid:
-//                pointGenerator.contiguousOnGrid(n, points);
+            case UniformInsideDisc:
+                pointGenerator.insideDisc(n,width,points);
+                break;
+//            case UniformOnSquare:
+//                pointGenerator.onSquare(n,width,points);
 //                break;
-//            case UniformRandomGrid:
-//                pointGenerator.randomOnGrid(n, points);
+//            case UniformOnCircle:
+//                pointGenerator.onCircle(n, width, points);
 //                break;
-//            case UniformInsideAnnulus:
-//                pointGenerator.insideAnnulus(n, width, width*0.8, points);
-//                break;
-//            case Galaxy:
-//                pointGenerator.inGalaxy(n, 5, points);
-//                break;
+            case NormalInsideSquare:
+                pointGenerator.insideSquareNormal(n,1,points);
+                break;
+            case NormalClustersInsideSquare:
+                pointGenerator.insideSquareNormal(n/10, 10, points);
+                break;
+            case ContiguousGrid:
+                pointGenerator.contiguousOnGrid(n, points);
+                break;
+            case UniformRandomGrid:
+                pointGenerator.randomOnGrid(n, points);
+                break;
+            case UniformInsideAnnulus:
+                pointGenerator.insideAnnulus(n, width, width*0.8, points);
+                break;
+            case Galaxy:
+                pointGenerator.inGalaxy(n, 5, points);
+                break;
 //            case ConvexHullInDisc:
 //                pointGenerator.onConvexHullInDisc(n, width, points);
 //                break;
@@ -245,7 +218,9 @@ namespace bdps_experiment {
             // SET POINTS
             std::vector<spanner::Point> points;
             generateRandomPointSet(dist, n, INPUT_WIDTH, points);
-            BoundedDegreePlaneSpannerAlgorithmLoop(spanner::DistributionType::Synthetic,dist,points,expOut,measureStretchFactor);
+            if(dist == spanner::SyntheticDistribution::NormalClustersInsideSquare) {
+                BoundedDegreePlaneSpannerAlgorithmLoop(spanner::DistributionType::Synthetic,dist,points,expOut,measureStretchFactor);
+            }
         }
     }
 
@@ -256,11 +231,12 @@ namespace bdps_experiment {
                                            size_t n_end,
                                            size_t increment,
                                            std::ofstream& expOut ) {
+        const auto measureStretchFactor = false;
         std::string distName = spanner::SYNTHETIC_DISTRIBUTION_NAMES.at(dist);
         srand(0);
         for (size_t trial = 0; trial < numRuns; ++trial) {
             std::cout<< "Starting trial "<< trial << " of "<<distName<<"\n\n";
-            SyntheticExperimentInputSizeLoop(dist, n_start, n_end, increment, expOut);
+            SyntheticExperimentInputSizeLoop(dist, n_start, n_end, increment, expOut, measureStretchFactor);
             std::cout<<"\n"<<std::endl;
         }
     }
